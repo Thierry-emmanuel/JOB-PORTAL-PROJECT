@@ -1,5 +1,7 @@
-package JobPortal.project.userprofile;
+package JobPortal.project.userprofile.Controller;
 
+import JobPortal.project.userprofile.Model.JobSeeker;
+import JobPortal.project.userprofile.Service.JobSeekerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

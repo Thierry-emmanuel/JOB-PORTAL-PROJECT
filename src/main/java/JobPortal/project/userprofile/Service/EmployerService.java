@@ -1,5 +1,7 @@
-package JobPortal.project.userprofile;
+package JobPortal.project.userprofile.Service;
 
+import JobPortal.project.userprofile.Model.Employer;
+import JobPortal.project.userprofile.Repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

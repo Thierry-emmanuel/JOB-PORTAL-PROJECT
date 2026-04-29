@@ -1,6 +1,7 @@
-package JobPortal.project.userprofile;
+package JobPortal.project.userprofile.Repository;
 
 
+import JobPortal.project.userprofile.Model.Admin;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

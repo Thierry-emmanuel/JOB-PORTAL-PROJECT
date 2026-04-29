@@ -1,5 +1,7 @@
-package JobPortal.project.company;
+package JobPortal.project.company.Controller;
 
+import JobPortal.project.company.Model.Company;
+import JobPortal.project.company.Service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

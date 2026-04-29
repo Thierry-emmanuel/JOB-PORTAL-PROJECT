@@ -1,9 +1,12 @@
-package JobPortal.project.company;
+package JobPortal.project.company.Service;
 
-import JobPortal.project.userprofile.Employer;
-import JobPortal.project.userprofile.EmployerRepository;
-import JobPortal.project.userprofile.JobSeeker;
-import JobPortal.project.userprofile.JobSeekerRepository;
+import JobPortal.project.company.Model.Company;
+import JobPortal.project.company.Model.CompanyRating;
+import JobPortal.project.company.Repository.CompanyRepository;
+import JobPortal.project.userprofile.Model.Employer;
+import JobPortal.project.userprofile.Repository.EmployerRepository;
+import JobPortal.project.userprofile.Model.JobSeeker;
+import JobPortal.project.userprofile.Repository.JobSeekerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

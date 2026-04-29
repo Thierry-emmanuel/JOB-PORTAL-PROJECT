@@ -1,4 +1,4 @@
-package JobPortal.project.company;
+package JobPortal.project.company.Enum;
 
 public enum CompanySize {
 

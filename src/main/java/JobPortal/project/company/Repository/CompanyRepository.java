@@ -1,6 +1,8 @@
-package JobPortal.project.company;
+package JobPortal.project.company.Repository;
 
-import JobPortal.project.userprofile.Employer;
+import JobPortal.project.company.Model.Company;
+import JobPortal.project.company.Enum.CompanySize;
+import JobPortal.project.userprofile.Model.Employer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,5 +1,6 @@
-package JobPortal.project.auth;
+package JobPortal.project.auth.Model;
 
+import JobPortal.project.auth.Enum.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
