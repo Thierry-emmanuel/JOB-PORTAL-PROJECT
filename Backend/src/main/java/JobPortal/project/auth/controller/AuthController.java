@@ -8,17 +8,24 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@lombok.RequiredArgsConstructor
 public class AuthController {
+
+    private final JobPortal.project.auth.service.AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest signUpRequest) {
-        // Implementation
-        return ResponseEntity.ok("User registered successfully");
+        try {
+            authService.registerUser(signUpRequest);
+            return ResponseEntity.ok("User registered successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        // Implementation
+        // Login logic will go here
         return ResponseEntity.ok(new AuthResponse("fake-jwt-token", loginRequest.getEmail(), "ROLE_JOB_SEEKER"));
     }
 }

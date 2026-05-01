@@ -31,7 +31,18 @@ public abstract class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private JobPortal.project.auth.Enum.Role role;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_role_entities",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_entity_id"))
+    private java.util.Set<RoleEntity> roles;
+
+    @Enumerated(EnumType.STRING)
+    private Provider provider = Provider.LOCAL;
+
+    private String providerId;
 
     @Column(nullable = false)
     private Boolean isActive = true;
@@ -40,6 +51,8 @@ public abstract class User {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    public enum Provider { LOCAL, GOOGLE, FACEBOOK }
 
     @PrePersist
     protected void onCreate() {

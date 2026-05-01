@@ -1,4 +1,4 @@
-package JobPortal.project.auth.entity;
+package JobPortal.project.auth.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,4 +15,8 @@ public class Permission {
 
     @Column(unique = true, nullable = false)
     private String name;
+
+    public Permission(String name) {
+        this.name = name;
+    }
 }

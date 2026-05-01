@@ -1,11 +1,11 @@
 package JobPortal.project.auth.repository;
 
-import JobPortal.project.auth.Model.RoleEntity;
+import JobPortal.project.auth.Model.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
-    Optional<RoleEntity> findByName(String name);
+public interface PermissionRepository extends JpaRepository<Permission, Long> {
+    Optional<Permission> findByName(String name);
 }

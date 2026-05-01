@@ -1,4 +1,4 @@
-package JobPortal.project.auth.entity;
+package JobPortal.project.auth.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.Set;
 @Table(name = "roles")
 @Data
 @NoArgsConstructor
-public class Role {
+public class RoleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,4 +22,8 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<Permission> permissions;
+
+    public RoleEntity(String name) {
+        this.name = name;
+    }
 }
