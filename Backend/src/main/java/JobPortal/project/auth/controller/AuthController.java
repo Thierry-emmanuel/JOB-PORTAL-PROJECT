@@ -25,7 +25,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        // Login logic will go here
-        return ResponseEntity.ok(new AuthResponse("fake-jwt-token", loginRequest.getEmail(), "ROLE_JOB_SEEKER"));
+        try {
+            AuthResponse response = authService.authenticateUser(loginRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Error: Invalid email or password");
+        }
     }
 }
