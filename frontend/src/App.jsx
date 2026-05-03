@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import JobSeekerProfile from "./pages/profile/JobSeekerProfile";
 import EmployerProfile from "./pages/profile/EmployerProfile";
 import AdminProfile from "./pages/profile/AdminProfile";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import "./App.css";
 
 // Demo nav to switch between profile types for development
@@ -15,7 +17,7 @@ function DevNav() {
         transform: "translateX(-50%)",
         background: "#0B2B26",
         borderRadius: "999px",
-        padding: "10px 20px",
+        padding: "14px 24px",
         display: "flex",
         gap: "12px",
         zIndex: 9999,
@@ -23,6 +25,8 @@ function DevNav() {
       }}
     >
       {[
+        { to: "/login", label: "Login" },
+        { to: "/register", label: "Register" },
         { to: "/profile/job-seeker", label: "Job Seeker" },
         { to: "/profile/employer", label: "Employer" },
         { to: "/profile/admin", label: "Admin" },
@@ -33,9 +37,9 @@ function DevNav() {
           style={{
             color: "rgba(255,255,255,0.7)",
             textDecoration: "none",
-            fontSize: "13px",
+            fontSize: "15px",
             fontWeight: 600,
-            padding: "6px 14px",
+            padding: "8px 18px",
             borderRadius: "999px",
             transition: "all 0.18s",
             fontFamily: "DM Sans, sans-serif",
@@ -56,7 +60,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/profile/job-seeker" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/profile/job-seeker" element={<JobSeekerProfile />} />
         <Route path="/profile/employer" element={<EmployerProfile />} />
         <Route path="/profile/admin" element={<AdminProfile />} />
