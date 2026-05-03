@@ -1,7 +1,9 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link ,Navigate} from "react-router-dom";
 import JobSeekerProfile from "./pages/profile/JobSeekerProfile";
 import EmployerProfile from "./pages/profile/EmployerProfile";
 import AdminProfile from "./pages/profile/AdminProfile";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import KoraHome from "./KoraHome";
 import "./App.css";
 
@@ -43,6 +45,10 @@ function DevNav() {
         Home
       </Link>
       {[
+
+        { to: "/login", label: "Login" },
+        { to: "/register", label: "Register" },
+
         { to: "/profile/job-seeker", label: "Job Seeker" },
         { to: "/profile/employer", label: "Employer" },
         { to: "/profile/admin", label: "Admin" },
@@ -80,6 +86,10 @@ export default function App() {
         <Route path="/profile/job-seeker" element={<JobSeekerProfile />} />
         <Route path="/profile/employer" element={<EmployerProfile />} />
         <Route path="/profile/admin" element={<AdminProfile />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
       </Routes>
       <DevNav />
     </BrowserRouter>
