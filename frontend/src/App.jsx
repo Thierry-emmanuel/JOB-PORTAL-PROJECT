@@ -16,7 +16,7 @@ function DevNav() {
         transform: "translateX(-50%)",
         background: "#0B2B26",
         borderRadius: "999px",
-        padding: "10px 20px",
+        padding: "14px 24px",
         display: "flex",
         gap: "12px",
         zIndex: 9999,

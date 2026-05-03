@@ -1,0 +1,289 @@
+/* ============================================================
+   KORA JOB PORTAL — Auth Pages Styles (Login & Register)
+   Brand: #0B2B26 (deep forest green) | #E07B39 (orange accent)
+   ============================================================ */
+
+.kora-auth-root {
+  min-height: 100vh;
+  display: flex;
+  background: var(--kora-bg, #f4f7f6);
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+.kora-auth-left {
+  flex: 0 0 40%;
+  background: var(--kora-primary, #0B2B26);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  color: white;
+  overflow: hidden;
+}
+
+.kora-auth-left-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(255,255,255,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(224,123,57,0.15) 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.02) 20px,
+      rgba(255,255,255,0.02) 21px
+    );
+  z-index: 1;
+}
+
+.kora-auth-left-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 480px;
+}
+
+.kora-auth-logo {
+  height: 50px;
+  margin-bottom: 24px;
+}
+
+.kora-auth-left-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.kora-auth-left-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+/* Auth form side */
+.kora-auth-right {
+  flex: 1;
+  background: var(--kora-bg, #f4f7f6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 40px;
+  position: relative;
+  z-index: 2;
+  box-shadow: -10px 0 30px rgba(11, 43, 38, 0.05);
+}
+
+.kora-auth-form-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  background: var(--kora-surface, #ffffff);
+  padding: 40px;
+  border: 1px solid var(--kora-border, #d8e4e1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(11, 43, 38, 0.05);
+}
+
+.kora-auth-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--kora-text-dark, #0d1f1c);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.kora-auth-subtitle {
+  font-size: 16px;
+  color: var(--kora-text-muted, #7a9590);
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.kora-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.kora-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kora-auth-field label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--kora-text-mid, #3a5550);
+}
+
+.kora-auth-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.kora-auth-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--kora-text-muted, #7a9590);
+  pointer-events: none;
+}
+
+.kora-auth-input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1.5px solid var(--kora-border, #d8e4e1);
+  border-radius: var(--kora-radius-sm, #8px);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--kora-text-dark, #0d1f1c);
+  background: var(--kora-surface, #ffffff);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.kora-auth-input:focus {
+  border-color: var(--kora-primary, #0B2B26);
+  box-shadow: 0 0 0 3px rgba(11, 43, 38, 0.08);
+}
+
+.kora-auth-input-right-icon {
+  position: absolute;
+  right: 14px;
+  color: var(--kora-text-muted, #7a9590);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.kora-auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14.5px;
+}
+
+.kora-auth-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--kora-text-mid, #3a5550);
+  font-weight: 500;
+}
+
+.kora-auth-checkbox input {
+  accent-color: var(--kora-primary, #0B2B26);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.kora-auth-link {
+  color: var(--kora-accent, #E07B39);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.kora-auth-link:hover {
+  color: #c46428;
+  text-decoration: underline;
+}
+
+.kora-auth-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--kora-primary, #0B2B26);
+  color: white;
+  border: none;
+  border-radius: var(--kora-radius-sm, #8px);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.kora-auth-btn:hover {
+  background: var(--kora-primary-light, #1a4a42);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(11, 43, 38, 0.25);
+}
+
+.kora-auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--kora-text-muted, #7a9590);
+  font-size: 13px;
+  margin: 24px 0;
+}
+
+.kora-auth-divider::before,
+.kora-auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--kora-border, #d8e4e1);
+}
+
+.kora-auth-divider::before {
+  margin-right: .5em;
+}
+
+.kora-auth-divider::after {
+  margin-left: .5em;
+}
+
+.kora-auth-social-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: transparent;
+  color: var(--kora-text-dark, #0d1f1c);
+  border: 1.5px solid var(--kora-border, #d8e4e1);
+  border-radius: var(--kora-radius-sm, #8px);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.kora-auth-social-btn:hover {
+  background: var(--kora-primary-pale, #e8f0ee);
+  border-color: var(--kora-primary, #0B2B26);
+}
+
+.kora-auth-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--kora-text-mid, #3a5550);
+}
+
+@media (max-width: 900px) {
+  .kora-auth-left {
+    display: none;
+  }
+  .kora-auth-right {
+    max-width: 100%;
+    padding: 40px 20px;
+  }
+}
