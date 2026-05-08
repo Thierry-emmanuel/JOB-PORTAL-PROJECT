@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Shield, Users, Briefcase, BarChart2, Bell, Settings,
   LogOut, Edit2, CheckCircle, XCircle, AlertCircle,
-  TrendingUp, Eye, Trash2, UserCheck, Search
+  TrendingUp, Eye, Trash2, UserCheck, Search, KeyRound, PieChart
 } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/Kora-logo.png";
+import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/admin-profile.css";
+
+/* ── Chart.js loaded via CDN in useEffect ── */
 
 const mockAdmin = {
   fullName: "Admin KORA",
@@ -17,9 +20,30 @@ const mockAdmin = {
     jobSeekers: 980,
     employers: 268,
     activeJobs: 143,
+    expiredJobs: 67,
+    deletedJobs: 22,
     totalApplications: 3890,
     pendingApprovals: 7,
     hireRate: 18,
+    applicationsByCategory: {
+      "IT & Software": 1240,
+      "Finance": 620,
+      "Education": 480,
+      "Healthcare": 390,
+      "Telecoms": 310,
+      "Other": 850,
+    },
+    usersOverTime: {
+      labels: ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr"],
+      jobSeekers: [520, 640, 710, 790, 900, 980],
+      employers: [120, 155, 180, 210, 245, 268],
+    },
+    applicationStatusBreakdown: {
+      APPLIED: 2100,
+      SHORTLISTED: 890,
+      HIRED: 420,
+      REJECTED: 480,
+    },
   },
   recentUsers: [
     { id: 1, name: "Alain NGUEMBA", role: "JOB_SEEKER", status: "ACTIVE", joined: "2025-04-28" },
@@ -31,16 +55,187 @@ const mockAdmin = {
 };
 
 const STATUS_STYLES = {
-  ACTIVE: { bg: "#dcfce7", color: "#15803d" },
-  PENDING: { bg: "#fef9c3", color: "#a16207" },
+  ACTIVE:    { bg: "#dcfce7", color: "#15803d" },
+  PENDING:   { bg: "#fef9c3", color: "#a16207" },
   SUSPENDED: { bg: "#fee2e2", color: "#dc2626" },
 };
 
+/* ── Chart Hook ── */
+function useChart(canvasRef, config, deps) {
+  useEffect(() => {
+    if (!canvasRef.current || typeof window === "undefined") return;
+    let chart;
+    const init = () => {
+      if (!window.Chart) return;
+      if (chart) chart.destroy();
+      chart = new window.Chart(canvasRef.current, config());
+    };
+    if (window.Chart) {
+      init();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js";
+      script.onload = init;
+      document.head.appendChild(script);
+    }
+    return () => { if (chart) chart.destroy(); };
+  }, deps);
+}
+
+/* ── Individual Chart Components ── */
+
+function UserGrowthChart({ data }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "Job Seekers",
+          data: data.jobSeekers,
+          borderColor: "#0B2B26",
+          backgroundColor: "rgba(11,43,38,0.08)",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#0B2B26",
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: "Employers",
+          data: data.employers,
+          borderColor: "#E07B39",
+          backgroundColor: "rgba(224,123,57,0.08)",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#E07B39",
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", labels: { font: { family: "DM Sans", size: 12 }, boxWidth: 14, padding: 16 } },
+        tooltip: { mode: "index", intersect: false },
+      },
+      scales: {
+        x: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "DM Sans" } } },
+        y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "DM Sans" } } },
+      },
+    },
+  }), []);
+  return <canvas ref={ref} />;
+}
+
+function ApplicationsByCategoryChart({ data }) {
+  const ref = useRef();
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+  useChart(ref, () => ({
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Applications",
+        data: values,
+        backgroundColor: ["#0B2B26","#1a4a42","#E07B39","#f5a05a","#b5c4c1","#3a5550"],
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} applications` } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: "DM Sans", size: 11 } } },
+        y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "DM Sans" } } },
+      },
+    },
+  }), []);
+  return <canvas ref={ref} />;
+}
+
+function ApplicationStatusChart({ data }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "doughnut",
+    data: {
+      labels: Object.keys(data),
+      datasets: [{
+        data: Object.values(data),
+        backgroundColor: ["#0B2B26","#E07B39","#22c55e","#ef4444"],
+        borderWidth: 3,
+        borderColor: "#ffffff",
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "65%",
+      plugins: {
+        legend: {
+          position: "right",
+          labels: { font: { family: "DM Sans", size: 12 }, boxWidth: 14, padding: 14 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((ctx.parsed / total) * 100).toFixed(1);
+              return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  }), []);
+  return <canvas ref={ref} />;
+}
+
+function JobStatusChart({ active, expired, deleted }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "pie",
+    data: {
+      labels: ["Active", "Expired", "Deleted"],
+      datasets: [{
+        data: [active, expired, deleted],
+        backgroundColor: ["#0B2B26","#f59e0b","#ef4444"],
+        borderWidth: 3,
+        borderColor: "#ffffff",
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: { font: { family: "DM Sans", size: 12 }, boxWidth: 14, padding: 14 },
+        },
+      },
+    },
+  }), []);
+  return <canvas ref={ref} />;
+}
+
+/* ── Main Component ── */
 export default function AdminProfile() {
   const [profile] = useState(mockAdmin);
   const [users, setUsers] = useState(mockAdmin.recentUsers);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [resetModal, setResetModal] = useState(false);
 
   const filtered = users.filter(
     (u) =>
@@ -52,9 +247,8 @@ export default function AdminProfile() {
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
 
   const deleteUser = (id) => {
-    if (window.confirm("Permanently delete this user?")) {
+    if (window.confirm("Permanently delete this user?"))
       setUsers((prev) => prev.filter((u) => u.id !== id));
-    }
   };
 
   const { stats } = profile;
@@ -64,17 +258,17 @@ export default function AdminProfile() {
       <div className="kora-bg-mesh" />
       <div className="kora-profile-layout">
 
-        {/* SIDEBAR */}
+        {/* ── SIDEBAR ── */}
         <aside className="kora-sidebar kora-admin-sidebar">
           <div className="kora-sidebar-inner">
+
+            {/* New logo — shown as-is on dark background */}
             <div className="kora-sidebar-logo">
-              <img src={koraLogo} alt="KORA" />
+              <img src={koraLogo} alt="KORA – Unlock Your Career" className="kora-sidebar-logo-img" />
             </div>
 
             <div className="kora-sidebar-avatar-section">
-              <div className="kora-admin-avatar">
-                <Shield size={32} />
-              </div>
+              <div className="kora-admin-avatar"><Shield size={32} /></div>
               <p className="kora-sidebar-name">{profile.fullName}</p>
               <p className="kora-sidebar-role">Platform Administrator</p>
             </div>
@@ -101,13 +295,18 @@ export default function AdminProfile() {
                   {count !== undefined && <span className="kora-nav-badge">{count}</span>}
                 </button>
               ))}
+
+              {/* Reset Password */}
+              <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={() => setResetModal(true)}>
+                <KeyRound size={16} /><span>Reset Password</span>
+              </button>
             </nav>
 
             <button className="kora-sidebar-logout"><LogOut size={15} />Sign Out</button>
           </div>
         </aside>
 
-        {/* MAIN */}
+        {/* ── MAIN ── */}
         <main className="kora-main-content">
 
           {/* Admin Header */}
@@ -115,9 +314,7 @@ export default function AdminProfile() {
             <div className="kora-header-banner admin-banner">
               <div className="kora-banner-pattern" />
               <div className="kora-banner-gradient" />
-              <div className="kora-admin-banner-badge">
-                <Shield size={16} />ADMINISTRATOR
-              </div>
+              <div className="kora-admin-banner-badge"><Shield size={16} />ADMINISTRATOR</div>
             </div>
             <div className="kora-header-body">
               <div className="kora-header-avatar-wrap">
@@ -132,9 +329,7 @@ export default function AdminProfile() {
                 </div>
                 <div className="kora-header-meta">
                   <span className="kora-meta-chip">{profile.email}</span>
-                  <span className="kora-meta-chip kora-admin-chip">
-                    <Shield size={12} />Full Access
-                  </span>
+                  <span className="kora-meta-chip kora-admin-chip"><Shield size={12} />Full Access</span>
                 </div>
               </div>
             </div>
@@ -149,7 +344,7 @@ export default function AdminProfile() {
             ))}
           </div>
 
-          {/* KPI Cards */}
+          {/* ── KPI Cards ── */}
           {(activeTab === "dashboard" || activeTab === "reports") && (
             <div className="kora-kpi-grid">
               {[
@@ -171,31 +366,79 @@ export default function AdminProfile() {
             </div>
           )}
 
-          {/* User Management Table */}
-          {(activeTab === "dashboard" || activeTab === "users") && (
-            <section className="kora-section">
-              <div className="kora-section-header">
-                <div className="kora-section-title">
-                  <Users size={18} />
-                  <h2>User Management</h2>
+          {/* ── CHART.JS REPORTS ── */}
+          {(activeTab === "dashboard" || activeTab === "reports") && (
+            <>
+              {/* Row 1: User Growth + Applications by Category */}
+              <div className="kora-charts-row">
+                <div className="kora-chart-card">
+                  <div className="kora-chart-header">
+                    <TrendingUp size={16} />
+                    <h3>User Growth (Last 6 Months)</h3>
+                  </div>
+                  <div className="kora-chart-area">
+                    <UserGrowthChart data={stats.usersOverTime} />
+                  </div>
                 </div>
-                <div className="kora-admin-search">
-                  <Search size={14} />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search users..."
-                  />
+
+                <div className="kora-chart-card">
+                  <div className="kora-chart-header">
+                    <BarChart2 size={16} />
+                    <h3>Applications by Category</h3>
+                  </div>
+                  <div className="kora-chart-area">
+                    <ApplicationsByCategoryChart data={stats.applicationsByCategory} />
+                  </div>
                 </div>
               </div>
 
+              {/* Row 2: Application Status + Job Status */}
+              <div className="kora-charts-row">
+                <div className="kora-chart-card">
+                  <div className="kora-chart-header">
+                    <PieChart size={16} />
+                    <h3>Application Status Breakdown</h3>
+                  </div>
+                  <div className="kora-chart-area">
+                    <ApplicationStatusChart data={stats.applicationStatusBreakdown} />
+                  </div>
+                </div>
+
+                <div className="kora-chart-card">
+                  <div className="kora-chart-header">
+                    <Briefcase size={16} />
+                    <h3>Job Postings by Status</h3>
+                  </div>
+                  <div className="kora-chart-area">
+                    <JobStatusChart
+                      active={stats.activeJobs}
+                      expired={stats.expiredJobs}
+                      deleted={stats.deletedJobs}
+                    />
+                  </div>
+                  {/* Hire Rate callout */}
+                  <div className="kora-hire-rate-callout">
+                    <span>Application-to-hire conversion rate</span>
+                    <strong>{stats.hireRate}%</strong>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── USER MANAGEMENT TABLE ── */}
+          {(activeTab === "dashboard" || activeTab === "users") && (
+            <section className="kora-section">
+              <div className="kora-section-header">
+                <div className="kora-section-title"><Users size={18} /><h2>User Management</h2></div>
+                <div className="kora-admin-search">
+                  <Search size={14} />
+                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." />
+                </div>
+              </div>
               <div className="kora-user-table">
                 <div className="kora-table-header">
-                  <span>Name</span>
-                  <span>Role</span>
-                  <span>Status</span>
-                  <span>Joined</span>
-                  <span>Actions</span>
+                  <span>Name</span><span>Role</span><span>Status</span><span>Joined</span><span>Actions</span>
                 </div>
                 {filtered.map((user) => (
                   <div key={user.id} className="kora-table-row">
@@ -203,47 +446,35 @@ export default function AdminProfile() {
                     <span className={`kora-role-badge kora-role-${user.role.toLowerCase()}`}>
                       {user.role === "JOB_SEEKER" ? "Job Seeker" : "Employer"}
                     </span>
-                    <span
-                      className="kora-status-badge"
-                      style={{
-                        background: STATUS_STYLES[user.status]?.bg,
-                        color: STATUS_STYLES[user.status]?.color,
-                      }}
-                    >
+                    <span className="kora-status-badge" style={{ background: STATUS_STYLES[user.status]?.bg, color: STATUS_STYLES[user.status]?.color }}>
                       {user.status}
                     </span>
                     <span className="kora-table-date">{user.joined}</span>
                     <div className="kora-table-actions">
                       {user.status === "PENDING" && (
-                        <button className="kora-action-btn kora-action-approve" title="Approve" onClick={() => updateStatus(user.id, "ACTIVE")}>
-                          <CheckCircle size={14} />
-                        </button>
+                        <button className="kora-action-btn kora-action-approve" title="Approve" onClick={() => updateStatus(user.id, "ACTIVE")}><CheckCircle size={14} /></button>
                       )}
                       {user.status === "ACTIVE" && (
-                        <button className="kora-action-btn kora-action-suspend" title="Suspend" onClick={() => updateStatus(user.id, "SUSPENDED")}>
-                          <XCircle size={14} />
-                        </button>
+                        <button className="kora-action-btn kora-action-suspend" title="Suspend" onClick={() => updateStatus(user.id, "SUSPENDED")}><XCircle size={14} /></button>
                       )}
                       {user.status === "SUSPENDED" && (
-                        <button className="kora-action-btn kora-action-approve" title="Reactivate" onClick={() => updateStatus(user.id, "ACTIVE")}>
-                          <CheckCircle size={14} />
-                        </button>
+                        <button className="kora-action-btn kora-action-approve" title="Reactivate" onClick={() => updateStatus(user.id, "ACTIVE")}><CheckCircle size={14} /></button>
                       )}
                       <button className="kora-action-btn" title="View"><Eye size={14} /></button>
-                      <button className="kora-action-btn kora-action-delete" title="Delete" onClick={() => deleteUser(user.id)}>
-                        <Trash2 size={14} />
-                      </button>
+                      <button className="kora-action-btn kora-action-delete" title="Delete" onClick={() => deleteUser(user.id)}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))}
-                {filtered.length === 0 && (
-                  <div className="kora-empty-state"><Users size={28} /><p>No users found</p></div>
-                )}
+                {filtered.length === 0 && <div className="kora-empty-state"><Users size={28} /><p>No users found</p></div>}
               </div>
             </section>
           )}
         </main>
       </div>
+
+      {resetModal && (
+        <ResetPasswordModal onClose={() => setResetModal(false)} userEmail={profile.email} />
+      )}
     </div>
   );
 }
