@@ -1,8 +1,8 @@
 import { useRef } from "react";
-import { Camera, FileText, Bookmark, Bell, Settings, LogOut, TrendingUp } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import { Camera, FileText, Bookmark, Bell, Settings, LogOut, TrendingUp, KeyRound } from "lucide-react";
+import koraLogo from "../../assets/Kora-logo.png";
 
-export default function ProfileSidebar({ profile, completion, onEdit, onPhotoChange }) {
+export default function ProfileSidebar({ profile, completion, onEdit, onPhotoChange, onResetPassword }) {
   const fileRef = useRef();
 
   const initials = profile.fullName
@@ -13,12 +13,12 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
 
   return (
     <div className="kora-sidebar-inner">
-      {/* Logo */}
+      {/* Logo — dark background logo, displayed as-is, no CSS filter */}
       <div className="kora-sidebar-logo">
-        <img src={koraLogo} alt="KORA" />
+        <img src={koraLogo} alt="KORA – Unlock Your Career" className="kora-sidebar-logo-img" />
       </div>
 
-      {/* Avatar + Upload */}
+      {/* Avatar + Photo Upload */}
       <div className="kora-sidebar-avatar-section">
         <div className="kora-sidebar-avatar">
           {profile.profilePhoto ? (
@@ -45,7 +45,7 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
         <p className="kora-sidebar-role">Job Seeker</p>
       </div>
 
-      {/* Completion */}
+      {/* Profile Completion Bar */}
       <div className="kora-sidebar-completion">
         <div className="kora-completion-bar-header">
           <TrendingUp size={14} />
@@ -53,10 +53,7 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
           <strong>{completion}%</strong>
         </div>
         <div className="kora-completion-bar-bg">
-          <div
-            className="kora-completion-bar-fill"
-            style={{ width: `${completion}%` }}
-          />
+          <div className="kora-completion-bar-fill" style={{ width: `${completion}%` }} />
         </div>
         {completion < 100 && (
           <p className="kora-completion-tip">
@@ -84,9 +81,15 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
             {count && <span className="kora-nav-badge">{count}</span>}
           </button>
         ))}
+
+        {/* Reset Password */}
+        <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={onResetPassword}>
+          <KeyRound size={16} />
+          <span>Reset Password</span>
+        </button>
       </nav>
 
-      {/* Logout */}
+      {/* Sign Out */}
       <button className="kora-sidebar-logout">
         <LogOut size={15} />
         Sign Out
