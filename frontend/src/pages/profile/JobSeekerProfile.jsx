@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import ProfileSidebar from "../../components/profile/ProfileSidebar";
 import ExperienceSection from "../../components/profile/ExperienceSection";
@@ -7,9 +7,9 @@ import SkillsSection from "../../components/profile/SkillsSection";
 import LanguagesSection from "../../components/profile/LanguagesSection";
 import CVUploadSection from "../../components/profile/CVUploadSection";
 import EditProfileModal from "../../components/profile/EditProfileModal";
+import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 
-// Mock data representing the authenticated job seeker (FR08)
 const mockJobSeeker = {
   id: 1,
   fullName: "Lena Dorcas Valmira BILOA EKASSI",
@@ -76,6 +76,7 @@ const mockJobSeeker = {
 export default function JobSeekerProfile() {
   const [profile, setProfile] = useState(mockJobSeeker);
   const [editModal, setEditModal] = useState({ open: false, section: null });
+  const [resetModal, setResetModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   const completionScore = () => {
@@ -101,11 +102,8 @@ export default function JobSeekerProfile() {
 
   return (
     <div className="kora-profile-root">
-      {/* Ambient background */}
       <div className="kora-bg-mesh" />
-
       <div className="kora-profile-layout">
-        {/* LEFT SIDEBAR */}
         <aside className="kora-sidebar">
           <ProfileSidebar
             profile={profile}
@@ -115,10 +113,10 @@ export default function JobSeekerProfile() {
               const url = URL.createObjectURL(file);
               setProfile((p) => ({ ...p, profilePhoto: url }));
             }}
+            onResetPassword={() => setResetModal(true)}
           />
         </aside>
 
-        {/* MAIN CONTENT */}
         <main className="kora-main-content">
           <ProfileHeader
             profile={profile}
@@ -126,7 +124,6 @@ export default function JobSeekerProfile() {
             completion={completionScore()}
           />
 
-          {/* Tab Navigation */}
           <div className="kora-tabs">
             {["overview", "experience", "education", "skills"].map((tab) => (
               <button
@@ -144,18 +141,14 @@ export default function JobSeekerProfile() {
               <ExperienceSection
                 experiences={profile.experiences}
                 onEdit={openEdit}
-                onUpdate={(experiences) =>
-                  setProfile((p) => ({ ...p, experiences }))
-                }
+                onUpdate={(experiences) => setProfile((p) => ({ ...p, experiences }))}
               />
             )}
             {(activeTab === "overview" || activeTab === "education") && (
               <EducationSection
                 education={profile.education}
                 onEdit={openEdit}
-                onUpdate={(education) =>
-                  setProfile((p) => ({ ...p, education }))
-                }
+                onUpdate={(education) => setProfile((p) => ({ ...p, education }))}
               />
             )}
             {(activeTab === "overview" || activeTab === "skills") && (
@@ -166,9 +159,7 @@ export default function JobSeekerProfile() {
                 />
                 <LanguagesSection
                   languages={profile.languages}
-                  onUpdate={(languages) =>
-                    setProfile((p) => ({ ...p, languages }))
-                  }
+                  onUpdate={(languages) => setProfile((p) => ({ ...p, languages }))}
                 />
               </>
             )}
@@ -189,7 +180,6 @@ export default function JobSeekerProfile() {
         </main>
       </div>
 
-      {/* Edit Modal */}
       {editModal.open && (
         <EditProfileModal
           section={editModal.section}
@@ -197,6 +187,10 @@ export default function JobSeekerProfile() {
           onSave={handleSave}
           onClose={closeEdit}
         />
+      )}
+
+      {resetModal && (
+        <ResetPasswordModal onClose={() => setResetModal(false)} userEmail={profile.email} />
       )}
     </div>
   );
