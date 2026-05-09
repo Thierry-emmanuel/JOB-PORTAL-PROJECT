@@ -1,0 +1,344 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   apply-page.css
+   Styles for ApplyPage (src/pages/jobs/ApplyPage.jsx)
+────────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --ap-bg: #f4f5fb;
+  --ap-card-bg: #ffffff;
+  --ap-accent: #6366f1;
+  --ap-accent-hover: #4f46e5;
+  --ap-text: #1e1f3a;
+  --ap-muted: #6b7280;
+  --ap-border: #e8eaf0;
+  --ap-radius: 14px;
+  --ap-radius-sm: 8px;
+  --ap-error: #dc2626;
+  --ap-error-bg: #fee2e2;
+  --ap-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --ap-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.ap-page {
+  min-height: 100vh;
+  background: var(--ap-bg);
+  font-family: var(--ap-font);
+  color: var(--ap-text);
+  padding: 0 0 60px;
+}
+
+.ap-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.ap-container--narrow { max-width: 560px; }
+
+.ap-loading, .ap-error {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--ap-muted);
+}
+
+/* ── Back button ──────────────────────────────────────────────────────────── */
+.ap-back-btn {
+  background: none;
+  border: 1px solid var(--ap-border);
+  color: var(--ap-text);
+  padding: 7px 14px;
+  border-radius: var(--ap-radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 22px;
+  display: inline-block;
+}
+.ap-back-btn:hover { background: var(--ap-card-bg); }
+
+/* ── Job banner ───────────────────────────────────────────────────────────── */
+.ap-job-banner {
+  background: var(--ap-card-bg);
+  border: 1px solid var(--ap-border);
+  border-radius: var(--ap-radius);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  box-shadow: var(--ap-shadow);
+}
+
+.ap-job-logo {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0;
+  overflow: hidden;
+}
+.ap-job-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+.ap-job-title { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+.ap-job-company { font-size: 13.5px; color: var(--ap-muted); margin: 0; }
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.ap-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+.ap-form {
+  background: var(--ap-card-bg);
+  border: 1px solid var(--ap-border);
+  border-radius: var(--ap-radius);
+  padding: 28px;
+  box-shadow: var(--ap-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ap-form-heading {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--ap-text);
+}
+
+.ap-submit-error {
+  background: var(--ap-error-bg);
+  color: var(--ap-error);
+  padding: 12px 14px;
+  border-radius: var(--ap-radius-sm);
+  font-size: 13.5px;
+}
+
+/* Fieldset */
+.ap-fieldset {
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  padding: 18px 18px 14px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ap-legend {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ap-text);
+  padding: 0 6px;
+}
+
+.ap-required { color: var(--ap-error); }
+.ap-optional { font-size: 12px; font-weight: 400; color: var(--ap-muted); }
+
+/* Field */
+.ap-field { display: flex; flex-direction: column; gap: 6px; }
+
+.ap-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ap-text);
+}
+
+.ap-input, .ap-select, .ap-textarea {
+  padding: 10px 13px;
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ap-text);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ap-input:focus, .ap-select:focus, .ap-textarea:focus { border-color: var(--ap-accent); }
+.ap-input--error { border-color: var(--ap-error); }
+.ap-input--error:focus { border-color: var(--ap-error); box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+
+.ap-textarea { resize: vertical; min-height: 120px; }
+
+.ap-field-error {
+  font-size: 12px;
+  color: var(--ap-error);
+  margin: 0;
+}
+
+.ap-char-count { font-size: 11.5px; color: var(--ap-muted); margin: 0; text-align: right; }
+
+/* Row */
+.ap-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── CV Upload zone ────────────────────────────────────────────────────────── */
+.ap-upload-zone {
+  border: 2px dashed var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: #fafbff;
+  outline-offset: 3px;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ap-upload-zone:hover, .ap-upload-zone:focus-visible { border-color: var(--ap-accent); background: #eef2ff; }
+.ap-upload-zone:focus-visible { outline: 2px solid var(--ap-accent); }
+.ap-upload-zone--error { border-color: var(--ap-error); }
+.ap-upload-zone--filled { border-style: solid; border-color: var(--ap-accent); background: #eef2ff; cursor: default; }
+
+.ap-file-input { display: none; }
+
+.ap-upload-prompt { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ap-upload-icon { font-size: 28px; }
+.ap-upload-text { font-size: 14px; font-weight: 600; color: var(--ap-text); margin: 0; }
+.ap-upload-hint { font-size: 12px; color: var(--ap-muted); margin: 0; }
+
+.ap-file-preview {
+  display: flex; align-items: center; gap: 10px;
+  padding: 2px 0;
+}
+.ap-file-icon { font-size: 22px; }
+.ap-file-name { font-size: 14px; color: var(--ap-accent); font-weight: 600; word-break: break-all; flex: 1; text-align: left; }
+.ap-file-remove {
+  background: none; border: none;
+  font-size: 16px; cursor: pointer; color: var(--ap-muted);
+  padding: 4px; border-radius: 4px; line-height: 1;
+}
+.ap-file-remove:hover { color: var(--ap-error); background: var(--ap-error-bg); }
+
+/* ── Submit row ───────────────────────────────────────────────────────────── */
+.ap-submit-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ap-btn {
+  font-size: 14px; font-weight: 600;
+  padding: 11px 24px;
+  border-radius: var(--ap-radius-sm);
+  cursor: pointer; border: none;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.15s;
+}
+
+.ap-btn--primary { background: var(--ap-accent); color: #fff; }
+.ap-btn--primary:hover:not(:disabled) { background: var(--ap-accent-hover); }
+.ap-btn--primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ap-btn--outline { background: #fff; color: var(--ap-text); border: 1.5px solid var(--ap-border); }
+.ap-btn--outline:hover:not(:disabled) { border-color: var(--ap-accent); color: var(--ap-accent); }
+.ap-btn--outline:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ap-btn--submit { min-width: 180px; justify-content: center; }
+
+.ap-btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ap-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ap-spin { to { transform: rotate(360deg); } }
+
+/* ── Sidebar summary ──────────────────────────────────────────────────────── */
+.ap-sidebar { }
+
+.ap-summary-card {
+  background: var(--ap-card-bg);
+  border: 1px solid var(--ap-border);
+  border-radius: var(--ap-radius);
+  padding: 22px;
+  box-shadow: var(--ap-shadow);
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ap-summary-title { font-size: 15px; font-weight: 800; margin: 0; }
+
+.ap-summary-job {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13.5px;
+  padding: 14px;
+  background: var(--ap-bg);
+  border-radius: var(--ap-radius-sm);
+  border: 1px solid var(--ap-border);
+}
+.ap-summary-job strong { font-size: 14px; color: var(--ap-text); }
+.ap-summary-job span { color: var(--ap-muted); }
+
+.ap-summary-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ap-tag { background: #eef2ff; color: var(--ap-accent); font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 50px; }
+
+.ap-summary-note {
+  font-size: 12.5px;
+  color: var(--ap-muted);
+  padding: 10px;
+  background: #fffbeb;
+  border-radius: var(--ap-radius-sm);
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+/* ── Already applied / Success states ───────────────────────────────────────── */
+.ap-already-applied, .ap-success {
+  background: var(--ap-card-bg);
+  border-radius: var(--ap-radius);
+  padding: 48px 32px;
+  text-align: center;
+  box-shadow: var(--ap-shadow);
+  border: 1px solid var(--ap-border);
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ap-success-icon { font-size: 52px; display: block; }
+.ap-success-title, .ap-already-applied h1 { font-size: 22px; font-weight: 800; margin: 0; color: var(--ap-text); }
+.ap-success-msg, .ap-already-applied p { font-size: 14.5px; color: var(--ap-muted); margin: 0; line-height: 1.6; }
+
+.ap-success-actions, .ap-already-actions {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  margin-top: 8px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ap-layout { grid-template-columns: 1fr; }
+  .ap-summary-card { position: static; }
+  .ap-row { grid-template-columns: 1fr; }
+  .ap-container { padding: 16px; }
+}
+
+@media (max-width: 480px) {
+  .ap-submit-row { flex-direction: column; }
+  .ap-btn--submit { width: 100%; }
+}

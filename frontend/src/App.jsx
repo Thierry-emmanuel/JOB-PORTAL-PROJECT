@@ -6,6 +6,13 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import KoraHome from "./KoraHome";
 import "./App.css";
+import EmployeeDashboard from './pages/employee/EmployeeDashboard';
+import JobList    from './pages/jobs/JobList';
+import JobDetails from './pages/jobs/JobDetails';
+import ApplyPage  from './pages/jobs/ApplyPage';
+import './styles/employee-dashboard.css';
+import './styles/job-list.css';
+ import './styles/apply-page.css';
 
 // Demo nav to switch between profile types for development
 function DevNav() {
@@ -89,6 +96,12 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/dashboard"          element={<Navigate to="/employee/dashboard" replace />} />
+       <Route path="/jobs"               element={<JobList />} />
+             <Route path="/jobs/:id"           element={<JobDetails />} />
+             <Route path="/jobs/:id/apply"     element={<ApplyPage />} />
+
 
       </Routes>
       <DevNav />
