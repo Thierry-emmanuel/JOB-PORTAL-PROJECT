@@ -1,21 +1,24 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
-import JobSeekerProfile from "./pages/profile/JobSeekerProfile";
-import EmployerProfile from "./pages/profile/EmployerProfile";
-import AdminProfile from "./pages/profile/AdminProfile";
+import JobSeekerProfile  from "./pages/profile/JobSeekerProfile";
+import EmployerProfile   from "./pages/profile/EmployerProfile";
+import AdminProfile      from "./pages/profile/AdminProfile";
 import EmployerDashboard from "./pages/EmployerDashboard";
+import ManageJobs        from "./pages/employer/ManageJobs";
+import PostJob           from "./pages/employer/PostJob";
 import "./App.css";
 
-// Demo nav to switch between pages for development
+// ── Dev Nav ───────────────────────────────────────────────
 function DevNav() {
   const location = useLocation();
-
   const links = [
-    { to: "/profile/job-seeker",   label: "Job Seeker"  },
-    { to: "/profile/employer",     label: "Employer"    },
-    { to: "/profile/admin",        label: "Admin"       },
-    { to: "/dashboard/employer",   label: "Dashboard"   },
+    { to: "/profile/job-seeker",  label: "Job Seeker"  },
+    { to: "/profile/employer",    label: "Employer"    },
+    { to: "/profile/admin",       label: "Admin"       },
+    { to: "/dashboard/employer",  label: "Dashboard"   },
+    { to: "/employer/jobs",       label: "Manage Jobs" },
+    { to: "/employer/post-job",   label: "Post Job"    },
   ];
-
   return (
     <nav
       style={{
@@ -27,9 +30,12 @@ function DevNav() {
         borderRadius: "999px",
         padding: "10px 20px",
         display: "flex",
-        gap: "12px",
+        gap: "10px",
         zIndex: 9999,
         boxShadow: "0 8px 32px rgba(11,43,38,0.4)",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        maxWidth: "90vw",
       }}
     >
       {links.map(({ to, label }) => {
@@ -39,15 +45,16 @@ function DevNav() {
             key={to}
             to={to}
             style={{
-              color: isActive ? "white" : "rgba(255,255,255,0.7)",
+              color: isActive ? "white" : "rgba(255,255,255,0.65)",
               textDecoration: "none",
-              fontSize: "13px",
+              fontSize: "12.5px",
               fontWeight: 600,
               padding: "6px 14px",
               borderRadius: "999px",
               background: isActive ? "rgba(255,255,255,0.15)" : "transparent",
               transition: "all 0.18s",
               fontFamily: "DM Sans, sans-serif",
+              whiteSpace: "nowrap",
             }}
           >
             {label}
@@ -58,15 +65,32 @@ function DevNav() {
   );
 }
 
+// ── Employer Jobs Manager (handles routing between Manage & Post) ──
+function EmployerJobsManager() {
+  const [view, setView] = useState("manage"); // "manage" | "post"
+  if (view === "post") {
+    return (
+      <PostJob
+        onBack={() => setView("manage")}
+        onSuccess={() => setView("manage")}
+      />
+    );
+  }
+  return <ManageJobs onPostJob={() => setView("post")} />;
+}
+
+// ── App ───────────────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"                      element={<Navigate to="/profile/job-seeker" replace />} />
-        <Route path="/profile/job-seeker"    element={<JobSeekerProfile />} />
-        <Route path="/profile/employer"      element={<EmployerProfile />} />
-        <Route path="/profile/admin"         element={<AdminProfile />} />
-        <Route path="/dashboard/employer"    element={<EmployerDashboard />} />
+        <Route path="/"                     element={<Navigate to="/profile/job-seeker" replace />} />
+        <Route path="/profile/job-seeker"   element={<JobSeekerProfile />} />
+        <Route path="/profile/employer"     element={<EmployerProfile />} />
+        <Route path="/profile/admin"        element={<AdminProfile />} />
+        <Route path="/dashboard/employer"   element={<EmployerDashboard />} />
+        <Route path="/employer/jobs"        element={<EmployerJobsManager />} />
+        <Route path="/employer/post-job"    element={<EmployerJobsManager />} />
       </Routes>
       <DevNav />
     </BrowserRouter>

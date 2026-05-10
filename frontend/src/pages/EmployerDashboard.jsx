@@ -3,7 +3,7 @@ import {
   Briefcase, Users, Eye, Star, Bell, Settings,
   LogOut, BarChart2, Plus, ChevronRight, Clock,
   CheckCircle, Calendar, Building2, ArrowUp, ArrowDown,
-  FileText, AlertCircle, Search, TrendingUp, Edit2
+  FileText, AlertCircle, Search, TrendingUp, Edit2, Menu, X
 } from "lucide-react";
 import koraLogo from "../assets/kora-logo.png";
 import "../styles/profile.css";
@@ -18,7 +18,6 @@ const mockDashboardData = {
     logo: null,
     city: "Douala",
     sector: "Information Technology",
-    status: "ACTIVE",
   },
   stats: {
     activeJobs: 3,
@@ -31,16 +30,16 @@ const mockDashboardData = {
     hiredChange: +1,
   },
   recentApplications: [
-    { id: 1, applicant: "Lena Biloa Ekassi",    job: "Senior Java Developer",       status: "SHORTLISTED", date: "2025-05-10" },
-    { id: 2, applicant: "Thomas Nguisseu",       job: "React.js Frontend Engineer",  status: "APPLIED",     date: "2025-05-09" },
-    { id: 3, applicant: "Marie Kana Tsolefack", job: "DevOps Engineer",             status: "APPLIED",     date: "2025-05-08" },
-    { id: 4, applicant: "Thierry Tsafack",       job: "Senior Java Developer",       status: "REJECTED",    date: "2025-05-07" },
-    { id: 5, applicant: "Marc Tsobeng",          job: "React.js Frontend Engineer",  status: "HIRED",       date: "2025-05-06" },
+    { id: 1, applicant: "Lena Biloa Ekassi",    job: "Senior Java Developer",      status: "SHORTLISTED", date: "2025-05-10" },
+    { id: 2, applicant: "Thomas Nguisseu",       job: "React.js Frontend Engineer", status: "APPLIED",     date: "2025-05-09" },
+    { id: 3, applicant: "Marie Kana Tsolefack", job: "DevOps Engineer",            status: "APPLIED",     date: "2025-05-08" },
+    { id: 4, applicant: "Thierry Tsafack",       job: "Senior Java Developer",      status: "REJECTED",    date: "2025-05-07" },
+    { id: 5, applicant: "Marc Tsobeng",          job: "React.js Frontend Engineer", status: "HIRED",       date: "2025-05-06" },
   ],
   jobPostings: [
-    { id: 1, title: "Senior Java Developer",       type: "CDI", applications: 12, views: 145, deadline: "2025-06-15", status: "ACTIVE", daysLeft: 36 },
-    { id: 2, title: "React.js Frontend Engineer",  type: "CDD", applications: 8,  views: 112, deadline: "2025-05-30", status: "ACTIVE", daysLeft: 20 },
-    { id: 3, title: "DevOps Engineer",             type: "CDI", applications: 4,  views: 85,  deadline: "2025-07-01", status: "ACTIVE", daysLeft: 52 },
+    { id: 1, title: "Senior Java Developer",      type: "CDI", applications: 12, views: 145, status: "ACTIVE", daysLeft: 36 },
+    { id: 2, title: "React.js Frontend Engineer", type: "CDD", applications: 8,  views: 112, status: "ACTIVE", daysLeft: 20 },
+    { id: 3, title: "DevOps Engineer",            type: "CDI", applications: 4,  views: 85,  status: "ACTIVE", daysLeft: 52 },
   ],
   notifications: [
     { id: 1, text: "New application for Senior Java Developer",    time: "2 hours ago", read: false },
@@ -49,7 +48,7 @@ const mockDashboardData = {
   ],
 };
 
-// ── Status Badge Component ────────────────────────────────
+// ── Status Badge ──────────────────────────────────────────
 function StatusBadge({ status }) {
   const map = {
     APPLIED:     { label: "Applied",     cls: "status-applied"     },
@@ -61,7 +60,7 @@ function StatusBadge({ status }) {
   return <span className={`ed-status-badge ${s.cls}`}>{s.label}</span>;
 }
 
-// ── Stat Card Component ───────────────────────────────────
+// ── Stat Card ─────────────────────────────────────────────
 function StatCard({ icon, label, value, change, color }) {
   const isPositive = change >= 0;
   return (
@@ -81,10 +80,11 @@ function StatCard({ icon, label, value, change, color }) {
   );
 }
 
-// ── Main Dashboard Component ──────────────────────────────
+// ── Main Component ────────────────────────────────────────
 export default function EmployerDashboard() {
-  const [activeNav, setActiveNav]       = useState("dashboard");
-  const [searchQuery, setSearchQuery]   = useState("");
+  const [activeNav, setActiveNav]     = useState("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { employer, stats, recentApplications, jobPostings, notifications } = mockDashboardData;
 
@@ -97,29 +97,48 @@ export default function EmployerDashboard() {
   );
 
   const navItems = [
-    { key: "dashboard", icon: <BarChart2 size={16} />, label: "Dashboard"                               },
-    { key: "jobs",      icon: <Briefcase size={16} />, label: "Job Postings",  count: stats.activeJobs  },
+    { key: "dashboard", icon: <BarChart2 size={16} />, label: "Dashboard"                                    },
+    { key: "jobs",      icon: <Briefcase size={16} />, label: "Job Postings",  count: stats.activeJobs       },
     { key: "apps",      icon: <Users size={16} />,     label: "Applications",  count: stats.totalApplications },
-    { key: "notifs",    icon: <Bell size={16} />,      label: "Notifications", count: unreadCount       },
-    { key: "settings",  icon: <Settings size={16} />,  label: "Settings"                                },
+    { key: "notifs",    icon: <Bell size={16} />,      label: "Notifications", count: unreadCount            },
+    { key: "settings",  icon: <Settings size={16} />,  label: "Settings"                                     },
   ];
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className="kora-profile-root employer">
       <div className="kora-bg-mesh" />
 
+      {/* Mobile Sidebar Overlay */}
+      <div
+        className={`ed-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
       <div className="kora-profile-layout">
 
-        {/* ════════════ SIDEBAR ════════════ */}
-        <aside className="kora-sidebar">
+        {/* ════════ SIDEBAR ════════ */}
+        <aside className={`kora-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="kora-sidebar-inner">
 
-            {/* Logo */}
-            <div className="kora-sidebar-logo">
+            {/* Logo + close btn on mobile */}
+            <div className="kora-sidebar-logo" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <img src={koraLogo} alt="KORA" />
+              <button
+                onClick={closeSidebar}
+                style={{
+                  display: "none",
+                  background: "none", border: "none",
+                  color: "rgba(255,255,255,0.6)", cursor: "pointer",
+                }}
+                className="ed-close-sidebar-btn"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Company Avatar */}
+            {/* Avatar */}
             <div className="kora-sidebar-avatar-section">
               <div className="kora-sidebar-avatar">
                 {employer.logo
@@ -146,14 +165,14 @@ export default function EmployerDashboard() {
               </div>
             </div>
 
-            {/* Navigation */}
+            {/* Nav */}
             <nav className="kora-sidebar-nav">
               <p className="kora-sidebar-nav-label">Main Menu</p>
               {navItems.map(({ key, icon, label, count }) => (
                 <button
                   key={key}
                   className={`kora-sidebar-nav-item ${activeNav === key ? "active" : ""}`}
-                  onClick={() => setActiveNav(key)}
+                  onClick={() => { setActiveNav(key); closeSidebar(); }}
                 >
                   {icon}
                   <span>{label}</span>
@@ -170,20 +189,29 @@ export default function EmployerDashboard() {
           </div>
         </aside>
 
-        {/* ════════════ MAIN CONTENT ════════════ */}
+        {/* ════════ MAIN CONTENT ════════ */}
         <main className="kora-main-content">
 
-          {/* ── Top Bar ── */}
+          {/* Top Bar */}
           <div className="ed-topbar">
-            <div>
-              <h1 className="ed-topbar-title">Dashboard</h1>
-              <p className="ed-topbar-sub">
-                <Calendar size={13} />
-                {new Date().toLocaleDateString("en-GB", {
-                  weekday: "long", year: "numeric",
-                  month: "long",   day: "numeric",
-                })}
-              </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* Hamburger — visible on tablet/mobile only */}
+              <button
+                className="ed-hamburger"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu size={18} />
+              </button>
+              <div>
+                <h1 className="ed-topbar-title">Dashboard</h1>
+                <p className="ed-topbar-sub">
+                  <Calendar size={13} />
+                  {new Date().toLocaleDateString("en-GB", {
+                    weekday: "long", year: "numeric",
+                    month: "long",   day: "numeric",
+                  })}
+                </p>
+              </div>
             </div>
             <div className="ed-topbar-actions">
               <button className="ed-notif-btn">
@@ -193,59 +221,33 @@ export default function EmployerDashboard() {
                 )}
               </button>
               <button className="kora-btn-primary ed-post-btn">
-                <Plus size={15} /> Post New Job
+                <Plus size={15} />
+                <span className="ed-post-btn-text">Post New Job</span>
               </button>
             </div>
           </div>
 
-          {/* ── Stat Cards ── */}
+          {/* Stat Cards */}
           <div className="ed-stats-grid">
-            <StatCard
-              icon={<Briefcase size={20} />}
-              label="Active Job Postings"
-              value={stats.activeJobs}
-              change={stats.activeJobsChange}
-              color="#0B2B26"
-            />
-            <StatCard
-              icon={<Users size={20} />}
-              label="Total Applications"
-              value={stats.totalApplications}
-              change={stats.totalApplicationsChange}
-              color="#E07B39"
-            />
-            <StatCard
-              icon={<Eye size={20} />}
-              label="Profile Views"
-              value={stats.totalViews}
-              change={stats.totalViewsChange}
-              color="#3b82f6"
-            />
-            <StatCard
-              icon={<Star size={20} />}
-              label="Candidates Hired"
-              value={stats.hired}
-              change={stats.hiredChange}
-              color="#10b981"
-            />
+            <StatCard icon={<Briefcase size={20} />} label="Active Jobs"        value={stats.activeJobs}           change={stats.activeJobsChange}           color="#0B2B26" />
+            <StatCard icon={<Users size={20} />}     label="Applications"       value={stats.totalApplications}    change={stats.totalApplicationsChange}    color="#E07B39" />
+            <StatCard icon={<Eye size={20} />}       label="Profile Views"      value={stats.totalViews}           change={stats.totalViewsChange}           color="#3b82f6" />
+            <StatCard icon={<Star size={20} />}      label="Candidates Hired"   value={stats.hired}                change={stats.hiredChange}                color="#10b981" />
           </div>
 
-          {/* ── Two Column Row ── */}
+          {/* Two Column Row */}
           <div className="ed-two-col">
 
-            {/* LEFT — Recent Applications */}
+            {/* LEFT — Applications */}
             <div className="kora-section ed-section-tall">
               <div className="kora-section-header">
                 <div className="kora-section-title">
-                  <Users size={18} />
-                  <h2>Recent Applications</h2>
+                  <Users size={18} /> <h2>Recent Applications</h2>
                 </div>
                 <button className="ed-view-all-btn">
                   View All <ChevronRight size={14} />
                 </button>
               </div>
-
-              {/* Search */}
               <div className="ed-search-bar">
                 <Search size={14} />
                 <input
@@ -255,8 +257,6 @@ export default function EmployerDashboard() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-              {/* List */}
               <div className="ed-applications-list">
                 {filteredApplications.map((app) => {
                   const av = app.applicant.split(" ").map((w) => w[0]).slice(0, 2).join("");
@@ -265,23 +265,18 @@ export default function EmployerDashboard() {
                       <div className="ed-app-avatar">{av}</div>
                       <div className="ed-app-info">
                         <p className="ed-app-name">{app.applicant}</p>
-                        <p className="ed-app-job">
-                          <Briefcase size={11} /> {app.job}
-                        </p>
+                        <p className="ed-app-job"><Briefcase size={11} /> {app.job}</p>
                       </div>
                       <div className="ed-app-right">
                         <StatusBadge status={app.status} />
-                        <p className="ed-app-date">
-                          <Clock size={11} /> {app.date}
-                        </p>
+                        <p className="ed-app-date"><Clock size={11} /> {app.date}</p>
                       </div>
                     </div>
                   );
                 })}
                 {filteredApplications.length === 0 && (
                   <div className="kora-empty-state">
-                    <Users size={28} />
-                    <p>No applications found.</p>
+                    <Users size={28} /><p>No applications found.</p>
                   </div>
                 )}
               </div>
@@ -294,12 +289,9 @@ export default function EmployerDashboard() {
               <div className="kora-section">
                 <div className="kora-section-header">
                   <div className="kora-section-title">
-                    <Briefcase size={18} />
-                    <h2>Active Jobs</h2>
+                    <Briefcase size={18} /> <h2>Active Jobs</h2>
                   </div>
-                  <button className="ed-view-all-btn">
-                    View All <ChevronRight size={14} />
-                  </button>
+                  <button className="ed-view-all-btn">View All <ChevronRight size={14} /></button>
                 </div>
                 <div className="ed-jobs-list">
                   {jobPostings.map((job) => (
@@ -321,8 +313,7 @@ export default function EmployerDashboard() {
                         <span><Eye size={12} /> {job.views} views</span>
                       </div>
                       <div className="ed-job-progress">
-                        <div
-                          className="ed-job-progress-fill"
+                        <div className="ed-job-progress-fill"
                           style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }}
                         />
                       </div>
@@ -335,8 +326,7 @@ export default function EmployerDashboard() {
               <div className="kora-section">
                 <div className="kora-section-header">
                   <div className="kora-section-title">
-                    <Bell size={18} />
-                    <h2>Notifications</h2>
+                    <Bell size={18} /> <h2>Notifications</h2>
                     {unreadCount > 0 && (
                       <span className="ed-section-badge">{unreadCount} new</span>
                     )}
@@ -358,22 +348,21 @@ export default function EmployerDashboard() {
             </div>
           </div>
 
-          {/* ── Quick Actions ── */}
+          {/* Quick Actions */}
           <div className="kora-section">
             <div className="kora-section-header">
               <div className="kora-section-title">
-                <TrendingUp size={18} />
-                <h2>Quick Actions</h2>
+                <TrendingUp size={18} /> <h2>Quick Actions</h2>
               </div>
             </div>
             <div className="ed-quick-actions">
               {[
-                { icon: <Plus size={20} />,       label: "Post a New Job",       color: "#0B2B26", bg: "#0B2B2618" },
-                { icon: <Users size={20} />,      label: "Review Applications",  color: "#E07B39", bg: "#E07B3918" },
-                { icon: <FileText size={20} />,   label: "View Job Reports",     color: "#3b82f6", bg: "#3b82f618" },
-                { icon: <Building2 size={20} />,  label: "Edit Company Profile", color: "#10b981", bg: "#10b98118" },
-                { icon: <AlertCircle size={20} />,label: "Pending Approvals",    color: "#f59e0b", bg: "#f59e0b18" },
-                { icon: <Edit2 size={20} />,      label: "Account Settings",     color: "#8b5cf6", bg: "#8b5cf618" },
+                { icon: <Plus size={20} />,        label: "Post a New Job",       color: "#0B2B26", bg: "#0B2B2618" },
+                { icon: <Users size={20} />,       label: "Review Applications",  color: "#E07B39", bg: "#E07B3918" },
+                { icon: <FileText size={20} />,    label: "View Job Reports",     color: "#3b82f6", bg: "#3b82f618" },
+                { icon: <Building2 size={20} />,   label: "Edit Company Profile", color: "#10b981", bg: "#10b98118" },
+                { icon: <AlertCircle size={20} />, label: "Pending Approvals",    color: "#f59e0b", bg: "#f59e0b18" },
+                { icon: <Edit2 size={20} />,       label: "Account Settings",     color: "#8b5cf6", bg: "#8b5cf618" },
               ].map(({ icon, label, color, bg }) => (
                 <button
                   key={label}

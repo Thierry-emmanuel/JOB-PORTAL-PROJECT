@@ -1,4 +1,3 @@
-
 .ed-topbar {
   display: flex;
   align-items: flex-start;
@@ -68,14 +67,43 @@
   white-space: nowrap;
 }
 
+/* ── Hamburger (hidden on desktop) ── */
+.ed-hamburger {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid var(--kora-border);
+  background: var(--kora-surface);
+  color: var(--kora-text-mid);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+.ed-hamburger:hover {
+  border-color: var(--kora-primary);
+  color: var(--kora-primary);
+}
+
+/* ── Sidebar Overlay (mobile) ── */
+.ed-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+.ed-sidebar-overlay.open { display: block; }
+
+/* ── Stats Grid ── */
 .ed-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: 20px;
-}
-@media (max-width: 1100px) {
-  .ed-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 .ed-stat-card {
   background: var(--kora-surface);
@@ -129,19 +157,17 @@
 .ed-stat-change.positive { color: #15803d; }
 .ed-stat-change.negative { color: #dc2626; }
 
-
+/* ── Two Column Layout ── */
 .ed-two-col {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
 }
-@media (max-width: 1000px) {
-  .ed-two-col { grid-template-columns: 1fr; }
-}
 .ed-section-tall { min-height: 400px; }
 .ed-right-col { display: flex; flex-direction: column; gap: 16px; }
 
+/* ── Search Bar ── */
 .ed-search-bar {
   display: flex;
   align-items: center;
@@ -166,6 +192,7 @@
 }
 .ed-search-bar input::placeholder { color: var(--kora-text-muted); }
 
+/* ── Applications List ── */
 .ed-applications-list { display: flex; flex-direction: column; gap: 8px; }
 .ed-app-row {
   display: flex;
@@ -364,9 +391,6 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
 }
-@media (max-width: 1100px) {
-  .ed-quick-actions { grid-template-columns: repeat(3, 1fr); }
-}
 .ed-quick-action-btn {
   display: flex;
   flex-direction: column;
@@ -409,3 +433,97 @@
   line-height: 1.3;
 }
 .ed-quick-action-btn:hover .ed-qa-label { color: var(--qa-color); }
+
+@media (max-width: 1024px) {
+
+  /* Sidebar becomes off-canvas drawer */
+  .kora-sidebar {
+    position: fixed !important;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    transition: left 0.3s ease;
+    width: 240px !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+  }
+  .kora-sidebar.open { left: 0 !important; }
+
+  /* Show hamburger */
+  .ed-hamburger { display: flex; }
+
+  /* Main takes full width */
+  .kora-main-content { padding: 20px 16px; }
+
+  /* Stats → 2 columns */
+  .ed-stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Two col → single column */
+  .ed-two-col { grid-template-columns: 1fr; }
+  .ed-section-tall { min-height: auto; }
+
+  /* Quick actions → 3 columns */
+  .ed-quick-actions { grid-template-columns: repeat(3, 1fr); }
+
+  /* Top bar */
+  .ed-topbar-title { font-size: 20px; }
+}
+
+@media (max-width: 640px) {
+
+  .kora-main-content { padding: 14px 10px; }
+
+  /* Top bar */
+  .ed-topbar { margin-bottom: 14px; }
+  .ed-topbar-title { font-size: 18px; }
+  .ed-topbar-sub   { font-size: 11px; }
+
+  /* Hide button text on mobile, show icon only */
+  .ed-post-btn-text { display: none; }
+  .ed-post-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    justify-content: center;
+  }
+
+  /* Stats → 2 columns compact */
+  .ed-stats-grid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .ed-stat-card   { padding: 12px; gap: 10px; }
+  .ed-stat-icon   { width: 36px; height: 36px; border-radius: 10px; }
+  .ed-stat-value  { font-size: 22px; }
+  .ed-stat-change { font-size: 10px; }
+
+  /* Application rows compact */
+  .ed-app-row    { padding: 10px 12px; gap: 10px; }
+  .ed-app-avatar { width: 32px; height: 32px; font-size: 10px; }
+  .ed-app-name   { font-size: 12px; }
+  .ed-app-job    { font-size: 10px; }
+  .ed-status-badge { font-size: 9.5px; padding: 2px 7px; }
+
+  /* Job cards compact */
+  .ed-job-card       { padding: 12px; }
+  .ed-job-card-title { font-size: 12px; }
+
+  /* Quick actions → 2 columns */
+  .ed-quick-actions    { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .ed-quick-action-btn { padding: 14px 8px; gap: 8px; }
+  .ed-qa-icon          { width: 36px; height: 36px; }
+  .ed-qa-label         { font-size: 11px; }
+
+  /* Sections */
+  .kora-section         { padding: 14px; }
+  .kora-section-header  { margin-bottom: 12px; }
+  .kora-section-header h2 { font-size: 14px; }
+
+  /* Search */
+  .ed-search-bar       { padding: 7px 10px; }
+  .ed-search-bar input { font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .ed-stats-grid    { grid-template-columns: 1fr; }
+  .ed-quick-actions { grid-template-columns: repeat(2, 1fr); }
+  .ed-stat-value    { font-size: 20px; }
+}
