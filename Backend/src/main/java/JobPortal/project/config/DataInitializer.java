@@ -1,9 +1,9 @@
 package JobPortal.project.config;
 
-import JobPortal.project.auth.Model.Permission;
-import JobPortal.project.auth.Model.RoleEntity;
-import JobPortal.project.auth.repository.RoleRepository;
-import JobPortal.project.auth.repository.PermissionRepository;
+import JobPortal.project.modules.auth.Model.Permission;
+import JobPortal.project.modules.auth.Model.RoleEntity;
+import JobPortal.project.modules.auth.repository.RoleRepository;
+import JobPortal.project.modules.auth.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -45,3 +45,6 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 }
+
+
+
