@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import {
   Building2, Globe, MapPin, Mail, Phone, Edit2, Plus,
-  Trash2, Upload, Camera, Briefcase, Users, CheckCircle,
-  ExternalLink, LogOut, Bell, Settings, BarChart2
+  Trash2, Camera, Briefcase, Users, CheckCircle,
+  ExternalLink, LogOut, Bell, Settings, BarChart2, KeyRound, X
 } from "lucide-react";
 import koraLogo from "../../assets/kora-logo.png";
+import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
 
@@ -38,6 +39,7 @@ export default function EmployerProfile() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ ...mockEmployer });
   const [activeTab, setActiveTab] = useState("overview");
+  const [resetModal, setResetModal] = useState(false);
   const logoRef = useRef();
 
   const handleSave = () => {
@@ -53,9 +55,8 @@ export default function EmployerProfile() {
   };
 
   const removeJob = (id) => {
-    if (window.confirm("Remove this job posting?")) {
+    if (window.confirm("Remove this job posting?"))
       setProfile((p) => ({ ...p, activeJobs: p.activeJobs.filter((j) => j.id !== id) }));
-    }
   };
 
   const initials = profile.companyName.split(" ").map((w) => w[0]).slice(0, 2).join("");
@@ -65,14 +66,14 @@ export default function EmployerProfile() {
       <div className="kora-bg-mesh" />
       <div className="kora-profile-layout">
 
-        {/* SIDEBAR */}
+        {/* ── SIDEBAR ── */}
         <aside className="kora-sidebar">
           <div className="kora-sidebar-inner">
             <div className="kora-sidebar-logo">
               <img src={koraLogo} alt="KORA" />
             </div>
 
-            {/* Company Logo */}
+            {/* Company Logo / Avatar */}
             <div className="kora-sidebar-avatar-section">
               <div className="kora-sidebar-avatar" onClick={() => logoRef.current?.click()}>
                 {profile.logo ? (
@@ -85,9 +86,7 @@ export default function EmployerProfile() {
               </div>
               <p className="kora-sidebar-name">{profile.companyName}</p>
               <p className="kora-sidebar-role">Employer Account</p>
-              <span className="kora-verified-badge">
-                <CheckCircle size={12} /> Verified
-              </span>
+              <span className="kora-verified-badge"><CheckCircle size={12} /> Verified</span>
             </div>
 
             {/* Stats */}
@@ -117,16 +116,19 @@ export default function EmployerProfile() {
                   {count !== undefined && <span className="kora-nav-badge">{count}</span>}
                 </button>
               ))}
+
+              {/* Reset Password */}
+              <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={() => setResetModal(true)}>
+                <KeyRound size={16} /><span>Reset Password</span>
+              </button>
             </nav>
 
             <button className="kora-sidebar-logout"><LogOut size={15} />Sign Out</button>
           </div>
         </aside>
 
-        {/* MAIN */}
+        {/* ── MAIN ── */}
         <main className="kora-main-content">
-
-          {/* Header Card */}
           <div className="kora-profile-header">
             <div className="kora-header-banner employer-banner">
               <div className="kora-banner-pattern" />
@@ -168,7 +170,6 @@ export default function EmployerProfile() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="kora-tabs">
             {["overview", "job postings"].map((tab) => (
               <button key={tab} className={`kora-tab ${activeTab === tab ? "active" : ""}`} onClick={() => setActiveTab(tab)}>
@@ -177,14 +178,10 @@ export default function EmployerProfile() {
             ))}
           </div>
 
-          {/* Job Postings */}
           {(activeTab === "overview" || activeTab === "job postings") && (
             <section className="kora-section">
               <div className="kora-section-header">
-                <div className="kora-section-title">
-                  <Briefcase size={18} />
-                  <h2>Job Postings</h2>
-                </div>
+                <div className="kora-section-title"><Briefcase size={18} /><h2>Job Postings</h2></div>
                 <button className="kora-add-btn"><Plus size={15} />Post New Job</button>
               </div>
               <div className="kora-jobs-list">
@@ -198,9 +195,7 @@ export default function EmployerProfile() {
                       </div>
                     </div>
                     <div className="kora-job-row-stats">
-                      <div className="kora-job-apps-count">
-                        <Users size={14} />{job.applications} applicants
-                      </div>
+                      <div className="kora-job-apps-count"><Users size={14} />{job.applications} applicants</div>
                       <span className={`kora-status-badge kora-status-${job.status.toLowerCase()}`}>{job.status}</span>
                     </div>
                     <div className="kora-item-actions" style={{ opacity: 1 }}>
@@ -210,10 +205,7 @@ export default function EmployerProfile() {
                   </div>
                 ))}
                 {profile.activeJobs.length === 0 && (
-                  <div className="kora-empty-state">
-                    <Briefcase size={32} />
-                    <p>No job postings yet. Post your first job!</p>
-                  </div>
+                  <div className="kora-empty-state"><Briefcase size={32} /><p>No job postings yet.</p></div>
                 )}
               </div>
             </section>
@@ -221,47 +213,22 @@ export default function EmployerProfile() {
         </main>
       </div>
 
-      {/* Edit Modal */}
       {editing && (
         <div className="kora-modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditing(false)}>
           <div className="kora-modal">
             <div className="kora-modal-header">
               <h2>Edit Company Profile</h2>
-              <button className="kora-modal-close" onClick={() => setEditing(false)}>✕</button>
+              <button className="kora-modal-close" onClick={() => setEditing(false)}><X size={20} /></button>
             </div>
             <div className="kora-modal-body">
               <div className="kora-form-grid">
-                <div className="kora-field">
-                  <label>Company Name *</label>
-                  <input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
-                </div>
-                <div className="kora-field">
-                  <label>Contact Person</label>
-                  <input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
-                </div>
-                <div className="kora-field">
-                  <label>Sector of Activity</label>
-                  <select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })}>
-                    {SECTORS.map((s) => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="kora-field">
-                  <label>Headquarters City</label>
-                  <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="e.g. Douala" />
-                </div>
-                <div className="kora-field">
-                  <label>Phone</label>
-                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </div>
-                <div className="kora-field">
-                  <label>Website URL</label>
-                  <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://yourcompany.cm" />
-                </div>
-                <div className="kora-field kora-field-full">
-                  <label>Company Description</label>
-                  <textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                  <span className="kora-char-count">{(form.description || "").length}/800</span>
-                </div>
+                <div className="kora-field"><label>Company Name *</label><input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></div>
+                <div className="kora-field"><label>Contact Person</label><input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
+                <div className="kora-field"><label>Sector</label><select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })}>{SECTORS.map((s) => <option key={s}>{s}</option>)}</select></div>
+                <div className="kora-field"><label>City</label><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+                <div className="kora-field"><label>Phone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                <div className="kora-field"><label>Website URL</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+                <div className="kora-field kora-field-full"><label>Description</label><textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               </div>
               <div className="kora-modal-footer">
                 <button className="kora-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
@@ -270,6 +237,10 @@ export default function EmployerProfile() {
             </div>
           </div>
         </div>
+      )}
+
+      {resetModal && (
+        <ResetPasswordModal onClose={() => setResetModal(false)} userEmail={profile.email} />
       )}
     </div>
   );

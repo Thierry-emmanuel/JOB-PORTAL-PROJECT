@@ -1,10 +1,10 @@
 /* ============================================================
    KORA JOB PORTAL — Profile Page Styles
    Brand: #0B2B26 (deep forest green) | #E07B39 (orange accent)
-   Font: Playfair Display (display) + DM Sans (body)
+   Font: Poppins (display) + DM Sans (body)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Poppins:wght@400;500;600;700&display=swap');
 
 /* ── CSS Variables ── */
 :root {
@@ -99,6 +99,7 @@
   width: auto;
   opacity: 0.95;
 }
+
 /* Sidebar Avatar */
 .kora-sidebar-avatar-section {
   display: flex;
@@ -125,9 +126,7 @@
   transition: border-color 0.2s;
 }
 .kora-sidebar-avatar:hover { border-color: var(--kora-accent); }
-.kora-sidebar-avatar img {
-  width: 100%; height: 100%; object-fit: cover;
-}
+.kora-sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .kora-sidebar-initials {
   font-family: 'Playfair Display', serif;
   font-size: 28px;
@@ -246,6 +245,18 @@
   color: white;
   font-weight: 600;
 }
+
+.kora-reset-pwd-btn { 
+  color: rgba(224,123,57,0.85); 
+  border-top: 1px solid rgba(255,255,255,0.08); 
+  margin-top: 6px; 
+  padding-top: 13px; 
+}
+.kora-reset-pwd-btn:hover { 
+  background: rgba(224,123,57,0.12); 
+  color: var(--kora-accent); 
+}
+
 .kora-nav-badge {
   margin-left: auto;
   background: var(--kora-accent);
@@ -1178,6 +1189,57 @@
 }
 
 /* ============================================================
+   CHART CARDS (Admin Reports)
+   ============================================================ */
+.kora-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.kora-chart-card {
+  background: var(--kora-surface);
+  border-radius: var(--kora-radius);
+  padding: 22px 24px;
+  border: 1px solid var(--kora-border);
+  box-shadow: var(--kora-shadow-sm);
+  animation: kora-fade-up 0.4s ease both;
+}
+.kora-chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: var(--kora-primary);
+}
+.kora-chart-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--kora-text-dark);
+}
+.kora-chart-area {
+  height: 220px;
+  position: relative;
+}
+.kora-hire-rate-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--kora-primary-pale);
+  border-radius: var(--kora-radius-sm);
+  font-size: 12.5px;
+  color: var(--kora-text-mid);
+}
+.kora-hire-rate-callout strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--kora-primary);
+  font-family: 'Playfair Display', serif;
+}
+
+/* ============================================================
    EMPTY STATE
    ============================================================ */
 .kora-empty-state {
@@ -1224,6 +1286,9 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+@media (max-width: 1100px) {
+  .kora-charts-row { grid-template-columns: 1fr; }
+}
 @media (max-width: 1024px) {
   .kora-profile-layout {
     grid-template-columns: 240px 1fr;

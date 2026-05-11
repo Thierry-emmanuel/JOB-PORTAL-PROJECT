@@ -1,8 +1,8 @@
 import { useRef } from "react";
-import { Camera, FileText, Bookmark, Bell, Settings, LogOut, TrendingUp } from "lucide-react";
+import { Camera, FileText, Bookmark, Bell, Settings, LogOut, TrendingUp, KeyRound } from "lucide-react";
 import koraLogo from "../../assets/kora-logo.png";
 
-export default function ProfileSidebar({ profile, completion, onEdit, onPhotoChange }) {
+export default function ProfileSidebar({ profile, completion, onEdit, onPhotoChange, onResetPassword }) {
   const fileRef = useRef();
 
   const initials = profile.fullName
@@ -84,6 +84,12 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
             {count && <span className="kora-nav-badge">{count}</span>}
           </button>
         ))}
+
+        {/* Reset Password */}
+        <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={onResetPassword}>
+          <KeyRound size={16} />
+          <span>Reset Password</span>
+        </button>
       </nav>
 
       {/* Logout */}
