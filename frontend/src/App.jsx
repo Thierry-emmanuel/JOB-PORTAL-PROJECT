@@ -12,9 +12,10 @@ import EmployerProfile from "./pages/profile/EmployerProfile";
 import AdminProfile from "./pages/profile/AdminProfile";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import OAuth2RedirectHandler from "./pages/auth/OAuth2RedirectHandler";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import ManageJobs from "./pages/employer/ManageJobs";
-import PostJob from "./pages/employer/PostJob";
+import PostJob from "./pages/employer/PostJobs";
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
 import JobList from './pages/jobs/JobList';
 import JobDetails from './pages/jobs/JobDetails';
@@ -112,6 +113,7 @@ export default function App() {
         <Route path="/profile/admin" element={<AdminProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
         <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
         <Route path="/jobs" element={<JobList />} />
