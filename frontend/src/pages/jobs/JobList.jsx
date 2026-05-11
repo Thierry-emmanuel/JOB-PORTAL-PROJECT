@@ -1,92 +1,75 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getJobs } from '../../api/jobs';
+import KoraNav from '../../components/KoraNav';          // ← added
 import JobCard from '../../components/jobs/JobCard';
 import JobFilters from '../../components/jobs/JobFilters';
 import Pagination from '../../components/jobs/Pagination';
 import CompanyModal from '../../components/jobs/CompanyModal';
 import '../../styles/job-list.css';
 
-const DEFAULT_FILTERS = { search: '', location: '', type: '', page: 1, limit: 6 };
+const PAGE_SIZE = 6;
 
-/**
- * JobList
- * Searchable, filterable, paginated list of job postings.
- */
 export default function JobList() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [jobs, setJobs] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedJob, setSelectedJob] = useState(null); // for CompanyModal
+  const [jobs,        setJobs]        = useState([]);
+  const [total,       setTotal]       = useState(0);
+  const [totalPages,  setTotalPages]  = useState(1);
+  const [page,        setPage]        = useState(1);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
+
   const [filters, setFilters] = useState({
-    search: searchParams.get('search') || '',
-    location: searchParams.get('location') || '',
-    type: searchParams.get('type') || '',
-    page: parseInt(searchParams.get('page') || '1', 10),
-    limit: 6,
+    search:   '',
+    location: '',
+    type:     '',
   });
 
-  // ── Fetch jobs ─────────────────────────────────────────────────────────────
-  const fetchJobs = useCallback(async (params) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getJobs(params);
-      setJobs(res.data || []);
-      setTotal(res.total || 0);
-      setTotalPages(res.totalPages || 1);
-    } catch (e) {
-      setError('Failed to load jobs. Please try again.');
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+
+  /* ── Fetch ──────────────────────────────────────────────── */
+  const fetchJobs = useCallback(
+    async (pageNum, activeFilters) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getJobs({
+          page:  pageNum,
+          limit: PAGE_SIZE,
+          ...activeFilters,
+        });
+        setJobs(res.data || []);
+        setTotal(res.total ?? 0);
+        setTotalPages(res.totalPages ?? 1);
+      } catch {
+        setError('Failed to load jobs. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    fetchJobs(filters);
-    // Sync URL params
-    const params = {};
-    if (filters.search) params.search = filters.search;
-    if (filters.location) params.location = filters.location;
-    if (filters.type) params.type = filters.type;
-    if (filters.page > 1) params.page = filters.page;
-    setSearchParams(params, { replace: true });
-  }, [filters, fetchJobs, setSearchParams]);
+    fetchJobs(page, filters);
+  }, [fetchJobs, page, filters]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleFiltersChange = (newFilters) => setFilters(newFilters);
-
-  const handleReset = () => {
-    setFilters(DEFAULT_FILTERS);
+  /* ── Handlers ───────────────────────────────────────────── */
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(1);
   };
 
-  const handlePageChange = (p) => setFilters((f) => ({ ...f, page: p }));
+  const handleRetry = () => fetchJobs(page, filters);
 
-  const handleSaveToggle = (jobId, newSavedState) => {
-    setJobs((prev) =>
-      prev.map((j) => j.id === jobId ? { ...j, saved: newSavedState } : j)
-    );
-  };
-
-  const handleApply = (job) => {
-    navigate(`/jobs/${job.id}/apply`);
-  };
-
-  const handleViewDetails = (job) => {
-    setSelectedJob(job);
-  };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  /* ── Render ─────────────────────────────────────────────── */
   return (
     <div className="jl-page">
-      {/* Header */}
+      {/* ── Top nav (mirrors KoraHome navbar exactly) ── */}
+      <KoraNav />
+
+      {/* ── Green gradient header ───────────────────── */}
       <header className="jl-header">
         <div className="jl-header-inner">
           <button
@@ -96,89 +79,96 @@ export default function JobList() {
           >
             ← Back
           </button>
-          <div>
-            <h1 className="jl-title">Find Your Next Role</h1>
-            <p className="jl-subtitle">
-              {total > 0 ? `${total} jobs available` : 'Explore opportunities'}
-            </p>
-          </div>
+          <h1 className="jl-title">Find Your Next Role</h1>
+          <p className="jl-subtitle">
+            {loading
+              ? 'Loading opportunities…'
+              : `${total.toLocaleString()} job${total !== 1 ? 's' : ''} available right now`}
+          </p>
         </div>
       </header>
 
-      <div className="jl-container">
+      {/* ── Main content ────────────────────────────── */}
+      <main className="jl-container" id="main-content">
         {/* Filters */}
-        <JobFilters
-          filters={filters}
-          onChange={handleFiltersChange}
-          onReset={handleReset}
-        />
+        <JobFilters filters={filters} onChange={handleFilterChange} />
 
         {/* Status bar */}
         <div className="jl-status-bar" aria-live="polite" aria-atomic="true">
-          {!loading && (
+          {loading ? (
+            <p className="jl-loading-text">Loading jobs…</p>
+          ) : !error && total > 0 ? (
             <p className="jl-result-count">
-              {total === 0 ? 'No jobs found' : `Showing ${jobs.length} of ${total} jobs`}
-              {filters.search && <> for "<strong>{filters.search}</strong>"</>}
+              Showing{' '}
+              <strong>
+                {Math.min(jobs.length, total)} of {total}
+              </strong>{' '}
+              {filters.search ? `jobs for "${filters.search}"` : 'jobs'}
             </p>
-          )}
-          {loading && <p className="jl-loading-text">Loading jobs…</p>}
+          ) : null}
         </div>
 
         {/* Error */}
         {error && (
           <div className="jl-error" role="alert">
+            <span aria-hidden="true">⚠️</span>
             {error}
-            <button onClick={() => fetchJobs(filters)} className="jl-retry-btn">Retry</button>
+            <button className="jl-retry-btn" onClick={handleRetry}>
+              Retry
+            </button>
           </div>
         )}
 
         {/* Grid */}
-        {!loading && !error && jobs.length === 0 ? (
-          <div className="jl-empty">
-            <span aria-hidden="true" className="jl-empty-icon">🔍</span>
+        {!error && (
+          <div
+            className={`jl-grid${loading ? ' jl-grid--loading' : ''}`}
+            aria-label="Job listings"
+          >
+            {loading
+              ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                  <div key={i} className="jl-skeleton" aria-hidden="true" />
+                ))
+              : jobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onCompanyClick={() => setSelectedCompany(job.company)}
+                  />
+                ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && jobs.length === 0 && (
+          <div className="jl-empty" role="status">
+            <span className="jl-empty-icon" aria-hidden="true">🔍</span>
             <h2>No jobs match your search</h2>
             <p>Try adjusting your filters or search terms.</p>
-            <button className="jl-btn jl-btn--primary" onClick={handleReset}>
-              Clear Filters
+            <button
+              className="jl-btn jl-btn--primary"
+              onClick={() => handleFilterChange({ search: '', location: '', type: '' })}
+            >
+              Clear filters
             </button>
           </div>
-        ) : (
-          <section aria-label="Job listings" aria-busy={loading}>
-            <div className={`jl-grid ${loading ? 'jl-grid--loading' : ''}`}>
-              {loading
-                ? Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="jl-skeleton" aria-hidden="true" />
-                  ))
-                : jobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      onSaveToggle={handleSaveToggle}
-                      onApply={handleApply}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))
-              }
-            </div>
-          </section>
         )}
 
         {/* Pagination */}
-        {!loading && totalPages > 1 && (
+        {!loading && !error && totalPages > 1 && (
           <Pagination
-            page={filters.page}
+            currentPage={page}
             totalPages={totalPages}
-            onChange={handlePageChange}
+            onPageChange={setPage}
           />
         )}
-      </div>
+      </main>
 
-      {/* Company / Job Details Modal */}
-      {selectedJob && (
+      {/* Company modal */}
+      {selectedCompany && (
         <CompanyModal
-          job={selectedJob}
-          onClose={() => setSelectedJob(null)}
-          onApply={handleApply}
+          companyName={selectedCompany}
+          onClose={() => setSelectedCompany(null)}
         />
       )}
     </div>

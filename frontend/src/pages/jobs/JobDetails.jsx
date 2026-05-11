@@ -1,81 +1,99 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJob, saveJob } from '../../api/jobs';
+import KoraNav from '../../components/KoraNav';          // ← added
 import '../../styles/job-list.css';
 
-/**
- * JobDetails
- * Full-page view for a single job posting.
- */
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [job, setJob] = useState(null);
+  const [job,     setJob]     = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [saved, setSaved] = useState(false);
-  const [savePending, setSavePending] = useState(false);
+  const [error,   setError]   = useState(null);
+  const [saved,   setSaved]   = useState(false);
+  const [saving,  setSaving]  = useState(false);
 
+  /* ── Load job ─────────────────────────────────────────── */
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       try {
         const data = await getJob(id);
-        setJob(data);
-        setSaved(data.saved || false);
-      } catch (e) {
-        setError('Job not found or failed to load.');
+        if (!cancelled) {
+          setJob(data);
+          setSaved(data.saved ?? false);
+        }
+      } catch {
+        if (!cancelled) setError('Could not load this job.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
+    return () => { cancelled = true; };
   }, [id]);
 
+  /* ── Save toggle ──────────────────────────────────────── */
   const handleSave = async () => {
-    if (savePending) return;
-    const prev = saved;
-    setSaved(!prev);
-    setSavePending(true);
+    setSaving(true);
     try {
-      await saveJob(id);
+      await saveJob(id, !saved);
+      setSaved((v) => !v);
     } catch {
-      setSaved(prev); // rollback
+      // silently fail — the button re-enables
     } finally {
-      setSavePending(false);
+      setSaving(false);
     }
   };
 
+  /* ── States ───────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="jd-loading" aria-busy="true">
-        <div className="ed-spinner" />
-        <p>Loading job details…</p>
+      <div className="jd-page">
+        <KoraNav />
+        <div className="jd-loading" aria-busy="true">
+          <div className="ed-spinner" />
+          <p>Loading job details…</p>
+        </div>
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="jd-error" role="alert">
-        <p>{error || 'Job not found.'}</p>
-        <Link to="/jobs" className="jl-btn jl-btn--primary">Back to Jobs</Link>
+      <div className="jd-page">
+        <KoraNav />
+        <div className="jd-error" role="alert">
+          <p>{error || 'Job not found.'}</p>
+          <Link to="/jobs" className="jl-btn jl-btn--primary">
+            Back to Jobs
+          </Link>
+        </div>
       </div>
     );
   }
 
+  /* ── Main render ──────────────────────────────────────── */
   return (
     <div className="jd-page">
+      {/* ── Top nav ── */}
+      <KoraNav />
+
       <div className="jd-container">
-        {/* Back nav */}
-        <button className="jl-back-btn" onClick={() => navigate(-1)} aria-label="Go back">
+        {/* Back */}
+        <button
+          className="jl-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="Back to job listings"
+        >
           ← Back to Jobs
         </button>
 
         <div className="jd-layout">
-          {/* Main column */}
-          <article className="jd-main">
-            {/* Header */}
+          {/* ── Left: job content ───────────────────── */}
+          <div className="jd-main">
+            {/* Header card */}
             <div className="jd-header">
               <div className="jd-logo" aria-hidden="true">
                 {job.logo
@@ -88,81 +106,118 @@ export default function JobDetails() {
                 <p className="jd-company">{job.company}</p>
               </div>
               <button
-                className={`jd-save-btn ${saved ? 'saved' : ''}`}
+                className={`jd-save-btn${saved ? ' saved' : ''}`}
                 onClick={handleSave}
-                disabled={savePending}
-                aria-pressed={saved}
-                aria-label={saved ? 'Unsave this job' : 'Save this job'}
+                disabled={saving}
+                aria-label={saved ? 'Remove from saved jobs' : 'Save this job'}
               >
-                {saved ? '🔖 Saved' : '🏷️ Save'}
+                {saved ? '🔖 Saved' : '🔖 Save'}
               </button>
             </div>
 
-            {/* Facts */}
-            <div className="jd-facts">
-              <span><span aria-hidden="true">📍</span> {job.location}</span>
-              <span><span aria-hidden="true">💼</span> {job.type}</span>
-              {job.salary && <span><span aria-hidden="true">💰</span> {job.salary}</span>}
-              <span><span aria-hidden="true">📅</span> Posted {new Date(job.postedAt).toLocaleDateString()}</span>
+            {/* Quick facts */}
+            <div className="jd-facts" aria-label="Job details">
+              {[
+                { icon: '📍', val: job.location },
+                { icon: '💼', val: job.type },
+                job.salary && { icon: '💰', val: job.salary },
+                job.remote  && { icon: '🌐', val: 'Remote OK' },
+                job.applicants != null && { icon: '👥', val: `${job.applicants} applicants` },
+              ]
+                .filter(Boolean)
+                .map((f) => (
+                  <span key={f.val} className="jc-detail-item">
+                    <span aria-hidden="true">{f.icon}</span> {f.val}
+                  </span>
+                ))}
             </div>
 
             {/* Tags */}
-            <div className="jd-tags" aria-label="Skills required">
-              {job.tags?.map((t) => <span key={t} className="jd-tag">{t}</span>)}
-            </div>
+            {job.tags?.length > 0 && (
+              <div className="jd-tags" aria-label="Required skills">
+                {job.tags.map((t) => (
+                  <span key={t} className="jd-tag">{t}</span>
+                ))}
+              </div>
+            )}
 
             {/* Description */}
-            <section aria-labelledby="jd-desc-heading">
-              <h2 id="jd-desc-heading" className="jd-section-heading">About the Role</h2>
-              <p className="jd-description">{job.description}</p>
-            </section>
-
-            {/* Company */}
-            {job.companyInfo && (
-              <section aria-labelledby="jd-company-heading">
-                <h2 id="jd-company-heading" className="jd-section-heading">About {job.company}</h2>
-                <dl className="jd-company-dl">
-                  <div><dt>Industry</dt><dd>{job.companyInfo.industry}</dd></div>
-                  <div><dt>Size</dt><dd>{job.companyInfo.size} employees</dd></div>
-                  {job.companyInfo.website && (
-                    <div>
-                      <dt>Website</dt>
-                      <dd>
-                        <a href={job.companyInfo.website} target="_blank" rel="noopener noreferrer">
-                          {job.companyInfo.website}
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </section>
+            {job.description && (
+              <>
+                <h2 className="jd-section-heading">Job Description</h2>
+                <div className="jd-description">{job.description}</div>
+              </>
             )}
-          </article>
 
-          {/* Sidebar CTA */}
-          <aside className="jd-sidebar" aria-label="Apply panel">
+            {/* Company info */}
+            <h2 className="jd-section-heading">About {job.company}</h2>
+            <dl className="jd-company-dl">
+              {job.location && (
+                <div>
+                  <dt>Location</dt>
+                  <dd>{job.location}</dd>
+                </div>
+              )}
+              {job.type && (
+                <div>
+                  <dt>Type</dt>
+                  <dd>{job.type}</dd>
+                </div>
+              )}
+              {job.salary && (
+                <div>
+                  <dt>Salary</dt>
+                  <dd>{job.salary}</dd>
+                </div>
+              )}
+              {job.website && (
+                <div>
+                  <dt>Website</dt>
+                  <dd>
+                    <a
+                      href={job.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {job.website}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          {/* ── Right: apply card (sticky) ───────────── */}
+          <aside className="jd-sidebar" aria-label="Apply for this job">
             <div className="jd-apply-card">
-              <h2 className="jd-apply-title">Ready to apply?</h2>
-              <p className="jd-apply-sub">Submit your application in minutes.</p>
+              <h2 className="jd-apply-title">Ready to Apply?</h2>
+              <p className="jd-apply-sub">
+                {job.applicants != null
+                  ? `${job.applicants} people have already applied.`
+                  : 'Be among the first to apply.'}
+              </p>
+
               {job.applied ? (
-                <div className="jd-applied-badge" aria-label="You have already applied">
+                <div className="jd-applied-badge" role="status">
                   ✓ Application Submitted
                 </div>
               ) : (
                 <Link
-                  to={`/jobs/${job.id}/apply`}
+                  to={`/jobs/${id}/apply`}
                   className="jd-apply-btn"
+                  aria-label={`Apply for ${job.title}`}
                 >
-                  Apply Now
+                  Apply Now →
                 </Link>
               )}
+
               <button
-                className={`jd-save-sidebar-btn ${saved ? 'saved' : ''}`}
+                className={`jd-save-sidebar-btn${saved ? ' saved' : ''}`}
                 onClick={handleSave}
-                disabled={savePending}
-                aria-pressed={saved}
+                disabled={saving}
+                aria-label={saved ? 'Remove from saved jobs' : 'Save this job for later'}
               >
-                {saved ? '🔖 Saved' : '🏷️ Save Job'}
+                {saving ? 'Saving…' : saved ? '🔖 Saved' : '🔖 Save for Later'}
               </button>
             </div>
           </aside>

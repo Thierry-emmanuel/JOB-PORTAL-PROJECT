@@ -1,24 +1,31 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+
+// ── Global styles ─────────────────────────────────────────
+import "./styles/theme.css";
+import "./App.css";
+
+// ── Page imports ───────────────────────────────────────────
+import KoraHome from "./KoraHome";
 import JobSeekerProfile from "./pages/profile/JobSeekerProfile";
 import EmployerProfile from "./pages/profile/EmployerProfile";
 import AdminProfile from "./pages/profile/AdminProfile";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import KoraHome from "./KoraHome";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import ManageJobs from "./pages/employer/ManageJobs";
 import PostJob from "./pages/employer/PostJob";
-import "./App.css";
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
-import JobList    from './pages/jobs/JobList';
+import JobList from './pages/jobs/JobList';
 import JobDetails from './pages/jobs/JobDetails';
-import ApplyPage  from './pages/jobs/ApplyPage';
+import ApplyPage from './pages/jobs/ApplyPage';
+
+// ── Shared styles for specific pages ──────────────────────
 import './styles/employee-dashboard.css';
 import './styles/job-list.css';
 import './styles/apply-page.css';
 
-// ── Dev Nav ───────────────────────────────────────────────
+// ── Development navigation overlay ────────────────────────
 function DevNav() {
   const location = useLocation();
   const links = [
@@ -28,7 +35,7 @@ function DevNav() {
     { to: "/profile/job-seeker",  label: "Job Seeker"   },
     { to: "/profile/employer",    label: "Employer"     },
     { to: "/profile/admin",       label: "Admin"        },
-    { to: "/dashboard/employer",  label: "Dashboard"    },
+    { to: "/dashboard/employer",  label: "Employer DB"  },
     { to: "/employer/jobs",       label: "Manage Jobs"  },
     { to: "/employer/post-job",   label: "Post Job"     },
     { to: "/employee/dashboard",  label: "Employee DB"  },
@@ -80,9 +87,9 @@ function DevNav() {
   );
 }
 
-// ── Employer Jobs Manager (handles routing between Manage & Post) ──
+// ── Employer Jobs Manager ─────────────────────────────────
 function EmployerJobsManager() {
-  const [view, setView] = useState("manage"); // "manage" | "post"
+  const [view, setView] = useState("manage");
   if (view === "post") {
     return (
       <PostJob
@@ -94,7 +101,7 @@ function EmployerJobsManager() {
   return <ManageJobs onPostJob={() => setView("post")} />;
 }
 
-// ── App ───────────────────────────────────────────────────
+// ── App Component ──────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
@@ -117,4 +124,4 @@ export default function App() {
       <DevNav />
     </BrowserRouter>
   );
-}
+}

@@ -1,337 +1,406 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getUserApplications, getUserInterviews } from '../../api/jobs';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import KoraNav from '../../components/KoraNav';
+import ProfileSidebar from '../../components/profile/ProfileSidebar';
+import { getUserApplications, getUserInterviews, getJobs } from '../../api/jobs';
 import '../../styles/employee-dashboard.css';
 
-/**
- * EmployeeDashboard
- * Main landing page for job seekers after login.
- * Shows summary stats, upcoming interviews, tasks, and quick links.
- */
+/* ─────────────────────────────────────────────────────────
+   Mock profile – replace with auth context / user API
+   when backend authentication is ready.
+   ───────────────────────────────────────────────────────── */
+const MOCK_PROFILE = {
+  id: 1,
+  fullName: 'Lena Dorcas Valmira BILOA EKASSI',
+  email: 'lena.biloa@gmail.com',
+  phone: '+237 691 234 567',
+  city: 'Yaoundé',
+  region: 'Centre',
+  dateOfBirth: '1999-03-15',
+  profilePhoto: null,
+  summary:
+    'Software engineering student at Institut Saint Jean with foundations in Java, Spring Boot, and React.js.',
+  cvUrl: null,
+  cvFileName: null,
+  experiences: [{ id: 1, title: 'Web Development Intern', company: 'TechCam Solutions' }],
+  education: [
+    { id: 1, degree: "Engineer's Degree", institution: 'Institut Universitaire Saint Jean' },
+  ],
+  skills: [
+    { id: 1, name: 'Java', type: 'technical' },
+    { id: 2, name: 'Spring Boot', type: 'technical' },
+    { id: 3, name: 'React.js', type: 'technical' },
+    { id: 4, name: 'MySQL', type: 'technical' },
+  ],
+  languages: [{ id: 1, name: 'French', level: 'Native' }],
+};
+
+/* ── Profile completion (same formula as JobSeekerProfile) ── */
+function profileCompletion(p) {
+  let score = 0;
+  if (p.profilePhoto) score += 15;
+  if (p.summary)      score += 15;
+  if (p.phone)        score += 10;
+  if (p.cvUrl)        score += 20;
+  if (p.experiences?.length > 0) score += 15;
+  if (p.education?.length > 0)   score += 10;
+  if (p.skills?.length >= 3)     score += 10;
+  if (p.languages?.length > 0)   score += 5;
+  return score;
+}
+
+/* ── Application status badge ───────────────────────────── */
+const STATUS_MAP = {
+  'Under Review':        { bg: '#FFF7ED', text: '#C2410C', dot: '#F97316' },
+  'Interview Scheduled': { bg: '#F0FDF4', text: '#166534', dot: '#22C55E' },
+  Rejected:              { bg: '#FEF2F2', text: '#991B1B', dot: '#EF4444' },
+  Hired:                 { bg: '#F0FDF4', text: '#166534', dot: '#22C55E' },
+};
+const DEFAULT_STATUS = { bg: '#F9FAFB', text: '#374151', dot: '#9CA3AF' };
+
+function StatusBadge({ status }) {
+  const c = STATUS_MAP[status] || DEFAULT_STATUS;
+  return (
+    <span className="ed-badge" style={{ background: c.bg, color: c.text }}>
+      <span className="ed-badge-dot" style={{ background: c.dot }} aria-hidden="true" />
+      {status}
+    </span>
+  );
+}
+StatusBadge.propTypes = { status: PropTypes.string.isRequired };
+
+/* ── Stat card ──────────────────────────────────────────── */
+function StatCard({ icon, value, label, delta, accent }) {
+  return (
+    <div className="ed-stat-card">
+      <div
+        className="ed-stat-icon"
+        style={{ background: `${accent}18`, color: accent }}
+        aria-hidden="true"
+      >
+        {icon}
+      </div>
+      <div className="ed-stat-body">
+        <div className="ed-stat-value">{value}</div>
+        <div className="ed-stat-label">{label}</div>
+        {delta && <div className="ed-stat-delta">{delta}</div>}
+      </div>
+    </div>
+  );
+}
+StatCard.propTypes = {
+  icon: PropTypes.node.isRequired,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  label: PropTypes.string.isRequired,
+  delta: PropTypes.string,
+  accent: PropTypes.string.isRequired,
+};
+
+/* ── Mini job card (Jobs For You section) ───────────────── */
+function MiniJobCard({ job }) {
+  return (
+    <Link to={`/jobs/${job.id}`} className="ed-mini-job-card">
+      <div className="ed-mini-job-logo" aria-hidden="true">
+        {job.logo ? (
+          <img src={job.logo} alt={`${job.company} logo`} loading="lazy" />
+        ) : (
+          <span>{job.company.charAt(0)}</span>
+        )}
+      </div>
+      <div className="ed-mini-job-info">
+        <h3 className="ed-mini-job-title">{job.title}</h3>
+        <p className="ed-mini-job-company">{job.company}</p>
+        <div className="ed-mini-job-meta">
+          <span>📍 {job.location}</span>
+          {job.salary && <span>💰 {job.salary}</span>}
+        </div>
+      </div>
+      <div className="ed-mini-job-footer">
+        <div className="ed-mini-job-tags">
+          {job.tags?.slice(0, 2).map((t) => (
+            <span key={t} className="ed-tag">{t}</span>
+          ))}
+        </div>
+        <span className="ed-type-badge">{job.type}</span>
+      </div>
+    </Link>
+  );
+}
+MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
+
+/* ════════════════════════════════════════════════════════════
+   EmployeeDashboard
+   ════════════════════════════════════════════════════════════ */
 export default function EmployeeDashboard() {
-  const navigate = useNavigate();
+  const [profile, setProfile] = useState(MOCK_PROFILE);
+  const completion = profileCompletion(profile);
+  const firstName  = profile.fullName.split(' ')[0];
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [applications, setApplications] = useState([]);
-  const [interviews, setInterviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  /* ── API data ───────────────────────────────────────────── */
+  const [applications,  setApplications]  = useState([]);
+  const [appsLoading,   setAppsLoading]   = useState(true);
+  const [appsError,     setAppsError]     = useState(null);
 
-  // Derive user name from localStorage or default
-  const userName = localStorage.getItem('userName') || 'there';
+  const [interviews,    setInterviews]    = useState([]);
+  const [interLoading,  setInterLoading]  = useState(true);
 
-  // ── Data fetching ──────────────────────────────────────────────────────────
+  const [recJobs,       setRecJobs]       = useState([]);
+  const [jobsLoading,   setJobsLoading]   = useState(true);
+
   useEffect(() => {
-    async function load() {
-      try {
-        const [appsRes, intRes] = await Promise.all([
-          getUserApplications(),
-          getUserInterviews(),
-        ]);
-        setApplications(appsRes.data || []);
-        setInterviews(intRes.data || []);
-      } catch (e) {
-        setError('Failed to load dashboard data.');
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    getUserApplications()
+      .then((res) => setApplications(res.data || []))
+      .catch(() => setAppsError('Could not load applications.'))
+      .finally(() => setAppsLoading(false));
+
+    getUserInterviews()
+      .then((res) => setInterviews(res.data || []))
+      .catch(() => {})
+      .finally(() => setInterLoading(false));
+
+    getJobs({ limit: 3 })
+      .then((res) => setRecJobs(res.data || []))
+      .catch(() => {})
+      .finally(() => setJobsLoading(false));
   }, []);
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
-  const totalApplied = applications.length;
-  const interviewing = applications.filter(a => a.status === 'Interview Scheduled').length;
-  const offers = applications.filter(a => a.status === 'Offer Received').length;
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const addToCalendar = (interview) => {
-    // Google Calendar deep-link
-    const title = encodeURIComponent(`Interview: ${interview.jobTitle} at ${interview.company}`);
-    const start = encodeURIComponent(interview.date.replace(/-/g, '') + 'T' + interview.time.replace(/[^0-9]/g, '').slice(0, 4) + '00');
-    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${start}`, '_blank');
-  };
-
-  // ── Render helpers ─────────────────────────────────────────────────────────
-  const statusBadge = (status) => {
-    const map = {
-      'Under Review': 'badge-warning',
-      'Interview Scheduled': 'badge-info',
-      'Offer Received': 'badge-success',
-      'Rejected': 'badge-danger',
-    };
-    return <span className={`ed-badge ${map[status] || 'badge-default'}`}>{status}</span>;
-  };
-
-  const navItems = [
-    { label: 'Dashboard', icon: '⊞', to: '/employee/dashboard', active: true },
-    { label: 'My Applications', icon: '📋', to: '/employee/applications' },
-    { label: 'Interview Schedule', icon: '📅', to: '/employee/interviews' },
-    { label: 'Find Jobs', icon: '🔍', to: '/jobs' },
-    { label: 'My Profile', icon: '👤', to: '/profile' },
-  ];
-
-  // ── Loading / Error states ─────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="ed-loading-screen" aria-busy="true" aria-label="Loading dashboard">
-        <div className="ed-spinner" />
-        <p>Loading your dashboard…</p>
-      </div>
-    );
-  }
-
-  // ── Main render ────────────────────────────────────────────────────────────
+  /* ── Render ─────────────────────────────────────────────── */
   return (
-    <div className={`ed-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-      {/* ── Sidebar ── */}
-      <aside className="ed-sidebar" aria-label="Main navigation">
-        <div className="ed-sidebar-header">
-          <div className="ed-logo">
-            <span className="ed-logo-icon">K</span>
-            <span className="ed-logo-text">KoraHR</span>
-          </div>
-          <button
-            className="ed-sidebar-toggle"
-            onClick={() => setSidebarOpen(v => !v)}
-            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          >
-            {sidebarOpen ? '‹' : '›'}
-          </button>
-        </div>
+    <div className="ed-root">
+      <KoraNav />
 
-        <nav>
-          <p className="ed-nav-label">Main</p>
-          <ul className="ed-nav-list">
-            {navItems.map((item) => (
-              <li key={item.label}>
-                <Link
-                  to={item.to}
-                  className={`ed-nav-item ${item.active ? 'ed-nav-item--active' : ''}`}
-                >
-                  <span className="ed-nav-icon" aria-hidden="true">{item.icon}</span>
-                  <span className="ed-nav-label-text">{item.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <div className="ed-body">
+        {/* ── Left sidebar ──────────────────────────────── */}
+        <aside className="ed-sidebar" aria-label="Profile sidebar">
+          <ProfileSidebar
+            profile={profile}
+            completion={completion}
+            onEdit={() => {}}
+            onPhotoChange={(file) => {
+              const url = URL.createObjectURL(file);
+              setProfile((p) => ({ ...p, profilePhoto: url }));
+            }}
+          />
+        </aside>
 
-          <p className="ed-nav-label">Others</p>
-          <ul className="ed-nav-list">
-            <li>
-              <Link to="/settings" className="ed-nav-item">
-                <span className="ed-nav-icon" aria-hidden="true">⚙️</span>
-                <span className="ed-nav-label-text">Settings</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        <div className="ed-sidebar-footer">
-          <div className="ed-user-chip">
-            <div className="ed-avatar" aria-hidden="true">{userName.charAt(0).toUpperCase()}</div>
-            <div className="ed-user-info">
-              <span className="ed-user-name">{userName}</span>
-              <span className="ed-user-role">Job Seeker</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Main content ── */}
-      <main className="ed-main">
-        {/* Top bar */}
-        <header className="ed-topbar">
-          <div className="ed-topbar-search">
-            <span className="ed-search-icon" aria-hidden="true">🔍</span>
-            <input
-              type="search"
-              placeholder="Search anything…"
-              className="ed-search-input"
-              aria-label="Search"
-              onKeyDown={(e) => e.key === 'Enter' && navigate(`/jobs?search=${e.target.value}`)}
-            />
-          </div>
-          <div className="ed-topbar-right">
-            <button className="ed-icon-btn" aria-label="Notifications">🔔</button>
-            <div className="ed-avatar" aria-hidden="true">{userName.charAt(0).toUpperCase()}</div>
-          </div>
-        </header>
-
-        <div className="ed-content">
+        {/* ── Main content ──────────────────────────────── */}
+        <main className="ed-main" id="main-content">
           {/* Welcome */}
-          <section className="ed-welcome" aria-labelledby="welcome-heading">
-            <h1 id="welcome-heading" className="ed-welcome-title">
-              Welcome back, <span className="ed-highlight">{userName}</span>!
-            </h1>
-            <p className="ed-welcome-sub">Manage and track your job applications</p>
-          </section>
+          <div className="ed-welcome">
+            <div>
+              <h1 className="ed-welcome-title">
+                Welcome back, {firstName}&nbsp;
+                <span aria-hidden="true">👋</span>
+              </h1>
+              <p className="ed-welcome-sub">
+                Here's what's happening with your job search today.
+              </p>
+            </div>
+            <Link to="/jobs" className="ed-find-jobs-btn">
+              Browse Jobs →
+            </Link>
+          </div>
 
           {/* Stats row */}
-          <section className="ed-stats" aria-label="Application statistics">
-            <div className="ed-stat-card">
-              <div className="ed-stat-icon ed-stat-icon--orange" aria-hidden="true">📄</div>
-              <div>
-                <p className="ed-stat-label">Jobs Applied</p>
-                <p className="ed-stat-value">{totalApplied}</p>
-              </div>
-            </div>
-            <div className="ed-stat-card">
-              <div className="ed-stat-icon ed-stat-icon--purple" aria-hidden="true">💬</div>
-              <div>
-                <p className="ed-stat-label">Interviewing</p>
-                <p className="ed-stat-value">{interviewing}</p>
-              </div>
-            </div>
-            <div className="ed-stat-card">
-              <div className="ed-stat-icon ed-stat-icon--green" aria-hidden="true">🏢</div>
-              <div>
-                <p className="ed-stat-label">Job Offers</p>
-                <p className="ed-stat-value">{offers}</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Error banner */}
-          {error && (
-            <div className="ed-error-banner" role="alert">{error}</div>
-          )}
-
-          {/* Main grid */}
-          <div className="ed-grid">
-            {/* ── Upcoming Interviews ── */}
-            <section className="ed-card ed-interviews" aria-labelledby="interviews-heading">
-              <h2 id="interviews-heading" className="ed-card-title">Upcoming Interviews</h2>
-
-              {interviews.length === 0 ? (
-                <div className="ed-empty">
-                  <span aria-hidden="true">📅</span>
-                  <p>No upcoming interviews scheduled.</p>
-                  <Link to="/jobs" className="ed-link-btn">Browse Jobs</Link>
-                </div>
-              ) : (
-                <ul className="ed-interview-list">
-                  {interviews.map((iv) => (
-                    <li key={iv.id} className="ed-interview-item">
-                      <div className="ed-interview-date" aria-label={`Date: ${formatDate(iv.date)}`}>
-                        <span className="ed-date-day">{new Date(iv.date).getDate()}</span>
-                        <span className="ed-date-month">
-                          {new Date(iv.date).toLocaleString('en-US', { month: 'short' })}
-                        </span>
-                      </div>
-                      <div className="ed-interview-info">
-                        <div className="ed-interview-header">
-                          <strong>{iv.jobTitle}</strong>
-                          <span className={`ed-type-badge ${iv.type === 'Video' ? 'type-video' : 'type-person'}`}>
-                            {iv.type}
-                          </span>
-                        </div>
-                        <p className="ed-interview-time">{iv.time} · {iv.company}</p>
-                        <div className="ed-interview-actions">
-                          <button
-                            className="ed-btn ed-btn--outline"
-                            onClick={() => addToCalendar(iv)}
-                            aria-label={`Add ${iv.jobTitle} interview to calendar`}
-                          >
-                            Add to Calendar
-                          </button>
-                          {iv.meetLink ? (
-                            <a
-                              href={iv.meetLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ed-btn ed-btn--primary"
-                            >
-                              Join Now
-                            </a>
-                          ) : (
-                            <button className="ed-btn ed-btn--outline">Reschedule</button>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {/* ── Quick Links ── */}
-            <section className="ed-card ed-quicklinks" aria-labelledby="quicklinks-heading">
-              <h2 id="quicklinks-heading" className="ed-card-title">Quick Links</h2>
-              <ul className="ed-quicklinks-list">
-                {[
-                  { label: 'View My Profile', icon: '👤', to: '/profile' },
-                  { label: 'Upload CV', icon: '📎', to: '/profile#cv' },
-                  { label: 'Browse Jobs', icon: '🔍', to: '/jobs' },
-                  { label: 'My Applications', icon: '📋', to: '/employee/applications' },
-                  { label: 'Saved Jobs', icon: '🔖', to: '/jobs?saved=true' },
-                ].map((link) => (
-                  <li key={link.label}>
-                    <Link to={link.to} className="ed-quicklink-item">
-                      <span aria-hidden="true">{link.icon}</span>
-                      {link.label}
-                      <span className="ed-arrow" aria-hidden="true">→</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          <div className="ed-stats-row" role="region" aria-label="Activity summary">
+            <StatCard
+              icon="📄"
+              value={applications.length}
+              label="Applications Sent"
+              accent="#1A5C2E"
+            />
+            <StatCard
+              icon="🔖"
+              value={5}
+              label="Saved Jobs"
+              accent="#F97316"
+            />
+            <StatCard
+              icon="📅"
+              value={interviews.length}
+              label="Upcoming Interviews"
+              accent="#3B82F6"
+            />
+            <StatCard
+              icon="⭐"
+              value={`${completion}%`}
+              label="Profile Complete"
+              accent="#8B5CF6"
+              delta={completion < 100 ? 'Add more details' : '✓ All done'}
+            />
           </div>
 
-          {/* ── Applications Table ── */}
-          <section className="ed-card ed-applications-table" aria-labelledby="apps-heading">
-            <div className="ed-card-header">
-              <h2 id="apps-heading" className="ed-card-title">My Applications</h2>
-              <Link to="/jobs" className="ed-view-all">View all jobs →</Link>
+          {/* Profile completion nudge */}
+          {completion < 80 && (
+            <div className="ed-nudge" role="note" aria-label="Profile completion tip">
+              <span className="ed-nudge-icon" aria-hidden="true">💡</span>
+              <div className="ed-nudge-text">
+                <strong>Boost your visibility</strong>
+                <p>
+                  {completion < 50
+                    ? 'Add experience and education to stand out to employers.'
+                    : 'Upload your CV to increase your chances of getting noticed.'}
+                </p>
+              </div>
+              <Link to="/profile/job-seeker" className="ed-nudge-btn">
+                Complete Profile
+              </Link>
+            </div>
+          )}
+
+          {/* ── Recent Applications ───────────────────────── */}
+          <section className="ed-section" aria-labelledby="apps-heading">
+            <div className="ed-section-header">
+              <h2 id="apps-heading" className="ed-section-title">
+                Recent Applications
+              </h2>
+              <Link to="#" className="ed-section-link">View all →</Link>
             </div>
 
-            {applications.length === 0 ? (
+            {appsLoading && (
+              <div className="ed-loading-row">
+                <div className="kora-spinner" aria-label="Loading applications" />
+              </div>
+            )}
+
+            {appsError && !appsLoading && (
+              <p className="ed-error-msg" role="alert">{appsError}</p>
+            )}
+
+            {!appsLoading && !appsError && applications.length === 0 && (
               <div className="ed-empty">
                 <span aria-hidden="true">📋</span>
-                <p>You haven't applied to any jobs yet.</p>
-                <Link to="/jobs" className="ed-link-btn">Find Jobs</Link>
+                <p>
+                  No applications yet.{' '}
+                  <Link to="/jobs">Find your first job →</Link>
+                </p>
               </div>
-            ) : (
-              <div className="ed-table-wrapper" role="region" aria-label="Applications table" tabIndex={0}>
-                <table className="ed-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Position</th>
-                      <th scope="col">Company</th>
-                      <th scope="col">Applied</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((app) => (
-                      <tr key={app.id}>
-                        <td>{app.jobTitle}</td>
-                        <td>{app.company}</td>
-                        <td>{formatDate(app.appliedAt)}</td>
-                        <td>{statusBadge(app.status)}</td>
-                        <td>
-                          <Link to={`/jobs/${app.jobId}`} className="ed-table-link">
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            )}
+
+            {!appsLoading && !appsError && applications.length > 0 && (
+              <div
+                className="ed-app-table"
+                role="table"
+                aria-label="Recent applications"
+              >
+                <div className="ed-app-thead" role="row">
+                  <span role="columnheader">Job Title</span>
+                  <span role="columnheader">Company</span>
+                  <span role="columnheader">Status</span>
+                  <span role="columnheader">Applied</span>
+                </div>
+                {applications.map((app) => (
+                  <div key={app.id} className="ed-app-row" role="row">
+                    <span className="ed-app-title" role="cell">
+                      {app.jobTitle}
+                    </span>
+                    <span className="ed-app-company" role="cell">
+                      {app.company}
+                    </span>
+                    <span role="cell">
+                      <StatusBadge status={app.status} />
+                    </span>
+                    <span className="ed-app-date" role="cell">
+                      {new Date(app.appliedAt).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </section>
-        </div>
-      </main>
+
+          {/* ── Upcoming Interviews ───────────────────────── */}
+          <section className="ed-section" aria-labelledby="inter-heading">
+            <div className="ed-section-header">
+              <h2 id="inter-heading" className="ed-section-title">
+                Upcoming Interviews
+              </h2>
+            </div>
+
+            {interLoading ? (
+              <div className="ed-loading-row">
+                <div className="kora-spinner" aria-label="Loading interviews" />
+              </div>
+            ) : interviews.length === 0 ? (
+              <div className="ed-empty">
+                <span aria-hidden="true">📅</span>
+                <p>No interviews scheduled yet.</p>
+              </div>
+            ) : (
+              <div className="ed-interview-grid">
+                {interviews.map((iv) => (
+                  <div key={iv.id} className="ed-interview-card">
+                    <div className="ed-interview-type-badge">
+                      {iv.type === 'Video' ? '🎥 Video' : '🏢 In-person'}
+                    </div>
+                    <h3 className="ed-interview-title">{iv.jobTitle}</h3>
+                    <p className="ed-interview-company">{iv.company}</p>
+                    <div className="ed-interview-meta">
+                      <span>
+                        📅{' '}
+                        {new Date(iv.date).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: '2-digit',
+                          month: 'short',
+                        })}
+                      </span>
+                      <span>🕐 {iv.time}</span>
+                    </div>
+                    {iv.meetLink && (
+                      <a
+                        href={iv.meetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ed-join-btn"
+                        aria-label={`Join meeting for ${iv.jobTitle}`}
+                      >
+                        Join Meeting →
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ── Jobs For You ──────────────────────────────── */}
+          <section className="ed-section" aria-labelledby="recjobs-heading">
+            <div className="ed-section-header">
+              <h2 id="recjobs-heading" className="ed-section-title">
+                Jobs For You
+              </h2>
+              <Link to="/jobs" className="ed-section-link">
+                See all jobs →
+              </Link>
+            </div>
+
+            {jobsLoading ? (
+              <div className="ed-loading-row">
+                <div className="kora-spinner" aria-label="Loading recommended jobs" />
+              </div>
+            ) : recJobs.length === 0 ? (
+              <div className="ed-empty">
+                <span aria-hidden="true">🔍</span>
+                <p>
+                  No recommendations yet.{' '}
+                  <Link to="/jobs">Browse all jobs →</Link>
+                </p>
+              </div>
+            ) : (
+              <div className="ed-mini-jobs-grid">
+                {recJobs.map((job) => (
+                  <MiniJobCard key={job.id} job={job} />
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
