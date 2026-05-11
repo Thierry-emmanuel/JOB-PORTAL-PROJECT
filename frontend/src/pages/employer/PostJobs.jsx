@@ -9,7 +9,7 @@ import koraLogo from "../../assets/kora-logo.png";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
 import "../../styles/employer-dashboard.css";
-import "../../styles/post-job.css";
+import "../../styles/PostJobs.css";
 
 // ── Constants ─────────────────────────────────────────────
 const STEPS = [

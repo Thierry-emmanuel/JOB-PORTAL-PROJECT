@@ -172,7 +172,7 @@ export default function EmployeeDashboard() {
 
       <div className="ed-body">
         {/* ── Left sidebar ──────────────────────────────── */}
-        <aside className="ed-sidebar" aria-label="Profile sidebar">
+        <aside className="ed-sidebar kora-sidebar" aria-label="Profile sidebar">
           <ProfileSidebar
             profile={profile}
             completion={completion}

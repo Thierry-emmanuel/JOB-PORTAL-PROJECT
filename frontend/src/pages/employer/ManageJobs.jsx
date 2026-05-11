@@ -9,7 +9,7 @@ import koraLogo from "../../assets/kora-logo.png";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
 import "../../styles/employer-dashboard.css";
-import "../../styles/manage-jobs.css";
+import "../../styles/ManageJobs.css";
 
 // ── Mock Data ─────────────────────────────────────────────
 const INITIAL_JOBS = [

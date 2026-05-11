@@ -9,22 +9,24 @@
 /* ── CSS Variables ── */
 :root {
   --kora-primary: #0B2B26;
-  --kora-primary-light: #1a4a42;
-  --kora-primary-pale: #e8f0ee;
+  --kora-primary-light: #15423b;
+  --kora-primary-pale: #f0f4f3;
   --kora-accent: #E07B39;
-  --kora-accent-light: #f5e6da;
+  --kora-accent-light: #fdf2e9;
+  --kora-accent-glow: rgba(224, 123, 57, 0.15);
   --kora-white: #ffffff;
-  --kora-bg: #f4f7f6;
+  --kora-bg: #f8fafc;
   --kora-surface: #ffffff;
-  --kora-border: #d8e4e1;
-  --kora-text-dark: #0d1f1c;
-  --kora-text-mid: #3a5550;
-  --kora-text-muted: #7a9590;
-  --kora-shadow-sm: 0 1px 4px rgba(11,43,38,0.08);
-  --kora-shadow-md: 0 4px 20px rgba(11,43,38,0.10);
-  --kora-shadow-lg: 0 12px 40px rgba(11,43,38,0.14);
-  --kora-radius: 14px;
-  --kora-radius-sm: 8px;
+  --kora-border: #e2e8f0;
+  --kora-text-dark: #0f172a;
+  --kora-text-mid: #475569;
+  --kora-text-muted: #64748b;
+  --kora-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --kora-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --kora-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --kora-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --kora-radius: 16px;
+  --kora-radius-sm: 10px;
   --kora-radius-pill: 999px;
   --sidebar-width: 280px;
 }
@@ -47,8 +49,9 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 10% 20%, rgba(11,43,38,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(224,123,57,0.05) 0%, transparent 70%);
+    radial-gradient(circle at 0% 0%, rgba(11, 43, 38, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(224, 123, 57, 0.03) 0%, transparent 50%),
+    #f8fafc;
 }
 
 /* ── Layout ── */
@@ -149,16 +152,18 @@
 .kora-sidebar-avatar:hover .kora-photo-overlay { opacity: 1; }
 
 .kora-sidebar-name {
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: white;
   text-align: center;
   line-height: 1.3;
+  margin-top: 4px;
 }
 .kora-sidebar-role {
-  font-size: 11.5px;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -216,23 +221,30 @@
 .kora-sidebar-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 11px 12px;
+  padding: 12px 14px;
   border-radius: var(--kora-radius-sm);
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.72);
+  color: rgba(255,255,255,0.6);
   font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 .kora-sidebar-nav-item:hover {
-  background: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.08);
   color: white;
+  transform: translateX(4px);
+}
+.kora-sidebar-nav-item.active {
+  background: rgba(255,255,255,0.12);
+  color: white;
+  font-weight: 600;
 }
 .kora-nav-badge {
   margin-left: auto;
@@ -240,13 +252,13 @@
   color: white;
   font-size: 10px;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  border-radius: var(--kora-radius-pill);
+  min-width: 18px;
+  height: 18px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 5px;
+  padding: 0 4px;
 }
 
 .kora-sidebar-logout {
@@ -388,17 +400,18 @@
 }
 .kora-header-name {
   font-family: 'Playfair Display', serif;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--kora-text-dark);
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 .kora-header-summary {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--kora-text-mid);
   line-height: 1.6;
-  margin-bottom: 14px;
-  max-width: 640px;
+  margin-bottom: 18px;
+  max-width: 720px;
 }
 .kora-header-meta {
   display: flex;
@@ -451,31 +464,38 @@
    ============================================================ */
 .kora-tabs {
   display: flex;
-  gap: 4px;
-  background: var(--kora-surface);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
   border-radius: var(--kora-radius);
   padding: 6px;
   box-shadow: var(--kora-shadow-sm);
   width: fit-content;
+  border: 1px solid var(--kora-border);
 }
 .kora-tab {
-  padding: 9px 22px;
-  border-radius: 10px;
+  padding: 10px 24px;
+  border-radius: 12px;
   border: none;
   background: transparent;
   font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--kora-text-muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
-.kora-tab:hover { color: var(--kora-primary); background: var(--kora-primary-pale); }
+.kora-tab:hover { 
+  color: var(--kora-primary); 
+  background: white;
+  box-shadow: var(--kora-shadow-sm);
+}
 .kora-tab.active {
   background: var(--kora-primary);
   color: white;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(11, 43, 38, 0.2);
 }
 
 .kora-tab-content {
@@ -490,29 +510,34 @@
 .kora-section {
   background: var(--kora-surface);
   border-radius: var(--kora-radius);
-  padding: 28px 32px;
+  padding: 32px 40px;
   box-shadow: var(--kora-shadow-sm);
   border: 1px solid var(--kora-border);
   animation: kora-fade-up 0.4s ease both;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kora-section:hover {
+  box-shadow: var(--kora-shadow-md);
 }
 
 .kora-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 .kora-section-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: var(--kora-primary);
 }
 .kora-section-title h2 {
   font-family: 'Playfair Display', serif;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--kora-text-dark);
+  letter-spacing: -0.01em;
 }
 
 /* ============================================================
@@ -743,13 +768,18 @@
 }
 .kora-timeline-content {
   flex: 1;
-  background: var(--kora-bg);
+  background: white;
   border-radius: var(--kora-radius-sm);
-  padding: 16px 18px;
+  padding: 20px 24px;
   border: 1px solid var(--kora-border);
-  transition: box-shadow 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--kora-shadow-sm);
 }
-.kora-timeline-content:hover { box-shadow: var(--kora-shadow-sm); }
+.kora-timeline-content:hover { 
+  box-shadow: var(--kora-shadow-md); 
+  transform: translateY(-2px);
+  border-color: var(--kora-primary);
+}
 
 .kora-exp-header {
   display: flex;
@@ -758,15 +788,16 @@
   margin-bottom: 6px;
 }
 .kora-exp-title {
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--kora-text-dark);
+  letter-spacing: -0.01em;
 }
 .kora-exp-company {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--kora-primary);
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .kora-exp-meta {
   display: flex;
@@ -1031,37 +1062,43 @@
 .kora-cv-uploaded {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
-  background: var(--kora-primary-pale);
+  gap: 20px;
+  padding: 24px;
+  background: white;
   border-radius: var(--kora-radius);
-  border: 1px solid rgba(11,43,38,0.15);
+  border: 1px solid var(--kora-border);
+  box-shadow: var(--kora-shadow-sm);
+  transition: box-shadow 0.2s;
+}
+.kora-cv-uploaded:hover {
+  box-shadow: var(--kora-shadow-md);
 }
 .kora-cv-icon {
-  width: 52px; height: 52px;
+  width: 56px; height: 56px;
   background: var(--kora-primary);
-  border-radius: 10px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(11, 43, 38, 0.15);
 }
 .kora-cv-info { flex: 1; }
 .kora-cv-name-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
-.kora-cv-check { color: #22c55e; }
+.kora-cv-check { color: #10b981; }
 .kora-cv-filename {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--kora-text-dark);
 }
 .kora-cv-hint {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--kora-text-muted);
 }
 .kora-cv-actions {
