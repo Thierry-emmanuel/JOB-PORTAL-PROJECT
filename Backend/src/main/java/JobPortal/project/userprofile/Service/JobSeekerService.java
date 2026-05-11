@@ -2,8 +2,11 @@ package JobPortal.project.userprofile.Service;
 
 
 import JobPortal.project.userprofile.Model.JobSeeker;
+import JobPortal.project.notification.Enum.NotificationType;
+import JobPortal.project.notification.Event.NotificationEvent;
 import JobPortal.project.userprofile.Repository.JobSeekerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +17,9 @@ public class JobSeekerService {
 
     @Autowired
     private JobSeekerRepository jobSeekerRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // Get all JobSeekers
     public List<JobSeeker> getAllJobSeekers() {
@@ -36,7 +42,15 @@ public class JobSeekerService {
             throw new RuntimeException("A JobSeeker with this email already exists.");
         }
         jobSeeker.computeProfileScore();
-        return jobSeekerRepository.save(jobSeeker);
+        JobSeeker saved = jobSeekerRepository.save(jobSeeker);
+
+        // Send Welcome Notification
+        eventPublisher.publishEvent(new NotificationEvent(this, saved, 
+            "Welcome to JobPortal!", 
+            "Hello " + saved.getFullName() + ", your job seeker profile has been successfully created. Start searching for jobs today!", 
+            NotificationType.WELCOME));
+
+        return saved;
     }
 
     // Update an existing JobSeeker profile
