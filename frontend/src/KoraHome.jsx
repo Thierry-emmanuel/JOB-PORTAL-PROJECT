@@ -318,6 +318,8 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
 /* ─── HERO CAROUSEL ─────────────────────────────────────────── */
 function Hero() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [animating, setAnimating] = useState(false);
@@ -341,6 +343,11 @@ function Hero() {
     }
     return () => clearInterval(timerRef.current);
   }, [current, paused, goTo]);
+
+  const handleAction = () => {
+    if (!isAuthenticated) navigate("/login");
+    else navigate("/jobs");
+  };
 
   const s = SLIDES[displaySlide];
   const bgGrads = [
@@ -388,7 +395,7 @@ function Hero() {
             ))}
           </div>
           <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
-            <button style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
+            <button onClick={handleAction} style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
               Voir l'offre →
             </button>
             <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
@@ -761,7 +768,15 @@ function CompaniesSection() {
 
 /* ─── EMPLOYER CTA ──────────────────────────────────────────── */
 function CtaSection() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [ref, style] = useReveal(0);
+
+  const handleAction = () => {
+    if (!isAuthenticated) navigate("/login");
+    else navigate("/employer/post-job");
+  };
+
   return (
     <section style={{ background:`linear-gradient(135deg, ${O} 0%, #EA580C 100%)`, padding:"clamp(52px,8vw,88px) clamp(16px,4vw,48px)", position:"relative", overflow:"hidden" }}>
       <div style={{ position:"absolute", top:-80, right:-80, width:400, height:400, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }}/>
@@ -774,7 +789,7 @@ function CtaSection() {
             Publiez une offre en moins de 5 minutes. Atteignez 50 000+ candidats qualifiés au Cameroun et au-delà. Matching IA inclus.
           </p>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:24 }}>
-            <button style={{ background:"white", color:O, border:"none", padding:"13px 26px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(0,0,0,0.15)" }}>
+            <button onClick={handleAction} style={{ background:"white", color:O, border:"none", padding:"13px 26px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(0,0,0,0.15)" }}>
               Publier une offre →
             </button>
             <button style={{ background:"transparent", color:"white", border:"2px solid rgba(255,255,255,0.5)", padding:"13px 22px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
