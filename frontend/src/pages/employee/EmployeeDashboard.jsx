@@ -137,9 +137,10 @@ MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
    ════════════════════════════════════════════════════════════ */
 export default function EmployeeDashboard() {
   const { user, token } = useAuth();
-  const [profile, setProfile] = useState(user || {});
+  // Merge auth user (has email/role) with any local profile overrides
+  const [profile, setProfile] = useState({ ...MOCK_PROFILE, ...(user || {}) });
   const completion = profileCompletion(profile);
-  const firstName  = profile.fullName?.split(' ')[0] || profile.firstName || 'User';
+  const firstName  = profile.fullName?.split(' ')[0] || profile.firstName || profile.email?.split('@')[0] || 'User';
 
   /* ── API data ───────────────────────────────────────────── */
   const [applications,  setApplications]  = useState([]);
