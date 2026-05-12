@@ -576,6 +576,8 @@ function StatsBand() {
 
 /* ─── JOB CARD ──────────────────────────────────────────────── */
 function JobCard({ job, delay }) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [ref, style] = useReveal(delay);
   const [saved, setSaved] = useState(false);
   const [barVisible, setBarVisible] = useState(false);
@@ -598,8 +600,30 @@ function JobCard({ job, delay }) {
     return () => obs.disconnect();
   }, []);
 
+  const handleCardClick = () => {
+    navigate(`/jobs/${job.id}`);
+  };
+
+  const handleApplyClick = (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      navigate(`/jobs/${job.id}/apply`);
+    }
+  };
+
+  const handleSaveClick = (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      setSaved(s => !s);
+    }
+  };
+
   return (
-    <div ref={ref} style={{
+    <div ref={ref} onClick={handleCardClick} style={{
       ...style,
       background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px)",
       cursor:"pointer", position:"relative", overflow:"hidden",
@@ -621,7 +645,7 @@ function JobCard({ job, delay }) {
             {job.remote && <span style={{ fontSize:9, fontWeight:700, color:G, background:G_L, border:`1px solid rgba(26,92,46,0.2)`, borderRadius:8, padding:"1px 7px", letterSpacing:"0.5px" }}>REMOTE</span>}
           </div>
         </div>
-        <button onClick={() => setSaved(s => !s)} style={{ background: saved ? O_L : "none", border:"none", cursor:"pointer", color: saved ? O : "#D1D5DB", fontSize:18, padding:4, borderRadius:6, lineHeight:1, transition:"all 0.2s", flexShrink:0 }} aria-label="Sauvegarder">
+        <button onClick={handleSaveClick} style={{ background: saved ? O_L : "none", border:"none", cursor:"pointer", color: saved ? O : "#D1D5DB", fontSize:18, padding:4, borderRadius:6, lineHeight:1, transition:"all 0.2s", flexShrink:0 }} aria-label="Sauvegarder">
           {saved ? "♥" : "♡"}
         </button>
       </div>
@@ -655,7 +679,7 @@ function JobCard({ job, delay }) {
           <div style={{ fontSize:"clamp(14px,3vw,16px)", fontWeight:800, color:G }}>{job.salary}</div>
           <div style={{ fontSize:11, fontWeight:600, color:fresh.color, marginTop:2 }}>● {fresh.label}</div>
         </div>
-        <button style={{ background:G, color:"white", border:"none", padding:"9px 18px", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
+        <button onClick={handleApplyClick} style={{ background:G, color:"white", border:"none", padding:"9px 18px", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
           Postuler →
         </button>
       </div>
@@ -675,9 +699,9 @@ function JobsSection() {
             <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>Dernières Opportunités</h2>
             <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>Offres filtrées par compatibilité avec votre profil</p>
           </div>
-          <a href="#" style={{ fontSize:14, fontWeight:600, color:G, textDecoration:"none", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap" }}>
+          <Link to="/jobs" style={{ fontSize:14, fontWeight:600, color:G, textDecoration:"none", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap" }}>
             Voir les 10 000+ offres →
-          </a>
+          </Link>
         </div>
         <div className="kora-jobs-grid">
           {JOBS.map((job, i) => <JobCard key={job.id} job={job} delay={[60,140,220,300,380,460][i]} />)}
@@ -689,6 +713,8 @@ function JobsSection() {
 
 /* ─── CATEGORIES ────────────────────────────────────────────── */
 function CategoriesSection() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
   return (
     <section style={{ background:"#fff", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
@@ -707,6 +733,7 @@ function CategoriesSection() {
                 background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
                 cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
               }}
+                onClick={() => !isAuthenticated ? navigate('/login') : navigate('/jobs')}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
               >
@@ -725,6 +752,8 @@ function CategoriesSection() {
 
 /* ─── COMPANIES ─────────────────────────────────────────────── */
 function CompaniesSection() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
   return (
     <section style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
@@ -746,6 +775,7 @@ function CompaniesSection() {
                 background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
                 cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
               }}
+                onClick={() => !isAuthenticated ? navigate('/login') : navigate('/jobs')}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
               >
