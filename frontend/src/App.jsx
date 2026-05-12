@@ -109,18 +109,27 @@ function ProtectedRoute({ children, role }) {
   const { isAuthenticated, user, loading } = useAuth();
   
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}><div className="kora-spinner" /></div>;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Debug: log auth state to console
+  console.log('[ProtectedRoute] isAuthenticated:', isAuthenticated, '| user:', user, '| required role:', role);
+
+  if (!isAuthenticated) {
+    console.log('[ProtectedRoute] ❌ Not authenticated → redirecting to /login');
+    return <Navigate to="/login" replace />;
+  }
   
   if (role) {
-    // Normalize: strip ROLE_ prefix and uppercase both sides for comparison
-    // Backend returns "ROLE_JOB_SEEKER", frontend may store "JOB_SEEKER" or "ROLE_JOB_SEEKER"
-    const userRole = (user?.role || user?.type || "").toUpperCase().replace("ROLE_", "");
+    const rawUserRole = user?.role || user?.type || "";
+    const userRole = rawUserRole.toUpperCase().replace("ROLE_", "");
     const requiredRole = role.toUpperCase().replace("ROLE_", "");
+    console.log('[ProtectedRoute] rawUserRole:', rawUserRole, '| normalized:', userRole, '| required:', requiredRole, '| match:', userRole.includes(requiredRole));
     if (!userRole.includes(requiredRole)) {
-      return <Navigate to="/" replace />;
+      console.log('[ProtectedRoute] ❌ Role mismatch → redirecting to /login');
+      return <Navigate to="/login" replace />;
     }
   }
 
+  console.log('[ProtectedRoute] ✅ Access granted');
   return children;
 }
 
