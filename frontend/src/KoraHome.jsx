@@ -318,7 +318,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
 /* ─── HERO CAROUSEL ─────────────────────────────────────────── */
 function Hero() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -343,6 +343,13 @@ function Hero() {
     }
     return () => clearInterval(timerRef.current);
   }, [current, paused, goTo]);
+
+  const getDashboardPath = () => {
+    const role = user?.role || user?.type || "";
+    if (role.includes("EMPLOYER")) return "/dashboard/employer";
+    if (role.includes("ADMIN")) return "/profile/admin";
+    return "/employee/dashboard";
+  };
 
   const handleAction = () => {
     if (!isAuthenticated) navigate("/login");
@@ -395,9 +402,25 @@ function Hero() {
             ))}
           </div>
           <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
-            <button onClick={handleAction} style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
-              Voir l'offre →
-            </button>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to={getDashboardPath()}
+                  style={{ background:G, color:"white", textDecoration:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, boxShadow:"0 4px 20px rgba(26,92,46,0.4)" }}
+                >
+                  Mon Tableau de Bord →
+                </Link>
+                <button onClick={handleAction} style={{ background:"rgba(255,255,255,0.15)", color:"white", border:"1px solid rgba(255,255,255,0.3)", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", backdropFilter:"blur(8px)" }}>
+                  Voir l'offre
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={handleAction} style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
+                  Voir l'offre →
+                </button>
+              </>
+            )}
             <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
               <span style={{ width:8, height:8, borderRadius:"50%", background: s.match >= 90 ? "#22C55E" : "#F59E0B", display:"inline-block" }}/>
               {s.match}% de compatibilité
