@@ -10,75 +10,77 @@ import EditProfileModal from "../../components/profile/EditProfileModal";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 
-// Mock data representing the authenticated job seeker (FR08)
-const mockJobSeeker = {
-  id: 1,
-  fullName: "Lena Dorcas Valmira BILOA EKASSI",
-  email: "lena.biloa@gmail.com",
-  phone: "+237 691 234 567",
-  city: "Yaoundé",
-  region: "Centre",
-  dateOfBirth: "1999-03-15",
+import { useState, useEffect } from "react";
+import ProfileHeader from "../../components/profile/ProfileHeader";
+import ProfileSidebar from "../../components/profile/ProfileSidebar";
+import ExperienceSection from "../../components/profile/ExperienceSection";
+import EducationSection from "../../components/profile/EducationSection";
+import SkillsSection from "../../components/profile/SkillsSection";
+import LanguagesSection from "../../components/profile/LanguagesSection";
+import CVUploadSection from "../../components/profile/CVUploadSection";
+import EditProfileModal from "../../components/profile/EditProfileModal";
+import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
+import "../../styles/profile.css";
+import { useAuth } from "../../context/AuthContext";
+import { getJobSeekerProfile, updateJobSeekerProfile } from "../../api/profiles";
+
+const FALLBACK_PROFILE = {
+  fullName: "User",
+  email: "",
+  phone: "",
+  city: "",
+  region: "",
+  dateOfBirth: "",
   profilePhoto: null,
-  summary:
-    "Passionate software engineering student at Institut Saint Jean with strong foundations in Java, Spring Boot, and React.js. Eager to contribute to impactful digital solutions in Cameroon's growing tech ecosystem.",
+  summary: "",
   cvUrl: null,
   cvFileName: null,
-  experiences: [
-    {
-      id: 1,
-      title: "Web Development Intern",
-      company: "TechCam Solutions",
-      city: "Yaoundé",
-      startDate: "2024-07",
-      endDate: "2024-09",
-      current: false,
-      description:
-        "Developed REST APIs using Spring Boot and integrated with a React.js frontend. Implemented JWT-based authentication and worked with MySQL databases.",
-    },
-  ],
-  education: [
-    {
-      id: 1,
-      degree: "Engineer's Degree – Software Engineering",
-      institution: "Institut Universitaire Saint Jean",
-      city: "Yaoundé",
-      startYear: 2022,
-      endYear: 2025,
-      current: true,
-    },
-    {
-      id: 2,
-      degree: "Baccalauréat Série C",
-      institution: "Lycée Général Leclerc",
-      city: "Yaoundé",
-      startYear: 2018,
-      endYear: 2021,
-      current: false,
-    },
-  ],
-  skills: [
-    { id: 1, name: "Java", type: "technical" },
-    { id: 2, name: "Spring Boot", type: "technical" },
-    { id: 3, name: "React.js", type: "technical" },
-    { id: 4, name: "MySQL", type: "technical" },
-    { id: 5, name: "Git & GitHub", type: "technical" },
-    { id: 6, name: "Docker", type: "technical" },
-    { id: 7, name: "Teamwork", type: "soft" },
-    { id: 8, name: "Problem Solving", type: "soft" },
-    { id: 9, name: "Communication", type: "soft" },
-  ],
-  languages: [
-    { id: 1, name: "French", level: "Native" },
-    { id: 2, name: "English", level: "Professional" },
-  ],
+  experiences: [],
+  education: [],
+  skills: [],
+  languages: [],
 };
 
 export default function JobSeekerProfile() {
-  const [profile, setProfile] = useState(mockJobSeeker);
+  const { user, token } = useAuth();
+  const [profile, setProfile] = useState(FALLBACK_PROFILE);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [editModal, setEditModal] = useState({ open: false, section: null });
   const [resetModal, setResetModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      // In a real app, user object might contain the jobSeekerId, or we fetch /me
+      // For now, if we have a user.id, we use it, otherwise we try id 1 as a fallback for demo
+      const idToFetch = user?.id || user?.jobSeekerId || 1; 
+      try {
+        const data = await getJobSeekerProfile(idToFetch);
+        // Ensure arrays exist
+        setProfile({
+          ...FALLBACK_PROFILE,
+          ...data,
+          experiences: data.experiences || [],
+          education: data.education || [],
+          skills: data.skills || [],
+          languages: data.languages || []
+        });
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+        setError("Could not load profile data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+      setError("Not authenticated.");
+    }
+  }, [user, token]);
 
   const completionScore = () => {
     let score = 0;
@@ -86,20 +88,36 @@ export default function JobSeekerProfile() {
     if (profile.summary) score += 15;
     if (profile.phone) score += 10;
     if (profile.cvUrl) score += 20;
-    if (profile.experiences.length > 0) score += 15;
-    if (profile.education.length > 0) score += 10;
-    if (profile.skills.length >= 3) score += 10;
-    if (profile.languages.length > 0) score += 5;
+    if (profile.experiences?.length > 0) score += 15;
+    if (profile.education?.length > 0) score += 10;
+    if (profile.skills?.length >= 3) score += 10;
+    if (profile.languages?.length > 0) score += 5;
     return score;
   };
 
   const openEdit = (section) => setEditModal({ open: true, section });
   const closeEdit = () => setEditModal({ open: false, section: null });
 
-  const handleSave = (section, data) => {
-    setProfile((prev) => ({ ...prev, ...data }));
-    closeEdit();
+  const handleSave = async (section, data) => {
+    try {
+      const updatedProfileData = { ...profile, ...data };
+      const idToUpdate = user?.id || user?.jobSeekerId || 1;
+      const updated = await updateJobSeekerProfile(idToUpdate, updatedProfileData);
+      setProfile({ ...updatedProfileData, ...updated });
+      closeEdit();
+    } catch (err) {
+      console.error("Failed to save profile", err);
+      alert("Failed to save changes.");
+    }
   };
+
+  if (loading) {
+    return <div style={{ padding: '50px', textAlign: 'center' }}>Loading profile...</div>;
+  }
+
+  if (error && !profile.id) {
+    return <div style={{ padding: '50px', textAlign: 'center', color: 'red' }}>{error}</div>;
+  }
 
   return (
     <div className="kora-profile-root">
@@ -147,25 +165,25 @@ export default function JobSeekerProfile() {
               <ExperienceSection
                 experiences={profile.experiences}
                 onEdit={openEdit}
-                onUpdate={(experiences) => setProfile((p) => ({ ...p, experiences }))}
+                onUpdate={(experiences) => handleSave("experiences", { experiences })}
               />
             )}
             {(activeTab === "overview" || activeTab === "education") && (
               <EducationSection
                 education={profile.education}
                 onEdit={openEdit}
-                onUpdate={(education) => setProfile((p) => ({ ...p, education }))}
+                onUpdate={(education) => handleSave("education", { education })}
               />
             )}
             {(activeTab === "overview" || activeTab === "skills") && (
               <>
                 <SkillsSection
                   skills={profile.skills}
-                  onUpdate={(skills) => setProfile((p) => ({ ...p, skills }))}
+                  onUpdate={(skills) => handleSave("skills", { skills })}
                 />
                 <LanguagesSection
                   languages={profile.languages}
-                  onUpdate={(languages) => setProfile((p) => ({ ...p, languages }))}
+                  onUpdate={(languages) => handleSave("languages", { languages })}
                 />
               </>
             )}

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Building2, Globe, MapPin, Mail, Phone, Edit2, Plus,
   Trash2, Camera, Briefcase, Users, CheckCircle,
@@ -8,25 +8,21 @@ import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
+import { useAuth } from "../../context/AuthContext";
+import { getEmployerProfile, updateEmployerProfile } from "../../api/profiles";
 
-const mockEmployer = {
-  id: 2,
-  companyName: "TechCam Solutions",
-  contactName: "Jean-Pierre MVONDO",
-  email: "contact@techcam.cm",
-  phone: "+237 233 456 789",
-  sector: "Information Technology",
-  description:
-    "TechCam Solutions is a leading software development company based in Cameroon, specializing in enterprise web applications, mobile solutions, and digital transformation for African businesses. We believe in nurturing local talent and building Africa's digital future.",
-  website: "https://www.techcam.cm",
-  city: "Douala",
+const FALLBACK_EMPLOYER = {
+  companyName: "Employer",
+  contactName: "",
+  email: "",
+  phone: "",
+  sector: "",
+  description: "",
+  website: "",
+  city: "",
   logo: null,
   status: "ACTIVE",
-  activeJobs: [
-    { id: 1, title: "Senior Java Developer", type: "CDI", applications: 12, deadline: "2025-06-15", status: "ACTIVE" },
-    { id: 2, title: "React.js Frontend Engineer", type: "CDD", applications: 8, deadline: "2025-05-30", status: "ACTIVE" },
-    { id: 3, title: "DevOps Engineer", type: "CDI", applications: 4, deadline: "2025-07-01", status: "ACTIVE" },
-  ],
+  activeJobs: [],
 };
 
 const SECTORS = [
@@ -35,16 +31,54 @@ const SECTORS = [
 ];
 
 export default function EmployerProfile() {
-  const [profile, setProfile] = useState(mockEmployer);
+  const { user, token, logout } = useAuth();
+  const [profile, setProfile] = useState(FALLBACK_EMPLOYER);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ ...mockEmployer });
+  const [form, setForm] = useState(FALLBACK_EMPLOYER);
   const [activeTab, setActiveTab] = useState("overview");
   const [resetModal, setResetModal] = useState(false);
   const logoRef = useRef();
 
-  const handleSave = () => {
-    setProfile({ ...form });
-    setEditing(false);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      // In a real app, user object might contain the employerId
+      // For now, if we have a user.id, we use it, otherwise we try id 2 as a fallback for demo
+      const idToFetch = user?.id || user?.employerId || 2; 
+      try {
+        const data = await getEmployerProfile(idToFetch);
+        setProfile({
+          ...FALLBACK_EMPLOYER,
+          ...data,
+          activeJobs: data.activeJobs || [],
+        });
+      } catch (err) {
+        console.error("Failed to fetch employer profile", err);
+        setError("Could not load employer profile data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+      setError("Not authenticated.");
+    }
+  }, [user, token]);
+
+  const handleSave = async () => {
+    try {
+      const idToUpdate = user?.id || user?.employerId || 2;
+      const updated = await updateEmployerProfile(idToUpdate, form);
+      setProfile({ ...form, ...updated });
+      setEditing(false);
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      alert("Failed to save changes.");
+    }
   };
 
   const handleLogoChange = (file) => {
@@ -59,7 +93,15 @@ export default function EmployerProfile() {
       setProfile((p) => ({ ...p, activeJobs: p.activeJobs.filter((j) => j.id !== id) }));
   };
 
-  const initials = profile.companyName.split(" ").map((w) => w[0]).slice(0, 2).join("");
+  if (loading) {
+    return <div style={{ padding: '50px', textAlign: 'center' }}>Loading employer profile...</div>;
+  }
+
+  if (error && !profile.id) {
+    return <div style={{ padding: '50px', textAlign: 'center', color: 'red' }}>{error}</div>;
+  }
+
+  const initials = profile.companyName?.split(" ").map((w) => w[0]).slice(0, 2).join("") || "E";
 
   return (
     <div className="kora-profile-root employer">
@@ -93,7 +135,7 @@ export default function EmployerProfile() {
             <div className="kora-employer-stats">
               {[
                 { label: "Active Jobs", value: profile.activeJobs.filter(j => j.status === "ACTIVE").length },
-                { label: "Applications", value: profile.activeJobs.reduce((a, j) => a + j.applications, 0) },
+                { label: "Applications", value: profile.activeJobs.reduce((a, j) => a + (j.applications || 0), 0) },
               ].map(({ label, value }) => (
                 <div key={label} className="kora-stat-pill">
                   <strong>{value}</strong>
@@ -123,7 +165,7 @@ export default function EmployerProfile() {
               </button>
             </nav>
 
-            <button className="kora-sidebar-logout"><LogOut size={15} />Sign Out</button>
+            <button className="kora-sidebar-logout" onClick={logout}><LogOut size={15} />Sign Out</button>
           </div>
         </aside>
 
@@ -195,8 +237,8 @@ export default function EmployerProfile() {
                       </div>
                     </div>
                     <div className="kora-job-row-stats">
-                      <div className="kora-job-apps-count"><Users size={14} />{job.applications} applicants</div>
-                      <span className={`kora-status-badge kora-status-${job.status.toLowerCase()}`}>{job.status}</span>
+                      <div className="kora-job-apps-count"><Users size={14} />{job.applications || 0} applicants</div>
+                      <span className={`kora-status-badge kora-status-${(job.status || "ACTIVE").toLowerCase()}`}>{job.status || "ACTIVE"}</span>
                     </div>
                     <div className="kora-item-actions" style={{ opacity: 1 }}>
                       <button title="Edit"><Edit2 size={14} /></button>
@@ -222,13 +264,13 @@ export default function EmployerProfile() {
             </div>
             <div className="kora-modal-body">
               <div className="kora-form-grid">
-                <div className="kora-field"><label>Company Name *</label><input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></div>
-                <div className="kora-field"><label>Contact Person</label><input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
-                <div className="kora-field"><label>Sector</label><select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })}>{SECTORS.map((s) => <option key={s}>{s}</option>)}</select></div>
-                <div className="kora-field"><label>City</label><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-                <div className="kora-field"><label>Phone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                <div className="kora-field"><label>Website URL</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-                <div className="kora-field kora-field-full"><label>Description</label><textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+                <div className="kora-field"><label>Company Name *</label><input value={form.companyName || ''} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></div>
+                <div className="kora-field"><label>Contact Person</label><input value={form.contactName || ''} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
+                <div className="kora-field"><label>Sector</label><select value={form.sector || ''} onChange={(e) => setForm({ ...form, sector: e.target.value })}><option value="">Select</option>{SECTORS.map((s) => <option key={s}>{s}</option>)}</select></div>
+                <div className="kora-field"><label>City</label><input value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+                <div className="kora-field"><label>Phone</label><input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                <div className="kora-field"><label>Website URL</label><input value={form.website || ''} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+                <div className="kora-field kora-field-full"><label>Description</label><textarea rows={4} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               </div>
               <div className="kora-modal-footer">
                 <button className="kora-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>

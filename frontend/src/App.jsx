@@ -103,28 +103,55 @@ function EmployerJobsManager() {
   return <ManageJobs onPostJob={() => setView("post")} />;
 }
 
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// ── Protected Route Helper ────────────────────────────────
+function ProtectedRoute({ children, role }) {
+  const { isAuthenticated, user, loading } = useAuth();
+  
+  if (loading) return <div>Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  if (role) {
+    const userRole = user?.role || user?.type || "";
+    if (!userRole.includes(role)) {
+      return <Navigate to="/" replace />;
+    }
+  }
+
+  return children;
+}
+
 // ── App Component ──────────────────────────────────────────
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<KoraHome />} />
-        <Route path="/profile/job-seeker" element={<JobSeekerProfile />} />
-        <Route path="/profile/employer" element={<EmployerProfile />} />
-        <Route path="/profile/admin" element={<AdminProfile />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-        <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
-        <Route path="/jobs" element={<JobList />} />
-        <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/jobs/:id/apply" element={<ApplyPage />} />
-        <Route path="/dashboard/employer" element={<EmployerDashboard />} />
-        <Route path="/employer/jobs" element={<EmployerJobsManager />} />
-        <Route path="/employer/post-job" element={<EmployerJobsManager />} />
-      </Routes>
-      <DevNav />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<KoraHome />} />
+          
+          {/* Private Routes */}
+          <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
+          <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
+          <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
+          
+          <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
+          
+          <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+          <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
+          <Route path="/jobs" element={<JobList />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/jobs/:id/apply" element={<ApplyPage />} />
+        </Routes>
+        <DevNav />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

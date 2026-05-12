@@ -5,25 +5,12 @@
  * If not set, the mock service is used automatically.
  */
 
-import axios from 'axios';
+import apiClient from './client';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // ─── Toggle mock mode ────────────────────────────────────────────────────────
-export const useMock = !BASE_URL;
-
-// ─── Axios instance ──────────────────────────────────────────────────────────
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-// Attach auth token if present
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+export const useMock = true; // Forced mock for jobs until backend is implemented
 
 // ─── Mock data ───────────────────────────────────────────────────────────────
 const MOCK_JOBS = [
@@ -156,33 +143,33 @@ const mockService = {
 // ─── Real API calls ───────────────────────────────────────────────────────────
 const realService = {
   async getJobs(params) {
-    const { data } = await api.get('/api/jobs', { params });
+    const { data } = await apiClient.get('/api/jobs', { params });
     return data;
   },
   async getJob(id) {
-    const { data } = await api.get(`/api/jobs/${id}`);
+    const { data } = await apiClient.get(`/api/jobs/${id}`);
     return data;
   },
   async applyToJob(id, formData) {
-    const { data } = await api.post(`/api/jobs/${id}/apply`, formData, {
+    const { data } = await apiClient.post(`/api/jobs/${id}/apply`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
   },
   async rateJob(id, rating) {
-    const { data } = await api.post(`/api/jobs/${id}/rate`, { rating });
+    const { data } = await apiClient.post(`/api/jobs/${id}/rate`, { rating });
     return data;
   },
   async getUserApplications() {
-    const { data } = await api.get('/api/user/applications');
+    const { data } = await apiClient.get('/api/user/applications');
     return data;
   },
   async getUserInterviews() {
-    const { data } = await api.get('/api/user/interviews');
+    const { data } = await apiClient.get('/api/user/interviews');
     return data;
   },
   async saveJob(id) {
-    const { data } = await api.post(`/api/jobs/${id}/save`);
+    const { data } = await apiClient.post(`/api/jobs/${id}/save`);
     return data;
   },
 };

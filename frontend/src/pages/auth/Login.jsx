@@ -1,11 +1,43 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+      const data = await login({ email, password });
+      // Redirect based on role or just go to dashboard
+      // If the backend doesn't return a role yet, default to employee dashboard
+      const role = data.role || data.type || '';
+      if (role.includes('EMPLOYER')) {
+        navigate('/dashboard/employer');
+      } else if (role.includes('ADMIN')) {
+        navigate('/profile/admin');
+      } else {
+        navigate('/employee/dashboard');
+      }
+    } catch (err) {
+      setError(err.response?.data || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="kora-auth-root">
@@ -28,7 +60,9 @@ export default function Login() {
           <h2 className="kora-auth-title">Sign In</h2>
           <p className="kora-auth-subtitle">Enter your details to proceed.</p>
 
-          <form className="kora-auth-form" onSubmit={(e) => e.preventDefault()}>
+          <form className="kora-auth-form" onSubmit={handleSubmit}>
+            {error && <div style={{color: 'red', marginBottom: '10px', fontSize: '14px'}}>{error}</div>}
+            
             <div className="kora-auth-field">
               <div className="kora-auth-input-wrapper">
                 <Mail size={18} className="kora-auth-input-icon" />
@@ -36,6 +70,9 @@ export default function Login() {
                   type="email"
                   className="kora-auth-input"
                   placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -47,6 +84,9 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   className="kora-auth-input"
                   placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -68,8 +108,8 @@ export default function Login() {
               </Link>
             </div>
 
-            <button type="submit" className="kora-auth-btn">
-              Sign In
+            <button type="submit" className="kora-auth-btn" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </button>
 
             <div className="kora-auth-divider">Or continue with</div>
@@ -97,4 +137,5 @@ export default function Login() {
     </div>
   );
 }
+
 

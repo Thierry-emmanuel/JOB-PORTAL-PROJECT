@@ -1,12 +1,61 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Briefcase, Eye, EyeOff } from "lucide-react";
 import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (password !== confirmPassword) {
+      return setError('Passwords do not match');
+    }
+    
+    if (!role) {
+      return setError('Please select a role');
+    }
+
+    setLoading(true);
+    
+    try {
+      const nameParts = fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      await register({
+        email,
+        password,
+        firstName,
+        lastName,
+        role: `ROLE_${role}`
+      });
+      
+      // Successfully registered, navigate to login
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="kora-auth-root">
@@ -28,7 +77,9 @@ export default function Register() {
           <h2 className="kora-auth-title">Create Account</h2>
           <p className="kora-auth-subtitle">Join us today. It only takes a minute.</p>
 
-          <form className="kora-auth-form" onSubmit={(e) => e.preventDefault()} style={{ gap: '15px' }}>
+          <form className="kora-auth-form" onSubmit={handleSubmit} style={{ gap: '15px' }}>
+            {error && <div style={{color: 'red', marginBottom: '5px', fontSize: '14px'}}>{error}</div>}
+            
             <div className="kora-auth-field">
               <div className="kora-auth-input-wrapper">
                 <User size={18} className="kora-auth-input-icon" />
@@ -36,6 +87,9 @@ export default function Register() {
                   type="text"
                   className="kora-auth-input"
                   placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -47,6 +101,9 @@ export default function Register() {
                   type="email"
                   className="kora-auth-input"
                   placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -54,7 +111,13 @@ export default function Register() {
             <div className="kora-auth-field">
               <div className="kora-auth-input-wrapper">
                 <Briefcase size={18} className="kora-auth-input-icon" />
-                <select className="kora-auth-input" defaultValue="" style={{ appearance: 'none' }}>
+                <select 
+                  className="kora-auth-input" 
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  style={{ appearance: 'none' }}
+                  required
+                >
                   <option value="" disabled>Select your role</option>
                   <option value="JOB_SEEKER">Job Seeker</option>
                   <option value="EMPLOYER">Employer</option>
@@ -69,6 +132,9 @@ export default function Register() {
                   type={showPassword ? "text" : "password"}
                   className="kora-auth-input"
                   placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -87,6 +153,9 @@ export default function Register() {
                   type={showConfirmPassword ? "text" : "password"}
                   className="kora-auth-input"
                   placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -100,13 +169,13 @@ export default function Register() {
 
             <div className="kora-auth-options" style={{ marginTop: '0' }}>
               <label className="kora-auth-checkbox">
-                <input type="checkbox" />
+                <input type="checkbox" required />
                 <span style={{ fontSize: '12px' }}>I agree to the Terms and Privacy Policy</span>
               </label>
             </div>
 
-            <button type="submit" className="kora-auth-btn" style={{ marginTop: '5px' }}>
-              Create Account
+            <button type="submit" className="kora-auth-btn" style={{ marginTop: '5px' }} disabled={loading}>
+              {loading ? "Creating..." : "Create Account"}
             </button>
 
             <div className="kora-auth-divider">Or sign up with</div>
@@ -130,4 +199,5 @@ export default function Register() {
     </div>
   );
 }
+
 
