@@ -1,31 +1,31 @@
-import { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // ── Global styles ─────────────────────────────────────────
 import "./styles/theme.css";
 import "./App.css";
-
-// ── Page imports ───────────────────────────────────────────
-import KoraHome from "./KoraHome";
-import JobSeekerProfile from "./pages/profile/JobSeekerProfile";
-import EmployerProfile from "./pages/profile/EmployerProfile";
-import AdminProfile from "./pages/profile/AdminProfile";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import OAuth2RedirectHandler from "./pages/auth/OAuth2RedirectHandler";
-import EmployerDashboard from "./pages/EmployerDashboard";
-import ManageJobs from "./pages/employer/ManageJobs";
-import PostJob from "./pages/employer/PostJobs";
-import EmployeeDashboard from './pages/employee/EmployeeDashboard';
-import JobList from './pages/jobs/JobList';
-import JobDetails from './pages/jobs/JobDetails';
-import ApplyPage from './pages/jobs/ApplyPage';
-import InterviewManagement from './pages/employer/InterviewManagement';
-
-// ── Shared styles for specific pages ──────────────────────
 import './styles/employee-dashboard.css';
 import './styles/job-list.css';
 import './styles/apply-page.css';
+
+// ── Lazy Loaded Pages ───────────────────────────────────────
+const KoraHome = lazy(() => import("./KoraHome"));
+const JobSeekerProfile = lazy(() => import("./pages/profile/JobSeekerProfile"));
+const EmployerProfile = lazy(() => import("./pages/profile/EmployerProfile"));
+const AdminProfile = lazy(() => import("./pages/profile/AdminProfile"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const OAuth2RedirectHandler = lazy(() => import("./pages/auth/OAuth2RedirectHandler"));
+const EmployerDashboard = lazy(() => import("./pages/EmployerDashboard"));
+const ManageJobs = lazy(() => import("./pages/employer/ManageJobs"));
+const PostJob = lazy(() => import("./pages/employer/PostJobs"));
+const EmployeeDashboard = lazy(() => import('./pages/employee/EmployeeDashboard'));
+const JobList = lazy(() => import('./pages/jobs/JobList'));
+const JobDetails = lazy(() => import('./pages/jobs/JobDetails'));
+const ApplyPage = lazy(() => import('./pages/jobs/ApplyPage'));
+const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagement'));
 
 // ── Development navigation overlay ────────────────────────
 function DevNav() {
@@ -104,13 +104,11 @@ function EmployerJobsManager() {
   return <ManageJobs onPostJob={() => setView("post")} />;
 }
 
-import { AuthProvider, useAuth } from "./context/AuthContext";
-
 // ── Protected Route Helper ────────────────────────────────
 function ProtectedRoute({ children, role }) {
   const { isAuthenticated, user, loading } = useAuth();
   
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}><div className="kora-spinner" /></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   
   if (role) {
@@ -123,37 +121,48 @@ function ProtectedRoute({ children, role }) {
   return children;
 }
 
+const GlobalLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#F9FAFB' }}>
+    <div className="kora-spinner" />
+  </div>
+);
+
 // ── App Component ──────────────────────────────────────────
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<KoraHome />} />
-          
-          {/* Private Routes */}
-          <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
-          <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
-          <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
-          
-          <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
-          <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
-          
-          <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-          <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-          <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<GlobalLoader />}>
+            <Routes>
+              <Route path="/" element={<KoraHome />} />
+              
+              {/* Private Routes */}
+              <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
+              <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
+              <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
+              
+              <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
+              <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
+              
+              <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+              <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+              <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
 
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-          <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
-          <Route path="/jobs" element={<JobList />} />
-          <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/jobs/:id/apply" element={<ApplyPage />} />
-        </Routes>
-        <DevNav />
-      </BrowserRouter>
-    </AuthProvider>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+              <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
+              <Route path="/jobs" element={<JobList />} />
+              <Route path="/jobs/:id" element={<JobDetails />} />
+              <Route path="/jobs/:id/apply" element={<ApplyPage />} />
+            </Routes>
+            <DevNav />
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
+
