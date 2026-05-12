@@ -48,8 +48,8 @@ export default function Register() {
         role: role
       });
       
-      // Successfully registered, navigate to login
-      navigate('/login');
+      // Successfully registered, navigate to home
+      navigate('/');
     } catch (err) {
       setError(err.response?.data || "Registration failed. Please try again.");
     } finally {
