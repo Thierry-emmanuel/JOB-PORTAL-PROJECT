@@ -112,8 +112,11 @@ function ProtectedRoute({ children, role }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   
   if (role) {
-    const userRole = user?.role || user?.type || "";
-    if (!userRole.includes(role)) {
+    // Normalize: strip ROLE_ prefix and uppercase both sides for comparison
+    // Backend returns "ROLE_JOB_SEEKER", frontend may store "JOB_SEEKER" or "ROLE_JOB_SEEKER"
+    const userRole = (user?.role || user?.type || "").toUpperCase().replace("ROLE_", "");
+    const requiredRole = role.toUpperCase().replace("ROLE_", "");
+    if (!userRole.includes(requiredRole)) {
       return <Navigate to="/" replace />;
     }
   }

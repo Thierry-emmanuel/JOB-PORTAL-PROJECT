@@ -14,13 +14,14 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (token) {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete apiClient.defaults.headers.common['Authorization'];
     }
-    setLoading(false);
   }, [token]);
 
   const login = async (credentials) => {
@@ -52,6 +53,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    loading,
     login,
     register,
     logout,

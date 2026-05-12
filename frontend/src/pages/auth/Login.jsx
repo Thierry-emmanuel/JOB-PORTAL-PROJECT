@@ -22,12 +22,10 @@ export default function Login() {
     
     try {
       const data = await login({ email, password });
-      // Redirect based on role or just go to dashboard
-      // If the backend doesn't return a role yet, default to employee dashboard
-      const role = data.role || data.type || '';
-      if (role.includes('EMPLOYER')) {
+      const rawRole = (data.role || data.type || '').toUpperCase().replace('ROLE_', '');
+      if (rawRole.includes('EMPLOYER')) {
         navigate('/dashboard/employer');
-      } else if (role.includes('ADMIN')) {
+      } else if (rawRole.includes('ADMIN')) {
         navigate('/profile/admin');
       } else {
         navigate('/employee/dashboard');
