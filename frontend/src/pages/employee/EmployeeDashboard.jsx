@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import KoraNav from '../../components/KoraNav';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
-import { getUserApplications, getUserInterviews, getJobs } from '../../api/jobs';
+import { getUserApplications, getJobs } from '../../api/jobs';
+import { getInterviewsBySeeker, cancelInterview } from '../../api/interviews';
+import InterviewCard from '../../components/interviews/InterviewCard';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/employee-dashboard.css';
 
 /* ─────────────────────────────────────────────────────────
@@ -133,9 +136,10 @@ MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
    EmployeeDashboard
    ════════════════════════════════════════════════════════════ */
 export default function EmployeeDashboard() {
-  const [profile, setProfile] = useState(MOCK_PROFILE);
+  const { user, token } = useAuth();
+  const [profile, setProfile] = useState(user || {});
   const completion = profileCompletion(profile);
-  const firstName  = profile.fullName.split(' ')[0];
+  const firstName  = profile.fullName?.split(' ')[0] || profile.firstName || 'User';
 
   /* ── API data ───────────────────────────────────────────── */
   const [applications,  setApplications]  = useState([]);
@@ -149,21 +153,36 @@ export default function EmployeeDashboard() {
   const [jobsLoading,   setJobsLoading]   = useState(true);
 
   useEffect(() => {
+    if (!token) return;
+
+    const seekerId = user?.id || user?.jobSeekerId || 1;
+
     getUserApplications()
       .then((res) => setApplications(res.data || []))
       .catch(() => setAppsError('Could not load applications.'))
       .finally(() => setAppsLoading(false));
 
-    getUserInterviews()
-      .then((res) => setInterviews(res.data || []))
-      .catch(() => {})
+    getInterviewsBySeeker(seekerId)
+      .then((data) => setInterviews(data || []))
+      .catch((err) => console.error("Interviews fetch error:", err))
       .finally(() => setInterLoading(false));
 
     getJobs({ limit: 3 })
       .then((res) => setRecJobs(res.data || []))
       .catch(() => {})
       .finally(() => setJobsLoading(false));
-  }, []);
+  }, [user, token]);
+
+  const handleCancelInterview = async (id) => {
+    if (window.confirm('Cancel this interview?')) {
+      try {
+        await cancelInterview(id);
+        setInterviews(interviews.filter(iv => iv.id !== id));
+      } catch (err) {
+        alert('Failed to cancel.');
+      }
+    }
+  };
 
   /* ── Render ─────────────────────────────────────────────── */
   return (
@@ -332,37 +351,13 @@ export default function EmployeeDashboard() {
                 <p>No interviews scheduled yet.</p>
               </div>
             ) : (
-              <div className="ed-interview-grid">
+              <div className="ed-interview-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                 {interviews.map((iv) => (
-                  <div key={iv.id} className="ed-interview-card">
-                    <div className="ed-interview-type-badge">
-                      {iv.type === 'Video' ? '🎥 Video' : '🏢 In-person'}
-                    </div>
-                    <h3 className="ed-interview-title">{iv.jobTitle}</h3>
-                    <p className="ed-interview-company">{iv.company}</p>
-                    <div className="ed-interview-meta">
-                      <span>
-                        📅{' '}
-                        {new Date(iv.date).toLocaleDateString('en-GB', {
-                          weekday: 'short',
-                          day: '2-digit',
-                          month: 'short',
-                        })}
-                      </span>
-                      <span>🕐 {iv.time}</span>
-                    </div>
-                    {iv.meetLink && (
-                      <a
-                        href={iv.meetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ed-join-btn"
-                        aria-label={`Join meeting for ${iv.jobTitle}`}
-                      >
-                        Join Meeting →
-                      </a>
-                    )}
-                  </div>
+                  <InterviewCard 
+                    key={iv.id} 
+                    interview={iv} 
+                    onCancel={handleCancelInterview}
+                  />
                 ))}
               </div>
             )}

@@ -20,6 +20,7 @@ import EmployeeDashboard from './pages/employee/EmployeeDashboard';
 import JobList from './pages/jobs/JobList';
 import JobDetails from './pages/jobs/JobDetails';
 import ApplyPage from './pages/jobs/ApplyPage';
+import InterviewManagement from './pages/employer/InterviewManagement';
 
 // ── Shared styles for specific pages ──────────────────────
 import './styles/employee-dashboard.css';
@@ -140,6 +141,7 @@ export default function App() {
           
           <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
           <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+          <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
 
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
