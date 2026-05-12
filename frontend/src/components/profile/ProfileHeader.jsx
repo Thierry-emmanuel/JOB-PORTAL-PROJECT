@@ -96,7 +96,7 @@ export default function ProfileHeader({ profile, onEdit, completion }) {
               cy="40"
               r="32"
               fill="none"
-              stroke="#0B2B26"
+              stroke="#1A5C2E"
               strokeWidth="6"
               strokeDasharray={`${(completion / 100) * 201} 201`}
               strokeLinecap="round"

@@ -4,7 +4,7 @@ import {
   Trash2, Camera, Briefcase, Users, CheckCircle,
   ExternalLink, LogOut, Bell, Settings, BarChart2, KeyRound, X
 } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";

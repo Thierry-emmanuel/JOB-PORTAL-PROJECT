@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Lock, User, Briefcase, Eye, EyeOff } from "lucide-react";
-import logo from "../../assets/absolute-size-logo - Copy.png";
+import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
 
 export default function Register() {

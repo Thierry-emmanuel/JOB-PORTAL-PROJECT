@@ -1,11 +1,11 @@
 /* ── Admin Profile Specific Styles ── */
 
 .admin-banner {
-  background: linear-gradient(135deg, #071e1a 0%, #0B2B26 50%, #1a3a35 100%);
+  background: linear-gradient(135deg, #071e1a 0%, #1A5C2E 50%, #1a3a35 100%);
 }
 
 .kora-admin-sidebar {
-  background: linear-gradient(180deg, #071e1a 0%, #0B2B26 100%);
+  background: linear-gradient(180deg, #071e1a 0%, #1A5C2E 100%);
 }
 
 .kora-admin-banner-badge {
@@ -38,7 +38,7 @@
   color: var(--kora-accent);
 }
 .kora-admin-avatar-large {
-  background: linear-gradient(135deg, #071e1a, #0B2B26);
+  background: linear-gradient(135deg, #071e1a, #1A5C2E);
 }
 .kora-admin-avatar-large svg { color: var(--kora-accent); }
 

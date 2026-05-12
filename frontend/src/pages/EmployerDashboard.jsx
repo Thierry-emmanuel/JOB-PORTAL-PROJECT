@@ -5,7 +5,7 @@ import {
   CheckCircle, Calendar, Building2, ArrowUp, ArrowDown,
   FileText, AlertCircle, Search, TrendingUp, Edit2, Menu, X
 } from "lucide-react";
-import koraLogo from "../assets/kora-logo.png";
+import koraLogo from "../assets/absolute-size-logo.png";
 import "../styles/profile.css";
 import "../styles/employer-profile.css";
 import "../styles/employer-dashboard.css";
@@ -229,8 +229,8 @@ export default function EmployerDashboard() {
 
           {/* Stat Cards */}
           <div className="ed-stats-grid">
-            <StatCard icon={<Briefcase size={20} />} label="Active Jobs"        value={stats.activeJobs}           change={stats.activeJobsChange}           color="#0B2B26" />
-            <StatCard icon={<Users size={20} />}     label="Applications"       value={stats.totalApplications}    change={stats.totalApplicationsChange}    color="#E07B39" />
+            <StatCard icon={<Briefcase size={20} />} label="Active Jobs"        value={stats.activeJobs}           change={stats.activeJobsChange}           color="#1A5C2E" />
+            <StatCard icon={<Users size={20} />}     label="Applications"       value={stats.totalApplications}    change={stats.totalApplicationsChange}    color="#F97316" />
             <StatCard icon={<Eye size={20} />}       label="Profile Views"      value={stats.totalViews}           change={stats.totalViewsChange}           color="#3b82f6" />
             <StatCard icon={<Star size={20} />}      label="Candidates Hired"   value={stats.hired}                change={stats.hiredChange}                color="#10b981" />
           </div>
@@ -357,8 +357,8 @@ export default function EmployerDashboard() {
             </div>
             <div className="ed-quick-actions">
               {[
-                { icon: <Plus size={20} />,        label: "Post a New Job",       color: "#0B2B26", bg: "#0B2B2618" },
-                { icon: <Users size={20} />,       label: "Review Applications",  color: "#E07B39", bg: "#E07B3918" },
+                { icon: <Plus size={20} />,        label: "Post a New Job",       color: "#1A5C2E", bg: "#1A5C2E18" },
+                { icon: <Users size={20} />,       label: "Review Applications",  color: "#F97316", bg: "#F9731618" },
                 { icon: <FileText size={20} />,    label: "View Job Reports",     color: "#3b82f6", bg: "#3b82f618" },
                 { icon: <Building2 size={20} />,   label: "Edit Company Profile", color: "#10b981", bg: "#10b98118" },
                 { icon: <AlertCircle size={20} />, label: "Pending Approvals",    color: "#f59e0b", bg: "#f59e0b18" },

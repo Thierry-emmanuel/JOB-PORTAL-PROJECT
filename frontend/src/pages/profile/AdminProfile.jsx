@@ -4,7 +4,7 @@ import {
   LogOut, Edit2, CheckCircle, XCircle, AlertCircle,
   TrendingUp, Eye, Trash2, UserCheck, Search, KeyRound, PieChart
 } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/admin-profile.css";
@@ -92,10 +92,10 @@ function UserGrowthChart({ data }) {
         {
           label: "Job Seekers",
           data: data.jobSeekers,
-          borderColor: "#0B2B26",
+          borderColor: "#1A5C2E",
           backgroundColor: "rgba(11,43,38,0.08)",
           borderWidth: 2.5,
-          pointBackgroundColor: "#0B2B26",
+          pointBackgroundColor: "#1A5C2E",
           pointRadius: 4,
           tension: 0.4,
           fill: true,
@@ -103,10 +103,10 @@ function UserGrowthChart({ data }) {
         {
           label: "Employers",
           data: data.employers,
-          borderColor: "#E07B39",
+          borderColor: "#F97316",
           backgroundColor: "rgba(224,123,57,0.08)",
           borderWidth: 2.5,
-          pointBackgroundColor: "#E07B39",
+          pointBackgroundColor: "#F97316",
           pointRadius: 4,
           tension: 0.4,
           fill: true,
@@ -140,7 +140,7 @@ function ApplicationsByCategoryChart({ data }) {
       datasets: [{
         label: "Applications",
         data: values,
-        backgroundColor: ["#0B2B26","#1a4a42","#E07B39","#f5a05a","#b5c4c1","#3a5550"],
+        backgroundColor: ["#1A5C2E","#1a4a42","#F97316","#f5a05a","#b5c4c1","#3a5550"],
         borderRadius: 6,
         borderSkipped: false,
       }],
@@ -169,7 +169,7 @@ function ApplicationStatusChart({ data }) {
       labels: Object.keys(data),
       datasets: [{
         data: Object.values(data),
-        backgroundColor: ["#0B2B26","#E07B39","#22c55e","#ef4444"],
+        backgroundColor: ["#1A5C2E","#F97316","#22c55e","#ef4444"],
         borderWidth: 3,
         borderColor: "#ffffff",
         hoverOffset: 6,
@@ -207,7 +207,7 @@ function JobStatusChart({ active, expired, deleted }) {
       labels: ["Active", "Expired", "Deleted"],
       datasets: [{
         data: [active, expired, deleted],
-        backgroundColor: ["#0B2B26","#f59e0b","#ef4444"],
+        backgroundColor: ["#1A5C2E","#f59e0b","#ef4444"],
         borderWidth: 3,
         borderColor: "#ffffff",
         hoverOffset: 6,
@@ -343,10 +343,10 @@ export default function AdminProfile() {
           {(activeTab === "dashboard" || activeTab === "reports") && (
             <div className="kora-kpi-grid">
               {[
-                { label: "Total Users", value: stats.totalUsers.toLocaleString(), icon: <Users size={20} />, color: "#0B2B26" },
+                { label: "Total Users", value: stats.totalUsers.toLocaleString(), icon: <Users size={20} />, color: "#1A5C2E" },
                 { label: "Job Seekers", value: stats.jobSeekers.toLocaleString(), icon: <UserCheck size={20} />, color: "#1a4a42" },
-                { label: "Employers", value: stats.employers.toLocaleString(), icon: <Briefcase size={20} />, color: "#E07B39" },
-                { label: "Active Jobs", value: stats.activeJobs.toLocaleString(), icon: <TrendingUp size={20} />, color: "#0B2B26" },
+                { label: "Employers", value: stats.employers.toLocaleString(), icon: <Briefcase size={20} />, color: "#F97316" },
+                { label: "Active Jobs", value: stats.activeJobs.toLocaleString(), icon: <TrendingUp size={20} />, color: "#1A5C2E" },
                 { label: "Applications", value: stats.totalApplications.toLocaleString(), icon: <BarChart2 size={20} />, color: "#1a4a42" },
                 { label: "Hire Rate", value: `${stats.hireRate}%`, icon: <CheckCircle size={20} />, color: "#22c55e" },
               ].map(({ label, value, icon, color }) => (

@@ -1,12 +1,12 @@
 /* ============================================================
    KORA JOB PORTAL — Redesigned Auth Pages (Login & Register)
-   Brand: #0B2B26 (deep forest green) | #E07B39 (orange accent)
+   Brand: #1A5C2E (deep forest green) | #F97316 (orange accent)
    ============================================================ */
 
 :root {
-  --kora-primary: #0B2B26;
+  --kora-primary: #1A5C2E;
   --kora-primary-light: #16423c;
-  --kora-accent: #E07B39;
+  --kora-accent: #F97316;
   --kora-bg-light: #f0f4f3;
   --kora-input-bg: #f0f4f8;
   --kora-text-dark: #1a1a1a;
@@ -37,7 +37,7 @@
 /* Left Side - Branding & Patterns */
 .kora-auth-left {
   flex: 1;
-  background: linear-gradient(135deg, #0B2B26 0%, #16423c 100%);
+  background: linear-gradient(135deg, #1A5C2E 0%, #16423c 100%);
   position: relative;
   display: flex;
   flex-direction: column;

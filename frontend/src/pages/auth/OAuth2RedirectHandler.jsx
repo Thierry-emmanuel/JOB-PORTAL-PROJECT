@@ -31,7 +31,7 @@ export default function OAuth2RedirectHandler() {
           width: 40, 
           height: 40, 
           border: '3px solid #e2e8f0', 
-          borderTopColor: '#0B2B26',
+          borderTopColor: '#1A5C2E',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
           margin: '0 auto 16px'

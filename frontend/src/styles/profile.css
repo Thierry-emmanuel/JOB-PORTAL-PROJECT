@@ -1,6 +1,6 @@
 /* ============================================================
    KORA JOB PORTAL — Profile Page Styles
-   Brand: #0B2B26 (deep forest green) | #E07B39 (orange accent)
+   Brand: #1A5C2E (deep forest green) | #F97316 (orange accent)
    Font: Poppins (display) + DM Sans (body)
    ============================================================ */
 
@@ -8,10 +8,10 @@
 
 /* ── CSS Variables ── */
 :root {
-  --kora-primary: #0B2B26;
+  --kora-primary: #1A5C2E;
   --kora-primary-light: #15423b;
   --kora-primary-pale: #f0f4f3;
-  --kora-accent: #E07B39;
+  --kora-accent: #F97316;
   --kora-accent-light: #fdf2e9;
   --kora-accent-glow: rgba(224, 123, 57, 0.15);
   --kora-white: #ffffff;

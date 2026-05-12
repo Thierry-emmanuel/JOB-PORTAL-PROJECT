@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Camera, FileText, Bookmark, Bell, Settings, LogOut, TrendingUp, KeyRound } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/absolute-size-logo.png";
 
 export default function ProfileSidebar({ profile, completion, onEdit, onPhotoChange, onResetPassword }) {
   const fileRef = useRef();
