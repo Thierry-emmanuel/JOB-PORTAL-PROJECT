@@ -45,7 +45,7 @@ export default function Register() {
         password,
         firstName,
         lastName,
-        role: `ROLE_${role}`
+        role: role
       });
       
       // Successfully registered, navigate to login
