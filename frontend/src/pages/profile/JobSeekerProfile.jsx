@@ -1,14 +1,3 @@
-import { useState } from "react";
-import ProfileHeader from "../../components/profile/ProfileHeader";
-import ProfileSidebar from "../../components/profile/ProfileSidebar";
-import ExperienceSection from "../../components/profile/ExperienceSection";
-import EducationSection from "../../components/profile/EducationSection";
-import SkillsSection from "../../components/profile/SkillsSection";
-import LanguagesSection from "../../components/profile/LanguagesSection";
-import CVUploadSection from "../../components/profile/CVUploadSection";
-import EditProfileModal from "../../components/profile/EditProfileModal";
-import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
-import "../../styles/profile.css";
 
 import { useState, useEffect } from "react";
 import ProfileHeader from "../../components/profile/ProfileHeader";
