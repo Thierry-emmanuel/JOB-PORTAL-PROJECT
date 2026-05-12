@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Kora_Logo from './assets/absolute-size-logo.png'
+import { useAuth } from "./context/AuthContext";
 
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────── */
@@ -115,10 +117,11 @@ function useReveal(delay = 0) {
 
 /* ─── NAVBAR ────────────────────────────────────────────────── */
 function Navbar({ logoSrc, onLogoUpload }) {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled]     = useState(false);
   const [activeNav, setActiveNav]   = useState("Offres");
   const [menuOpen, setMenuOpen]     = useState(false);
-  const fileRef = useRef(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -134,6 +137,13 @@ function Navbar({ logoSrc, onLogoUpload }) {
   }, []);
 
   const navLinks = ["Offres","Entreprises","Salaires","Recruteurs","Blog"];
+
+  const getDashboardPath = () => {
+    const role = user?.role || user?.type || "";
+    if (role.includes("EMPLOYER")) return "/dashboard/employer";
+    if (role.includes("ADMIN")) return "/profile/admin";
+    return "/employee/dashboard";
+  };
 
   return (
     <nav style={{
@@ -151,7 +161,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
         gap:16,
       }}>
         {/* Logo */}
-        <div style={{ display:"flex", alignItems:"center", flexShrink:0 }}>
+        <Link to="/" style={{ display:"flex", alignItems:"center", flexShrink:0, textDecoration: "none" }}>
           <div style={{ width:70, height:50, borderRadius:8, overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <img src={Kora_Logo} alt="Logo" style={{ width:"100%", height:"100%", objectFit:"contain" }} />
           </div>
@@ -159,7 +169,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
             <div style={{ fontWeight:800, fontSize:16, color:G, letterSpacing:"-0.3px", lineHeight:1 }}>KORA</div>
             <div style={{ fontSize:8, color:O, fontWeight:600, letterSpacing:"1.5px" }}>UNLOCK YOUR CAREER</div>
           </div>
-        </div>
+        </Link>
 
         {/* Desktop nav links */}
         <div className="kora-desktop-nav" style={{ flex:1, display:"flex", justifyContent:"center", gap:4, alignItems:"center" }}>
@@ -180,19 +190,48 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
         {/* Desktop auth buttons */}
         <div className="kora-desktop-nav" style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
-          <button style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color:"#374151", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit" }}>
-            Connexion
-          </button>
-          <button style={{ background:O, color:"white", border:"none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(249,115,22,0.3)" }}>
-            Postuler
-          </button>
+          {isAuthenticated ? (
+            <Link 
+              to={getDashboardPath()}
+              style={{ background:G, color:"white", textDecoration: "none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(26,92,46,0.2)" }}
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link 
+                to="/login"
+                style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color:"#374151", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit", textDecoration: "none" }}
+              >
+                Connexion
+              </Link>
+              <Link 
+                to="/register"
+                style={{ background:O, color:"white", border:"none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(249,115,22,0.3)", textDecoration: "none" }}
+              >
+                S'inscrire
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile: auth + hamburger */}
         <div className="kora-mobile-nav" style={{ display:"flex", gap:8, alignItems:"center", marginLeft:"auto" }}>
-          <button style={{ background:O, color:"white", border:"none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-            Postuler
-          </button>
+          {isAuthenticated ? (
+            <Link 
+              to={getDashboardPath()}
+              style={{ background:G, color:"white", textDecoration: "none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link 
+              to="/register"
+              style={{ background:O, color:"white", border:"none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit", textDecoration: "none" }}
+            >
+              S'inscrire
+            </Link>
+          )}
           {/* Hamburger button */}
           <button
             onClick={() => setMenuOpen(o => !o)}
@@ -245,9 +284,32 @@ function Navbar({ logoSrc, onLogoUpload }) {
               {link}
             </button>
           ))}
-          <button style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:INK, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit" }}>
-            Connexion
-          </button>
+          {isAuthenticated ? (
+            <Link 
+              to={getDashboardPath()}
+              onClick={() => setMenuOpen(false)}
+              style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:G, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link 
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:INK, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
+              >
+                Connexion
+              </Link>
+              <Link 
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:O, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
+              >
+                S'inscrire
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -827,7 +889,7 @@ function ScrollToTop() {
 }
 
 /* ─── APP ROOT ──────────────────────────────────────────────── */
-export default function KoraLanding() {
+export default function KoraHome() {
   const [logoSrc, setLogoSrc] = useState(null);
 
   const handleLogoUpload = (e) => {
