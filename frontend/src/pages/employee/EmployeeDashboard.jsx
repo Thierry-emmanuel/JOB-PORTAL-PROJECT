@@ -10,33 +10,23 @@ import { useAuth } from '../../context/AuthContext';
 import '../../styles/employee-dashboard.css';
 
 /* ─────────────────────────────────────────────────────────
-   Mock profile – replace with auth context / user API
-   when backend authentication is ready.
+   Profile is fetched from the backend. Fallback layout if missing.
    ───────────────────────────────────────────────────────── */
-const MOCK_PROFILE = {
-  id: 1,
-  fullName: 'Lena Dorcas Valmira BILOA EKASSI',
-  email: 'lena.biloa@gmail.com',
-  phone: '+237 691 234 567',
-  city: 'Yaoundé',
-  region: 'Centre',
-  dateOfBirth: '1999-03-15',
+const EMPTY_PROFILE = {
+  fullName: 'Loading User...',
+  email: '',
+  phone: '',
+  city: '',
+  region: '',
+  dateOfBirth: '',
   profilePhoto: null,
-  summary:
-    'Software engineering student at Institut Saint Jean with foundations in Java, Spring Boot, and React.js.',
+  summary: '',
   cvUrl: null,
   cvFileName: null,
-  experiences: [{ id: 1, title: 'Web Development Intern', company: 'TechCam Solutions' }],
-  education: [
-    { id: 1, degree: "Engineer's Degree", institution: 'Institut Universitaire Saint Jean' },
-  ],
-  skills: [
-    { id: 1, name: 'Java', type: 'technical' },
-    { id: 2, name: 'Spring Boot', type: 'technical' },
-    { id: 3, name: 'React.js', type: 'technical' },
-    { id: 4, name: 'MySQL', type: 'technical' },
-  ],
-  languages: [{ id: 1, name: 'French', level: 'Native' }],
+  experiences: [],
+  education: [],
+  skills: [],
+  languages: [],
 };
 
 /* ── Profile completion (same formula as JobSeekerProfile) ── */
@@ -138,7 +128,7 @@ MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
 export default function EmployeeDashboard() {
   const { user, token } = useAuth();
   // Merge auth user (has email/role) with any local profile overrides
-  const [profile, setProfile] = useState({ ...MOCK_PROFILE, ...(user || {}) });
+  const [profile, setProfile] = useState({ ...EMPTY_PROFILE, ...(user || {}) });
   const completion = profileCompletion(profile);
   const firstName  = profile.fullName?.split(' ')[0] || profile.firstName || profile.email?.split('@')[0] || 'User';
 
@@ -167,9 +157,7 @@ export default function EmployeeDashboard() {
       })
       .catch((err) => console.error("Failed to fetch profile:", err));
 
-    // The backend application/interview endpoints currently expect a UUID. 
-    // We pass the Long ID, which might fail with 500. We handle it gracefully.
-    getUserApplications()
+    getUserApplications(seekerId)
       .then((res) => setApplications(res.data || []))
       .catch(() => {
         setAppsError('Could not load applications.');
