@@ -5,6 +5,7 @@ import KoraNav from '../../components/KoraNav';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import { getUserApplications, getJobs } from '../../api/jobs';
 import { getInterviewsBySeeker, cancelInterview } from '../../api/interviews';
+import { getJobSeekerProfile } from '../../api/profiles';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/employee-dashboard.css';
@@ -149,13 +150,13 @@ export default function EmployeeDashboard() {
     const seekerId = user.id;
 
     // Fetch actual JobSeeker profile
-    apiClient.get(`/api/v1/jobseekers/${seekerId}`)
-      .then((res) => {
-        if (res.data) {
-          setProfile(prev => ({ ...prev, ...res.data }));
+    getJobSeekerProfile(seekerId)
+      .then((data) => {
+        if (data) {
+          setProfile(prev => ({ ...prev, ...data }));
         }
       })
-      .catch((err) => console.error("Failed to fetch profile:", err));
+      .catch((err) => console.error('Failed to fetch profile:', err));
 
     getUserApplications(seekerId)
       .then((res) => setApplications(res.data || []))

@@ -105,69 +105,9 @@ export default function EmployerProfile() {
 
   return (
     <div className="kora-profile-root employer">
+      <KoraNav />
       <div className="kora-bg-mesh" />
-      <div className="kora-profile-layout">
-
-        {/* ── SIDEBAR ── */}
-        <aside className="kora-sidebar">
-          <div className="kora-sidebar-inner">
-            <div className="kora-sidebar-logo">
-              <img src={koraLogo} alt="KORA" />
-            </div>
-
-            {/* Company Logo / Avatar */}
-            <div className="kora-sidebar-avatar-section">
-              <div className="kora-sidebar-avatar" onClick={() => logoRef.current?.click()}>
-                {profile.logo ? (
-                  <img src={profile.logo} alt={profile.companyName} />
-                ) : (
-                  <span className="kora-sidebar-initials">{initials}</span>
-                )}
-                <button className="kora-photo-overlay"><Camera size={16} /></button>
-                <input ref={logoRef} type="file" accept="image/*" hidden onChange={(e) => handleLogoChange(e.target.files[0])} />
-              </div>
-              <p className="kora-sidebar-name">{profile.companyName}</p>
-              <p className="kora-sidebar-role">Employer Account</p>
-              <span className="kora-verified-badge"><CheckCircle size={12} /> Verified</span>
-            </div>
-
-            {/* Stats */}
-            <div className="kora-employer-stats">
-              {[
-                { label: "Active Jobs", value: profile.activeJobs.filter(j => j.status === "ACTIVE").length },
-                { label: "Applications", value: profile.activeJobs.reduce((a, j) => a + (j.applications || 0), 0) },
-              ].map(({ label, value }) => (
-                <div key={label} className="kora-stat-pill">
-                  <strong>{value}</strong>
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-
-            <nav className="kora-sidebar-nav">
-              <p className="kora-sidebar-nav-label">Dashboard</p>
-              {[
-                { icon: <Briefcase size={16} />, label: "Job Postings", count: profile.activeJobs.length },
-                { icon: <Users size={16} />, label: "Applications", count: 24 },
-                { icon: <BarChart2 size={16} />, label: "Analytics" },
-                { icon: <Bell size={16} />, label: "Notifications", count: 3 },
-                { icon: <Settings size={16} />, label: "Settings" },
-              ].map(({ icon, label, count }) => (
-                <button key={label} className="kora-sidebar-nav-item">
-                  {icon}<span>{label}</span>
-                  {count !== undefined && <span className="kora-nav-badge">{count}</span>}
-                </button>
-              ))}
-
-              {/* Reset Password */}
-              <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={() => setResetModal(true)}>
-                <KeyRound size={16} /><span>Reset Password</span>
-              </button>
-            </nav>
-
-            <button className="kora-sidebar-logout" onClick={logout}><LogOut size={15} />Sign Out</button>
-          </div>
-        </aside>
+      <div className="kora-profile-layout no-sidebar">
 
         {/* ── MAIN ── */}
         <main className="kora-main-content">

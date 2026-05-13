@@ -66,6 +66,34 @@
   gap: 0;
 }
 
+.kora-profile-layout.no-sidebar {
+  grid-template-columns: 1fr;
+  max-width: 1000px;
+  padding-top: 80px; /* Space for KoraNav */
+}
+
+.kora-profile-actions-strip {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -12px;
+  margin-bottom: 8px;
+}
+
+.kora-reset-pwd-inline {
+  background: white;
+  border: 1.5px solid var(--kora-border);
+  color: var(--kora-text-mid);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.kora-reset-pwd-inline:hover {
+  border-color: var(--kora-accent);
+  color: var(--kora-accent);
+  background: var(--kora-accent-light);
+}
+
 /* ============================================================
    SIDEBAR
    ============================================================ */

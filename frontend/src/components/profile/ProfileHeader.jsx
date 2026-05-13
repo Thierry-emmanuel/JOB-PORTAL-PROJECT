@@ -1,11 +1,13 @@
 import { MapPin, Mail, Phone, Calendar, Edit2, CheckCircle } from "lucide-react";
 
 export default function ProfileHeader({ profile, onEdit, completion }) {
-  const initials = profile.fullName
+  const displayName = profile.fullName || profile.companyName || "User";
+  const initials = displayName
     .split(" ")
     .map((n) => n[0])
+    .filter(Boolean)
     .slice(0, 2)
-    .join("");
+    .join("").toUpperCase() || "U";
 
   return (
     <div className="kora-profile-header">

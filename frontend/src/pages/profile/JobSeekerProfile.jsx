@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
+import { KeyRound } from "lucide-react";
+import KoraNav from "../../components/KoraNav";
 import ProfileHeader from "../../components/profile/ProfileHeader";
-import ProfileSidebar from "../../components/profile/ProfileSidebar";
 import ExperienceSection from "../../components/profile/ExperienceSection";
 import EducationSection from "../../components/profile/EducationSection";
 import SkillsSection from "../../components/profile/SkillsSection";
@@ -110,24 +111,12 @@ export default function JobSeekerProfile() {
 
   return (
     <div className="kora-profile-root">
+      <KoraNav />
+      
       {/* Ambient background */}
       <div className="kora-bg-mesh" />
 
-      <div className="kora-profile-layout">
-        {/* LEFT SIDEBAR */}
-        <aside className="kora-sidebar">
-          <ProfileSidebar
-            profile={profile}
-            completion={completionScore()}
-            onEdit={openEdit}
-            onPhotoChange={(file) => {
-              const url = URL.createObjectURL(file);
-              setProfile((p) => ({ ...p, profilePhoto: url }));
-            }}
-            onResetPassword={() => setResetModal(true)}
-          />
-        </aside>
-
+      <div className="kora-profile-layout no-sidebar">
         {/* MAIN CONTENT */}
         <main className="kora-main-content">
           <ProfileHeader
@@ -135,6 +124,13 @@ export default function JobSeekerProfile() {
             onEdit={openEdit}
             completion={completionScore()}
           />
+
+          <div className="kora-profile-actions-strip">
+             <button className="kora-meta-chip kora-reset-pwd-inline" onClick={() => setResetModal(true)}>
+                <KeyRound size={13} />
+                Reset Password
+             </button>
+          </div>
 
           {/* Tab Navigation */}
           <div className="kora-tabs">
