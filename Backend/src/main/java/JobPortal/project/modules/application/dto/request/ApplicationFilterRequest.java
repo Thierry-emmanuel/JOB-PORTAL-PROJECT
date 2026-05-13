@@ -4,16 +4,16 @@ import JobPortal.project.modules.application.enums.ApplicationStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-import java.util.UUID;
+
 
 
 public record ApplicationFilterRequest(
 
-        UUID seekerId,
+        Long seekerId,
 
-        UUID jobPostingId,
+        Long jobPostingId,
 
-        UUID employerId,
+        Long employerId,
 
         ApplicationStatus status,
 

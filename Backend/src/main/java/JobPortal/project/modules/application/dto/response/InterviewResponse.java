@@ -4,15 +4,15 @@ import JobPortal.project.modules.application.enums.InterviewResult;
 import JobPortal.project.modules.application.enums.InterviewType;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 
 public record InterviewResponse(
 
-        UUID id,
-        UUID applicationId,
-        UUID seekerId,
-        UUID jobPostingId,
+        Long id,
+        Long applicationId,
+        Long seekerId,
+        Long jobPostingId,
 
         LocalDateTime scheduledAt,
         InterviewType type,

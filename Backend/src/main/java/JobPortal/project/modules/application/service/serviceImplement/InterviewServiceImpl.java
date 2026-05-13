@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+
 
 @Slf4j
 @Service
@@ -44,7 +44,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public InterviewResponse schedule(UUID applicationId, ScheduleInterviewRequest request) {
+    public InterviewResponse schedule(Long applicationId, ScheduleInterviewRequest request) {
 
         Application application = findApplicationById(applicationId);
 
@@ -71,7 +71,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public InterviewResponse scheduleForEmployer(UUID employerId, UUID applicationId,
+    public InterviewResponse scheduleForEmployer(Long employerId, Long applicationId,
                                                  ScheduleInterviewRequest request) {
 
         Application application = findApplicationById(applicationId);
@@ -110,14 +110,14 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public InterviewResponse getById(UUID interviewId) {
+    public InterviewResponse getById(Long interviewId) {
         Interview interview = findByIdWithApplication(interviewId);
         return interviewMapper.toResponse(interview);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public InterviewResponse getByApplicationId(UUID applicationId) {
+    public InterviewResponse getByApplicationId(Long applicationId) {
         Interview interview = interviewRepository.findByApplicationIdWithApplication(applicationId)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "No interview found for application: " + applicationId));
@@ -126,21 +126,21 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getBySeekerIdId(UUID seekerId) {
+    public List<InterviewResponse> getBySeekerIdId(Long seekerId) {
         List<Interview> interviews = interviewRepository.findBySeekerIdWithApplication(seekerId);
         return interviewMapper.toResponseList(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getByJobPostingId(UUID jobPostingId) {
+    public List<InterviewResponse> getByJobPostingId(Long jobPostingId) {
         List<Interview> interviews = interviewRepository.findByJobPostingId(jobPostingId);
         return interviewMapper.toResponseList(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ApplicationResponse> getShortlistedForPosting(UUID jobPostingId) {
+    public List<ApplicationResponse> getShortlistedForPosting(Long jobPostingId) {
         List<Application> shortlisted = applicationRepository.findShortlistedByJobPostingId(
                 jobPostingId, ApplicationStatus.SHORTLISTED);
         return applicationMapper.toResponseList(shortlisted);
@@ -148,7 +148,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public InterviewPageResponse getBySeekerIdPaged(UUID seekerId, int page, int size) {
+    public InterviewPageResponse getBySeekerIdPaged(Long seekerId, int page, int size) {
         Page<Interview> result = interviewRepository.findBySeekerId(
                 seekerId,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduledAt")));
@@ -174,7 +174,7 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     @Transactional(readOnly = true)
     public List<InterviewResponse> getSeekerInterviewsInDateRange(
-            UUID seekerId, LocalDateTime from, LocalDateTime to) {
+            Long seekerId, LocalDateTime from, LocalDateTime to) {
         List<Interview> interviews = interviewRepository.findBySeekerIdAndScheduledAtBetween(
                 seekerId, from, to);
         return interviewMapper.toResponseList(interviews);
@@ -189,7 +189,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getPendingBySeekerId(UUID seekerId) {
+    public List<InterviewResponse> getPendingBySeekerId(Long seekerId) {
         List<Interview> interviews = interviewRepository.findPendingBySeekerId(
                 seekerId, LocalDateTime.now());
         return interviewMapper.toResponseList(interviews);
@@ -197,7 +197,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public InterviewResponse getByApplicationIdSimple(UUID applicationId) {
+    public InterviewResponse getByApplicationIdSimple(Long applicationId) {
         Interview interview = interviewRepository.findByApplicationId(applicationId)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "No interview found for application: " + applicationId));
@@ -210,7 +210,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public InterviewResponse reschedule(UUID interviewId, RescheduleInterviewRequest request) {
+    public InterviewResponse reschedule(Long interviewId, RescheduleInterviewRequest request) {
 
         Interview interview = findByIdWithApplication(interviewId);
 
@@ -236,7 +236,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public InterviewResponse recordResult(UUID interviewId, InterviewResult result, String feedback) {
+    public InterviewResponse recordResult(Long interviewId, InterviewResult result, String feedback) {
 
         Interview interview = findByIdWithApplication(interviewId);
 
@@ -272,7 +272,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public InterviewResponse addFeedback(UUID interviewId, String feedback) {
+    public InterviewResponse addFeedback(Long interviewId, String feedback) {
 
         Interview interview = findByIdWithApplication(interviewId);
         interview.setFeedBack(feedback);
@@ -288,7 +288,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
-    public void cancel(UUID interviewId) {
+    public void cancel(Long interviewId) {
 
         Interview interview = findByIdWithApplication(interviewId);
 
@@ -315,13 +315,13 @@ public class InterviewServiceImpl implements InterviewService {
                 page.isLast());
     }
 
-    private Interview findByIdWithApplication(UUID id) {
+    private Interview findByIdWithApplication(Long id) {
         return interviewRepository.findByIdWithApplication(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Interview not found: " + id));
     }
 
-    private Application findApplicationById(UUID applicationId) {
+    private Application findApplicationById(Long applicationId) {
         return applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Application not found: " + applicationId));

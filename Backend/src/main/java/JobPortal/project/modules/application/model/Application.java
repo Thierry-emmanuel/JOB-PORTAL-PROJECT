@@ -8,7 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -31,15 +31,15 @@ import java.util.UUID;
 public class Application {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "CHAR(36)")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false, nullable = false)
+    private Long id;
 
-    @Column(name = "seeker_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
-    private UUID seekerId;
+    @Column(name = "seeker_id", nullable = false, updatable = false)
+    private Long seekerId;
 
-    @Column(name = "job_posting_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
-    private UUID jobPostingId;
+    @Column(name = "job_posting_id", nullable = false, updatable = false)
+    private Long jobPostingId;
 
     @Column(name = "cover_letter", length = 1000)
     private String coverLetter;

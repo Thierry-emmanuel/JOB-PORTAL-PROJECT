@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/v1/interviews")
@@ -36,7 +36,7 @@ public class InterviewController {
 
     @PostMapping("/applications/{applicationId}")
     public ResponseEntity<InterviewResponse> schedule(
-            @PathVariable UUID applicationId,
+            @PathVariable Long applicationId,
             @Valid @RequestBody ScheduleInterviewRequest request) {
 
         InterviewResponse response = interviewService.schedule(applicationId, request);
@@ -49,7 +49,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/{id}")
-    public ResponseEntity<InterviewResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<InterviewResponse> getById(@PathVariable Long id) {
         InterviewResponse response = interviewService.getById(id);
         return ResponseEntity.ok(response);
     }
@@ -60,7 +60,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/applications/{applicationId}")
-    public ResponseEntity<InterviewResponse> getByApplicationId(@PathVariable UUID applicationId) {
+    public ResponseEntity<InterviewResponse> getByApplicationId(@PathVariable Long applicationId) {
         InterviewResponse response = interviewService.getByApplicationId(applicationId);
         return ResponseEntity.ok(response);
     }
@@ -71,7 +71,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}")
-    public ResponseEntity<List<InterviewResponse>> getBySeekerId(@PathVariable UUID seekerId) {
+    public ResponseEntity<List<InterviewResponse>> getBySeekerId(@PathVariable Long seekerId) {
         List<InterviewResponse> response = interviewService.getBySeekerIdId(seekerId);
         return ResponseEntity.ok(response);
     }
@@ -82,7 +82,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/job-postings/{jobPostingId}")
-    public ResponseEntity<List<InterviewResponse>> getByJobPostingId(@PathVariable UUID jobPostingId) {
+    public ResponseEntity<List<InterviewResponse>> getByJobPostingId(@PathVariable Long jobPostingId) {
         List<InterviewResponse> response = interviewService.getByJobPostingId(jobPostingId);
         return ResponseEntity.ok(response);
     }
@@ -94,7 +94,7 @@ public class InterviewController {
 
     @GetMapping("/job-postings/{jobPostingId}/shortlisted")
     public ResponseEntity<List<ApplicationResponse>> getShortlistedForPosting(
-            @PathVariable UUID jobPostingId) {
+            @PathVariable Long jobPostingId) {
 
         List<ApplicationResponse> response = interviewService.getShortlistedForPosting(jobPostingId);
         return ResponseEntity.ok(response);
@@ -107,7 +107,7 @@ public class InterviewController {
 
     @GetMapping("/seekers/{seekerId}/paged")
     public ResponseEntity<InterviewPageResponse> getBySeekerIdPaged(
-            @PathVariable UUID seekerId,
+            @PathVariable Long seekerId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
@@ -121,7 +121,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}/pending")
-    public ResponseEntity<List<InterviewResponse>> getPendingBySeekerId(@PathVariable UUID seekerId) {
+    public ResponseEntity<List<InterviewResponse>> getPendingBySeekerId(@PathVariable Long seekerId) {
         List<InterviewResponse> response = interviewService.getPendingBySeekerId(seekerId);
         return ResponseEntity.ok(response);
     }
@@ -133,7 +133,7 @@ public class InterviewController {
 
     @GetMapping("/seekers/{seekerId}/date-range")
     public ResponseEntity<List<InterviewResponse>> getSeekerInterviewsInDateRange(
-            @PathVariable UUID seekerId,
+            @PathVariable Long seekerId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
 
@@ -188,7 +188,7 @@ public class InterviewController {
 
     @GetMapping("/applications/{applicationId}/simple")
     public ResponseEntity<InterviewResponse> getByApplicationIdSimple(
-            @PathVariable UUID applicationId) {
+            @PathVariable Long applicationId) {
 
         InterviewResponse response = interviewService.getByApplicationIdSimple(applicationId);
         return ResponseEntity.ok(response);
@@ -201,7 +201,7 @@ public class InterviewController {
 
     @PatchMapping("/{id}/reschedule")
     public ResponseEntity<InterviewResponse> reschedule(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody RescheduleInterviewRequest request) {
 
         InterviewResponse response = interviewService.reschedule(id, request);
@@ -215,7 +215,7 @@ public class InterviewController {
 
     @PatchMapping("/{id}/result")
     public ResponseEntity<InterviewResponse> recordResult(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody RecordInterviewResultRequest request) {
 
         InterviewResponse response = interviewService.recordResult(
@@ -230,7 +230,7 @@ public class InterviewController {
 
     @PatchMapping("/{id}/feedback")
     public ResponseEntity<InterviewResponse> addFeedback(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody AddFeedbackRequest request) {
 
         InterviewResponse response = interviewService.addFeedback(id, request.feedback());
@@ -243,7 +243,7 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
+    public ResponseEntity<Void> cancel(@PathVariable Long id) {
         interviewService.cancel(id);
         return ResponseEntity.noContent().build();
     }

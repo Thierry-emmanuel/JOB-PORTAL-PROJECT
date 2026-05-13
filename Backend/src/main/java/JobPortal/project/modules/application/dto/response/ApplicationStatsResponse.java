@@ -1,14 +1,14 @@
 package JobPortal.project.modules.application.dto.response;
 
-import java.util.UUID;
+
 
 
 
 public record ApplicationStatsResponse(
 
-        UUID jobPostingId,
+        Long jobPostingId,
 
-        UUID seekerId,
+        Long seekerId,
 
         long totalApplications,
         long applied,

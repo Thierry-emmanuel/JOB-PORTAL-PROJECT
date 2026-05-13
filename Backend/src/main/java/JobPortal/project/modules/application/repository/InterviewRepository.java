@@ -13,24 +13,24 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
-public interface InterviewRepository extends JpaRepository<Interview, UUID> {
+public interface InterviewRepository extends JpaRepository<Interview, Long> {
 
     // ─── Lookup by application ────────────────────────────────────────────────
 
-    Optional<Interview> findByApplicationId(UUID applicationId);
+    Optional<Interview> findByApplicationId(Long applicationId);
 
-    boolean existsByApplicationId(UUID applicationId);
+    boolean existsByApplicationId(Long applicationId);
 
     // ─── Lookup with application eagerly fetched ──────────────────────────────
 
     @Query("SELECT i FROM Interview i JOIN FETCH i.application WHERE i.id = :id")
-    Optional<Interview> findByIdWithApplication(@Param("id") UUID id);
+    Optional<Interview> findByIdWithApplication(@Param("id") Long id);
 
     @Query("SELECT i FROM Interview i JOIN FETCH i.application WHERE i.application.id = :applicationId")
-    Optional<Interview> findByApplicationIdWithApplication(@Param("applicationId") UUID applicationId);
+    Optional<Interview> findByApplicationIdWithApplication(@Param("applicationId") Long applicationId);
 
     // ─── Seeker-scoped queries ────────────────────────────────────────────────
 
@@ -39,14 +39,14 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             JOIN FETCH i.application a
             WHERE a.seekerId = :seekerId
             """)
-    List<Interview> findBySeekerIdWithApplication(@Param("seekerId") UUID seekerId);
+    List<Interview> findBySeekerIdWithApplication(@Param("seekerId") Long seekerId);
 
     @Query("""
             SELECT i FROM Interview i
             JOIN i.application a
             WHERE a.seekerId = :seekerId
             """)
-    Page<Interview> findBySeekerId(@Param("seekerId") UUID seekerId, Pageable pageable);
+    Page<Interview> findBySeekerId(@Param("seekerId") Long seekerId, Pageable pageable);
 
     @Query("""
             SELECT i FROM Interview i
@@ -54,7 +54,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             WHERE a.seekerId = :seekerId AND i.result = :result
             """)
     List<Interview> findBySeekerIdAndResult(
-            @Param("seekerId") UUID seekerId,
+            @Param("seekerId") Long seekerId,
             @Param("result") InterviewResult result);
 
     // ─── Employer/job-posting-scoped queries ──────────────────────────────────
@@ -64,7 +64,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             JOIN i.application a
             WHERE a.jobPostingId = :jobPostingId
             """)
-    List<Interview> findByJobPostingId(@Param("jobPostingId") UUID jobPostingId);
+    List<Interview> findByJobPostingId(@Param("jobPostingId") Long jobPostingId);
 
     @Query("""
             SELECT i FROM Interview i
@@ -73,7 +73,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             AND i.result = :result
             """)
     List<Interview> findByJobPostingIdAndResult(
-            @Param("jobPostingId") UUID jobPostingId,
+            @Param("jobPostingId") Long jobPostingId,
             @Param("result") InterviewResult result);
 
     // ─── Scheduled-time window queries ───────────────────────────────────────
@@ -87,7 +87,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             AND i.scheduledAt BETWEEN :from AND :to
             """)
     List<Interview> findBySeekerIdAndScheduledAtBetween(
-            @Param("seekerId") UUID seekerId,
+            @Param("seekerId") Long seekerId,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
 
@@ -104,7 +104,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             AND i.scheduledAt > :now
             """)
     List<Interview> findPendingBySeekerId(
-            @Param("seekerId") UUID seekerId,
+            @Param("seekerId") Long seekerId,
             @Param("now") LocalDateTime now);
 
     // ─── Filter by type ───────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             JOIN i.application a
             WHERE a.jobPostingId = :jobPostingId
             """)
-    long countByJobPostingId(@Param("jobPostingId") UUID jobPostingId);
+    long countByJobPostingId(@Param("jobPostingId") Long jobPostingId);
 
     @Query("""
             SELECT COUNT(i) FROM Interview i
@@ -130,7 +130,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             AND i.result = :result
             """)
     long countByJobPostingIdAndResult(
-            @Param("jobPostingId") UUID jobPostingId,
+            @Param("jobPostingId") Long jobPostingId,
             @Param("result") InterviewResult result);
 
     @Query("""
@@ -138,7 +138,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             JOIN i.application a
             WHERE a.seekerId = :seekerId
             """)
-    long countBySeekerId(@Param("seekerId") UUID seekerId);
+    long countBySeekerId(@Param("seekerId") Long seekerId);
 
     @Query("""
             SELECT COUNT(i) FROM Interview i
@@ -147,7 +147,7 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
             AND i.result = :result
             """)
     long countBySeekerIdAndResult(
-            @Param("seekerId") UUID seekerId,
+            @Param("seekerId") Long seekerId,
             @Param("result") InterviewResult result);
 }
 

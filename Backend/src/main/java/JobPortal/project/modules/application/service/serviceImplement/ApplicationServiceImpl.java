@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @Slf4j
 @Service
@@ -41,7 +41,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationResponse apply(UUID seekerId, CreateApplicationRequest request) {
+    public ApplicationResponse apply(Long seekerId, CreateApplicationRequest request) {
 
         if (applicationRepository.existsBySeekerIdAndJobPostingId(seekerId, request.jobPostingId())) {
             throw new IllegalStateException(
@@ -63,7 +63,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public ApplicationResponse getById(UUID applicationId) {
+    public ApplicationResponse getById(Long applicationId) {
         Application application = findByIdWithInterview(applicationId);
         return applicationMapper.toResponse(application);
     }
@@ -117,7 +117,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationResponse updateStatus(UUID applicationId, UpdateApplicationStatusRequest request) {
+    public ApplicationResponse updateStatus(Long applicationId, UpdateApplicationStatusRequest request) {
 
         Application application = findById(applicationId);
 
@@ -144,7 +144,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public void withdraw(UUID applicationId, UUID seekerId) {
+    public void withdraw(Long applicationId, Long seekerId) {
 
         Application application = findById(applicationId);
 
@@ -165,7 +165,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ApplicationResponse> getWithInterviewsBySeekerId(UUID seekerId) {
+    public List<ApplicationResponse> getWithInterviewsBySeekerId(Long seekerId) {
         List<Application> applications = applicationRepository.findBySeekerIdWithInterview(seekerId);
         return applicationMapper.toResponseList(applications);
     }
@@ -176,7 +176,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public ApplicationStatsResponse getStats(UUID jobPostingId, UUID seekerId) {
+    public ApplicationStatsResponse getStats(Long jobPostingId, Long seekerId) {
 
         if (jobPostingId != null) {
             return buildJobPostingStats(jobPostingId);
@@ -191,19 +191,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     //  Private helpers                                                     //
     // ------------------------------------------------------------------ //
 
-    private Application findById(UUID id) {
+    private Application findById(Long id) {
         return applicationRepository.findById(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Application not found: " + id));
     }
 
-    private Application findByIdWithInterview(UUID id) {
+    private Application findByIdWithInterview(Long id) {
         return applicationRepository.findByIdWithInterview(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Application not found: " + id));
     }
 
-    private ApplicationStatsResponse buildJobPostingStats(UUID jobPostingId) {
+    private ApplicationStatsResponse buildJobPostingStats(Long jobPostingId) {
 
         long total       = applicationRepository.countByJobPostingId(jobPostingId);
         long applied     = applicationRepository.countByJobPostingIdAndStatus(jobPostingId, ApplicationStatus.APPLIED);
@@ -223,7 +223,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 interviewsScheduled, passed, failed, noShow);
     }
 
-    private ApplicationStatsResponse buildSeekerStats(UUID seekerId) {
+    private ApplicationStatsResponse buildSeekerStats(Long seekerId) {
 
         long total       = applicationRepository.countBySeekerId(seekerId);
         long applied     = applicationRepository.countBySeekerIdAndStatus(seekerId, ApplicationStatus.APPLIED);

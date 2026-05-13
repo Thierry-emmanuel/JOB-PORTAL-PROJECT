@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -33,7 +33,7 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<ApplicationResponse> apply(
-            @RequestParam UUID seekerId,
+            @RequestParam Long seekerId,
             @Valid @RequestBody CreateApplicationRequest request) {
 
         ApplicationResponse response = applicationService.apply(seekerId, request);
@@ -46,7 +46,7 @@ public class ApplicationController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApplicationResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<ApplicationResponse> getById(@PathVariable Long id) {
         ApplicationResponse response = applicationService.getById(id);
         return ResponseEntity.ok(response);
     }
@@ -58,9 +58,9 @@ public class ApplicationController {
 
     @GetMapping
     public ResponseEntity<ApplicationPageResponse> getAll(
-            @RequestParam(required = false) UUID seekerId,
-            @RequestParam(required = false) UUID jobPostingId,
-            @RequestParam(required = false) UUID employerId,
+            @RequestParam(required = false) Long seekerId,
+            @RequestParam(required = false) Long jobPostingId,
+            @RequestParam(required = false) Long employerId,
             @RequestParam(required = false) ApplicationStatus status,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -79,7 +79,7 @@ public class ApplicationController {
 
     @GetMapping("/seekers/{seekerId}/with-interviews")
     public ResponseEntity<List<ApplicationResponse>> getWithInterviewsBySeekerId(
-            @PathVariable UUID seekerId) {
+            @PathVariable Long seekerId) {
 
         List<ApplicationResponse> response = applicationService.getWithInterviewsBySeekerId(seekerId);
         return ResponseEntity.ok(response);
@@ -92,7 +92,7 @@ public class ApplicationController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApplicationResponse> updateStatus(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody UpdateApplicationStatusRequest request) {
 
         ApplicationResponse response = applicationService.updateStatus(id, request);
@@ -106,8 +106,8 @@ public class ApplicationController {
 
     @DeleteMapping("/{id}/withdraw")
     public ResponseEntity<Void> withdraw(
-            @PathVariable UUID id,
-            @RequestParam UUID seekerId) {
+            @PathVariable Long id,
+            @RequestParam Long seekerId) {
 
         applicationService.withdraw(id, seekerId);
         return ResponseEntity.noContent().build();
@@ -120,8 +120,8 @@ public class ApplicationController {
 
     @GetMapping("/stats")
     public ResponseEntity<ApplicationStatsResponse> getStats(
-            @RequestParam(required = false) UUID jobPostingId,
-            @RequestParam(required = false) UUID seekerId) {
+            @RequestParam(required = false) Long jobPostingId,
+            @RequestParam(required = false) Long seekerId) {
 
         ApplicationStatsResponse response = applicationService.getStats(jobPostingId, seekerId);
         return ResponseEntity.ok(response);

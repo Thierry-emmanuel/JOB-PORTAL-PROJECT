@@ -4,14 +4,14 @@ import JobPortal.project.modules.application.enums.ApplicationStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 
 public record ApplicationResponse(
 
-        UUID id,
-        UUID seekerId,
-        UUID jobPostingId,
+        Long id,
+        Long seekerId,
+        Long jobPostingId,
         String coverLetter,
         BigDecimal expectedSalary,
         ApplicationStatus status,

@@ -10,7 +10,7 @@ import JobPortal.project.modules.application.enums.InterviewType;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+
 
 public interface InterviewService {
 
@@ -18,46 +18,46 @@ public interface InterviewService {
      * Schedule an interview for an application that has been SHORTLISTED.
      * No ownership check — use scheduleForEmployer when the caller is an employer.
      */
-    InterviewResponse schedule(UUID applicationId, ScheduleInterviewRequest request);
+    InterviewResponse schedule(Long applicationId, ScheduleInterviewRequest request);
 
     /**
      * Schedule an interview on behalf of an employer.
      * Validates that the application's job posting belongs to the given employer
      * before scheduling — throws AccessDeniedException (403) if not.
      */
-    InterviewResponse scheduleForEmployer(UUID employerId, UUID applicationId,
+    InterviewResponse scheduleForEmployer(Long employerId, Long applicationId,
                                           ScheduleInterviewRequest request);
 
     /**
      * Retrieve a single interview by its own ID.
      */
-    InterviewResponse getById(UUID interviewId);
+    InterviewResponse getById(Long interviewId);
 
     /**
      * Retrieve the interview linked to a specific application.
      */
-    InterviewResponse getByApplicationId(UUID applicationId);
+    InterviewResponse getByApplicationId(Long applicationId);
 
     /**
      * All interviews for a seeker.
      */
-    List<InterviewResponse> getBySeekerIdId(UUID seekerId);
+    List<InterviewResponse> getBySeekerIdId(Long seekerId);
 
     /**
      * All interviews for a job posting.
      */
-    List<InterviewResponse> getByJobPostingId(UUID jobPostingId);
+    List<InterviewResponse> getByJobPostingId(Long jobPostingId);
 
     /**
      * All SHORTLISTED applications for a job posting that are eligible for interview
      * scheduling (i.e. not yet assigned an interview).
      */
-    List<ApplicationResponse> getShortlistedForPosting(UUID jobPostingId);
+    List<ApplicationResponse> getShortlistedForPosting(Long jobPostingId);
 
     /**
      * Paginated interviews for a seeker.
      */
-    InterviewPageResponse getBySeekerIdPaged(UUID seekerId, int page, int size);
+    InterviewPageResponse getBySeekerIdPaged(Long seekerId, int page, int size);
 
     /**
      * Paginated interviews filtered by interview type (VIDEO, PHONE, IN_PERSON).
@@ -72,7 +72,7 @@ public interface InterviewService {
     /**
      * All interviews for a specific seeker within a time window.
      */
-    List<InterviewResponse> getSeekerInterviewsInDateRange(UUID seekerId, LocalDateTime from, LocalDateTime to);
+    List<InterviewResponse> getSeekerInterviewsInDateRange(Long seekerId, LocalDateTime from, LocalDateTime to);
 
     /**
      * All pending interviews (no result yet, scheduled in the future) across the platform (admin).
@@ -82,35 +82,35 @@ public interface InterviewService {
     /**
      * All pending interviews for a specific seeker.
      */
-    List<InterviewResponse> getPendingBySeekerId(UUID seekerId);
+    List<InterviewResponse> getPendingBySeekerId(Long seekerId);
 
     /**
      * Lightweight lookup of an interview by application — no eager join.
      */
-    InterviewResponse getByApplicationIdSimple(UUID applicationId);
+    InterviewResponse getByApplicationIdSimple(Long applicationId);
 
     /**
      * Move the interview to a new date/time.
      * Throws if the interview is already completed.
      */
-    InterviewResponse reschedule(UUID interviewId, RescheduleInterviewRequest request);
+    InterviewResponse reschedule(Long interviewId, RescheduleInterviewRequest request);
 
     /**
      * Record the outcome of a completed interview.
      * Cascades application status: PASSED → HIRED, FAILED / NO_SHOW → REJECTED.
      */
-    InterviewResponse recordResult(UUID interviewId, InterviewResult result, String feedback);
+    InterviewResponse recordResult(Long interviewId, InterviewResult result, String feedback);
 
     /**
      * Add or replace textual feedback on an interview.
      */
-    InterviewResponse addFeedback(UUID interviewId, String feedback);
+    InterviewResponse addFeedback(Long interviewId, String feedback);
 
     /**
      * Cancel a pending interview.
      * Throws if the interview already has a recorded result.
      */
-    void cancel(UUID interviewId);
+    void cancel(Long interviewId);
 }
 
 

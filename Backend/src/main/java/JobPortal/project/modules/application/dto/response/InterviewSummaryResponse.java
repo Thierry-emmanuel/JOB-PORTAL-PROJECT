@@ -4,12 +4,12 @@ import JobPortal.project.modules.application.enums.InterviewResult;
 import JobPortal.project.modules.application.enums.InterviewType;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 
 public record InterviewSummaryResponse(
 
-        UUID id,
+        Long id,
         LocalDateTime scheduledAt,
         InterviewType type,
         String platform,

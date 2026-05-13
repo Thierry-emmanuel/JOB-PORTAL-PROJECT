@@ -6,7 +6,7 @@ import JobPortal.project.modules.application.model.Application;
 import org.mapstruct.*;
 
 import java.util.List;
-import java.util.UUID;
+
 
 
 @Mapper(
@@ -44,7 +44,7 @@ public interface ApplicationMapper {
     @Mapping(target = "interview",     ignore = true)
     @Mapping(target = "appliedAt",     ignore = true)
     @Mapping(target = "lastUpdatedAt", ignore = true)
-    Application toEntity(CreateApplicationRequest request, UUID seekerId);
+    Application toEntity(CreateApplicationRequest request, Long seekerId);
 }
 
 

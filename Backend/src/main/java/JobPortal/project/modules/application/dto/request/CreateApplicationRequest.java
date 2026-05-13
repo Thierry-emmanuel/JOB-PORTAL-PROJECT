@@ -3,12 +3,12 @@ package JobPortal.project.modules.application.dto.request;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+
 
 public record CreateApplicationRequest(
 
         @NotNull(message = "Job posting ID is required")
-        UUID jobPostingId,
+        Long jobPostingId,
 
         @Size(max = 1000, message = "Cover letter must not exceed 1000 characters")
         String coverLetter,

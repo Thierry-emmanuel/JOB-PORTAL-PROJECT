@@ -12,14 +12,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
-public interface ApplicationRepository extends JpaRepository<Application, UUID> {
+public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     // ─── Existence checks ────────────────────────────────────────────────────
 
-    boolean existsBySeekerIdAndJobPostingId(UUID seekerId, UUID jobPostingId);
+    boolean existsBySeekerIdAndJobPostingId(Long seekerId, Long jobPostingId);
 
     /**
      * Confirms that a given application belongs to a job posting owned by the given employer.
@@ -34,36 +34,36 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
             AND jp.employer_id = :employerId
             """, nativeQuery = true)
     boolean existsByIdAndEmployerId(
-            @Param("applicationId") UUID applicationId,
+            @Param("applicationId") Long applicationId,
             @Param("employerId") String employerId);
 
     // ─── Single-record lookups ────────────────────────────────────────────────
 
-    Optional<Application> findBySeekerIdAndJobPostingId(UUID seekerId, UUID jobPostingId);
+    Optional<Application> findBySeekerIdAndJobPostingId(Long seekerId, Long jobPostingId);
 
     // ─── Seeker-scoped queries ────────────────────────────────────────────────
 
-    Page<Application> findBySeekerId(UUID seekerId, Pageable pageable);
+    Page<Application> findBySeekerId(Long seekerId, Pageable pageable);
 
-    Page<Application> findBySeekerIdAndStatus(UUID seekerId, ApplicationStatus status, Pageable pageable);
+    Page<Application> findBySeekerIdAndStatus(Long seekerId, ApplicationStatus status, Pageable pageable);
 
-    List<Application> findBySeekerIdAndStatus(UUID seekerId, ApplicationStatus status);
+    List<Application> findBySeekerIdAndStatus(Long seekerId, ApplicationStatus status);
 
-    long countBySeekerId(UUID seekerId);
+    long countBySeekerId(Long seekerId);
 
-    long countBySeekerIdAndStatus(UUID seekerId, ApplicationStatus status);
+    long countBySeekerIdAndStatus(Long seekerId, ApplicationStatus status);
 
     // ─── Job-posting-scoped queries ───────────────────────────────────────────
 
-    Page<Application> findByJobPostingId(UUID jobPostingId, Pageable pageable);
+    Page<Application> findByJobPostingId(Long jobPostingId, Pageable pageable);
 
-    Page<Application> findByJobPostingIdAndStatus(UUID jobPostingId, ApplicationStatus status, Pageable pageable);
+    Page<Application> findByJobPostingIdAndStatus(Long jobPostingId, ApplicationStatus status, Pageable pageable);
 
-    List<Application> findByJobPostingIdAndStatus(UUID jobPostingId, ApplicationStatus status);
+    List<Application> findByJobPostingIdAndStatus(Long jobPostingId, ApplicationStatus status);
 
-    long countByJobPostingId(UUID jobPostingId);
+    long countByJobPostingId(Long jobPostingId);
 
-    long countByJobPostingIdAndStatus(UUID jobPostingId, ApplicationStatus status);
+    long countByJobPostingIdAndStatus(Long jobPostingId, ApplicationStatus status);
 
     // ─── Employer-scoped queries (across all their postings) ─────────────────
     // Native SQL: JobPosting lives in a separate module, not visible as a JPQL entity.
@@ -108,23 +108,23 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     @Modifying
     @Query("UPDATE Application a SET a.status = :newStatus WHERE a.id = :id AND a.status = :expectedStatus")
     int updateStatusIfExpected(
-            @Param("id") UUID id,
+            @Param("id") Long id,
             @Param("expectedStatus") ApplicationStatus expectedStatus,
             @Param("newStatus") ApplicationStatus newStatus);
 
     // ─── Applications with interview eagerly joined ───────────────────────────
 
     @Query("SELECT a FROM Application a LEFT JOIN FETCH a.interview WHERE a.id = :id")
-    Optional<Application> findByIdWithInterview(@Param("id") UUID id);
+    Optional<Application> findByIdWithInterview(@Param("id") Long id);
 
     @Query("SELECT a FROM Application a LEFT JOIN FETCH a.interview WHERE a.seekerId = :seekerId")
-    List<Application> findBySeekerIdWithInterview(@Param("seekerId") UUID seekerId);
+    List<Application> findBySeekerIdWithInterview(@Param("seekerId") Long seekerId);
 
     // ─── Shortlisted applications (convenience) ───────────────────────────────
 
     @Query("SELECT a FROM Application a WHERE a.jobPostingId = :jobPostingId AND a.status = :status")
     List<Application> findShortlistedByJobPostingId(
-            @Param("jobPostingId") UUID jobPostingId,
+            @Param("jobPostingId") Long jobPostingId,
             @Param("status") ApplicationStatus status);
 }
 
