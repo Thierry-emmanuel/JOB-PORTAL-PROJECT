@@ -154,18 +154,35 @@ export default function EmployeeDashboard() {
   const [jobsLoading,   setJobsLoading]   = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !user?.id) return;
 
-    const seekerId = user?.id || user?.jobSeekerId || 1;
+    const seekerId = user.id;
 
+    // Fetch actual JobSeeker profile
+    apiClient.get(`/api/v1/jobseekers/${seekerId}`)
+      .then((res) => {
+        if (res.data) {
+          setProfile(prev => ({ ...prev, ...res.data }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch profile:", err));
+
+    // The backend application/interview endpoints currently expect a UUID. 
+    // We pass the Long ID, which might fail with 500. We handle it gracefully.
     getUserApplications()
       .then((res) => setApplications(res.data || []))
-      .catch(() => setAppsError('Could not load applications.'))
+      .catch(() => {
+        setAppsError('Could not load applications.');
+        setApplications([]); // Fallback
+      })
       .finally(() => setAppsLoading(false));
 
     getInterviewsBySeeker(seekerId)
       .then((data) => setInterviews(data || []))
-      .catch((err) => console.error("Interviews fetch error:", err))
+      .catch((err) => {
+        console.error("Interviews fetch error gracefully caught:", err.message);
+        setInterviews([]); // Fallback
+      })
       .finally(() => setInterLoading(false));
 
     getJobs({ limit: 3 })

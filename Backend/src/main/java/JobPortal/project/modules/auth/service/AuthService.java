@@ -90,7 +90,10 @@ public class AuthService {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
 
-        return new AuthResponse(jwt, userDetails.getUsername(), role);
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Error: User not found."));
+
+        return new AuthResponse(jwt, userDetails.getUsername(), role, user.getId(), user.getFullName());
     }
 }
 
