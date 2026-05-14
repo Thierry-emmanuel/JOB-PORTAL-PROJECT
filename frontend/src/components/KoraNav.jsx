@@ -21,6 +21,7 @@ export default function KoraNav() {
 
   const navLinks = [
     { label: 'Jobs', to: '/jobs' },
+    { label: 'Insights', to: '/insights' },
   ];
 
   if (isEmployer) {

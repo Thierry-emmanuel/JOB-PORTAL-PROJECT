@@ -26,6 +26,7 @@ const JobList = lazy(() => import('./pages/jobs/JobList'));
 const JobDetails = lazy(() => import('./pages/jobs/JobDetails'));
 const ApplyPage = lazy(() => import('./pages/jobs/ApplyPage'));
 const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagement'));
+const InsightsPage = lazy(() => import('./pages/shared/InsightsPage'));
 
 // ── Development navigation overlay ────────────────────────
 function DevNav() {
@@ -42,6 +43,7 @@ function DevNav() {
     { to: "/employer/post-job",   label: "Post Job"     },
     { to: "/employee/dashboard",  label: "Employee DB"  },
     { to: "/jobs",                label: "Jobs"         },
+    { to: "/insights",            label: "Insights"     },
   ];
 
   return (
@@ -169,6 +171,7 @@ export default function App() {
               <Route path="/jobs" element={<JobList />} />
               <Route path="/jobs/:id" element={<JobDetails />} />
               <Route path="/jobs/:id/apply" element={<ApplyPage />} />
+              <Route path="/insights" element={<InsightsPage />} />
             </Routes>
             <DevNav />
           </Suspense>

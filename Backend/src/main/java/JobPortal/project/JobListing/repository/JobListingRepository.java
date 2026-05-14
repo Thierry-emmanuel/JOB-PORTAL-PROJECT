@@ -109,4 +109,26 @@ public interface JobListingRepository
 
     long countByStatus(PostingStatus status);
     long countByEmployerId(UUID employerId);
+
+    // ── Market Insights ───────────────────────────────────────────────────────
+
+    @Query("""
+        SELECT new JobPortal.project.JobListing.dto.response.SalaryAggregationResponse(
+            c.name, AVG(jl.salaryMin), AVG(jl.salaryMax), COUNT(jl)
+        )
+        FROM JobListing jl
+        JOIN jl.category c
+        WHERE jl.status = 'ACTIVE' AND jl.salaryMin IS NOT NULL AND jl.salaryMax IS NOT NULL
+        GROUP BY c.name
+    """)
+    List<JobPortal.project.JobListing.dto.response.SalaryAggregationResponse> getAverageSalaryByCategory();
+
+    @Query("""
+        SELECT YEAR(jl.createdAt) as yr, MONTH(jl.createdAt) as mo, COUNT(jl) as cnt
+        FROM JobListing jl
+        WHERE jl.status = 'ACTIVE'
+        GROUP BY YEAR(jl.createdAt), MONTH(jl.createdAt)
+        ORDER BY yr ASC, mo ASC
+    """)
+    List<Object[]> getDemandTrendsRaw();
 }
