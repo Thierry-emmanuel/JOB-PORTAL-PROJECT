@@ -23,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +46,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "jobInterviews", allEntries = true)
     public InterviewResponse schedule(Long applicationId, ScheduleInterviewRequest request) {
 
         Application application = findApplicationById(applicationId);
@@ -71,6 +74,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "jobInterviews", allEntries = true)
     public InterviewResponse scheduleForEmployer(Long employerId, Long applicationId,
                                                  ScheduleInterviewRequest request) {
 
@@ -126,16 +130,19 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getBySeekerIdId(Long seekerId) {
-        List<Interview> interviews = interviewRepository.findBySeekerIdWithApplication(seekerId);
-        return interviewMapper.toResponseList(interviews);
+    public InterviewPageResponse getBySeekerIdId(Long seekerId, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findBySeekerIdWithApplication(
+                seekerId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getByJobPostingId(Long jobPostingId) {
-        List<Interview> interviews = interviewRepository.findByJobPostingId(jobPostingId);
-        return interviewMapper.toResponseList(interviews);
+    @Cacheable(value = "jobInterviews", key = "#jobPostingId + '-' + #page + '-' + #size")
+    public InterviewPageResponse getByJobPostingId(Long jobPostingId, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findByJobPostingId(
+                jobPostingId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
@@ -166,33 +173,35 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getInDateRange(LocalDateTime from, LocalDateTime to) {
-        List<Interview> interviews = interviewRepository.findByScheduledAtBetween(from, to);
-        return interviewMapper.toResponseList(interviews);
+    public InterviewPageResponse getInDateRange(LocalDateTime from, LocalDateTime to, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findByScheduledAtBetween(
+                from, to, PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getSeekerInterviewsInDateRange(
-            Long seekerId, LocalDateTime from, LocalDateTime to) {
-        List<Interview> interviews = interviewRepository.findBySeekerIdAndScheduledAtBetween(
-                seekerId, from, to);
-        return interviewMapper.toResponseList(interviews);
+    public InterviewPageResponse getSeekerInterviewsInDateRange(
+            Long seekerId, LocalDateTime from, LocalDateTime to, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findBySeekerIdAndScheduledAtBetween(
+                seekerId, from, to, PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getAllPending() {
-        List<Interview> interviews = interviewRepository.findAllPending(LocalDateTime.now());
-        return interviewMapper.toResponseList(interviews);
+    public InterviewPageResponse getAllPending(int page, int size) {
+        Page<Interview> interviews = interviewRepository.findAllPending(
+                LocalDateTime.now(), PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InterviewResponse> getPendingBySeekerId(Long seekerId) {
-        List<Interview> interviews = interviewRepository.findPendingBySeekerId(
-                seekerId, LocalDateTime.now());
-        return interviewMapper.toResponseList(interviews);
+    public InterviewPageResponse getPendingBySeekerId(Long seekerId, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findPendingBySeekerId(
+                seekerId, LocalDateTime.now(), PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "scheduledAt")));
+        return toPageResponse(interviews);
     }
 
     @Override
@@ -210,6 +219,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "jobInterviews", allEntries = true)
     public InterviewResponse reschedule(Long interviewId, RescheduleInterviewRequest request) {
 
         Interview interview = findByIdWithApplication(interviewId);
@@ -236,6 +246,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "jobInterviews", allEntries = true)
     public InterviewResponse recordResult(Long interviewId, InterviewResult result, String feedback) {
 
         Interview interview = findByIdWithApplication(interviewId);
@@ -288,6 +299,7 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "jobInterviews", allEntries = true)
     public void cancel(Long interviewId) {
 
         Interview interview = findByIdWithApplication(interviewId);

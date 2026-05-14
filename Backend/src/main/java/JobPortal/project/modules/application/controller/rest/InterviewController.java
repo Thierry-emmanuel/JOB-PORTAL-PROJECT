@@ -71,8 +71,11 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}")
-    public ResponseEntity<List<InterviewResponse>> getBySeekerId(@PathVariable Long seekerId) {
-        List<InterviewResponse> response = interviewService.getBySeekerIdId(seekerId);
+    public ResponseEntity<InterviewPageResponse> getBySeekerId(
+            @PathVariable Long seekerId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        InterviewPageResponse response = interviewService.getBySeekerIdId(seekerId, page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -82,8 +85,11 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/job-postings/{jobPostingId}")
-    public ResponseEntity<List<InterviewResponse>> getByJobPostingId(@PathVariable Long jobPostingId) {
-        List<InterviewResponse> response = interviewService.getByJobPostingId(jobPostingId);
+    public ResponseEntity<InterviewPageResponse> getByJobPostingId(
+            @PathVariable Long jobPostingId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        InterviewPageResponse response = interviewService.getByJobPostingId(jobPostingId, page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -121,8 +127,11 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}/pending")
-    public ResponseEntity<List<InterviewResponse>> getPendingBySeekerId(@PathVariable Long seekerId) {
-        List<InterviewResponse> response = interviewService.getPendingBySeekerId(seekerId);
+    public ResponseEntity<InterviewPageResponse> getPendingBySeekerId(
+            @PathVariable Long seekerId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        InterviewPageResponse response = interviewService.getPendingBySeekerId(seekerId, page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -132,12 +141,14 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}/date-range")
-    public ResponseEntity<List<InterviewResponse>> getSeekerInterviewsInDateRange(
+    public ResponseEntity<InterviewPageResponse> getSeekerInterviewsInDateRange(
             @PathVariable Long seekerId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-        List<InterviewResponse> response = interviewService.getSeekerInterviewsInDateRange(seekerId, from, to);
+        InterviewPageResponse response = interviewService.getSeekerInterviewsInDateRange(seekerId, from, to, page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -162,8 +173,10 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/pending")
-    public ResponseEntity<List<InterviewResponse>> getAllPending() {
-        List<InterviewResponse> response = interviewService.getAllPending();
+    public ResponseEntity<InterviewPageResponse> getAllPending(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        InterviewPageResponse response = interviewService.getAllPending(page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -173,11 +186,13 @@ public class InterviewController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<InterviewResponse>> getInDateRange(
+    public ResponseEntity<InterviewPageResponse> getInDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-        List<InterviewResponse> response = interviewService.getInDateRange(from, to);
+        InterviewPageResponse response = interviewService.getInDateRange(from, to, page, size);
         return ResponseEntity.ok(response);
     }
 

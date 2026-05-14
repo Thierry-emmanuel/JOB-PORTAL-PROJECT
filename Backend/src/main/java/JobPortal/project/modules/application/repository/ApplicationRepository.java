@@ -118,7 +118,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     Optional<Application> findByIdWithInterview(@Param("id") Long id);
 
     @Query("SELECT a FROM Application a LEFT JOIN FETCH a.interview WHERE a.seekerId = :seekerId")
-    List<Application> findBySeekerIdWithInterview(@Param("seekerId") Long seekerId);
+    Page<Application> findBySeekerIdWithInterview(@Param("seekerId") Long seekerId, Pageable pageable);
 
     // ─── Shortlisted applications (convenience) ───────────────────────────────
 

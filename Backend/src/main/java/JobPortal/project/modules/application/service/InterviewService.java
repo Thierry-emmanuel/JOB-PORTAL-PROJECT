@@ -41,12 +41,12 @@ public interface InterviewService {
     /**
      * All interviews for a seeker.
      */
-    List<InterviewResponse> getBySeekerIdId(Long seekerId);
+    InterviewPageResponse getBySeekerIdId(Long seekerId, int page, int size);
 
     /**
      * All interviews for a job posting.
      */
-    List<InterviewResponse> getByJobPostingId(Long jobPostingId);
+    InterviewPageResponse getByJobPostingId(Long jobPostingId, int page, int size);
 
     /**
      * All SHORTLISTED applications for a job posting that are eligible for interview
@@ -67,22 +67,22 @@ public interface InterviewService {
     /**
      * All interviews across all seekers/postings within a time window (admin).
      */
-    List<InterviewResponse> getInDateRange(LocalDateTime from, LocalDateTime to);
+    InterviewPageResponse getInDateRange(LocalDateTime from, LocalDateTime to, int page, int size);
 
     /**
      * All interviews for a specific seeker within a time window.
      */
-    List<InterviewResponse> getSeekerInterviewsInDateRange(Long seekerId, LocalDateTime from, LocalDateTime to);
+    InterviewPageResponse getSeekerInterviewsInDateRange(Long seekerId, LocalDateTime from, LocalDateTime to, int page, int size);
 
     /**
      * All pending interviews (no result yet, scheduled in the future) across the platform (admin).
      */
-    List<InterviewResponse> getAllPending();
+    InterviewPageResponse getAllPending(int page, int size);
 
     /**
      * All pending interviews for a specific seeker.
      */
-    List<InterviewResponse> getPendingBySeekerId(Long seekerId);
+    InterviewPageResponse getPendingBySeekerId(Long seekerId, int page, int size);
 
     /**
      * Lightweight lookup of an interview by application — no eager join.

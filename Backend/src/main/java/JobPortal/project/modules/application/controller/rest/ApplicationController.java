@@ -78,10 +78,12 @@ public class ApplicationController {
     // ------------------------------------------------------------------ //
 
     @GetMapping("/seekers/{seekerId}/with-interviews")
-    public ResponseEntity<List<ApplicationResponse>> getWithInterviewsBySeekerId(
-            @PathVariable Long seekerId) {
+    public ResponseEntity<ApplicationPageResponse> getWithInterviewsBySeekerId(
+            @PathVariable Long seekerId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-        List<ApplicationResponse> response = applicationService.getWithInterviewsBySeekerId(seekerId);
+        ApplicationPageResponse response = applicationService.getWithInterviewsBySeekerId(seekerId, page, size);
         return ResponseEntity.ok(response);
     }
 

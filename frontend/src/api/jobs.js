@@ -24,12 +24,12 @@ export const rateJob = async (id, rating) => {
 
 export const getUserApplications = async (seekerId) => {
   const { data } = await apiClient.get(`/api/v1/applications/seekers/${seekerId}/with-interviews`);
-  return data;
+  return data.content || data;
 };
 
 export const getUserInterviews = async (seekerId) => {
   const { data } = await apiClient.get(`/api/v1/interviews/seekers/${seekerId}`);
-  return data;
+  return data.content || data;
 };
 
 export const saveJob = async (id) => {

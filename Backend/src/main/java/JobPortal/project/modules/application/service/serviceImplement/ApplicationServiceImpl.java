@@ -22,6 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"seekerApplications", "applicationStats"}, allEntries = true)
     public ApplicationResponse apply(Long seekerId, CreateApplicationRequest request) {
 
         if (applicationRepository.existsBySeekerIdAndJobPostingId(seekerId, request.jobPostingId())) {
@@ -117,6 +120,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"seekerApplications", "applicationStats"}, allEntries = true)
     public ApplicationResponse updateStatus(Long applicationId, UpdateApplicationStatusRequest request) {
 
         Application application = findById(applicationId);
@@ -144,6 +148,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"seekerApplications", "applicationStats"}, allEntries = true)
     public void withdraw(Long applicationId, Long seekerId) {
 
         Application application = findById(applicationId);
@@ -165,9 +170,18 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ApplicationResponse> getWithInterviewsBySeekerId(Long seekerId) {
-        List<Application> applications = applicationRepository.findBySeekerIdWithInterview(seekerId);
-        return applicationMapper.toResponseList(applications);
+    @Cacheable(value = "seekerApplications", key = "#seekerId + '-' + #page + '-' + #size")
+    public ApplicationPageResponse getWithInterviewsBySeekerId(Long seekerId, int page, int size) {
+        Page<Application> pageResult = applicationRepository.findBySeekerIdWithInterview(
+                seekerId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "appliedAt")));
+        
+        return new ApplicationPageResponse(
+                applicationMapper.toResponseList(pageResult.getContent()),
+                pageResult.getNumber(),
+                pageResult.getSize(),
+                pageResult.getTotalElements(),
+                pageResult.getTotalPages(),
+                pageResult.isLast());
     }
 
     // ------------------------------------------------------------------ //
@@ -176,6 +190,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "applicationStats", key = "(#jobPostingId != null ? #jobPostingId : 'null') + '-' + (#seekerId != null ? #seekerId : 'null')")
     public ApplicationStatsResponse getStats(Long jobPostingId, Long seekerId) {
 
         if (jobPostingId != null) {

@@ -17,12 +17,12 @@ export const getInterviewById = async (id) => {
 
 export const getInterviewsBySeeker = async (seekerId) => {
   const response = await apiClient.get(`/api/v1/interviews/seekers/${seekerId}`);
-  return response.data;
+  return response.data.content || response.data;
 };
 
 export const getInterviewsByJobPosting = async (jobPostingId) => {
   const response = await apiClient.get(`/api/v1/interviews/job-postings/${jobPostingId}`);
-  return response.data;
+  return response.data.content || response.data;
 };
 
 export const rescheduleInterview = async (id, data) => {
@@ -41,5 +41,5 @@ export const cancelInterview = async (id) => {
 
 export const getPendingInterviewsBySeeker = async (seekerId) => {
   const response = await apiClient.get(`/api/v1/interviews/seekers/${seekerId}/pending`);
-  return response.data;
+  return response.data.content || response.data;
 };

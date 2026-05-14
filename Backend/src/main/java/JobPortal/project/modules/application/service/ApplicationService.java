@@ -44,9 +44,9 @@ public interface ApplicationService {
     /**
      * All applications for a seeker with their interviews eagerly loaded in a single query.
      * Prefer this over getAll(filter) when the caller needs interview data for every application,
-     * as it avoids N+1 queries.
+     * as it avoids N+1 queries. Returns a paginated response.
      */
-    List<ApplicationResponse> getWithInterviewsBySeekerId(Long seekerId);
+    ApplicationPageResponse getWithInterviewsBySeekerId(Long seekerId, int page, int size);
 
     /**
      * Aggregate statistics for a job posting or a seeker.

@@ -39,7 +39,7 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             JOIN FETCH i.application a
             WHERE a.seekerId = :seekerId
             """)
-    List<Interview> findBySeekerIdWithApplication(@Param("seekerId") Long seekerId);
+    Page<Interview> findBySeekerIdWithApplication(@Param("seekerId") Long seekerId, Pageable pageable);
 
     @Query("""
             SELECT i FROM Interview i
@@ -64,7 +64,7 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             JOIN i.application a
             WHERE a.jobPostingId = :jobPostingId
             """)
-    List<Interview> findByJobPostingId(@Param("jobPostingId") Long jobPostingId);
+    Page<Interview> findByJobPostingId(@Param("jobPostingId") Long jobPostingId, Pageable pageable);
 
     @Query("""
             SELECT i FROM Interview i
@@ -78,7 +78,7 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
 
     // ─── Scheduled-time window queries ───────────────────────────────────────
 
-    List<Interview> findByScheduledAtBetween(LocalDateTime from, LocalDateTime to);
+    Page<Interview> findByScheduledAtBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
 
     @Query("""
             SELECT i FROM Interview i
@@ -86,15 +86,16 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             WHERE a.seekerId = :seekerId
             AND i.scheduledAt BETWEEN :from AND :to
             """)
-    List<Interview> findBySeekerIdAndScheduledAtBetween(
+    Page<Interview> findBySeekerIdAndScheduledAtBetween(
             @Param("seekerId") Long seekerId,
             @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to);
+            @Param("to") LocalDateTime to,
+            Pageable pageable);
 
     // ─── Pending / upcoming interviews (no result yet, scheduled in future) ───
 
     @Query("SELECT i FROM Interview i WHERE i.result IS NULL AND i.scheduledAt > :now")
-    List<Interview> findAllPending(@Param("now") LocalDateTime now);
+    Page<Interview> findAllPending(@Param("now") LocalDateTime now, Pageable pageable);
 
     @Query("""
             SELECT i FROM Interview i
@@ -103,9 +104,10 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             AND i.result IS NULL
             AND i.scheduledAt > :now
             """)
-    List<Interview> findPendingBySeekerId(
+    Page<Interview> findPendingBySeekerId(
             @Param("seekerId") Long seekerId,
-            @Param("now") LocalDateTime now);
+            @Param("now") LocalDateTime now,
+            Pageable pageable);
 
     // ─── Filter by type ───────────────────────────────────────────────────────
 
