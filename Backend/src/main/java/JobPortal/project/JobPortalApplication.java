@@ -6,8 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 
+import org.springframework.cache.annotation.EnableCaching;
+
 @Slf4j
 @SpringBootApplication
+@EnableCaching
 public class JobPortalApplication {
 
 	public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package JobPortal.project.JobListing.config;
 
-import JobPortal.project.auth.Model.User;
-import JobPortal.project.auth.repository.UserRepository;
+import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;

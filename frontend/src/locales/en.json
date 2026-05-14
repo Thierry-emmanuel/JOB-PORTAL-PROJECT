@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "jobs": "Jobs",
+    "companies": "Companies",
+    "salaries": "Salaries",
+    "recruiters": "Recruiters",
+    "blog": "Blog",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "featured": "FEATURED POST",
+    "finance": "FINANCE OPPORTUNITY",
+    "creative": "CREATIVE ROLE",
+    "compatibility": "compatibility",
+    "view_job": "View Job",
+    "my_dashboard": "My Dashboard"
+  },
+  "ticker": {
+    "live": "LIVE"
+  },
+  "search": {
+    "placeholder_job": "Job title, skill...",
+    "placeholder_loc": "City or Remote",
+    "button": "Search",
+    "filters": {
+      "all": "All",
+      "remote": "Remote",
+      "full_time": "Full-time",
+      "internship": "Internship",
+      "tech": "Tech",
+      "finance": "Finance",
+      "design": "Design"
+    }
+  },
+  "stats": {
+    "active_jobs": "Active Jobs",
+    "companies": "Companies",
+    "candidates": "Candidates",
+    "placement_rate": "Placement Rate"
+  },
+  "jobs": {
+    "eyebrow": "SELECTED FOR YOU",
+    "title": "Latest Opportunities",
+    "subtitle": "Jobs filtered by compatibility with your profile",
+    "view_all": "View all {{count}}+ jobs",
+    "apply": "Apply",
+    "compatibility_label": "AI Compatibility",
+    "remote": "REMOTE"
+  }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Kora_Logo from './assets/absolute-size-logo.png'
 import { useAuth } from "./context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────── */
@@ -118,6 +119,7 @@ function useReveal(delay = 0) {
 /* ─── NAVBAR ────────────────────────────────────────────────── */
 function Navbar({ logoSrc, onLogoUpload }) {
   const { isAuthenticated, user } = useAuth();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [scrolled, setScrolled]     = useState(false);
   const [activeNav, setActiveNav]   = useState("Offres");
@@ -136,7 +138,13 @@ function Navbar({ logoSrc, onLogoUpload }) {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const navLinks = ["Offres","Entreprises","Salaires","Recruteurs","Blog"];
+  const navLinks = [
+    { label: t('nav.jobs'), key: "Offres" },
+    { label: t('nav.companies'), key: "Entreprises" },
+    { label: t('nav.salaries'), key: "Salaires" },
+    { label: t('nav.recruiters'), key: "Recruteurs" },
+    { label: t('nav.blog'), key: "Blog" }
+  ];
 
   const getDashboardPath = () => {
     const role = user?.role || user?.type || "";
@@ -174,15 +182,15 @@ function Navbar({ logoSrc, onLogoUpload }) {
         {/* Desktop nav links */}
         <div className="kora-desktop-nav" style={{ flex:1, display:"flex", justifyContent:"center", gap:4, alignItems:"center" }}>
           {navLinks.map(link => (
-            <button key={link} onClick={() => setActiveNav(link)} style={{
-              fontSize:14, fontWeight:500, color: activeNav===link ? O : "#374151",
+            <button key={link.key} onClick={() => setActiveNav(link.key)} style={{
+              fontSize:14, fontWeight:500, color: activeNav===link.key ? O : "#374151",
               cursor:"pointer", padding:"6px 14px", background:"none", border:"none",
               fontFamily:"inherit", whiteSpace:"nowrap", position:"relative",
             }}>
-              {link}
+              {link.label}
               <span style={{
                 position:"absolute", bottom:-2, left:14, right:14, height:2,
-                background: activeNav===link ? O : "transparent", borderRadius:2,
+                background: activeNav===link.key ? O : "transparent", borderRadius:2,
               }}/>
             </button>
           ))}
@@ -190,12 +198,24 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
         {/* Desktop auth buttons */}
         <div className="kora-desktop-nav" style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
+          {/* Language Switcher */}
+          <div style={{ display:"flex", background:"#F3F4F6", borderRadius:8, padding:2, marginRight:8 }}>
+            <button 
+              onClick={() => i18n.changeLanguage('fr')}
+              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'fr' ? "#fff" : "transparent", color: i18n.language === 'fr' ? G : MUTED, boxShadow: i18n.language === 'fr' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+            >FR</button>
+            <button 
+              onClick={() => i18n.changeLanguage('en')}
+              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'en' ? "#fff" : "transparent", color: i18n.language === 'en' ? G : MUTED, boxShadow: i18n.language === 'en' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+            >EN</button>
+          </div>
+
           {isAuthenticated ? (
             <Link 
               to={getDashboardPath()}
               style={{ background:G, color:"white", textDecoration: "none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(26,92,46,0.2)" }}
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
           ) : (
             <>
@@ -203,13 +223,13 @@ function Navbar({ logoSrc, onLogoUpload }) {
                 to="/login"
                 style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color:"#374151", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit", textDecoration: "none" }}
               >
-                Connexion
+                {t('nav.login')}
               </Link>
               <Link 
                 to="/register"
                 style={{ background:O, color:"white", border:"none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(249,115,22,0.3)", textDecoration: "none" }}
               >
-                S'inscrire
+                {t('nav.register')}
               </Link>
             </>
           )}
@@ -273,15 +293,15 @@ function Navbar({ logoSrc, onLogoUpload }) {
       }}>
         <div style={{ padding:"8px 16px 16px" }}>
           {navLinks.map(link => (
-            <button key={link} onClick={() => { setActiveNav(link); setMenuOpen(false); }} style={{
+            <button key={link.key} onClick={() => { setActiveNav(link.key); setMenuOpen(false); }} style={{
               display:"block", width:"100%", textAlign:"left",
-              fontSize:15, fontWeight: activeNav===link ? 700 : 500,
-              color: activeNav===link ? O : INK,
+              fontSize:15, fontWeight: activeNav===link.key ? 700 : 500,
+              color: activeNav===link.key ? O : INK,
               cursor:"pointer", padding:"12px 8px",
               background:"none", border:"none", fontFamily:"inherit",
               borderBottom:`1px solid ${BORDER}`,
             }}>
-              {link}
+              {link.label}
             </button>
           ))}
           {isAuthenticated ? (
@@ -319,6 +339,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
 /* ─── HERO CAROUSEL ─────────────────────────────────────────── */
 function Hero() {
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -388,7 +409,7 @@ function Hero() {
           width:"100%",
         }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-            <span style={{ fontSize:"clamp(9px,2.5vw,11px)", fontWeight:700, letterSpacing:3, color:O }}>{s.eyebrow}</span>
+            <span style={{ fontSize:"clamp(9px,2.5vw,11px)", fontWeight:700, letterSpacing:3, color:O }}>{s.eyebrow === "POSTE VEDETTE" ? t('hero.featured') : s.eyebrow === "OPPORTUNITÉ FINANCE" ? t('hero.finance') : t('hero.creative')}</span>
             <span style={{ fontSize:"clamp(9px,2vw,10px)", fontWeight:700, padding:"3px 10px", borderRadius:20, letterSpacing:1, background:`${s.tagColor}22`, color:s.tagColor, border:`1px solid ${s.tagColor}44` }}>{s.tag}</span>
           </div>
           <h1 style={{ fontSize:"clamp(32px, 6vw, 76px)", fontWeight:800, color:"#fff", lineHeight:1.05, letterSpacing:"-1.5px", marginBottom:20, whiteSpace:"pre-line" }}>
@@ -411,7 +432,7 @@ function Hero() {
                   Mon Tableau de Bord →
                 </Link>
                 <button onClick={handleAction} style={{ background:"rgba(255,255,255,0.15)", color:"white", border:"1px solid rgba(255,255,255,0.3)", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", backdropFilter:"blur(8px)" }}>
-                  Voir l'offre
+                  {t('hero.view_job')}
                 </button>
               </>
             ) : (
@@ -423,7 +444,7 @@ function Hero() {
             )}
             <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
               <span style={{ width:8, height:8, borderRadius:"50%", background: s.match >= 90 ? "#22C55E" : "#F59E0B", display:"inline-block" }}/>
-              {s.match}% de compatibilité
+              {s.match}% {t('hero.compatibility')}
             </div>
           </div>
         </div>
@@ -503,6 +524,7 @@ function Ticker() {
 
 /* ─── SEARCH SECTION ────────────────────────────────────────── */
 function SearchSection() {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState("Tous");
   return (
     <div style={{ background:"#fff", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,48px)", borderBottom:`1px solid ${BORDER}` }}>
@@ -518,7 +540,7 @@ function SearchSection() {
             <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Ville ou Remote" aria-label="Localisation"/>
           </div>
           <button style={{ background:G, color:"white", border:"none", padding:"0 22px", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", minHeight:48, flexShrink:0, whiteSpace:"nowrap" }}>
-            Rechercher
+            {t('search.button')}
           </button>
         </div>
         {/* Filter pills */}
@@ -574,10 +596,10 @@ function StatsBand() {
   }, []);
 
   const stats = [
-    { icon:"💼", val: counts.jobs.toLocaleString(),       suf:"+", label:"Offres Actives" },
-    { icon:"🏢", val: counts.companies,                   suf:"+", label:"Entreprises" },
-    { icon:"👥", val: counts.candidates.toLocaleString(), suf:"+", label:"Candidats" },
-    { icon:"✓",  val: counts.rate,                        suf:"%", label:"Taux de placement" },
+    { icon:"💼", val: counts.jobs.toLocaleString(),       suf:"+", label:t('stats.active_jobs') },
+    { icon:"🏢", val: counts.companies,                   suf:"+", label:t('stats.companies') },
+    { icon:"👥", val: counts.candidates.toLocaleString(), suf:"+", label:t('stats.candidates') },
+    { icon:"✓",  val: counts.rate,                        suf:"%", label:t('stats.placement_rate') },
   ];
 
   return (
@@ -605,6 +627,7 @@ function JobCard({ job, delay }) {
   const [saved, setSaved] = useState(false);
   const [barVisible, setBarVisible] = useState(false);
   const barRef = useRef(null);
+  const { t } = useTranslation();
   const fresh = freshnessLabel(job.posted);
   const matchColor = job.match >= 90 ? "#16A34A" : job.match >= 80 ? "#D97706" : "#6B7280";
   const barGrad = job.match >= 90
@@ -683,7 +706,7 @@ function JobCard({ job, delay }) {
       {/* Match bar */}
       <div style={{ marginBottom:12 }} ref={barRef}>
         <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:4 }}>
-          <span style={{ color:MUTED, fontWeight:500 }}>Compatibilité IA</span>
+          <span style={{ color:MUTED, fontWeight:500 }}>{t('jobs.compatibility_label')}</span>
           <span style={{ fontWeight:700, color:matchColor }}>{job.match}%</span>
         </div>
         <div style={{ height:4, background:"#F3F4F6", borderRadius:4 }}>
@@ -702,9 +725,15 @@ function JobCard({ job, delay }) {
           <div style={{ fontSize:"clamp(14px,3vw,16px)", fontWeight:800, color:G }}>{job.salary}</div>
           <div style={{ fontSize:11, fontWeight:600, color:fresh.color, marginTop:2 }}>● {fresh.label}</div>
         </div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:`1px solid ${BORDER}`, paddingTop:14, flexWrap:"wrap", gap:8 }}>
+        <div>
+          <div style={{ fontSize:"clamp(14px,3vw,16px)", fontWeight:800, color:G }}>{job.salary}</div>
+          <div style={{ fontSize:11, fontWeight:600, color:fresh.color, marginTop:2 }}>● {fresh.label}</div>
+        </div>
         <button onClick={handleApplyClick} style={{ background:G, color:"white", border:"none", padding:"9px 18px", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
-          Postuler →
+          {t('jobs.apply')} →
         </button>
+      </div>
       </div>
     </div>
   );
@@ -718,12 +747,12 @@ function JobsSection() {
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
         <div ref={ref} style={{ ...style, display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:36, flexWrap:"wrap", gap:12 }}>
           <div>
-            <div style={{ fontSize:11, fontWeight:700, color:O, letterSpacing:"2.5px", marginBottom:6 }}>SÉLECTIONNÉS POUR VOUS</div>
-            <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>Dernières Opportunités</h2>
-            <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>Offres filtrées par compatibilité avec votre profil</p>
+            <div style={{ fontSize:11, fontWeight:700, color:O, letterSpacing:"2.5px", marginBottom:6 }}>{t('jobs.eyebrow')}</div>
+            <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>{t('jobs.title')}</h2>
+            <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>{t('jobs.subtitle')}</p>
           </div>
           <Link to="/jobs" style={{ fontSize:14, fontWeight:600, color:G, textDecoration:"none", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap" }}>
-            Voir les 10 000+ offres →
+            {t('jobs.view_all', { count: 10000 })} →
           </Link>
         </div>
         <div className="kora-jobs-grid">
