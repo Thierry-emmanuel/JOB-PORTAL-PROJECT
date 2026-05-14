@@ -1,8 +1,9 @@
 package JobPortal.project.modules.application.service;
 
 import JobPortal.project.modules.application.model.Interview;
+import JobPortal.project.modules.auth.repository.UserRepository;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
@@ -11,6 +12,7 @@ import com.google.api.services.calendar.model.EventDateTime;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -23,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
@@ -33,93 +34,96 @@ import java.util.Date;
 public class GoogleCalendarService {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
-    private final JobPortal.project.modules.auth.repository.UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    /** Reuse one transport for all requests – creating it is expensive. */
+    private NetHttpTransport httpTransport;
+
+    @PostConstruct
+    void init() {
+        try {
+            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        } catch (GeneralSecurityException | IOException e) {
+            log.error("Failed to initialize Google HTTP transport", e);
+        }
+    }
 
     /**
      * Creates a Google Calendar event for the given interview.
-     * @param interview The interview entity with scheduled time and details.
-     * @return The created Google Calendar Event ID, or null if sync failed.
+     *
+     * @return the Calendar event ID, or {@code null} if the user is not authenticated via OAuth2.
      */
     public String createInterviewEvent(Interview interview) {
+        Calendar service = getCalendarService();
+        if (service == null) {
+            log.debug("Skipping Calendar sync – no OAuth2 session for current user");
+            return null;
+        }
+
         try {
-            Calendar service = getCalendarService();
-            if (service == null) {
-                log.warn("Could not initialize Google Calendar service (no valid OAuth2 client found)");
-                return null;
-            }
-
-            // Fetch seeker email
             String seekerEmail = userRepository.findById(interview.getApplication().getSeekerId())
-                    .map(JobPortal.project.modules.auth.Model.User::getEmail)
-                    .orElse("candidate@kora.com");
+                    .map(u -> u.getEmail())
+                    .orElse(null);
 
-            Event event = new Event()
-                    .setSummary("Kora Interview: Job Opportunity")
-                    .setLocation(interview.getMeetingLink() != null ? interview.getMeetingLink() : "Kora Platform")
-                    .setDescription("Job Interview scheduled via Kora Job Portal.\nPlatform: " + interview.getPlatform());
-
-            // Convert LocalDateTime to Google DateTime
-            com.google.api.client.util.DateTime startDateTime = new com.google.api.client.util.DateTime(
-                    Date.from(interview.getScheduledAt().atZone(ZoneId.systemDefault()).toInstant())
-            );
-            event.setStart(new EventDateTime().setDateTime(startDateTime));
-
-            // Assume 1 hour duration
-            com.google.api.client.util.DateTime endDateTime = new com.google.api.client.util.DateTime(
-                    Date.from(interview.getScheduledAt().plusHours(1).atZone(ZoneId.systemDefault()).toInstant())
-            );
-            event.setEnd(new EventDateTime().setDateTime(endDateTime));
-
-            // Add attendees (Interviewer and Candidate)
-            EventAttendee candidate = new EventAttendee().setEmail(seekerEmail);
-            event.setAttendees(Collections.singletonList(candidate));
-
+            Event event = buildEvent(interview, seekerEmail);
             event = service.events().insert("primary", event).execute();
-            log.info("Google Calendar event created: {}", event.getHtmlLink());
+            log.info("Google Calendar event created: id={}, link={}", event.getId(), event.getHtmlLink());
             return event.getId();
-
-        } catch (Exception e) {
-            log.error("Failed to create Google Calendar event", e);
+        } catch (IOException e) {
+            log.error("Failed to create Google Calendar event for interview {}", interview.getId(), e);
             return null;
         }
     }
 
     public void cancelInterviewEvent(String eventId) {
         if (eventId == null) return;
+        Calendar service = getCalendarService();
+        if (service == null) return;
         try {
-            Calendar service = getCalendarService();
-            if (service != null) {
-                service.events().delete("primary", eventId).execute();
-                log.info("Google Calendar event cancelled: {}", eventId);
-            }
-        } catch (Exception e) {
-            log.error("Failed to cancel Google Calendar event: {}", eventId, e);
+            service.events().delete("primary", eventId).execute();
+            log.info("Google Calendar event deleted: {}", eventId);
+        } catch (IOException e) {
+            log.error("Failed to delete Google Calendar event {}", eventId, e);
         }
     }
 
-    private Calendar getCalendarService() throws GeneralSecurityException, IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof OAuth2AuthenticationToken)) {
-            return null;
-        }
+    // ─── Private helpers ────────────────────────────────────────────────────
 
-        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+    private Event buildEvent(Interview interview, String seekerEmail) {
+        var startInstant = interview.getScheduledAt().atZone(ZoneId.systemDefault()).toInstant();
+        var endInstant   = interview.getScheduledAt().plusHours(1).atZone(ZoneId.systemDefault()).toInstant();
+
+        var start = new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(Date.from(startInstant)));
+        var end   = new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(Date.from(endInstant)));
+
+        Event event = new Event()
+                .setSummary("Kora Interview: Job Opportunity")
+                .setLocation(interview.getMeetingLink() != null ? interview.getMeetingLink() : "Kora Platform")
+                .setDescription("Interview via Kora Job Portal. Platform: " + interview.getPlatform())
+                .setStart(start)
+                .setEnd(end);
+
+        if (seekerEmail != null) {
+            event.setAttendees(Collections.singletonList(new EventAttendee().setEmail(seekerEmail)));
+        }
+        return event;
+    }
+
+    private Calendar getCalendarService() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!(auth instanceof OAuth2AuthenticationToken oauthToken)) return null;
+
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-                oauthToken.getAuthorizedClientRegistrationId(),
-                oauthToken.getName()
-        );
+                oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
+        if (client == null || client.getAccessToken() == null) return null;
+        if (httpTransport == null) return null;
 
-        if (client == null || client.getAccessToken() == null) {
-            return null;
-        }
+        var token = new AccessToken(
+                client.getAccessToken().getTokenValue(),
+                Date.from(client.getAccessToken().getExpiresAt()));
+        GoogleCredentials credentials = GoogleCredentials.create(token);
 
-        String tokenValue = client.getAccessToken().getTokenValue();
-        AccessToken accessToken = new AccessToken(tokenValue, Date.from(client.getAccessToken().getExpiresAt()));
-        GoogleCredentials credentials = GoogleCredentials.create(accessToken);
-
-        return new Calendar.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
+        return new Calendar.Builder(httpTransport, GsonFactory.getDefaultInstance(),
                 new HttpCredentialsAdapter(credentials))
                 .setApplicationName("Kora Job Portal")
                 .build();

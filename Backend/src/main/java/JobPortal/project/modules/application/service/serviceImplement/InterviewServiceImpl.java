@@ -70,14 +70,7 @@ public class InterviewServiceImpl implements InterviewService {
         Interview saved = interviewRepository.save(interview);
         log.info("Interview scheduled: id={}, applicationId={}, scheduledAt={}",
                 saved.getId(), applicationId, request.scheduledAt());
-
-        // Sync to Google Calendar
-        String eventId = googleCalendarService.createInterviewEvent(saved);
-        if (eventId != null) {
-            saved.setGoogleCalendarEventId(eventId);
-            interviewRepository.save(saved);
-        }
-
+        syncCalendar(saved);
         return interviewMapper.toResponse(saved);
     }
 
@@ -89,9 +82,6 @@ public class InterviewServiceImpl implements InterviewService {
 
         Application application = findApplicationById(applicationId);
 
-        // Ownership check: verify this application belongs to a posting owned by this employer.
-        // Uses a native sub-query via the repository rather than loading the JobPosting entity
-        // (which lives in a different module and is not visible to this persistence context).
         boolean owned = applicationRepository.existsByIdAndEmployerId(
                 applicationId, employerId.toString());
         if (!owned) {
@@ -116,14 +106,7 @@ public class InterviewServiceImpl implements InterviewService {
         Interview saved = interviewRepository.save(interview);
         log.info("Interview scheduled by employer {}: id={}, applicationId={}, scheduledAt={}",
                 employerId, saved.getId(), applicationId, request.scheduledAt());
-
-        // Sync to Google Calendar
-        String eventId = googleCalendarService.createInterviewEvent(saved);
-        if (eventId != null) {
-            saved.setGoogleCalendarEventId(eventId);
-            interviewRepository.save(saved);
-        }
-
+        syncCalendar(saved);
         return interviewMapper.toResponse(saved);
     }
 
@@ -367,6 +350,19 @@ public class InterviewServiceImpl implements InterviewService {
         return applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "Application not found: " + applicationId));
+    }
+
+    /**
+     * Syncs an interview to Google Calendar after it is saved.
+     * Stores the returned event ID back on the entity for future updates/cancellations.
+     * Gracefully no-ops when the user is not authenticated via OAuth2.
+     */
+    private void syncCalendar(Interview interview) {
+        String eventId = googleCalendarService.createInterviewEvent(interview);
+        if (eventId != null) {
+            interview.setGoogleCalendarEventId(eventId);
+            interviewRepository.save(interview);
+        }
     }
 }
 
