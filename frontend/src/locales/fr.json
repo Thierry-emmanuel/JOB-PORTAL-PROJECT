@@ -1,52 +1,26 @@
 {
   "nav": {
-    "jobs": "Offres",
-    "companies": "Entreprises",
-    "salaries": "Salaires",
-    "recruiters": "Recruteurs",
-    "blog": "Blog",
-    "login": "Connexion",
-    "register": "S'inscrire",
-    "dashboard": "Tableau de Bord"
+    "jobs": "Emplois",
+    "insights": "Analyses",
+    "dashboard": "Tableau de Bord",
+    "interviews": "Entretiens",
+    "post_job": "Publier une Offre",
+    "my_profile": "Mon Profil",
+    "sign_in": "Se Connecter",
+    "sign_out": "Se Déconnecter"
   },
-  "hero": {
-    "featured": "POSTE VEDETTE",
-    "finance": "OPPORTUNITÉ FINANCE",
-    "creative": "RÔLE CRÉATIF",
-    "compatibility": "de compatibilité",
-    "view_job": "Voir l'offre",
-    "my_dashboard": "Mon Tableau de Bord"
+  "home": {
+    "hero_title": "Libérez Votre Potentiel de Carrière",
+    "hero_subtitle": "Connectez-vous avec les meilleurs employeurs et trouvez l'emploi de vos rêves sur Kora.",
+    "find_job": "Trouver un Emploi",
+    "post_job": "Publier un Emploi",
+    "trending_categories": "Catégories Populaires"
   },
-  "ticker": {
-    "live": "EN DIRECT"
-  },
-  "search": {
-    "placeholder_job": "Titre de poste, compétence…",
-    "placeholder_loc": "Ville ou Remote",
-    "button": "Rechercher",
-    "filters": {
-      "all": "Tous",
-      "remote": "Remote",
-      "full_time": "Full-time",
-      "internship": "Stage",
-      "tech": "Tech",
-      "finance": "Finance",
-      "design": "Design"
-    }
-  },
-  "stats": {
-    "active_jobs": "Offres Actives",
-    "companies": "Entreprises",
-    "candidates": "Candidats",
-    "placement_rate": "Taux de placement"
-  },
-  "jobs": {
-    "eyebrow": "SÉLECTIONNÉS POUR VOUS",
-    "title": "Dernières Opportunités",
-    "subtitle": "Offres filtrées par compatibilité avec votre profil",
-    "view_all": "Voir les {{count}}+ offres",
-    "apply": "Postuler",
-    "compatibility_label": "Compatibilité IA",
-    "remote": "REMOTE"
+  "dashboard": {
+    "welcome": "Bon retour",
+    "apps_sent": "Candidatures Envoyées",
+    "saved_jobs": "Emplois Enregistrés",
+    "upcoming_interviews": "Entretiens à Venir",
+    "profile_complete": "Profil Complété"
   }
 }

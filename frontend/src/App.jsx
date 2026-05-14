@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 // ── Global styles ─────────────────────────────────────────
 import "./styles/theme.css";
@@ -146,36 +147,38 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<GlobalLoader />}>
-            <Routes>
-              <Route path="/" element={<KoraHome />} />
-              
-              {/* Private Routes */}
-              <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
-              <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
-              <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
-              
-              <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
-              <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
-              
-              <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-              <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-              <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
-
-              {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-              <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
-              <Route path="/jobs" element={<JobList />} />
-              <Route path="/jobs/:id" element={<JobDetails />} />
-              <Route path="/jobs/:id/apply" element={<ApplyPage />} />
-              <Route path="/insights" element={<InsightsPage />} />
-            </Routes>
-            <DevNav />
-          </Suspense>
-        </BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
+            <Suspense fallback={<GlobalLoader />}>
+              <Routes>
+                <Route path="/" element={<KoraHome />} />
+                
+                {/* Private Routes */}
+                <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
+                <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
+                <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
+                
+                <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
+                <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
+                
+                <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+                <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+                <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
+  
+                {/* Public Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+                <Route path="/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
+                <Route path="/jobs" element={<JobList />} />
+                <Route path="/jobs/:id" element={<JobDetails />} />
+                <Route path="/jobs/:id/apply" element={<ApplyPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
+              </Routes>
+              <DevNav />
+            </Suspense>
+          </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

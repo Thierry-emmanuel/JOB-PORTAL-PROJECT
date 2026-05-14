@@ -5,6 +5,7 @@ import JobPortal.project.enums.NotificationType;
 import JobPortal.project.modules.notification.Model.Notification;
 import JobPortal.project.modules.notification.Repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final MailService mailService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public Notification sendNotification(User recipient, String title, String message, NotificationType type) {
@@ -29,7 +31,15 @@ public class NotificationService {
         
         Notification saved = notificationRepository.save(notification);
 
-        // Send email for critical notifications or based on user settings (if implemented)
+        // Push real-time notification via WebSocket
+        try {
+            String destination = "/topic/notifications/" + recipient.getId();
+            messagingTemplate.convertAndSend(destination, saved);
+        } catch (Exception e) {
+            System.err.println("Failed to push websocket notification: " + e.getMessage());
+        }
+
+        // Send email for critical notifications...
         if (type == NotificationType.JOB_ALERT || type == NotificationType.WELCOME || type == NotificationType.NEW_APPLICATION) {
             try {
                 mailService.sendEmail(recipient.getEmail(), title, message);

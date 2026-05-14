@@ -13,9 +13,9 @@ i18n
       en: { translation: enTranslations },
       fr: { translation: frTranslations }
     },
-    fallbackLng: 'fr',
+    fallbackLng: 'en',
     interpolation: {
-      escapeValue: false
+      escapeValue: false // react already safes from xss
     }
   });
 
