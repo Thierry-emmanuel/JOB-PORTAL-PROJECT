@@ -14,6 +14,7 @@ import JobPortal.project.modules.application.model.Application;
 import JobPortal.project.modules.application.model.Interview;
 import JobPortal.project.modules.application.repository.ApplicationRepository;
 import JobPortal.project.modules.application.repository.InterviewRepository;
+import JobPortal.project.modules.application.service.GoogleCalendarService;
 import JobPortal.project.modules.application.service.InterviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class InterviewServiceImpl implements InterviewService {
     private final ApplicationRepository applicationRepository;
     private final InterviewMapper       interviewMapper;
     private final ApplicationMapper     applicationMapper;
+    private final GoogleCalendarService  googleCalendarService;
 
     // ------------------------------------------------------------------ //
     //  Schedule                                                            //
@@ -68,6 +70,13 @@ public class InterviewServiceImpl implements InterviewService {
         Interview saved = interviewRepository.save(interview);
         log.info("Interview scheduled: id={}, applicationId={}, scheduledAt={}",
                 saved.getId(), applicationId, request.scheduledAt());
+
+        // Sync to Google Calendar
+        String eventId = googleCalendarService.createInterviewEvent(saved);
+        if (eventId != null) {
+            saved.setGoogleCalendarEventId(eventId);
+            interviewRepository.save(saved);
+        }
 
         return interviewMapper.toResponse(saved);
     }
@@ -107,6 +116,13 @@ public class InterviewServiceImpl implements InterviewService {
         Interview saved = interviewRepository.save(interview);
         log.info("Interview scheduled by employer {}: id={}, applicationId={}, scheduledAt={}",
                 employerId, saved.getId(), applicationId, request.scheduledAt());
+
+        // Sync to Google Calendar
+        String eventId = googleCalendarService.createInterviewEvent(saved);
+        if (eventId != null) {
+            saved.setGoogleCalendarEventId(eventId);
+            interviewRepository.save(saved);
+        }
 
         return interviewMapper.toResponse(saved);
     }
@@ -237,6 +253,15 @@ public class InterviewServiceImpl implements InterviewService {
 
         Interview saved = interviewRepository.save(interview);
         log.info("Interview {} rescheduled to {}", interviewId, request.newScheduledAt());
+
+        // Update Google Calendar
+        if (saved.getGoogleCalendarEventId() != null) {
+            googleCalendarService.cancelInterviewEvent(saved.getGoogleCalendarEventId()); // Simple approach: recreate
+            String newEventId = googleCalendarService.createInterviewEvent(saved);
+            saved.setGoogleCalendarEventId(newEventId);
+            interviewRepository.save(saved);
+        }
+
         return interviewMapper.toResponse(saved);
     }
 
@@ -307,6 +332,11 @@ public class InterviewServiceImpl implements InterviewService {
         if (interview.isCompleted()) {
             throw new IllegalStateException(
                     "Cannot cancel a completed interview: " + interviewId);
+        }
+
+        // Cancel Google Calendar event
+        if (interview.getGoogleCalendarEventId() != null) {
+            googleCalendarService.cancelInterviewEvent(interview.getGoogleCalendarEventId());
         }
 
         interviewRepository.delete(interview);
