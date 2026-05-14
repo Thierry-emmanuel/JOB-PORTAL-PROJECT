@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SalaryAggregationResponse {
     private String category;
-    private BigDecimal avgSalaryMin;
-    private BigDecimal avgSalaryMax;
+    private Double avgSalaryMin;
+    private Double avgSalaryMax;
     private Long jobCount;
 }
