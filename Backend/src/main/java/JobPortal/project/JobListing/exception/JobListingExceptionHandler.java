@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @RestControllerAdvice(basePackages = "JobPortal.project.JobListing")
 @Slf4j
-public class GlobalExceptionHandler {
+public class JobListingExceptionHandler {
 
     /** 404 – resource missing */
     @ExceptionHandler(ResourceNotFoundException.class)
