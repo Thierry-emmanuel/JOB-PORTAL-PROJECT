@@ -1007,23 +1007,13 @@ export default function AdminDashboard() {
     <div className="ad-shell">
       {/* ── Sidebar ───────────────────────────────────────────── */}
       <aside className={`ad-sidebar ${collapsed ? 'collapsed' : ''}`}>
-        {/* Logo + burger in one bar — height matches topbar (68px) */}
+        {/* Logo */}
         <div className="ad-sidebar-logo">
           <img src={KoraLogo} alt="KORA" className="ad-logo-img" />
           <div className="ad-logo-text">
             <span className="ad-logo-name">KORA</span>
             <span className="ad-logo-sub">Admin Panel</span>
           </div>
-          <button
-            className="ad-burger"
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            title={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <span className="ad-burger-bar" />
-            <span className="ad-burger-bar" />
-            <span className="ad-burger-bar" />
-          </button>
         </div>
 
         {/* Nav */}
@@ -1064,6 +1054,15 @@ export default function AdminDashboard() {
       <div className="ad-main">
         {/* Top bar */}
         <div className="ad-topbar">
+          <button
+            className="ad-burger"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
+            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
+            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
+          </button>
           <div className="ad-topbar-left">
             <h1>{title}</h1>
             <p>{sub}</p>
