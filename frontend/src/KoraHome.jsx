@@ -564,6 +564,7 @@ function SearchSection() {
 
 /* ─── STATS BAND ────────────────────────────────────────────── */
 function StatsBand() {
+  const { t } = useTranslation();
   const [counts, setCounts] = useState({ jobs:0, companies:0, candidates:0, rate:0 });
   const ref = useRef(null);
   const counted = useRef(false);
@@ -581,10 +582,10 @@ function StatsBand() {
           const p = Math.min((now - start) / dur, 1);
           const ease = 1 - Math.pow(1 - p, 3);
           setCounts({
-            jobs:      Math.floor(ease * targets.jobs),
-            companies: Math.floor(ease * targets.companies),
-            candidates:Math.floor(ease * targets.candidates),
-            rate:      Math.floor(ease * targets.rate),
+            jobs:       Math.floor(ease * targets.jobs),
+            companies:  Math.floor(ease * targets.companies),
+            candidates: Math.floor(ease * targets.candidates),
+            rate:       Math.floor(ease * targets.rate),
           });
           if (p < 1) requestAnimationFrame(tick);
         }
@@ -596,10 +597,10 @@ function StatsBand() {
   }, []);
 
   const stats = [
-    { icon:"💼", val: counts.jobs.toLocaleString(),       suf:"+", label:t('stats.active_jobs') },
-    { icon:"🏢", val: counts.companies,                   suf:"+", label:t('stats.companies') },
-    { icon:"👥", val: counts.candidates.toLocaleString(), suf:"+", label:t('stats.candidates') },
-    { icon:"✓",  val: counts.rate,                        suf:"%", label:t('stats.placement_rate') },
+    { icon:"💼", val: counts.jobs.toLocaleString(),       suf:"+", label: t('stats.active_jobs') },
+    { icon:"🏢", val: counts.companies,                   suf:"+", label: t('stats.companies') },
+    { icon:"👥", val: counts.candidates.toLocaleString(), suf:"+", label: t('stats.candidates') },
+    { icon:"✓",  val: counts.rate,                        suf:"%", label: t('stats.placement_rate') },
   ];
 
   return (
@@ -646,34 +647,26 @@ function JobCard({ job, delay }) {
     return () => obs.disconnect();
   }, []);
 
-  const handleCardClick = () => {
-    navigate(`/jobs/${job.id}`);
-  };
+  const handleCardClick = () => navigate(`/jobs/${job.id}`);
 
   const handleApplyClick = (e) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else {
-      navigate(`/jobs/${job.id}/apply`);
-    }
+    if (!isAuthenticated) navigate("/login");
+    else navigate(`/jobs/${job.id}/apply`);
   };
 
   const handleSaveClick = (e) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else {
-      setSaved(s => !s);
-    }
+    if (!isAuthenticated) navigate("/login");
+    else setSaved(s => !s);
   };
 
   return (
     <div ref={ref} onClick={handleCardClick} style={{
       ...style,
-      background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px)",
-      cursor:"pointer", position:"relative", overflow:"hidden",
-      transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",
+      background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14,
+      padding:"clamp(16px,3vw,24px)", cursor:"pointer", position:"relative",
+      overflow:"hidden", transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",
     }}
       onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 36px rgba(26,92,46,0.12)"; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
@@ -715,16 +708,12 @@ function JobCard({ job, delay }) {
       </div>
 
       <div style={{ display:"flex", gap:6, marginBottom:14, flexWrap:"wrap" }}>
-        {job.tags.map(t => (
-          <span key={t} style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:G_L, color:G, fontWeight:600, border:`1px solid rgba(26,92,46,0.13)` }}>{t}</span>
+        {job.tags.map(tag => (
+          <span key={tag} style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:G_L, color:G, fontWeight:600, border:`1px solid rgba(26,92,46,0.13)` }}>{tag}</span>
         ))}
       </div>
 
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:`1px solid ${BORDER}`, paddingTop:14, flexWrap:"wrap", gap:8 }}>
-        <div>
-          <div style={{ fontSize:"clamp(14px,3vw,16px)", fontWeight:800, color:G }}>{job.salary}</div>
-          <div style={{ fontSize:11, fontWeight:600, color:fresh.color, marginTop:2 }}>● {fresh.label}</div>
-        </div>
+      {/* ↓ Single bottom row — duplicate was removed */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:`1px solid ${BORDER}`, paddingTop:14, flexWrap:"wrap", gap:8 }}>
         <div>
           <div style={{ fontSize:"clamp(14px,3vw,16px)", fontWeight:800, color:G }}>{job.salary}</div>
@@ -734,13 +723,13 @@ function JobCard({ job, delay }) {
           {t('jobs.apply')} →
         </button>
       </div>
-      </div>
     </div>
   );
 }
 
 /* ─── JOBS SECTION ──────────────────────────────────────────── */
 function JobsSection() {
+  const { t } = useTranslation();                          // ← WAS MISSING
   const [ref, style] = useReveal(0);
   return (
     <section style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
