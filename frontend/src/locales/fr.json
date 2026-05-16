@@ -1,13 +1,43 @@
 {
   "nav": {
     "jobs": "Emplois",
-    "insights": "Analyses",
+    "companies": "Entreprises",
+    "salaries": "Salaires",
+    "recruiters": "Recruteurs",
+    "blog": "Blog",
+    "login": "Connexion",
+    "register": "S'inscrire",
     "dashboard": "Tableau de Bord",
+    "insights": "Analyses",
     "interviews": "Entretiens",
     "post_job": "Publier une Offre",
     "my_profile": "Mon Profil",
     "sign_in": "Se Connecter",
     "sign_out": "Se Déconnecter"
+  },
+  "hero": {
+    "featured": "POSTE VEDETTE",
+    "finance": "OPPORTUNITÉ FINANCE",
+    "creative": "RÔLE CRÉATIF",
+    "view_job": "Voir l'offre",
+    "compatibility": "de compatibilité"
+  },
+  "search": {
+    "button": "Rechercher"
+  },
+  "stats": {
+    "active_jobs": "Offres d'emploi actives",
+    "companies": "Entreprises qui recrutent",
+    "candidates": "Candidats inscrits",
+    "placement_rate": "Taux de placement"
+  },
+  "jobs": {
+    "eyebrow": "DERNIÈRES OPPORTUNITÉS",
+    "title": "Offres sélectionnées pour vous",
+    "subtitle": "Correspondant à votre profil et vos compétences",
+    "view_all": "Voir les {{count}}+ offres",
+    "apply": "Postuler",
+    "compatibility_label": "Score de compatibilité"
   },
   "home": {
     "hero_title": "Libérez Votre Potentiel de Carrière",
