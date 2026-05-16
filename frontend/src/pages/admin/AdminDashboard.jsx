@@ -13,6 +13,7 @@ import {
   fetchOverviewStats, fetchMarketInsights,
 } from '../../api/admin';
 import '../../styles/admin-dashboard.css';
+import KoraLogo from '../../assets/absolute-size-logo.png';
 
 // ─── Chart.js ─────────────────────────────────────────────────────────────────
 // Chart.js is loaded via CDN script (same pattern as AdminProfile.jsx)
@@ -1006,18 +1007,23 @@ export default function AdminDashboard() {
     <div className="ad-shell">
       {/* ── Sidebar ───────────────────────────────────────────── */}
       <aside className={`ad-sidebar ${collapsed ? 'collapsed' : ''}`}>
-        {/* Collapse toggle */}
-        <button className="ad-collapse-btn" onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand' : 'Collapse'}>
-          {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
-        </button>
-
-        {/* Logo */}
+        {/* Logo + burger in one bar — height matches topbar (68px) */}
         <div className="ad-sidebar-logo">
-          <div className="ad-logo-mark">K</div>
+          <img src={KoraLogo} alt="KORA" className="ad-logo-img" />
           <div className="ad-logo-text">
             <span className="ad-logo-name">KORA</span>
             <span className="ad-logo-sub">Admin Panel</span>
           </div>
+          <button
+            className="ad-burger"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <span className="ad-burger-bar" />
+            <span className="ad-burger-bar" />
+            <span className="ad-burger-bar" />
+          </button>
         </div>
 
         {/* Nav */}
