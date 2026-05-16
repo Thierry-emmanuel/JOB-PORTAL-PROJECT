@@ -11,6 +11,10 @@ import './styles/employee-dashboard.css';
 import './styles/job-list.css';
 import './styles/apply-page.css';
 
+
+
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+
 // ── Lazy Loaded Pages ───────────────────────────────────────
 const KoraHome = lazy(() => import("./KoraHome"));
 const JobSeekerProfile = lazy(() => import("./pages/profile/JobSeekerProfile"));
@@ -45,6 +49,7 @@ function DevNav() {
     { to: "/employee/dashboard",  label: "Employee DB"  },
     { to: "/jobs",                label: "Jobs"         },
     { to: "/insights",            label: "Insights"     },
+    { to: "/admin/dashboard", label: "Admin DB" }
   ];
 
   return (
@@ -154,6 +159,8 @@ export default function App() {
                 <Route path="/" element={<KoraHome />} />
                 
                 {/* Private Routes */}
+
+                <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminDashboard /></ProtectedRoute>}  />
                 <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
                 <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
                 <Route path="/profile/admin"      element={<ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>} />
