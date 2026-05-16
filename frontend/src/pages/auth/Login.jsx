@@ -11,7 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -19,19 +19,28 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       const data = await login({ email, password });
-      const rawRole = (data.role || data.type || '').toUpperCase().replace('ROLE_', '');
-      if (rawRole.includes('EMPLOYER')) {
+
+      // ✅ FIX 3: Backend AuthResponse.role is "ROLE_ADMIN", "ROLE_EMPLOYER",
+      // or "ROLE_JOB_SEEKER" — always strip the prefix before comparing.
+      const rawRole = (data.role || '').toUpperCase().replace('ROLE_', '');
+
+      if (rawRole === 'ADMIN') {
+        navigate('/admin/dashboard');          // go straight to the new admin dashboard
+      } else if (rawRole === 'EMPLOYER') {
         navigate('/dashboard/employer');
-      } else if (rawRole.includes('ADMIN')) {
-        navigate('/profile/admin');
       } else {
         navigate('/employee/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data || "Invalid email or password");
+      // Show the plain string the backend sends ("Error: Invalid email or password")
+      const msg =
+        typeof err.response?.data === 'string'
+          ? err.response.data
+          : err.message || 'Invalid email or password';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -40,7 +49,7 @@ export default function Login() {
   return (
     <div className="kora-auth-root">
       <div className="kora-auth-container">
-        {/* Left Side - Image/Branding */}
+        {/* Left Side */}
         <div className="kora-auth-left">
           <div className="kora-auth-left-wave" />
           <div className="kora-auth-logo-wrapper">
@@ -53,14 +62,18 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Right Side - Form */}
+        {/* Right Side */}
         <div className="kora-auth-right">
           <h2 className="kora-auth-title">Sign In</h2>
           <p className="kora-auth-subtitle">Enter your details to proceed.</p>
 
           <form className="kora-auth-form" onSubmit={handleSubmit}>
-            {error && <div style={{color: 'red', marginBottom: '10px', fontSize: '14px'}}>{error}</div>}
-            
+            {error && (
+              <div style={{ color: '#dc2626', marginBottom: 10, fontSize: 14, background: '#fee2e2', padding: '10px 14px', borderRadius: 8, border: '1px solid #fca5a5' }}>
+                {error}
+              </div>
+            )}
+
             <div className="kora-auth-field">
               <div className="kora-auth-input-wrapper">
                 <Mail size={18} className="kora-auth-input-icon" />
@@ -107,13 +120,13 @@ export default function Login() {
             </div>
 
             <button type="submit" className="kora-auth-btn" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
 
             <div className="kora-auth-divider">Or continue with</div>
 
-            <a 
-              href="http://localhost:8080/oauth2/authorization/google" 
+            <a
+              href="http://localhost:8083/oauth2/authorization/google"
               className="kora-auth-social-btn"
               style={{ textDecoration: 'none' }}
             >
@@ -135,5 +148,3 @@ export default function Login() {
     </div>
   );
 }
-
-
