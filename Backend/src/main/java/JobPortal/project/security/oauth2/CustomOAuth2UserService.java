@@ -1,11 +1,11 @@
 package JobPortal.project.security.oauth2;
 
-import JobPortal.project.auth.Enum.Role;
-import JobPortal.project.auth.Model.User;
-import JobPortal.project.auth.Model.RoleEntity;
-import JobPortal.project.auth.repository.UserRepository;
-import JobPortal.project.auth.repository.RoleRepository;
-import JobPortal.project.userprofile.Model.JobSeeker;
+import JobPortal.project.enums.Role;
+import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.Model.RoleEntity;
+import JobPortal.project.modules.auth.repository.UserRepository;
+import JobPortal.project.modules.auth.repository.RoleRepository;
+import JobPortal.project.modules.userprofile.Model.JobSeeker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -72,3 +72,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return oAuth2User;
     }
 }
+
+
+

@@ -22,7 +22,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/auth/**", "/oauth2/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                auth.requestMatchers("/api/auth/**", "/oauth2/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/jobs/**", "/api/jobs/**", "/api/ai/**", "/api/v1/insights/**").permitAll()
                     .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -43,3 +43,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
+

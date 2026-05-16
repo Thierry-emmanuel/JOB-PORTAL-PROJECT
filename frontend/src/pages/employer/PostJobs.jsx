@@ -5,11 +5,11 @@ import {
   Eye, Lightbulb, LogOut, Bell, Settings, Users,
   BarChart2, Menu, Building2
 } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/absolute-size-logo.png";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
 import "../../styles/employer-dashboard.css";
-import "../../styles/post-job.css";
+import "../../styles/PostJobs.css";
 
 // ── Constants ─────────────────────────────────────────────
 const STEPS = [

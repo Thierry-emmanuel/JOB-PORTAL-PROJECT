@@ -5,11 +5,11 @@ import {
   BarChart2, Bell, Settings, LogOut, Menu, X,
   AlertTriangle, TrendingUp
 } from "lucide-react";
-import koraLogo from "../../assets/kora-logo.png";
+import koraLogo from "../../assets/absolute-size-logo.png";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
 import "../../styles/employer-dashboard.css";
-import "../../styles/manage-jobs.css";
+import "../../styles/ManageJobs.css";
 
 // ── Mock Data ─────────────────────────────────────────────
 const INITIAL_JOBS = [
@@ -292,7 +292,7 @@ export default function ManageJobs({ onPostJob }) {
           {/* Dynamic Stats Row */}
           <div className="mj-stats-row">
             {[
-              { label: "Total Jobs", val: stats.total,   color: "#0B2B26", bg: "#0B2B2618", icon: <Briefcase size={18} />    },
+              { label: "Total Jobs", val: stats.total,   color: "#1A5C2E", bg: "#1A5C2E18", icon: <Briefcase size={18} />    },
               { label: "Active",     val: stats.active,  color: "#15803d", bg: "#dcfce7",   icon: <CheckCircle size={18} />   },
               { label: "Draft",      val: stats.draft,   color: "#6b7280", bg: "#f3f4f6",   icon: <FileText size={18} />      },
               { label: "Expired",    val: stats.expired, color: "#dc2626", bg: "#fee2e2",   icon: <XCircle size={18} />       },

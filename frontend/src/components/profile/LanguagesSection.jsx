@@ -3,9 +3,9 @@ import { Globe, Plus, Trash2 } from "lucide-react";
 
 const LEVELS = ["Native", "Fluent", "Professional", "Intermediate", "Basic"];
 const LEVEL_COLOR = {
-  Native: "#0B2B26",
+  Native: "#1A5C2E",
   Fluent: "#1a4a42",
-  Professional: "#E07B39",
+  Professional: "#F97316",
   Intermediate: "#f0a070",
   Basic: "#b5c4c1",
 };

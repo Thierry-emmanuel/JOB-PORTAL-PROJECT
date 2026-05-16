@@ -20,7 +20,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        String targetUrl = "http://localhost:3000/oauth2/redirect"; // Frontend redirect URL
+        String targetUrl = "http://localhost:5174/oauth2/redirect"; // Frontend redirect URL
 
         String token = jwtUtils.generateJwtToken(authentication);
 
@@ -31,3 +31,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
+
+
+

@@ -1,0 +1,432 @@
+/* ═══════════════════════════════════════════════════════
+   KORA – Global Theme Variables
+   Source of truth for all design tokens.
+   Mirrors KoraHome.jsx constants exactly:
+     G  = #1A5C2E  G2 = #0D3D1F  G_L = #E8F5EE
+     O  = #F97316  O_L = #FFF3EA
+     INK = #111827  MUTED = #6B7280  BORDER = #E5E7EB
+   Import this FIRST in App.jsx before any page CSS.
+   Usage example:
+     background: var(--kora-green);
+     font-family: var(--kora-font);
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Brand palette ──────────────────────────────────── */
+  --kora-green:        #1A5C2E;
+  --kora-green-dark:   #0D3D1F;
+  --kora-green-light:  #E8F5EE;
+  --kora-orange:       #F97316;
+  --kora-orange-light: #FFF3EA;
+
+  /* ── Neutrals ────────────────────────────────────────── */
+  --kora-ink:    #111827;
+  --kora-muted:  #6B7280;
+  --kora-border: #E5E7EB;
+  --kora-bg:     #F9FAFB;
+  --kora-white:  #ffffff;
+
+  /* ── Typography ──────────────────────────────────────── */
+  --kora-font: 'Poppins', 'DM Sans', sans-serif;
+
+  /* ── Shadows ─────────────────────────────────────────── */
+  --kora-shadow-sm: 0 2px 8px  rgba(0, 0, 0, 0.05);
+  --kora-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --kora-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* ── Border radii ────────────────────────────────────── */
+  --kora-r-sm:   8px;
+  --kora-r-md:   12px;
+  --kora-r-lg:   16px;
+  --kora-r-pill: 999px;
+
+  /* ── Layout ──────────────────────────────────────────── */
+  --kora-nav-h: 72px;
+  --kora-max-w: 1300px;
+}
+
+/* ── Accessibility helper ───────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   KoraNav – shared top navigation bar
+   Used by: EmployeeDashboard, JobList, JobDetails, ApplyPage
+   Visual spec mirrors KoraHome.jsx Navbar exactly:
+     • Sticky, white, 72 px tall
+     • absolute-size-logo.png + "KORA" / "UNLOCK YOUR CAREER"
+     • Active link: orange text + 2 px orange underline bar
+     • Primary CTA: orange bg, white text, 8 px radius
+   ══════════════════════════════════════════════════════════ */
+.kn-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--kora-white);
+  padding: 0 48px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: var(--kora-font);
+}
+.kn-nav--scrolled {
+  border-bottom-color: var(--kora-border);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+}
+.kn-inner {
+  max-width: var(--kora-max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  height: var(--kora-nav-h);
+  gap: 24px;
+}
+
+/* Logo block */
+.kn-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.kn-logo img {
+  width: 80px;
+  height: 56px;
+  object-fit: contain;
+}
+.kn-brand {
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--kora-green);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.kn-tagline {
+  font-size: 8px;
+  color: var(--kora-orange);
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Nav links */
+.kn-links {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  align-items: center;
+}
+.kn-link {
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  text-decoration: none;
+  padding: 6px 14px;
+  white-space: nowrap;
+  transition: color 0.18s;
+}
+.kn-link:hover        { color: var(--kora-orange); }
+.kn-link--active      { color: var(--kora-orange); }
+.kn-link-bar {
+  position: absolute;
+  bottom: -2px;
+  left: 14px; right: 14px;
+  height: 2px;
+  background: var(--kora-orange);
+  border-radius: 2px;
+}
+
+/* Auth section */
+.kn-auth {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.kn-btn-ghost {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-family: var(--kora-font);
+  text-decoration: none;
+  transition: color 0.18s;
+  display: inline-block;
+}
+.kn-btn-ghost:hover { color: var(--kora-orange); }
+.kn-btn-primary {
+  background: var(--kora-orange);
+  color: var(--kora-white);
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--kora-r-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--kora-font);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+  transition: background 0.18s, box-shadow 0.18s;
+}
+.kn-btn-primary:hover {
+  background: #ea6e0f;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
+}
+
+/* ── Shared spinner ──────────────────────────────────────── */
+.kora-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--kora-green-light);
+  border-top-color: var(--kora-green);
+  border-radius: 50%;
+  animation: kora-spin 0.7s linear infinite;
+}
+@keyframes kora-spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .kn-nav    { padding: 0 20px; }
+  .kn-links  { display: none; }
+  .kn-logo img { width: 56px; height: 40px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ProfileSidebar — shared left-panel for all dashboards
+   ══════════════════════════════════════════════════════════ */
+.kora-sidebar-inner {
+  background: var(--kora-white);
+  border: 1px solid var(--kora-border);
+  border-radius: var(--kora-r-lg);
+  padding: 28px 20px 20px;
+  box-shadow: var(--kora-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: var(--kora-font);
+  overflow: hidden;
+}
+
+/* Logo */
+.kora-sidebar-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.kora-sidebar-logo img {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Avatar section */
+.kora-sidebar-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--kora-border);
+  margin-bottom: 20px;
+}
+.kora-sidebar-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--kora-green), #2d8f50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(26, 92, 46, 0.25);
+}
+.kora-sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.kora-sidebar-initials {
+  font-size: 26px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  user-select: none;
+}
+.kora-photo-overlay {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--kora-orange);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  padding: 0;
+  transition: background 0.18s, transform 0.18s;
+}
+.kora-photo-overlay:hover {
+  background: #ea6e0f;
+  transform: scale(1.12);
+}
+.kora-sidebar-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kora-ink);
+  margin: 0 0 3px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.kora-sidebar-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kora-white);
+  background: var(--kora-green);
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--kora-r-pill);
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+/* Completion bar */
+.kora-sidebar-completion {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--kora-border);
+  margin-bottom: 20px;
+}
+.kora-completion-bar-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kora-muted);
+  margin-bottom: 8px;
+}
+.kora-completion-bar-header strong {
+  margin-left: auto;
+  color: var(--kora-green);
+  font-size: 13px;
+}
+.kora-completion-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--kora-green-light);
+  border-radius: var(--kora-r-pill);
+  overflow: hidden;
+}
+.kora-completion-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--kora-green), #22C55E);
+  border-radius: var(--kora-r-pill);
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.kora-completion-tip {
+  font-size: 11px;
+  color: var(--kora-muted);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Sidebar nav */
+.kora-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.kora-sidebar-nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--kora-muted);
+  margin: 0 0 8px 4px;
+}
+.kora-sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--kora-r-sm);
+  border: none;
+  background: transparent;
+  font-family: var(--kora-font);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+.kora-sidebar-nav-item:hover {
+  background: var(--kora-green-light);
+  color: var(--kora-green);
+}
+.kora-sidebar-nav-item svg {
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+.kora-sidebar-nav-item:hover svg { opacity: 1; }
+.kora-nav-badge {
+  margin-left: auto;
+  background: var(--kora-orange);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--kora-r-pill);
+  line-height: 1.6;
+}
+
+/* Reset password button */
+.kora-reset-pwd-btn {
+  margin-top: 4px;
+  color: #6B7280;
+}
+.kora-reset-pwd-btn:hover {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+/* Logout button */
+.kora-sidebar-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px 12px;
+  border-radius: var(--kora-r-sm);
+  border: 1px solid #FEE2E2;
+  background: #FFF5F5;
+  font-family: var(--kora-font);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #DC2626;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.kora-sidebar-logout:hover {
+  background: #FEE2E2;
+  border-color: #FECACA;
+}

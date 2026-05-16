@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "jobs": "Jobs",
+    "insights": "Insights",
+    "dashboard": "Dashboard",
+    "interviews": "Interviews",
+    "post_job": "Post Job",
+    "my_profile": "My Profile",
+    "sign_in": "Sign In",
+    "sign_out": "Sign Out"
+  },
+  "home": {
+    "hero_title": "Unlock Your Career Potential",
+    "hero_subtitle": "Connect with top employers and find your dream job on Kora.",
+    "find_job": "Find a Job",
+    "post_job": "Post a Job",
+    "trending_categories": "Trending Categories"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "apps_sent": "Applications Sent",
+    "saved_jobs": "Saved Jobs",
+    "upcoming_interviews": "Upcoming Interviews",
+    "profile_complete": "Profile Complete"
+  }
+}

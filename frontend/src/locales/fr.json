@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "jobs": "Emplois",
+    "insights": "Analyses",
+    "dashboard": "Tableau de Bord",
+    "interviews": "Entretiens",
+    "post_job": "Publier une Offre",
+    "my_profile": "Mon Profil",
+    "sign_in": "Se Connecter",
+    "sign_out": "Se Déconnecter"
+  },
+  "home": {
+    "hero_title": "Libérez Votre Potentiel de Carrière",
+    "hero_subtitle": "Connectez-vous avec les meilleurs employeurs et trouvez l'emploi de vos rêves sur Kora.",
+    "find_job": "Trouver un Emploi",
+    "post_job": "Publier un Emploi",
+    "trending_categories": "Catégories Populaires"
+  },
+  "dashboard": {
+    "welcome": "Bon retour",
+    "apps_sent": "Candidatures Envoyées",
+    "saved_jobs": "Emplois Enregistrés",
+    "upcoming_interviews": "Entretiens à Venir",
+    "profile_complete": "Profil Complété"
+  }
+}
