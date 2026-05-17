@@ -35,51 +35,108 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 20px 18px 16px;
+  padding: 0 14px 0 16px;
+  height: 68px;
+  min-height: 68px;
+  flex-shrink: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
 }
 
-.ad-logo-mark {
-  width: 36px;
-  height: 36px;
-  background: var(--kora-orange, #F97316);
-  border-radius: var(--kora-r-md, 8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: white;
-  font-size: 15px;
+.ad-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
   flex-shrink: 0;
-  letter-spacing: -0.5px;
 }
 
 .ad-logo-text {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 
 .ad-logo-name {
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--kora-green, #1A5C2E);
   line-height: 1.1;
   white-space: nowrap;
 }
 
 .ad-logo-sub {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--kora-orange, #F97316);
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+/* ── Burger menu button ───────────────────────────────────────── */
+.ad-burger {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--kora-r-md, 8px);
+  border: none;
+  background: var(--kora-green-light, #E8F5EE);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  transition: background 0.18s;
+  margin-left: auto;
+}
+
+.ad-burger:hover {
+  background: var(--kora-green, #1A5C2E);
+}
+
+.ad-burger:hover .ad-burger-bar {
+  background: #ffffff;
+}
+
+.ad-burger-bar {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--kora-green, #1A5C2E);
+  transition: background 0.18s, width 0.18s, transform 0.25s;
+}
+
+/* Middle bar slightly shorter for visual balance */
+.ad-burger-bar:nth-child(2) {
+  width: 11px;
+  align-self: flex-start;
+  margin-left: 10px;
+}
+
+/* When collapsed: show X-like indicator on middle bar */
+.ad-sidebar.collapsed .ad-burger-bar:nth-child(2) {
+  width: 16px;
+  margin-left: 0;
 }
 
 .ad-sidebar.collapsed .ad-logo-text,
 .ad-sidebar.collapsed .ad-nav-label,
 .ad-sidebar.collapsed .ad-sidebar-footer-info {
   display: none;
+}
+
+.ad-sidebar.collapsed .ad-sidebar-logo {
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.ad-sidebar.collapsed .ad-burger {
+  margin-left: 0;
 }
 
 .ad-nav {
@@ -221,26 +278,6 @@
 }
 .ad-logout-btn:hover { color: #ef4444; }
 
-.ad-collapse-btn {
-  position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  background: white;
-  border: 1.5px solid var(--kora-border, #E5E7EB);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--kora-muted, #6B7280);
-  box-shadow: var(--kora-shadow-sm);
-  transition: color 0.15s, background 0.15s;
-  z-index: 20;
-}
-.ad-collapse-btn:hover { background: var(--kora-green-light); color: var(--kora-green); }
-
 /* ── Main Area ────────────────────────────────────────────────── */
 .ad-main {
   flex: 1;
@@ -251,15 +288,25 @@
 
 /* ── Top Bar ──────────────────────────────────────────────────── */
 .ad-topbar {
-  background: white;
-  border-bottom: 1px solid var(--kora-border, #E5E7EB);
-  padding: 0 28px;
-  height: 62px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: center;        /* vertically centers all children */
+  gap: 12px;
+  padding: 0 24px;
+  height: 64px;               /* fixed height keeps it from going crooked */
+  background: #fff;
+  border-bottom: 1px solid var(--kora-border, #e5e7eb);
+  position: sticky;
+  top: 0;
+  z-index: 10;
   flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.ad-topbar-left {
+  flex: 1;                    /* takes remaining space, pushing right-side to the edge */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
 }
 
 .ad-topbar-left h1 {
@@ -271,8 +318,6 @@
 }
 
 .ad-topbar-left p {
-  font-size: 12px;
-  color: var(--kora-muted, #6B7280);
   margin: 0;
 }
 
@@ -303,13 +348,6 @@
   align-items: center;
   justify-content: center;
 }
-
-.ad-chip-name {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kora-green, #1A5C2E);
-}
-
 /* ── Content Area ─────────────────────────────────────────────── */
 .ad-content {
   flex: 1;
