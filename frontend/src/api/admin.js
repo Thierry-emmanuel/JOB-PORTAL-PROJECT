@@ -34,12 +34,12 @@ export const fetchAdminJobs = async ({ status = '', page = 0, size = 20 } = {}) 
   const params = new URLSearchParams({ page, size });
   if (status) params.set('status', status);
   const { data } = await apiClient.get(`/api/admin/jobs?${params}`);
-  return data;
+  return data.data || data;
 };
 
 export const approveJob = async (id) => {
   const { data } = await apiClient.patch(`/api/admin/jobs/${id}/approve`, { status: 'ACTIVE' });
-  return data;
+  return data.data || data;
 };
 
 export const flagJob = async (id, reason = '') => {
@@ -47,12 +47,12 @@ export const flagJob = async (id, reason = '') => {
     status: 'DRAFT',
     reason,
   });
-  return data;
+  return data.data || data;
 };
 
 export const deleteJob = async (id) => {
   const { data } = await apiClient.delete(`/api/admin/jobs/${id}`);
-  return data;
+  return data.data || data;
 };
 
 // ─── Job Seekers ──────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ export const fetchOverviewStats = async () => {
 
   const totalJobs =
     jobsResp.status === 'fulfilled'
-      ? jobsResp.value.data?.totalElements ?? jobsResp.value.data?.length ?? 0
+      ? jobsResp.value.data?.data?.totalElements ?? jobsResp.value.data?.totalElements ?? jobsResp.value.data?.length ?? 0
       : 0;
 
   const seekers =

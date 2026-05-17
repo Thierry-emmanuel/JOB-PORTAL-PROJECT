@@ -2,9 +2,9 @@ package JobPortal.project.admin.Service;
 
 import JobPortal.project.admin.DTO.DashboardStatsDTO;
 import JobPortal.project.admin.DTO.UserManagementDTO;
-import JobPortal.project.auth.Enum.Role;
-import JobPortal.project.auth.Model.User;
-import JobPortal.project.auth.repository.UserRepository;
+import JobPortal.project.enums.Role;
+import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

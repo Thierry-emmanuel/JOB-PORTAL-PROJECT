@@ -3,20 +3,16 @@ package JobPortal.project.admin.Controller;
 import JobPortal.project.admin.DTO.CategoryDTO;
 import JobPortal.project.admin.DTO.DashboardStatsDTO;
 import JobPortal.project.admin.DTO.FAQDTO;
-import JobPortal.project.admin.DTO.JobManagementDTO;
 import JobPortal.project.admin.DTO.UserManagementDTO;
 import JobPortal.project.admin.Service.AdminService;
 import JobPortal.project.cms.Model.FAQ;
 import JobPortal.project.cms.Service.FAQService;
-import JobPortal.project.job.Enum.JobStatus;
 import JobPortal.project.job.Model.Category;
-import JobPortal.project.job.Model.Job;
 import JobPortal.project.job.Service.CategoryService;
-import JobPortal.project.job.Service.JobService;
-import JobPortal.project.notification.Service.NotificationService;
-import JobPortal.project.resume.entity.Skill;
-import JobPortal.project.resume.repository.SkillRepository;
-import JobPortal.project.auth.Enum.Role;
+import JobPortal.project.modules.notification.Service.NotificationService;
+import JobPortal.project.modules.resume.entity.Skill;
+import JobPortal.project.modules.resume.repository.SkillRepository;
+import JobPortal.project.enums.Role;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +27,6 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AdminService adminService;
-    private final JobService jobService;
     private final CategoryService categoryService;
     private final FAQService faqService;
     private final SkillRepository skillRepository;
@@ -55,38 +50,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.toggleUserStatus(id));
     }
 
-    // ==========================================
-    // 2. JOB MODERATION
-    // ==========================================
-    @GetMapping("/jobs")
-    public ResponseEntity<List<JobManagementDTO>> getAllJobs() {
-        List<JobManagementDTO> dtos = jobService.getAllJobs().stream().map(job -> new JobManagementDTO(
-                job.getId(),
-                job.getTitle(),
-                job.getCompany() != null ? job.getCompany().getName() : "Unknown",
-                job.getCategory() != null ? job.getCategory().getName() : "Uncategorized",
-                job.getLocation(),
-                job.getStatus(),
-                job.getCreatedAt()
-        )).collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
 
-    @PutMapping("/jobs/{id}/approve")
-    public ResponseEntity<Job> approveJob(@PathVariable Long id) {
-        return ResponseEntity.ok(jobService.updateJobStatus(id, JobStatus.APPROVED));
-    }
-
-    @PutMapping("/jobs/{id}/reject")
-    public ResponseEntity<Job> rejectJob(@PathVariable Long id) {
-        return ResponseEntity.ok(jobService.updateJobStatus(id, JobStatus.REJECTED));
-    }
-
-    @DeleteMapping("/jobs/{id}")
-    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
-        jobService.deleteJob(id);
-        return ResponseEntity.noContent().build();
-    }
 
     // ==========================================
     // 3. MASTER DATA: CATEGORIES

@@ -1,6 +1,6 @@
 package JobPortal.project.admin.DTO;
 
-import JobPortal.project.auth.Enum.Role;
+import JobPortal.project.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

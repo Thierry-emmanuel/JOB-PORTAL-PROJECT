@@ -4,6 +4,8 @@ import JobPortal.project.modules.auth.Model.User;
 import JobPortal.project.enums.NotificationType;
 import JobPortal.project.modules.notification.Model.Notification;
 import JobPortal.project.modules.notification.Repository.NotificationRepository;
+import JobPortal.project.modules.auth.repository.UserRepository;
+import JobPortal.project.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,6 +28,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final MailService mailService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     @Transactional
     public Notification sendNotification(User recipient, String title, String message, NotificationType type) {
@@ -97,5 +100,27 @@ public class NotificationService {
     @Transactional
     public void deleteNotification(Long id) {
         notificationRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void sendBroadcastNotification(String title, String message, Role targetRole) {
+        List<User> recipients;
+        if (targetRole == null) {
+            recipients = userRepository.findAll();
+        } else {
+            recipients = userRepository.findAll().stream().filter(u -> u.getRole() == targetRole).toList();
+        }
+
+        List<Notification> notifications = recipients.stream().map(recipient -> 
+            Notification.builder()
+                .recipient(recipient)
+                .title(title)
+                .message(message)
+                .type(NotificationType.SYSTEM)
+                .isRead(false)
+                .build()
+        ).collect(java.util.stream.Collectors.toList());
+
+        notificationRepository.saveAll(notifications);
     }
 }

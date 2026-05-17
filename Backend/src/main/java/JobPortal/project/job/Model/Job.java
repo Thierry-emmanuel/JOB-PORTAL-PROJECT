@@ -1,6 +1,6 @@
 package JobPortal.project.job.Model;
 
-import JobPortal.project.company.Model.Company;
+import JobPortal.project.modules.company.Model.Company;
 import JobPortal.project.job.Enum.JobStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
