@@ -2,42 +2,28 @@ import apiClient from './client';
 
 /**
  * Fetch paginated + filtered job listings.
- *
- * JobList.jsx passes { page (1-indexed), limit, search, location, type }.
- * The backend expects:
- *   - page  → 0-indexed  (Spring PageRequest)
- *   - size  → page size   (not "limit")
- *   - keyword / location / jobType  (search endpoint)
- *
- * Backend response shape:
- *   ApiResponse { data: SpringPage { content:[], totalElements, totalPages } }
- *
- * Returns: { data: Job[], total: number, totalPages: number }
  */
 export const getJobs = async (params = {}) => {
   const { page = 1, limit, size, search, location, type, ...rest } = params;
 
   const backendParams = {
-    page: Math.max(0, page - 1),        // 1-indexed → 0-indexed
-    size: limit || size || 10,           // normalise "limit" → "size"
+    page: Math.max(0, page - 1),
+    size: limit || size || 10,
     ...rest,
   };
 
-  // Map frontend filter names → backend param names
   if (search)   backendParams.keyword  = search;
   if (location) backendParams.location = location;
   if (type)     backendParams.jobType  = type;
 
-  // Use /search endpoint only when a filter is active
   const hasFilters = search || location || type;
   const url = hasFilters ? '/api/jobs/search' : '/api/jobs';
 
   const { data: apiResp } = await apiClient.get(url, { params: backendParams });
 
-  // Unwrap ApiResponse → Spring Page
   const pageData = apiResp?.data ?? apiResp;
   return {
-    data:       pageData?.content      ?? [],
+    data:       (pageData?.content ?? []).map(mapJobSummary),
     total:      pageData?.totalElements ?? 0,
     totalPages: pageData?.totalPages    ?? 1,
   };
@@ -45,8 +31,42 @@ export const getJobs = async (params = {}) => {
 
 export const getJob = async (id) => {
   const { data } = await apiClient.get(`/api/jobs/${id}`);
-  return data;
+  const jobData = data?.data ?? data;
+  return mapJobDetail(jobData);
 };
+
+// Map JobListingSummary (list view) to frontend component shape
+const mapJobSummary = (job) => ({
+  id: job.id,
+  title: job.title,
+  company: job.companyName || 'Unknown Company',
+  logo: job.companyLogoUrl || null,
+  location: job.locationCity ? `${job.locationCity}, ${job.locationCountry || ''}`.replace(/,\s*$/, '') : 'Remote',
+  type: job.jobType || 'Full-time',
+  salary: job.salaryMin ? `${job.salaryMin} XAF${job.salaryMax ? ` - ${job.salaryMax} XAF` : ''}` : null,
+  postedAt: job.createdAt || new Date().toISOString(),
+  saved: false,
+  applied: false,
+  description: '',
+  tags: []
+});
+
+// Map JobListingResponse (detail view) to frontend component shape
+const mapJobDetail = (job) => ({
+  id: job.id,
+  title: job.title,
+  company: job.company?.name || 'Unknown Company',
+  logo: job.company?.logoUrl || null,
+  location: job.location?.city ? `${job.location.city}, ${job.location.country || ''}`.replace(/,\s*$/, '') : 'Remote',
+  type: job.jobType || 'Full-time',
+  salary: job.salaryMin ? `${job.salaryMin} XAF${job.salaryMax ? ` - ${job.salaryMax} XAF` : ''}` : null,
+  postedAt: job.createdAt || new Date().toISOString(),
+  saved: false,
+  applied: false,
+  description: job.description || '',
+  tags: job.skills?.map(s => s.name) || [],
+  website: null // the backend currently does not include company website
+});
 
 export const applyToJob = async (id, formData) => {
   const { data } = await apiClient.post(`/api/jobs/${id}/apply`, formData, {
