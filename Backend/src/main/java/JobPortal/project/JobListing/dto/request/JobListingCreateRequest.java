@@ -31,9 +31,9 @@ public record JobListingCreateRequest(
     @Schema(description = "UUID of the job category")
     UUID categoryId,
 
-    @NotNull(message = "Company UUID is required")
-    @Schema(description = "UUID of the employer's company to associate this listing with")
-    UUID companyId,
+    @NotNull(message = "Company ID is required")
+    @Schema(description = "ID of the employer's company to associate this listing with")
+    Long companyId,
 
     @Schema(description = "UUID of the location (null = remote/unspecified)")
     UUID locationId,

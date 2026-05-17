@@ -30,39 +30,6 @@ const ApplyPage        = lazy(() => import('./pages/jobs/ApplyPage'));
 const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagement'));
 const InsightsPage     = lazy(() => import('./pages/shared/InsightsPage'));
 
-// ── DevNav ─────────────────────────────────────────────────
-function DevNav() {
-  const location = useLocation();
-  const links = [
-    { to: "/",                   label: "Home"        },
-    { to: "/login",              label: "Login"       },
-    { to: "/register",           label: "Register"    },
-    { to: "/profile/job-seeker", label: "Job Seeker"  },
-    { to: "/profile/employer",   label: "Employer"    },
-    { to: "/profile/admin",      label: "Admin"       },
-    { to: "/dashboard/employer", label: "Employer DB" },
-    { to: "/employer/jobs",      label: "Manage Jobs" },
-    { to: "/employer/post-job",  label: "Post Job"    },
-    { to: "/employee/dashboard", label: "Employee DB" },
-    { to: "/jobs",               label: "Jobs"        },
-    { to: "/insights",           label: "Insights"    },
-    { to: "/admin/dashboard",    label: "Admin DB"    },
-  ];
-
-  return (
-    <nav style={{ position:"fixed", bottom:20, left:"50%", transform:"translateX(-50%)", background:"#1A5C2E", borderRadius:"999px", padding:"14px 24px", display:"flex", gap:"10px", zIndex:9999, boxShadow:"0 8px 32px rgba(11,43,38,0.4)", flexWrap:"wrap", justifyContent:"center", maxWidth:"90vw" }}>
-      {links.map(({ to, label }) => {
-        const isActive = location.pathname === to;
-        return (
-          <Link key={to} to={to} style={{ color: isActive ? "white" : "rgba(255,255,255,0.65)", textDecoration:"none", fontSize:"12.5px", fontWeight:600, padding:"6px 14px", borderRadius:"999px", background: isActive ? "rgba(255,255,255,0.15)" : "transparent", transition:"all 0.18s", whiteSpace:"nowrap" }}>
-            {label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
 // ── Employer combined view ─────────────────────────────────
 function EmployerJobsManager() {
   const [view, setView] = useState("manage");
@@ -155,7 +122,6 @@ export default function App() {
                 <Route path="/jobs/:id/apply"  element={<ApplyPage />} />
                 <Route path="/insights"        element={<InsightsPage />} />
               </Routes>
-              <DevNav />
             </Suspense>
           </BrowserRouter>
         </NotificationProvider>

@@ -36,16 +36,53 @@ export const getJobs = async (params = {}) => {
 
   // Unwrap ApiResponse → Spring Page
   const pageData = apiResp?.data ?? apiResp;
+  const rawJobs = pageData?.content ?? [];
+  
+  const mappedJobs = rawJobs.map(job => ({
+    id: job.id,
+    title: job.title,
+    company: job.companyName || 'Unknown Company',
+    logo: job.companyLogoUrl || null,
+    location: job.locationCity && job.locationCountry 
+      ? `${job.locationCity}, ${job.locationCountry}` 
+      : job.locationCity || job.locationCountry || 'Remote',
+    type: job.jobType || 'Full-time',
+    salary: job.salaryMin && job.salaryMax ? `$${job.salaryMin} - $${job.salaryMax}` : null,
+    description: job.description,
+    tags: job.skills ? job.skills.map(s => s.name) : [],
+    postedAt: job.createdAt || job.updatedAt || new Date().toISOString(),
+    saved: false,
+    applied: false
+  }));
+
   return {
-    data:       pageData?.content      ?? [],
+    data:       mappedJobs,
     total:      pageData?.totalElements ?? 0,
     totalPages: pageData?.totalPages    ?? 1,
   };
 };
 
 export const getJob = async (id) => {
-  const { data } = await apiClient.get(`/api/jobs/${id}`);
-  return data;
+  const { data: apiResp } = await apiClient.get(`/api/jobs/${id}`);
+  
+  // Unwrap ApiResponse → JobListingResponse
+  const data = apiResp?.data ?? apiResp;
+  
+  // Map backend JobListingResponse → frontend expected shape
+  return {
+    id: data.id,
+    title: data.title,
+    company: data.company?.name || 'Unknown Company',
+    logo: data.company?.logoUrl || null,
+    location: data.location ? `${data.location.city || ''}, ${data.location.country || ''}`.replace(/^, |^,/g, '').trim() : 'Remote',
+    type: data.jobType || 'Full-time',
+    salary: data.salaryMin && data.salaryMax ? `$${data.salaryMin} - $${data.salaryMax}` : null,
+    description: data.description,
+    tags: data.skills ? data.skills.map(s => s.name) : [],
+    postedAt: data.createdAt || data.updatedAt || new Date().toISOString(),
+    saved: false,
+    applied: false
+  };
 };
 
 export const applyToJob = async (id, formData) => {

@@ -68,7 +68,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
-    public JobListingResponse createListing(UUID employerId, JobListingCreateRequest req) {
+    public JobListingResponse createListing(Long employerId, JobListingCreateRequest req) {
 
         JobCategory category = categoryRepository.findById(req.categoryId())
             .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId()));
@@ -112,7 +112,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
-    public JobListingResponse updateListing(UUID employerId, UUID listingId,
+    public JobListingResponse updateListing(Long employerId, UUID listingId,
                                             JobListingUpdateRequest req) {
 
         JobListing listing = findOwnedListing(employerId, listingId);
@@ -147,7 +147,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
-    public void deleteListing(UUID employerId, UUID listingId) {
+    public void deleteListing(Long employerId, UUID listingId) {
         JobListing listing = findOwnedListing(employerId, listingId);
         listing.softDelete();
         listingRepository.save(listing);
@@ -160,14 +160,14 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<JobListingSummary> getEmployerListings(UUID employerId, Pageable pageable) {
+    public Page<JobListingSummary> getEmployerListings(Long employerId, Pageable pageable) {
         return listingRepository.findAllByEmployerId(employerId, pageable)
                                 .map(mapper::toSummary);
     }
 
     @Override
     @Transactional
-    public JobListingResponse changeListingStatus(UUID employerId, UUID listingId,
+    public JobListingResponse changeListingStatus(Long employerId, UUID listingId,
                                                   JobListingStatusRequest req) {
         JobListing listing = findOwnedListing(employerId, listingId);
         applyStatusTransition(listing, req.status());
@@ -237,7 +237,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<JobListingSummary> adminGetAllListings(PostingStatus status, UUID employerId,
+    public Page<JobListingSummary> adminGetAllListings(PostingStatus status, Long employerId,
                                                        Pageable pageable) {
         return listingRepository.findAllForAdmin(status, employerId, pageable)
                                 .map(mapper::toSummary);
@@ -245,7 +245,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
-    public JobListingResponse adminModerate(UUID adminId, UUID listingId,
+    public JobListingResponse adminModerate(Long adminId, UUID listingId,
                                             AdminJobModerationRequest req) {
 
         JobListing listing = listingRepository.findById(listingId)
@@ -266,7 +266,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
-    public void adminDeleteListing(UUID adminId, UUID listingId) {
+    public void adminDeleteListing(Long adminId, UUID listingId) {
         JobListing listing = listingRepository.findById(listingId)
             .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
 
@@ -287,7 +287,7 @@ public class JobListingServiceImpl implements JobListingService {
      * Fetches a listing and verifies the employer owns it.
      * Returns 404 if not found; 403 if owned by a different employer.
      */
-    private JobListing findOwnedListing(UUID employerId, UUID listingId) {
+    private JobListing findOwnedListing(Long employerId, UUID listingId) {
         return listingRepository.findByIdAndEmployerId(listingId, employerId)
             .orElseThrow(() -> new ResourceNotFoundException(
                 "Job listing not found or you do not have permission to access it."));

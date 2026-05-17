@@ -43,13 +43,13 @@ public class AdminJobListingController {
     private final JobListingService jobListingService;
     private final UserRepository    userRepository;
 
-    // ── Resolve authenticated admin UUID from email principal ─────────────────
+    // ── Resolve authenticated admin ID from email principal ─────────────────
 
-    private UUID resolveAdminId(UserDetails principal) {
+    private Long resolveAdminId(UserDetails principal) {
         User user = userRepository.findByEmail(principal.getUsername())
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
-        return UUID.fromString(String.valueOf(user.getId()));
+        return user.getId();
     }
 
     // ── GET /api/admin/jobs ───────────────────────────────────────────────────
@@ -62,8 +62,8 @@ public class AdminJobListingController {
             @Parameter(description = "Filter by posting status")
             @RequestParam(required = false) PostingStatus status,
 
-            @Parameter(description = "Filter by employer UUID")
-            @RequestParam(required = false) UUID employerId,
+            @Parameter(description = "Filter by employer ID")
+            @RequestParam(required = false) Long employerId,
 
             @RequestParam(defaultValue = "0")         int page,
             @RequestParam(defaultValue = "20")        int size,

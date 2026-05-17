@@ -47,7 +47,7 @@ public interface JobListingService {
      * @param request    validated create payload
      * @return full detail response of the created listing
      */
-    JobListingResponse createListing(UUID employerId, JobListingCreateRequest request);
+    JobListingResponse createListing(Long employerId, JobListingCreateRequest request);
 
     /**
      * Partially updates an existing listing.
@@ -59,7 +59,7 @@ public interface JobListingService {
      * @param request    partial update payload
      * @return updated full detail response
      */
-    JobListingResponse updateListing(UUID employerId, UUID listingId,
+    JobListingResponse updateListing(Long employerId, UUID listingId,
                                      JobListingUpdateRequest request);
 
     /**
@@ -69,7 +69,7 @@ public interface JobListingService {
      * @param employerId authenticated employer UUID
      * @param listingId  UUID of the listing to soft-delete
      */
-    void deleteListing(UUID employerId, UUID listingId);
+    void deleteListing(Long employerId, UUID listingId);
 
     /**
      * Returns all non-deleted listings belonging to the employer (paginated).
@@ -78,7 +78,7 @@ public interface JobListingService {
      * @param pageable   pagination and sort parameters
      * @return page of lightweight summaries
      */
-    Page<JobListingSummary> getEmployerListings(UUID employerId, Pageable pageable);
+    Page<JobListingSummary> getEmployerListings(Long employerId, Pageable pageable);
 
     /**
      * Toggles a listing open (ACTIVE) or closed (DRAFT).
@@ -89,7 +89,7 @@ public interface JobListingService {
      * @param request    target status
      * @return updated full detail response
      */
-    JobListingResponse changeListingStatus(UUID employerId, UUID listingId,
+    JobListingResponse changeListingStatus(Long employerId, UUID listingId,
                                            JobListingStatusRequest request);
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -153,7 +153,7 @@ public interface JobListingService {
      * @param pageable   pagination and sort
      * @return page of summaries
      */
-    Page<JobListingSummary> adminGetAllListings(PostingStatus status, UUID employerId,
+    Page<JobListingSummary> adminGetAllListings(PostingStatus status, Long employerId,
                                                 Pageable pageable);
 
     /**
@@ -164,7 +164,7 @@ public interface JobListingService {
      * @param request   target status + mandatory reason
      * @return updated full detail response
      */
-    JobListingResponse adminModerate(UUID adminId, UUID listingId,
+    JobListingResponse adminModerate(Long adminId, UUID listingId,
                                      AdminJobModerationRequest request);
 
     /**
@@ -173,5 +173,5 @@ public interface JobListingService {
      * @param adminId   authenticated admin UUID
      * @param listingId UUID of the listing to remove
      */
-    void adminDeleteListing(UUID adminId, UUID listingId);
+    void adminDeleteListing(Long adminId, UUID listingId);
 }

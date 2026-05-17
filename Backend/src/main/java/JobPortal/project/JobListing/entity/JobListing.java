@@ -55,11 +55,11 @@ public class JobListing {
 
     /** FK to users(id) — the employer who owns this posting. */
     @Column(name = "employer_id", nullable = false, updatable = false)
-    private UUID employerId;
+    private Long employerId;
 
-    /** Denormalised employer company UUID — avoids a join for list views. */
+    /** Denormalised employer company ID — avoids a join for list views. */
     @Column(name = "company_id", nullable = false)
-    private UUID companyId;
+    private Long companyId;
 
     // ── Classification ─────────────────────────────────────────────────────────
 
@@ -165,8 +165,8 @@ public class JobListing {
         return this.deadline != null && LocalDate.now().isAfter(this.deadline);
     }
 
-    /** @return true when the given employer UUID owns this listing. */
-    public boolean isOwnedBy(UUID ownerId) {
+    /** @return true when the given employer ID owns this listing. */
+    public boolean isOwnedBy(Long ownerId) {
         return this.employerId != null && this.employerId.equals(ownerId);
     }
 }

@@ -43,7 +43,7 @@ public interface JobListingRepository
           AND jl.status <> JobPortal.project.JobListing.enums.PostingStatus.DELETED
         ORDER BY jl.createdAt DESC
         """)
-    Page<JobListing> findAllByEmployerId(@Param("employerId") UUID employerId, Pageable pageable);
+    Page<JobListing> findAllByEmployerId(@Param("employerId") Long employerId, Pageable pageable);
 
     /**
      * Single listing owned by the given employer (prevents IDOR).
@@ -59,7 +59,7 @@ public interface JobListingRepository
         """)
     Optional<JobListing> findByIdAndEmployerId(
             @Param("id") UUID id,
-            @Param("employerId") UUID employerId);
+            @Param("employerId") Long employerId);
 
     // ── Public ────────────────────────────────────────────────────────────────
 
@@ -91,7 +91,7 @@ public interface JobListingRepository
         """)
     Page<JobListing> findAllForAdmin(
             @Param("status")     PostingStatus status,
-            @Param("employerId") UUID employerId,
+            @Param("employerId") Long employerId,
             Pageable pageable);
 
     // ── Scheduler ─────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ public interface JobListingRepository
     // ── Counts (admin dashboard) ───────────────────────────────────────────────
 
     long countByStatus(PostingStatus status);
-    long countByEmployerId(UUID employerId);
+    long countByEmployerId(Long employerId);
 
     // ── Market Insights ───────────────────────────────────────────────────────
 
