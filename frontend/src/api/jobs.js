@@ -1,8 +1,46 @@
 import apiClient from './client';
 
-export const getJobs = async (params) => {
-  const { data } = await apiClient.get('/api/jobs', { params });
-  return data;
+/**
+ * Fetch paginated + filtered job listings.
+ *
+ * JobList.jsx passes { page (1-indexed), limit, search, location, type }.
+ * The backend expects:
+ *   - page  → 0-indexed  (Spring PageRequest)
+ *   - size  → page size   (not "limit")
+ *   - keyword / location / jobType  (search endpoint)
+ *
+ * Backend response shape:
+ *   ApiResponse { data: SpringPage { content:[], totalElements, totalPages } }
+ *
+ * Returns: { data: Job[], total: number, totalPages: number }
+ */
+export const getJobs = async (params = {}) => {
+  const { page = 1, limit, size, search, location, type, ...rest } = params;
+
+  const backendParams = {
+    page: Math.max(0, page - 1),        // 1-indexed → 0-indexed
+    size: limit || size || 10,           // normalise "limit" → "size"
+    ...rest,
+  };
+
+  // Map frontend filter names → backend param names
+  if (search)   backendParams.keyword  = search;
+  if (location) backendParams.location = location;
+  if (type)     backendParams.jobType  = type;
+
+  // Use /search endpoint only when a filter is active
+  const hasFilters = search || location || type;
+  const url = hasFilters ? '/api/jobs/search' : '/api/jobs';
+
+  const { data: apiResp } = await apiClient.get(url, { params: backendParams });
+
+  // Unwrap ApiResponse → Spring Page
+  const pageData = apiResp?.data ?? apiResp;
+  return {
+    data:       pageData?.content      ?? [],
+    total:      pageData?.totalElements ?? 0,
+    totalPages: pageData?.totalPages    ?? 1,
+  };
 };
 
 export const getJob = async (id) => {
@@ -44,7 +82,7 @@ const jobsService = {
   rateJob,
   getUserApplications,
   getUserInterviews,
-  saveJob
+  saveJob,
 };
 
-export default jobsService;
+export default jobsService;
