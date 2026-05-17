@@ -45,11 +45,11 @@ public class EmployerJobListingController {
 
     // ── Resolve authenticated user UUID from email principal ──────────────────
 
-    private UUID resolveEmployerId(UserDetails principal) {
+    private Long resolveEmployerId(UserDetails principal) {
         User user = userRepository.findByEmail(principal.getUsername())
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
-        return UUID.fromString(String.valueOf(user.getId()));
+        return user.getId();
     }
 
     // ── POST /api/jobs ────────────────────────────────────────────────────────
@@ -106,15 +106,15 @@ public class EmployerJobListingController {
     public ResponseEntity<ApiResponse<Page<JobListingSummary>>> getEmployerListings(
             @AuthenticationPrincipal UserDetails principal,
 
-            @Parameter(description = "Employer UUID - must match authenticated user")
-            @PathVariable UUID employerId,
+            @Parameter(description = "Employer ID - must match authenticated user")
+            @PathVariable Long employerId,
 
             @RequestParam(defaultValue = "0")         int page,
             @RequestParam(defaultValue = "10")        int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC")      String direction) {
 
-        UUID authenticatedId = resolveEmployerId(principal);
+        Long authenticatedId = resolveEmployerId(principal);
         if (!authenticatedId.equals(employerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("You can only view your own listings."));

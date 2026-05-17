@@ -22,6 +22,7 @@ export const getJobs = async (params = {}) => {
   const { data: apiResp } = await apiClient.get(url, { params: backendParams });
 
   const pageData = apiResp?.data ?? apiResp;
+  
   return {
     data:       (pageData?.content ?? []).map(mapJobSummary),
     total:      pageData?.totalElements ?? 0,
@@ -105,4 +106,4 @@ const jobsService = {
   saveJob,
 };
 
-export default jobsService;
+export default jobsService;

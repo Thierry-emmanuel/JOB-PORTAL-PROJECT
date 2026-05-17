@@ -157,9 +157,9 @@ export default function JobList() {
         {/* Pagination */}
         {!loading && !error && totalPages > 1 && (
           <Pagination
-            currentPage={page}
+            page={page}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onChange={setPage}
           />
         )}
       </main>

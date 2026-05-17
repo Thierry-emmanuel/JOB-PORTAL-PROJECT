@@ -14,6 +14,17 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import JobPortal.project.JobListing.entity.JobListing;
+import JobPortal.project.JobListing.enums.ExperienceLevel;
+import JobPortal.project.JobListing.enums.JobType;
+import JobPortal.project.JobListing.enums.PostingStatus;
+import JobPortal.project.JobListing.repository.JobListingRepository;
+import JobPortal.project.modules.company.Model.Company;
+import JobPortal.project.modules.company.Repository.CompanyRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 
 
@@ -26,6 +37,8 @@ public class JobListingDataSeeder implements ApplicationRunner {
     private final JobCategoryRepository  categoryRepository;
     private final ListingSkillRepository skillRepository;
     private final JobLocationRepository  locationRepository;
+    private final JobListingRepository   jobListingRepository;
+    private final CompanyRepository      companyRepository;
 
     @Override
     @Transactional
@@ -33,6 +46,7 @@ public class JobListingDataSeeder implements ApplicationRunner {
         seedCategories();
         seedSkills();
         seedLocations();
+        seedJobs();
         log.info("[JobListingDataSeeder] Reference data seeding complete.");
     }
 
@@ -120,5 +134,73 @@ public class JobListingDataSeeder implements ApplicationRunner {
         return JobLocation.builder()
             .city(city).state(state).country(country)
             .latitude(lat).longitude(lon).build();
+    }
+
+    private void seedJobs() {
+        if (jobListingRepository.count() > 0) {
+            log.info("[JobListingDataSeeder] Jobs already seeded — skipping.");
+            return;
+        }
+
+        List<Company> companies = companyRepository.findAll();
+        if (companies.isEmpty()) {
+            log.info("[JobListingDataSeeder] No companies found to associate jobs with — skipping jobs.");
+            return;
+        }
+
+        List<JobCategory> categories = categoryRepository.findAll();
+        List<JobLocation> locations = locationRepository.findAll();
+        List<ListingSkill> skills = skillRepository.findAll();
+
+        if (categories.isEmpty() || locations.isEmpty() || skills.isEmpty()) {
+            return;
+        }
+
+        for (Company company : companies) {
+            // Seed 2 jobs per company
+            JobCategory cat = categories.get((int)(Math.random() * categories.size()));
+            JobLocation loc = locations.get((int)(Math.random() * locations.size()));
+            
+            JobListing job1 = JobListing.builder()
+                .employerId(company.getEmployer().getId())
+                .companyId(company.getId())
+                .category(cat)
+                .location(loc)
+                .title("Software Engineer - " + company.getName())
+                .description("We are looking for a skilled Software Engineer to join our team at " + company.getName() + ". You will be responsible for developing high-quality applications.")
+                .jobType(JobType.CDI)
+                .salaryMin(new BigDecimal("300000"))
+                .salaryMax(new BigDecimal("600000"))
+                .experienceLevel(ExperienceLevel.MID)
+                .deadline(LocalDate.now().plusDays(30))
+                .status(PostingStatus.ACTIVE)
+                .viewCount(0)
+                .skills(new HashSet<>(skills.subList(0, 3)))
+                .build();
+                
+            JobCategory cat2 = categories.get((int)(Math.random() * categories.size()));
+            JobLocation loc2 = locations.get((int)(Math.random() * locations.size()));
+            
+            JobListing job2 = JobListing.builder()
+                .employerId(company.getEmployer().getId())
+                .companyId(company.getId())
+                .category(cat2)
+                .location(loc2)
+                .title("Product Manager - " + company.getName())
+                .description("Looking for an experienced Product Manager to lead product development at " + company.getName() + ". Must have excellent communication skills.")
+                .jobType(JobType.CDD)
+                .salaryMin(new BigDecimal("500000"))
+                .salaryMax(new BigDecimal("800000"))
+                .experienceLevel(ExperienceLevel.SENIOR)
+                .deadline(LocalDate.now().plusDays(15))
+                .status(PostingStatus.ACTIVE)
+                .viewCount(0)
+                .skills(new HashSet<>(skills.subList(3, 5)))
+                .build();
+
+            jobListingRepository.save(job1);
+            jobListingRepository.save(job2);
+        }
+        log.info("[JobListingDataSeeder] Seeded {} jobs.", companies.size() * 2);
     }
 }

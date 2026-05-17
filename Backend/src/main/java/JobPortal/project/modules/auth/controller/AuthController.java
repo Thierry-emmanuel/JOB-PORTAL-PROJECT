@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @lombok.RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class AuthController {
 
     private final JobPortal.project.modules.auth.service.AuthService authService;
@@ -29,6 +30,10 @@ public class AuthController {
             AuthResponse response = authService.authenticateUser(loginRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            log.warn("[Auth] Login failed for email '{}' — {}: {}",
+                    loginRequest.getEmail(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             return ResponseEntity.status(401).body("Error: Invalid email or password");
         }
     }

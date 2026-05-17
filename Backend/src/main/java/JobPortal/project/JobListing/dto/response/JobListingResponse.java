@@ -45,7 +45,7 @@ public record JobListingResponse(
     public record CategorySummary(UUID id, String name, String slug) {}
 
     @Schema(description = "Company reference")
-    public record CompanySummary(UUID id, String name, String logoUrl) {}
+    public record CompanySummary(Long id, String name, String logoUrl) {}
 
     @Schema(description = "Location reference")
     public record LocationSummary(UUID id, String city, String state, String country) {}

@@ -22,6 +22,7 @@ export default function KoraNav() {
   const isAdmin = getRole().includes("ADMIN");
 
   const navLinks = [
+    { label: t('nav.home'), to: '/' },
     { label: t('nav.jobs'), to: '/jobs' },
     { label: t('nav.insights'), to: '/insights' },
   ];
