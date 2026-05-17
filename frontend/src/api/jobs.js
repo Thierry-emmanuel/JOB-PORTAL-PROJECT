@@ -1,24 +1,24 @@
 import apiClient from './client';
 
 export const getJobs = async (params) => {
-  const { data } = await apiClient.get('/api/v1/jobs', { params });
+  const { data } = await apiClient.get('/api/jobs', { params });
   return data;
 };
 
 export const getJob = async (id) => {
-  const { data } = await apiClient.get(`/api/v1/jobs/${id}`);
+  const { data } = await apiClient.get(`/api/jobs/${id}`);
   return data;
 };
 
 export const applyToJob = async (id, formData) => {
-  const { data } = await apiClient.post(`/api/v1/jobs/${id}/apply`, formData, {
+  const { data } = await apiClient.post(`/api/jobs/${id}/apply`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return data;
 };
 
 export const rateJob = async (id, rating) => {
-  const { data } = await apiClient.post(`/api/v1/jobs/${id}/rate`, { rating });
+  const { data } = await apiClient.post(`/api/jobs/${id}/rate`, { rating });
   return data;
 };
 
@@ -33,7 +33,7 @@ export const getUserInterviews = async (seekerId) => {
 };
 
 export const saveJob = async (id) => {
-  const { data } = await apiClient.post(`/api/v1/jobs/${id}/save`);
+  const { data } = await apiClient.post(`/api/jobs/${id}/save`);
   return data;
 };
 
