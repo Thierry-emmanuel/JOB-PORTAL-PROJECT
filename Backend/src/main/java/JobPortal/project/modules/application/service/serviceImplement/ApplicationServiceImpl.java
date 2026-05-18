@@ -95,11 +95,13 @@ public class ApplicationServiceImpl implements ApplicationService {
             page = applicationRepository.findByJobPostingId(filter.jobPostingId(), pageable);
 
         } else if (filter.employerId() != null && filter.status() != null) {
+            Pageable nativePageable = PageRequest.of(filter.page(), filter.size(), Sort.unsorted());
             page = applicationRepository.findByEmployerIdAndStatus(
-                    filter.employerId().toString(), filter.status().name(), pageable);
+                    filter.employerId().toString(), filter.status().name(), nativePageable);
 
         } else if (filter.employerId() != null) {
-            page = applicationRepository.findByEmployerId(filter.employerId().toString(), pageable);
+            Pageable nativePageable = PageRequest.of(filter.page(), filter.size(), Sort.unsorted());
+            page = applicationRepository.findByEmployerId(filter.employerId().toString(), nativePageable);
 
         } else {
             page = applicationRepository.findAll(pageable);

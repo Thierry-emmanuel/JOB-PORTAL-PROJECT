@@ -111,6 +111,11 @@ public interface InterviewService {
      * Throws if the interview already has a recorded result.
      */
     void cancel(Long interviewId);
+
+    /**
+     * Retrieve paginated interviews for a given employer.
+     */
+    InterviewPageResponse getByEmployerId(Long employerId, int page, int size);
 }
 
 

@@ -29,7 +29,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT COUNT(*) > 0
             FROM applications a
-            JOIN job_postings jp ON jp.id = a.job_posting_id
+            JOIN job_listings jp ON CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) = a.job_posting_id
             WHERE a.id = :applicationId
             AND jp.employer_id = :employerId
             """, nativeQuery = true)
@@ -71,13 +71,14 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT a.* FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT jp.id FROM job_postings jp WHERE jp.employer_id = :employerId
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
+            ORDER BY a.applied_at DESC
             """,
             countQuery = """
             SELECT COUNT(*) FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT jp.id FROM job_postings jp WHERE jp.employer_id = :employerId
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             """,
             nativeQuery = true)
@@ -86,14 +87,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT a.* FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT jp.id FROM job_postings jp WHERE jp.employer_id = :employerId
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             AND a.status = :status
+            ORDER BY a.applied_at DESC
             """,
             countQuery = """
             SELECT COUNT(*) FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT jp.id FROM job_postings jp WHERE jp.employer_id = :employerId
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             AND a.status = :status
             """,

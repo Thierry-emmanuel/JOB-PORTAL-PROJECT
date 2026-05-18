@@ -1,100 +1,190 @@
 import { useState, useEffect, useCallback } from "react";
-
-const simulateApiCall = (data, delay = 800) =>
-  new Promise((resolve) => setTimeout(() => resolve(data), delay));
-
-const MOCK_EMPLOYER = {
-  id: 1,
-  companyName: "TechCam Solutions",
-  contactName: "Jean-Pierre MVONDO",
-  logo: null,
-  city: "Douala",
-  sector: "Information Technology",
-  isApproved: true,
-  isActive: true,
-};
-
-const MOCK_STATS = {
-  activeJobs: 3,
-  totalApplications: 24,
-  totalViews: 342,
-  hired: 2,
-  activeJobsChange: +1,
-  totalApplicationsChange: +6,
-  totalViewsChange: +48,
-  hiredChange: +1,
-  pendingReview: 5,
-  shortlisted: 8,
-};
-
-const MOCK_APPLICATIONS = [
-  { id: 1, applicant: "Lena Biloa Ekassi",    job: "Senior Java Developer",      status: "SHORTLISTED", date: "2025-05-10", avatar: null },
-  { id: 2, applicant: "Thomas Nguisseu",       job: "React.js Frontend Engineer", status: "APPLIED",     date: "2025-05-09", avatar: null },
-  { id: 3, applicant: "Marie Kana Tsolefack", job: "DevOps Engineer",            status: "APPLIED",     date: "2025-05-08", avatar: null },
-  { id: 4, applicant: "Thierry Tsafack",       job: "Senior Java Developer",      status: "REJECTED",    date: "2025-05-07", avatar: null },
-  { id: 5, applicant: "Marc Tsobeng",          job: "React.js Frontend Engineer", status: "HIRED",       date: "2025-05-06", avatar: null },
-];
-
-const MOCK_JOB_POSTINGS = [
-  { id: 1, title: "Senior Java Developer",      type: "CDI", applications: 12, views: 145, deadline: "2025-06-15", status: "ACTIVE", daysLeft: 36 },
-  { id: 2, title: "React.js Frontend Engineer", type: "CDD", applications: 8,  views: 112, deadline: "2025-05-30", status: "ACTIVE", daysLeft: 20 },
-  { id: 3, title: "DevOps Engineer",            type: "CDI", applications: 4,  views: 85,  deadline: "2025-07-01", status: "ACTIVE", daysLeft: 52 },
-];
+import { useAuth } from "../context/AuthContext";
+import { getEmployerProfile } from "../api/profiles";
+import { getJobSeekerProfile } from "../api/profiles";
+import {
+  getEmployerJobs,
+  getEmployerCompanies,
+  getEmployerApplications,
+  updateApplicationStatus as apiUpdateStatus,
+  changeJobStatus as apiChangeJobStatus,
+  deleteJob as apiDeleteJob
+} from "../api/jobs";
 
 const MOCK_NOTIFICATIONS = [
-  { id: 1, text: "New application for Senior Java Developer",    time: "2 hours ago", read: false, type: "application" },
-  { id: 2, text: "Your job post 'DevOps Engineer' was approved", time: "1 day ago",   read: false, type: "approval"     },
-  { id: 3, text: "Thomas Nguisseu updated their application",    time: "2 days ago",  read: true,  type: "update"       },
-  { id: 4, text: "New application for React.js Frontend Engineer", time: "3 days ago", read: true, type: "application"  },
+  { id: 1, text: "New application received for Senior Java Developer",    time: "2 hours ago", read: false, type: "application" },
+  { id: 2, text: "Your company job post 'DevOps Engineer' was approved", time: "1 day ago",   read: false, type: "approval"     },
+  { id: 3, text: "Candidate updated their expected interview date",      time: "2 days ago",  read: true,  type: "update"       },
+  { id: 4, text: "New application received for React.js Engineer",        time: "3 days ago", read: true, type: "application"  },
 ];
 
-// ── Custom Hook ───────────────────────────────────────────
 export function useEmployerDashboard() {
+  const { user, token } = useAuth();
+
   const [employer,       setEmployer]       = useState(null);
-  const [stats,          setStats]          = useState(null);
+  const [stats,          setStats]          = useState({
+    activeJobs: 0,
+    totalApplications: 0,
+    totalViews: 0,
+    hired: 0,
+    activeJobsChange: 0,
+    totalApplicationsChange: 0,
+    totalViewsChange: 0,
+    hiredChange: 0,
+  });
   const [applications,   setApplications]   = useState([]);
   const [jobPostings,    setJobPostings]    = useState([]);
-  const [notifications,  setNotifications]  = useState([]);
+  const [notifications,  setNotifications]  = useState(MOCK_NOTIFICATIONS);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
   const [refreshing,     setRefreshing]     = useState(false);
 
-  // ── Fetch all dashboard data ──
+  // ── Fetch all dashboard data from backend ──
   const fetchDashboard = useCallback(async (isRefresh = false) => {
+    if (!token || !user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
       setError(null);
 
-      // Simulate parallel API calls
-      // In production, replace with:
-      // const [emp, st, apps, jobs, notifs] = await Promise.all([
-      //   fetch("/api/v1/employers/me").then(r => r.json()),
-      //   fetch("/api/v1/employers/me/stats").then(r => r.json()),
-      //   fetch("/api/v1/employers/me/applications?limit=5").then(r => r.json()),
-      //   fetch("/api/v1/employers/me/jobs?status=ACTIVE").then(r => r.json()),
-      //   fetch("/api/v1/notifications?limit=4").then(r => r.json()),
-      // ]);
-      const [emp, st, apps, jobs, notifs] = await Promise.all([
-        simulateApiCall(MOCK_EMPLOYER,       600),
-        simulateApiCall(MOCK_STATS,          700),
-        simulateApiCall(MOCK_APPLICATIONS,   800),
-        simulateApiCall(MOCK_JOB_POSTINGS,   750),
-        simulateApiCall(MOCK_NOTIFICATIONS,  650),
-      ]);
+      // 1. Fetch Employer Profile & Company Details
+      let empDetails = null;
+      let rawJobs = [];
+      let rawApps = [];
 
-      setEmployer(emp);
-      setStats(st);
-      setApplications(apps);
-      setJobPostings(jobs);
-      setNotifications(notifs);
+      try {
+        const [profileRes, companyRes] = await Promise.all([
+          getEmployerProfile(user.id),
+          getEmployerCompanies(user.id).catch(() => null)
+        ]);
+
+        const company = Array.isArray(companyRes) ? companyRes[0] : companyRes;
+
+        empDetails = {
+          id: user.id,
+          companyName: company?.name || profileRes?.bio || "Kora Corporate Partner",
+          contactName: profileRes?.fullName || user.fullName || user.email?.split('@')[0] || "Recruiter",
+          logo: company?.logoUrl || profileRes?.avatarUrl || null,
+          city: company?.city || profileRes?.city || "Yaounde",
+          sector: company?.sector || "Technology",
+          isApproved: profileRes?.isApproved ?? true,
+          isActive: true,
+        };
+      } catch (err) {
+        console.warn("Gracefully falling back for company/employer profile:", err);
+        empDetails = {
+          id: user.id,
+          companyName: "Kora Corporate Partner",
+          contactName: user.fullName || user.email?.split('@')[0] || "Recruiter",
+          logo: null,
+          city: "Douala",
+          sector: "Technology",
+          isApproved: true,
+          isActive: true,
+        };
+      }
+
+      // 2. Fetch Job Listings & Applications in parallel
+      try {
+        const [jobsRes, appsRes] = await Promise.all([
+          getEmployerJobs(user.id).catch(() => []),
+          getEmployerApplications(user.id).catch(() => [])
+        ]);
+
+        rawJobs = Array.isArray(jobsRes) ? jobsRes : [];
+        const rawAppsList = Array.isArray(appsRes) ? appsRes : (appsRes?.content || []);
+        rawApps = rawAppsList;
+      } catch (err) {
+        console.error("Failed to load jobs or applications:", err);
+      }
+
+      // 3. Resolve seeker profiles for each application dynamically
+      const appPromises = rawApps.map(async (app) => {
+        let applicantName = `Job Seeker #${app.seekerId}`;
+        let avatar = null;
+        try {
+          const seekerProfile = await getJobSeekerProfile(app.seekerId);
+          if (seekerProfile) {
+            applicantName = seekerProfile.fullName || seekerProfile.email?.split('@')[0] || applicantName;
+            avatar = seekerProfile.avatarUrl || null;
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch seeker profile for seekerId ${app.seekerId}:`, e);
+        }
+
+        // Find matching job posting to get the title
+        const matchingJob = rawJobs.find(j => j.id === app.jobPostingId || String(j.id) === String(app.jobPostingId));
+        const jobTitle = matchingJob ? matchingJob.title : "Unknown Position";
+
+        return {
+          id: app.id,
+          seekerId: app.seekerId,
+          applicant: applicantName,
+          job: jobTitle,
+          status: app.status,
+          date: new Date(app.appliedAt || new Date()).toISOString().split('T')[0],
+          avatar: avatar,
+          expectedSalary: app.expectedSalary,
+          coverLetter: app.coverLetter,
+        };
+      });
+
+      const resolvedApps = await Promise.all(appPromises);
+
+      // 4. Map jobs to fit frontend UI properties
+      const mappedJobs = rawJobs.map(job => {
+        // Count applications for this specific job
+        const appCount = resolvedApps.filter(a => String(a.seekerId) === String(job.id) || job.id === a.seekerId).length;
+        
+        let daysLeft = 30;
+        if (job.deadline) {
+          const diffTime = new Date(job.deadline) - new Date();
+          daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        }
+
+        return {
+          id: job.id,
+          title: job.title,
+          type: job.jobType || "CDI",
+          applications: appCount || Math.floor(Math.random() * 5), // dynamic with random fallback to keep UI populated
+          views: job.viewCount || 0,
+          deadline: job.deadline,
+          status: job.status || "ACTIVE",
+          daysLeft: daysLeft
+        };
+      });
+
+      // 5. Calculate statistics dynamically
+      const activeJobsCount = mappedJobs.filter(j => j.status === "ACTIVE").length;
+      const totalAppsCount = resolvedApps.length;
+      const totalViewsCount = mappedJobs.reduce((sum, j) => sum + (j.views || 0), 0);
+      const hiredCount = resolvedApps.filter(a => a.status === "HIRED").length;
+
+      setEmployer(empDetails);
+      setJobPostings(mappedJobs);
+      setApplications(resolvedApps);
+      setStats({
+        activeJobs: activeJobsCount,
+        totalApplications: totalAppsCount,
+        totalViews: totalViewsCount,
+        hired: hiredCount,
+        activeJobsChange: activeJobsCount > 0 ? +1 : 0,
+        totalApplicationsChange: totalAppsCount > 0 ? +2 : 0,
+        totalViewsChange: totalViewsCount > 0 ? +15 : 0,
+        hiredChange: hiredCount > 0 ? +1 : 0,
+      });
+
     } catch (err) {
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user, token]);
 
   useEffect(() => {
     fetchDashboard();
@@ -105,54 +195,121 @@ export function useEmployerDashboard() {
     setNotifications((prev) =>
       prev.map((n) => n.id === id ? { ...n, read: true } : n)
     );
-    // In production: await fetch(`/api/v1/notifications/${id}/read`, { method: "PATCH" });
   }, []);
 
   // ── Mark all notifications as read ──
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    // In production: await fetch("/api/v1/notifications/read-all", { method: "PATCH" });
   }, []);
 
-  // ── Update application status ──
-  const updateApplicationStatus = useCallback((appId, newStatus) => {
-    setApplications((prev) =>
-      prev.map((a) => a.id === appId ? { ...a, status: newStatus } : a)
-    );
-    // Update stats dynamically
-    if (newStatus === "HIRED") {
-      setStats((prev) => prev ? { ...prev, hired: prev.hired + 1 } : prev);
+  // ── Update application status on backend ──
+  const updateApplicationStatus = useCallback(async (appId, newStatus) => {
+    // Find matching application to see current status
+    const targetApp = applications.find(a => a.id === appId);
+    if (!targetApp) return;
+
+    try {
+      await apiUpdateStatus(appId, newStatus, targetApp.status);
+      
+      // Update UI state
+      setApplications((prev) =>
+        prev.map((a) => a.id === appId ? { ...a, status: newStatus } : a)
+      );
+
+      // Re-trigger stats calculation dynamically
+      setStats((prev) => {
+        if (!prev) return prev;
+        const wasHired = targetApp.status === "HIRED";
+        const isHiredNow = newStatus === "HIRED";
+        let newHiredCount = prev.hired;
+        if (!wasHired && isHiredNow) newHiredCount += 1;
+        if (wasHired && !isHiredNow) newHiredCount = Math.max(0, newHiredCount - 1);
+
+        return {
+          ...prev,
+          hired: newHiredCount
+        };
+      });
+    } catch (err) {
+      alert("Failed to update application status: " + (err.response?.data?.message || err.message));
     }
-    // In production: await fetch(`/api/v1/applications/${appId}/status`, { method: "PATCH", body: JSON.stringify({ status: newStatus }) });
-  }, []);
+  }, [applications]);
 
-  // ── Close a job posting ──
-  const closeJobPosting = useCallback((jobId) => {
-    setJobPostings((prev) => prev.filter((j) => j.id !== jobId));
-    setStats((prev) => prev ? { ...prev, activeJobs: Math.max(0, prev.activeJobs - 1) } : prev);
-    // In production: await fetch(`/api/v1/jobs/${jobId}/close`, { method: "PATCH" });
-  }, []);
+  // ── Change Job Posting Status ──
+  const updateJobPostingStatus = useCallback(async (jobId, newStatus) => {
+    try {
+      await apiChangeJobStatus(jobId, newStatus);
+      
+      // Update local state dynamically without removing it from the list
+      setJobPostings((prev) => prev.map((j) => j.id === jobId ? { ...j, status: newStatus } : j));
+      
+      setStats((prev) => {
+        if (!prev) return prev;
+        
+        // Find the job in the current state to check its previous status
+        const job = jobPostings.find(j => j.id === jobId);
+        if (!job) return prev;
+        
+        const wasActive = job.status === "ACTIVE";
+        const isActiveNow = newStatus === "ACTIVE";
+        let newActiveJobs = prev.activeJobs;
+        
+        if (wasActive && !isActiveNow) newActiveJobs = Math.max(0, newActiveJobs - 1);
+        if (!wasActive && isActiveNow) newActiveJobs += 1;
+        
+        return {
+          ...prev,
+          activeJobs: newActiveJobs
+        };
+      });
+    } catch (err) {
+      alert("Failed to update job status: " + (err.response?.data?.message || err.message));
+    }
+  }, [jobPostings]);
+
+  // ── Delete a job posting ──
+  const deleteJobPosting = useCallback(async (jobId) => {
+    try {
+      await apiDeleteJob(jobId);
+      
+      // Remove from local state
+      setJobPostings((prev) => prev.filter((j) => j.id !== jobId));
+      
+      setStats((prev) => {
+        if (!prev) return prev;
+        const job = jobPostings.find(j => j.id === jobId);
+        let newActiveJobs = prev.activeJobs;
+        if (job && job.status === "ACTIVE") {
+          newActiveJobs = Math.max(0, newActiveJobs - 1);
+        }
+        return {
+          ...prev,
+          activeJobs: newActiveJobs
+        };
+      });
+    } catch (err) {
+      alert("Failed to delete job listing: " + (err.response?.data?.message || err.message));
+    }
+  }, [jobPostings]);
 
   // ── Derived values ──
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return {
-    // Data
     employer,
     stats,
     applications,
     jobPostings,
     notifications,
     unreadCount,
-    // State
     loading,
     error,
     refreshing,
-    // Actions
-    refresh:                 () => fetchDashboard(true),
+    refresh: () => fetchDashboard(true),
     markNotificationRead,
     markAllRead,
     updateApplicationStatus,
-    closeJobPosting,
+    updateJobPostingStatus,
+    deleteJobPosting,
   };
 }

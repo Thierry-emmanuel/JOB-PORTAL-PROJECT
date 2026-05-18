@@ -1,28 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getInterviewsByJobPosting, cancelInterview, recordInterviewResult } from '../../api/interviews';
+import { getInterviewsByEmployer, cancelInterview, recordInterviewResult } from '../../api/interviews';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import { Calendar, Filter, Search, ChevronRight } from 'lucide-react';
+import EmployerSidebar from "../../components/employer/EmployerSidebar";
+import KoraNav from "../../components/KoraNav";
+import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
+import "../../styles/employee-dashboard.css";
+import "../../styles/employer-dashboard.css";
+import "../../styles/profile.css";
 
 export default function InterviewManagement() {
   const { user } = useAuth();
   const [interviews, setInterviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(true);
   const [filter, setFilter] = useState('ALL'); // ALL, PENDING, COMPLETED
+  
+  const {
+    employer, stats, loading
+  } = useEmployerDashboard();
 
   useEffect(() => {
-    // In a real app, we might want to fetch all interviews for ALL employer job postings
-    // For now, we'll try to fetch for a generic context or specific ID if available
     const fetchInterviews = async () => {
+      if (!user?.id) return;
       try {
-        // Mocking fetching for employer's active contexts
-        // In a real system, the backend might have /api/v1/interviews/employer/me
-        const data = await getInterviewsByJobPosting('all'); // Assuming backend handles 'all' or we iterate
+        const data = await getInterviewsByEmployer(user.id);
         setInterviews(data);
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        setLocalLoading(false);
       }
     };
     fetchInterviews();
@@ -61,229 +68,100 @@ export default function InterviewManagement() {
   });
 
   return (
-    <div className="kora-page-container">
-      <div className="kora-bg-mesh" />
-      
-      <div className="kora-content-wrap">
-        <header className="page-header">
-          <div className="header-text">
-            <h1 className="title">Interview Management</h1>
-            <p className="subtitle">Track and manage candidate evaluations</p>
-          </div>
+    <div className="ed-root">
+      <KoraNav />
+      <div className="ed-body">
+        
+        {/* ════════ SIDEBAR ════════ */}
+        <aside className="ed-sidebar kora-sidebar">
+          <EmployerSidebar employer={employer} loading={loading} stats={stats} />
+        </aside>
+
+        {/* ════════ MAIN CONTENT ════════ */}
+        <main className="ed-main">
           
-          <div className="header-actions">
-            <div className="search-box">
-              <Search size={18} />
-              <input type="text" placeholder="Search candidates..." />
+          <div className="ed-welcome">
+            <div>
+              <h1 className="ed-welcome-title">Interview Management</h1>
+              <p className="ed-welcome-sub">
+                Track and manage candidate evaluations
+              </p>
             </div>
           </div>
-        </header>
 
-        <div className="management-layout">
-          <aside className="filters-sidebar">
-            <div className="filter-card">
-              <h3>Status Filter</h3>
-              <div className="filter-options">
-                {['ALL', 'PENDING', 'COMPLETED'].map(f => (
-                  <button 
-                    key={f} 
-                    className={`filter-btn ${filter === f ? 'active' : ''}`}
-                    onClick={() => setFilter(f)}
-                  >
-                    {f}
-                    <ChevronRight size={14} />
-                  </button>
-                ))}
+          <div className="ed-two-col" style={{ gridTemplateColumns: "1fr 280px" }}>
+            
+            {/* LEFT — Main List */}
+            <div className="kora-section">
+              <div className="ed-search-bar" style={{ marginBottom: "20px" }}>
+                <Search size={14} />
+                <input type="text" placeholder="Search candidates..." />
+              </div>
+
+              {localLoading ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "var(--kora-muted)" }}>
+                  <p>Loading interviews...</p>
+                </div>
+              ) : filteredInterviews.length === 0 ? (
+                <div className="kora-empty-state">
+                  <Calendar size={48} />
+                  <h3>No interviews found</h3>
+                  <p>Scheduled interviews will appear here.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
+                  {filteredInterviews.map(iv => (
+                    <InterviewCard 
+                      key={iv.id} 
+                      interview={iv} 
+                      isEmployer={true}
+                      onCancel={handleCancel}
+                      onRecordResult={handleRecordResult}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT Column — Filters */}
+            <div className="ed-right-col">
+              <div className="kora-section">
+                <div className="kora-section-header">
+                  <div className="kora-section-title">
+                    <Filter size={18} />
+                    <h2>Status Filter</h2>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {['ALL', 'PENDING', 'COMPLETED'].map(f => (
+                    <button 
+                      key={f} 
+                      onClick={() => setFilter(f)}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "none",
+                        background: filter === f ? "var(--kora-green-light)" : "transparent",
+                        color: filter === f ? "var(--kora-green)" : "var(--kora-muted)",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {f}
+                      <ChevronRight size={14} />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </aside>
 
-          <main className="interviews-grid-wrap">
-            {loading ? (
-              <div className="loading-state">
-                <div className="kora-spinner" />
-                <p>Loading interviews...</p>
-              </div>
-            ) : filteredInterviews.length === 0 ? (
-              <div className="empty-state">
-                <Calendar size={48} />
-                <h3>No interviews found</h3>
-                <p>Scheduled interviews will appear here.</p>
-              </div>
-            ) : (
-              <div className="interviews-grid">
-                {filteredInterviews.map(iv => (
-                  <InterviewCard 
-                    key={iv.id} 
-                    interview={iv} 
-                    isEmployer={true}
-                    onCancel={handleCancel}
-                    onRecordResult={handleRecordResult}
-                  />
-                ))}
-              </div>
-            )}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-
-      <style jsx>{`
-        .kora-page-container {
-          min-height: 100vh;
-          padding: 40px 20px;
-          position: relative;
-        }
-
-        .kora-bg-mesh {
-          position: fixed;
-          inset: 0;
-          background: 
-            radial-gradient(at 0% 0%, rgba(26, 92, 46, 0.05) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(249, 115, 22, 0.05) 0px, transparent 50%),
-            #F9FAFB;
-          z-index: -1;
-        }
-
-        .kora-content-wrap {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          margin-bottom: 40px;
-        }
-
-        .title {
-          font-size: 32px;
-          font-weight: 800;
-          color: #111827;
-          letter-spacing: -1px;
-          margin: 0;
-        }
-
-        .subtitle {
-          color: #6B7280;
-          margin: 8px 0 0;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 16px;
-        }
-
-        .search-box {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          background: white;
-          border: 1.5px solid #E5E7EB;
-          padding: 10px 16px;
-          border-radius: 14px;
-          width: 300px;
-          transition: all 0.2s;
-        }
-
-        .search-box:focus-within {
-          border-color: #1A5C2E;
-          box-shadow: 0 0 0 4px rgba(26, 92, 46, 0.1);
-        }
-
-        .search-box input {
-          border: none;
-          outline: none;
-          width: 100%;
-          font-size: 14px;
-        }
-
-        .management-layout {
-          display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 32px;
-        }
-
-        .filter-card {
-          background: white;
-          padding: 24px;
-          border-radius: 20px;
-          border: 1px solid #E5E7EB;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .filter-card h3 {
-          font-size: 14px;
-          font-weight: 700;
-          color: #374151;
-          margin: 0 0 16px 0;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-
-        .filter-options {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .filter-btn {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 16px;
-          border-radius: 12px;
-          border: none;
-          background: transparent;
-          color: #6B7280;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-align: left;
-        }
-
-        .filter-btn:hover {
-          background: #F9FAFB;
-          color: #111827;
-        }
-
-        .filter-btn.active {
-          background: #F0FDF4;
-          color: #1A5C2E;
-        }
-
-        .interviews-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 20px;
-        }
-
-        .loading-state, .empty-state {
-          text-align: center;
-          padding: 80px 0;
-          background: white;
-          border-radius: 24px;
-          border: 1.5px dashed #E5E7EB;
-        }
-
-        .empty-state {
-          color: #9CA3AF;
-        }
-
-        .empty-state h3 {
-          color: #4B5563;
-          margin: 16px 0 8px;
-        }
-
-        @media (max-width: 900px) {
-          .management-layout {
-            grid-template-columns: 1fr;
-          }
-          .filters-sidebar {
-            display: none;
-          }
-        }
-      `}</style>
     </div>
   );
 }

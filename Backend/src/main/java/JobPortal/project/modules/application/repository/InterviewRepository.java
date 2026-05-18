@@ -151,6 +151,24 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     long countBySeekerIdAndResult(
             @Param("seekerId") Long seekerId,
             @Param("result") InterviewResult result);
+
+    @Query(value = """
+            SELECT i.* FROM interviews i
+            JOIN applications a ON i.application_id = a.id
+            WHERE a.job_posting_id IN (
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
+            )
+            ORDER BY i.scheduled_at DESC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM interviews i
+            JOIN applications a ON i.application_id = a.id
+            WHERE a.job_posting_id IN (
+                SELECT CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) FROM job_listings jp WHERE jp.employer_id = :employerId
+            )
+            """,
+            nativeQuery = true)
+    Page<Interview> findByEmployerId(@Param("employerId") String employerId, Pageable pageable);
 }
 
 

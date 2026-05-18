@@ -326,6 +326,14 @@ public class InterviewServiceImpl implements InterviewService {
         log.info("Interview {} cancelled", interviewId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public InterviewPageResponse getByEmployerId(Long employerId, int page, int size) {
+        Page<Interview> interviews = interviewRepository.findByEmployerId(
+                employerId.toString(), PageRequest.of(page, size, Sort.unsorted()));
+        return toPageResponse(interviews);
+    }
+
     // ------------------------------------------------------------------ //
     //  Private helpers                                                     //
     // ------------------------------------------------------------------ //

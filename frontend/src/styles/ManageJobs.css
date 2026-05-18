@@ -344,6 +344,30 @@
 .mj-confirm-box h3 { font-size: 17px; font-weight: 700; color: var(--kora-text-dark); margin-bottom: 8px; }
 .mj-confirm-box p  { font-size: 13.5px; color: var(--kora-text-muted); margin-bottom: 24px; line-height: 1.5; }
 .mj-confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.mj-btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid var(--kora-border);
+  background: var(--kora-surface);
+  color: var(--kora-text-mid);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.mj-btn-cancel:hover { background: var(--kora-bg); color: var(--kora-text-dark); }
+.mj-btn-danger {
+  padding: 10px 20px;
+  border: none;
+  background: #dc2626;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.mj-btn-danger:hover { background: #b91c1c; }
 
 /* ════════════════════════════
    TABLET ≤ 1024px

@@ -69,10 +69,8 @@ const mapJobDetail = (job) => ({
   website: null // the backend currently does not include company website
 });
 
-export const applyToJob = async (id, formData) => {
-  const { data } = await apiClient.post(`/api/jobs/${id}/apply`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const applyToJob = async (seekerId, requestBody) => {
+  const { data } = await apiClient.post(`/api/v1/applications?seekerId=${seekerId}`, requestBody);
   return data;
 };
 
@@ -96,6 +94,54 @@ export const saveJob = async (id) => {
   return data;
 };
 
+export const getCategories = async () => {
+  const { data } = await apiClient.get('/api/jobs/categories');
+  return data.data || data; // Extract from ApiResponse
+};
+
+export const getCompanies = async () => {
+  const { data } = await apiClient.get('/api/v1/companies');
+  return data;
+};
+
+// ── Employer/Recruiter Endpoints ─────────────────────────────────────────────
+
+export const getEmployerJobs = async (employerId) => {
+  const { data } = await apiClient.get(`/api/jobs/employer/${employerId}`);
+  // Return unzipped page content
+  return data.data?.content || data.data || data.content || data || [];
+};
+
+export const getEmployerCompanies = async (employerId) => {
+  const { data } = await apiClient.get(`/api/v1/companies/employer/${employerId}`);
+  return data;
+};
+
+export const getEmployerApplications = async (employerId) => {
+  const { data } = await apiClient.get(`/api/v1/applications?employerId=${employerId}`);
+  return data.content || data;
+};
+
+export const updateApplicationStatus = async (applicationId, newStatus, expectedStatus) => {
+  const { data } = await apiClient.patch(`/api/v1/applications/${applicationId}/status`, {
+    newStatus,
+    expectedStatus
+  });
+  return data;
+};
+
+export const changeJobStatus = async (jobId, targetStatus) => {
+  const { data } = await apiClient.patch(`/api/jobs/${jobId}/status`, {
+    status: targetStatus
+  });
+  return data;
+};
+
+export const deleteJob = async (jobId) => {
+  const { data } = await apiClient.delete(`/api/jobs/${jobId}`);
+  return data;
+};
+
 const jobsService = {
   getJobs,
   getJob,
@@ -104,6 +150,14 @@ const jobsService = {
   getUserApplications,
   getUserInterviews,
   saveJob,
+  getCategories,
+  getCompanies,
+  getEmployerJobs,
+  getEmployerCompanies,
+  getEmployerApplications,
+  updateApplicationStatus,
+  changeJobStatus,
+  deleteJob,
 };
 
 export default jobsService;

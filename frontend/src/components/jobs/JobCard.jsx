@@ -6,7 +6,7 @@ import { saveJob } from '../../api/jobs';
  * JobCard
  * @param {{ job: object, onSaveToggle: function, onApply: function, onViewDetails: function }} props
  */
-export default function JobCard({ job, onSaveToggle, onApply, onViewDetails }) {
+export default function JobCard({ job, onSaveToggle, onApply, onViewDetails, onCompanyClick }) {
   const navigate = useNavigate();
   const [saved, setSaved] = useState(job.saved || false);
   const [savePending, setSavePending] = useState(false);
@@ -72,7 +72,19 @@ export default function JobCard({ job, onSaveToggle, onApply, onViewDetails }) {
         </div>
         <div className="jc-meta">
           <h3 className="jc-title">{job.title}</h3>
-          <p className="jc-company">{job.company}</p>
+          <p 
+            className="jc-company"
+            onClick={(e) => {
+              if (onCompanyClick) {
+                e.stopPropagation();
+                onCompanyClick(job.company);
+              }
+            }}
+            style={onCompanyClick ? { cursor: 'pointer', textDecoration: 'underline' } : {}}
+            aria-label={onCompanyClick ? `View ${job.company} details` : undefined}
+          >
+            {job.company}
+          </p>
         </div>
         <button
           className={`jc-save-btn ${saved ? 'jc-save-btn--saved' : ''}`}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getJobs } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';          // ← added
 import JobCard from '../../components/jobs/JobCard';
@@ -12,6 +12,11 @@ const PAGE_SIZE = 6;
 
 export default function JobList() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getQueryParam = (param) => {
+    return new URLSearchParams(location.search).get(param) || '';
+  };
 
   const [jobs,        setJobs]        = useState([]);
   const [total,       setTotal]       = useState(0);
@@ -21,10 +26,20 @@ export default function JobList() {
   const [error,       setError]       = useState(null);
 
   const [filters, setFilters] = useState({
-    search:   '',
-    location: '',
-    type:     '',
+    search:   getQueryParam('search'),
+    location: getQueryParam('location'),
+    type:     getQueryParam('type'),
   });
+
+  // Sync filters if URL changes (e.g. user navigates here with new query params)
+  useEffect(() => {
+    setFilters({
+      search:   getQueryParam('search'),
+      location: getQueryParam('location'),
+      type:     getQueryParam('type'),
+    });
+    setPage(1);
+  }, [location.search]);
 
   const [selectedCompany, setSelectedCompany] = useState(null);
 
@@ -91,7 +106,11 @@ export default function JobList() {
       {/* ── Main content ────────────────────────────── */}
       <main className="jl-container" id="main-content">
         {/* Filters */}
-        <JobFilters filters={filters} onChange={handleFilterChange} />
+        <JobFilters 
+          filters={filters} 
+          onChange={handleFilterChange} 
+          onReset={() => handleFilterChange({ search: '', location: '', type: '' })}
+        />
 
         {/* Status bar */}
         <div className="jl-status-bar" aria-live="polite" aria-atomic="true">

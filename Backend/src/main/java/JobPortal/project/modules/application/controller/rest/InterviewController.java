@@ -262,6 +262,20 @@ public class InterviewController {
         interviewService.cancel(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ------------------------------------------------------------------ //
+    //  GET /api/v1/interviews/employers/{employerId}                      //
+    //  Retrieve paginated interviews for a given employer                 //
+    // ------------------------------------------------------------------ //
+
+    @GetMapping("/employers/{employerId}")
+    public ResponseEntity<InterviewPageResponse> getByEmployerId(
+            @PathVariable Long employerId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        InterviewPageResponse response = interviewService.getByEmployerId(employerId, page, size);
+        return ResponseEntity.ok(response);
+    }
 }
 
 

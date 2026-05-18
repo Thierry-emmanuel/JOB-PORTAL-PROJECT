@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -32,11 +32,14 @@ const InsightsPage     = lazy(() => import('./pages/shared/InsightsPage'));
 
 // ── Employer combined view ─────────────────────────────────
 function EmployerJobsManager() {
-  const [view, setView] = useState("manage");
-  if (view === "post") {
-    return <PostJob onBack={() => setView("manage")} onSuccess={() => setView("manage")} />;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isPostRoute = location.pathname === "/employer/post-job";
+
+  if (isPostRoute) {
+    return <PostJob onBack={() => navigate("/employer/jobs")} onSuccess={() => navigate("/employer/jobs")} />;
   }
-  return <ManageJobs onPostJob={() => setView("post")} />;
+  return <ManageJobs onPostJob={() => navigate("/employer/post-job")} />;
 }
 
 // ── ProtectedRoute ─────────────────────────────────────────

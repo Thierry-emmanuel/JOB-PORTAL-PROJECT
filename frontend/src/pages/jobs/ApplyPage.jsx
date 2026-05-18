@@ -1,47 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJob, applyToJob } from '../../api/jobs';
-import KoraNav from '../../components/KoraNav';           // ← added
+import { useAuth } from '../../context/AuthContext';
+import KoraNav from '../../components/KoraNav';
 import '../../styles/apply-page.css';
 
-/**
- * ApplyPage
- * Submit an application for a specific job.
- *  - CV file upload (inline, portability)
- *  - Optional cover letter
- *  - Submit with loading / success / error feedback
- *
- * To use the CVUploadSection component instead, uncomment:
- *   import CVUploadSection from '../../components/profile/CVUploadSection';
- * and replace the "CV Upload" fieldset below.
- */
 export default function ApplyPage() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   /* ── State ────────────────────────────────────────────── */
-  const [job,        setJob]        = useState(null);
+  const [job, setJob] = useState(null);
   const [jobLoading, setJobLoading] = useState(true);
-  const [jobError,   setJobError]   = useState(null);
+  const [jobError, setJobError] = useState(null);
 
   const [form, setForm] = useState({
-    fullName:     '',
-    email:        '',
-    phone:        '',
-    coverLetter:  '',
-    cvFile:       null,
-    cvFileName:   '',
-    linkedIn:     '',
-    portfolio:    '',
-    availability: '',
+    coverLetter: '',
+    expectedSalary: ''
   });
 
-  const [errors,      setErrors]      = useState({});
-  const [submitting,  setSubmitting]  = useState(false);
-  const [submitted,   setSubmitted]   = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-
-  const fileInputRef = useRef(null);
 
   /* ── Load job ─────────────────────────────────────────── */
   useEffect(() => {
@@ -56,21 +38,19 @@ export default function ApplyPage() {
       }
     }
     load();
-
-    // Pre-fill from localStorage if available
-    const savedName  = localStorage.getItem('userName')  || '';
-    const savedEmail = localStorage.getItem('userEmail') || '';
-    setForm((f) => ({ ...f, fullName: savedName, email: savedEmail }));
   }, [id]);
 
   /* ── Validation ───────────────────────────────────────── */
   const validate = () => {
     const errs = {};
-    if (!form.fullName.trim())   errs.fullName = 'Full name is required.';
-    if (!form.email.trim())      errs.email    = 'Email is required.';
-    else if (!/\S+@\S+\.\S+/.test(form.email))
-                                 errs.email    = 'Enter a valid email.';
-    if (!form.cvFile)            errs.cvFile   = 'Please upload your CV.';
+    if (!form.expectedSalary) {
+      errs.expectedSalary = 'Expected salary is required.';
+    } else {
+      const salary = parseFloat(form.expectedSalary);
+      if (isNaN(salary) || salary <= 0) {
+        errs.expectedSalary = 'Expected salary must be a positive number.';
+      }
+    }
     return errs;
   };
 
@@ -78,31 +58,6 @@ export default function ApplyPage() {
   const handleChange = (field, value) => {
     setForm((f) => ({ ...f, [field]: value }));
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowed = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-    if (!allowed.includes(file.type)) {
-      setErrors((e) => ({ ...e, cvFile: 'Only PDF or Word documents are accepted.' }));
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors((e) => ({ ...e, cvFile: 'File must be under 5 MB.' }));
-      return;
-    }
-    setForm((f) => ({ ...f, cvFile: file, cvFileName: file.name }));
-    setErrors((e) => ({ ...e, cvFile: undefined }));
-  };
-
-  const handleRemoveFile = () => {
-    setForm((f) => ({ ...f, cvFile: null, cvFileName: '' }));
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -113,22 +68,25 @@ export default function ApplyPage() {
       document.querySelector('[aria-invalid="true"]')?.focus();
       return;
     }
+    
+    if (!user || !user.id) {
+      setSubmitError('You must be logged in to apply.');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const fd = new FormData();
-      fd.append('fullName',     form.fullName);
-      fd.append('email',        form.email);
-      fd.append('phone',        form.phone);
-      fd.append('coverLetter',  form.coverLetter);
-      fd.append('linkedIn',     form.linkedIn);
-      fd.append('portfolio',    form.portfolio);
-      fd.append('availability', form.availability);
-      if (form.cvFile) fd.append('cv', form.cvFile);
-      await applyToJob(id, fd);
+      const requestBody = {
+        jobPostingId: parseInt(id, 10),
+        coverLetter: form.coverLetter,
+        expectedSalary: parseFloat(form.expectedSalary)
+      };
+      await applyToJob(user.id, requestBody);
       setSubmitted(true);
     } catch (err) {
-      setSubmitError('Failed to submit your application. Please try again.');
+      const msg = err.response?.data?.message || 'Failed to submit your application. Please try again.';
+      setSubmitError(msg);
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -218,11 +176,9 @@ export default function ApplyPage() {
   /* ── Main form ────────────────────────────────────────── */
   return (
     <div className="ap-page">
-      {/* ── Top nav ── */}
       <KoraNav />
 
       <div className="ap-container">
-        {/* Back */}
         <button
           className="ap-back-btn"
           onClick={() => navigate(-1)}
@@ -231,7 +187,6 @@ export default function ApplyPage() {
           ← Back
         </button>
 
-        {/* Job banner */}
         {job && (
           <div className="ap-job-banner" aria-label={`Applying for ${job.title}`}>
             <div className="ap-job-logo" aria-hidden="true">
@@ -251,7 +206,6 @@ export default function ApplyPage() {
         )}
 
         <div className="ap-layout">
-          {/* ── Application form ───────────────────── */}
           <form
             className="ap-form"
             onSubmit={handleSubmit}
@@ -264,170 +218,48 @@ export default function ApplyPage() {
               <div className="ap-submit-error" role="alert">{submitError}</div>
             )}
 
-            {/* Personal info */}
             <fieldset className="ap-fieldset">
-              <legend className="ap-legend">Personal Information</legend>
+              <legend className="ap-legend">Profile & Resume</legend>
+              <div className="ap-profile-hint">
+                <p style={{ fontSize: '14px', color: '#374151', background: '#F3F4F6', padding: '12px', borderRadius: '8px' }}>
+                  <span aria-hidden="true">📄</span> <strong>Your profile details and uploaded CV</strong> will be automatically attached to this application. Please ensure your profile is up to date in your dashboard before applying.
+                </p>
+              </div>
+            </fieldset>
+
+            <fieldset className="ap-fieldset">
+              <legend className="ap-legend">Job Requirements</legend>
 
               <div className="ap-field">
-                <label htmlFor="ap-fullName" className="ap-label">
-                  Full Name{' '}
+                <label htmlFor="ap-expectedSalary" className="ap-label">
+                  Expected Salary (Monthly){' '}
                   <span aria-hidden="true" className="ap-required">*</span>
                 </label>
-                <input
-                  id="ap-fullName"
-                  type="text"
-                  className={`ap-input${errors.fullName ? ' ap-input--error' : ''}`}
-                  value={form.fullName}
-                  onChange={(e) => handleChange('fullName', e.target.value)}
-                  aria-required="true"
-                  aria-invalid={!!errors.fullName}
-                  aria-describedby={errors.fullName ? 'ap-fullName-error' : undefined}
-                  autoComplete="name"
-                />
-                {errors.fullName && (
-                  <p id="ap-fullName-error" className="ap-field-error" role="alert">
-                    {errors.fullName}
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6B7280' }}>$</span>
+                  <input
+                    id="ap-expectedSalary"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    style={{ paddingLeft: '28px' }}
+                    className={`ap-input${errors.expectedSalary ? ' ap-input--error' : ''}`}
+                    value={form.expectedSalary}
+                    onChange={(e) => handleChange('expectedSalary', e.target.value)}
+                    aria-required="true"
+                    aria-invalid={!!errors.expectedSalary}
+                    aria-describedby={errors.expectedSalary ? 'ap-salary-error' : undefined}
+                    placeholder="e.g. 500000"
+                  />
+                </div>
+                {errors.expectedSalary && (
+                  <p id="ap-salary-error" className="ap-field-error" role="alert">
+                    {errors.expectedSalary}
                   </p>
                 )}
               </div>
-
-              <div className="ap-row">
-                <div className="ap-field">
-                  <label htmlFor="ap-email" className="ap-label">
-                    Email{' '}
-                    <span aria-hidden="true" className="ap-required">*</span>
-                  </label>
-                  <input
-                    id="ap-email"
-                    type="email"
-                    className={`ap-input${errors.email ? ' ap-input--error' : ''}`}
-                    value={form.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    aria-required="true"
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? 'ap-email-error' : undefined}
-                    autoComplete="email"
-                  />
-                  {errors.email && (
-                    <p id="ap-email-error" className="ap-field-error" role="alert">
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-                <div className="ap-field">
-                  <label htmlFor="ap-phone" className="ap-label">Phone</label>
-                  <input
-                    id="ap-phone"
-                    type="tel"
-                    className="ap-input"
-                    value={form.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    autoComplete="tel"
-                  />
-                </div>
-              </div>
-
-              <div className="ap-row">
-                <div className="ap-field">
-                  <label htmlFor="ap-linkedIn" className="ap-label">LinkedIn Profile</label>
-                  <input
-                    id="ap-linkedIn"
-                    type="url"
-                    className="ap-input"
-                    placeholder="https://linkedin.com/in/…"
-                    value={form.linkedIn}
-                    onChange={(e) => handleChange('linkedIn', e.target.value)}
-                  />
-                </div>
-                <div className="ap-field">
-                  <label htmlFor="ap-portfolio" className="ap-label">Portfolio / Website</label>
-                  <input
-                    id="ap-portfolio"
-                    type="url"
-                    className="ap-input"
-                    placeholder="https://yoursite.com"
-                    value={form.portfolio}
-                    onChange={(e) => handleChange('portfolio', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="ap-field">
-                <label htmlFor="ap-availability" className="ap-label">Availability</label>
-                <select
-                  id="ap-availability"
-                  className="ap-select"
-                  value={form.availability}
-                  onChange={(e) => handleChange('availability', e.target.value)}
-                >
-                  <option value="">Select availability</option>
-                  <option value="immediately">Immediately</option>
-                  <option value="2weeks">2 weeks notice</option>
-                  <option value="1month">1 month notice</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
             </fieldset>
 
-            {/* CV Upload */}
-            <fieldset className="ap-fieldset">
-              <legend className="ap-legend">
-                CV / Résumé{' '}
-                <span aria-hidden="true" className="ap-required">*</span>
-              </legend>
-
-              <div
-                className={`ap-upload-zone${errors.cvFile ? ' ap-upload-zone--error' : ''}${form.cvFile ? ' ap-upload-zone--filled' : ''}`}
-                onClick={() => !form.cvFile && fileInputRef.current?.click()}
-                onKeyDown={(e) =>
-                  (e.key === 'Enter' || e.key === ' ') &&
-                  !form.cvFile &&
-                  fileInputRef.current?.click()
-                }
-                role="button"
-                tabIndex={0}
-                aria-label="Upload CV"
-                aria-invalid={!!errors.cvFile}
-                aria-describedby={errors.cvFile ? 'ap-cv-error' : 'ap-cv-hint'}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  className="ap-file-input"
-                  onChange={handleFileChange}
-                  aria-hidden="true"
-                  tabIndex={-1}
-                />
-                {form.cvFile ? (
-                  <div className="ap-file-preview">
-                    <span className="ap-file-icon" aria-hidden="true">📄</span>
-                    <span className="ap-file-name">{form.cvFileName}</span>
-                    <button
-                      type="button"
-                      className="ap-file-remove"
-                      onClick={(e) => { e.stopPropagation(); handleRemoveFile(); }}
-                      aria-label="Remove uploaded file"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="ap-upload-prompt">
-                    <span className="ap-upload-icon" aria-hidden="true">⬆️</span>
-                    <p className="ap-upload-text">Click to upload or drag & drop</p>
-                    <p id="ap-cv-hint" className="ap-upload-hint">PDF, DOC, DOCX · max 5 MB</p>
-                  </div>
-                )}
-              </div>
-              {errors.cvFile && (
-                <p id="ap-cv-error" className="ap-field-error" role="alert">
-                  {errors.cvFile}
-                </p>
-              )}
-            </fieldset>
-
-            {/* Cover letter */}
             <fieldset className="ap-fieldset">
               <legend className="ap-legend">
                 Cover Letter{' '}
@@ -444,15 +276,14 @@ export default function ApplyPage() {
                   placeholder="Write a short cover letter highlighting your relevant experience and enthusiasm for this role…"
                   value={form.coverLetter}
                   onChange={(e) => handleChange('coverLetter', e.target.value)}
-                  maxLength={2000}
+                  maxLength={1000}
                 />
                 <p className="ap-char-count" aria-live="polite">
-                  {form.coverLetter.length}/2000 characters
+                  {form.coverLetter.length}/1000 characters
                 </p>
               </div>
             </fieldset>
 
-            {/* Submit */}
             <div className="ap-submit-row">
               <button
                 type="submit"
@@ -480,7 +311,6 @@ export default function ApplyPage() {
             </div>
           </form>
 
-          {/* ── Side summary ─────────────────────────── */}
           {job && (
             <aside className="ap-sidebar" aria-label="Job summary">
               <div className="ap-summary-card">
