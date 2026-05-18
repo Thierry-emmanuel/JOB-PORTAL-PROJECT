@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Kora_Logo from './assets/absolute-size-logo.png'
 import { useAuth } from "./context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { getJobs, getCategories, getCompanies } from "./api/jobs";
 
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────── */
@@ -16,13 +17,13 @@ const MUTED= "#6B7280";
 const BORDER="#E5E7EB";
 
 /* ─── DATA ──────────────────────────────────────────────────── */
-const SLIDES = [
+const SLIDES_MOCK = [
   { eyebrow:"POSTE VEDETTE",       title:"Senior Frontend\nDeveloper",  company:"Orange Digital Centre", location:"Douala · Remote OK",  salary:"2.5M – 4M FCFA/mo", match:94, tag:"TECH",    tagColor:"#3B82F6" },
   { eyebrow:"OPPORTUNITÉ FINANCE", title:"Product Manager\nFintech",    company:"Afriland First Bank",   location:"Yaoundé · CDI",       salary:"3M – 5M FCFA/mo",   match:88, tag:"FINANCE", tagColor:"#1D4ED8" },
   { eyebrow:"RÔLE CRÉATIF",        title:"Lead UX\nDesigner",           company:"CamTech Solutions",     location:"Remote · Contract",   salary:"1.8M – 3M FCFA/mo", match:81, tag:"DESIGN",  tagColor:"#7C3AED" },
 ];
 
-const JOBS = [
+const JOBS_MOCK = [
   { id:1, title:"Senior Frontend Developer", company:"Orange Digital Centre", location:"Douala",   type:"Full-time", salary:"2.5M – 4M FCFA/mo",   posted:0, logo:"OD", match:94, tags:["React","TypeScript"], remote:true,  applicants:12 },
   { id:2, title:"Product Manager",           company:"Afriland First Bank",   location:"Yaoundé",  type:"Full-time", salary:"3M – 5M FCFA/mo",     posted:1, logo:"AF", match:88, tags:["Fintech","Agile"],    remote:false, applicants:34 },
   { id:3, title:"Data Scientist",            company:"CamTech Solutions",     location:"Remote",   type:"Contract",  salary:"1.8M – 3M FCFA/mo",   posted:3, logo:"CT", match:81, tags:["Python","ML"],        remote:true,  applicants:7  },
@@ -31,7 +32,7 @@ const JOBS = [
   { id:6, title:"Analyste Financier",        company:"UBA Bank",              location:"Yaoundé",  type:"Full-time", salary:"2M – 3.5M FCFA/mo",   posted:1, logo:"UB", match:79, tags:["Excel","Finance"],    remote:false, applicants:22 },
 ];
 
-const CATEGORIES = [
+const CATEGORIES_MOCK = [
   { name:"Technologie", count:342, trend:"+12%", icon:"💻" },
   { name:"Finance",     count:218, trend:"+8%",  icon:"📊" },
   { name:"Ingénierie",  count:289, trend:"+6%",  icon:"⚙️" },
@@ -42,7 +43,7 @@ const CATEGORIES = [
   { name:"Éducation",   count:97,  trend:"+5%",  icon:"📚" },
 ];
 
-const COMPANIES = [
+const COMPANIES_MOCK = [
   { name:"MTN Cameroon",  abbr:"MTN", roles:23, hot:true  },
   { name:"Orange CM",     abbr:"ORG", roles:18, hot:true  },
   { name:"Afriland Bank", abbr:"AFL", roles:15, hot:false },
@@ -153,6 +154,22 @@ function Navbar({ logoSrc, onLogoUpload }) {
     return "/employee/dashboard";
   };
 
+  const handleNavClick = (link) => {
+    setActiveNav(link.key);
+    if (link.key === "Offres") {
+      navigate("/jobs");
+    } else if (link.key === "Entreprises") {
+      const el = document.getElementById("companies-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      else navigate("/jobs");
+    } else if (link.key === "Salaires") {
+      navigate("/insights");
+    } else if (link.key === "Recruteurs") {
+      const el = document.getElementById("cta-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <nav style={{
       position:"sticky", top:0, zIndex:200, background:"#fff",
@@ -182,7 +199,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
         {/* Desktop nav links */}
         <div className="kora-desktop-nav" style={{ flex:1, display:"flex", justifyContent:"center", gap:4, alignItems:"center" }}>
           {navLinks.map(link => (
-            <button key={link.key} onClick={() => setActiveNav(link.key)} style={{
+            <button key={link.key} onClick={() => handleNavClick(link)} style={{
               fontSize:14, fontWeight:500, color: activeNav===link.key ? O : "#374151",
               cursor:"pointer", padding:"6px 14px", background:"none", border:"none",
               fontFamily:"inherit", whiteSpace:"nowrap", position:"relative",
@@ -293,7 +310,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
       }}>
         <div style={{ padding:"8px 16px 16px" }}>
           {navLinks.map(link => (
-            <button key={link.key} onClick={() => { setActiveNav(link.key); setMenuOpen(false); }} style={{
+            <button key={link.key} onClick={() => { handleNavClick(link); setMenuOpen(false); }} style={{
               display:"block", width:"100%", textAlign:"left",
               fontSize:15, fontWeight: activeNav===link.key ? 700 : 500,
               color: activeNav===link.key ? O : INK,
@@ -341,12 +358,32 @@ function Hero() {
   const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [slides, setSlides] = useState(SLIDES_MOCK);
+  
+  useEffect(() => {
+    getJobs({ page: 1, limit: 3 }).then(res => {
+      if (res.data && res.data.length > 0) {
+        setSlides(res.data.slice(0, 3).map((job, i) => ({
+          eyebrow: i === 0 ? "POSTE VEDETTE" : i === 1 ? "OPPORTUNITÉ FINANCE" : "RÔLE CRÉATIF",
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          salary: job.salary || "Négociable",
+          match: Math.floor(Math.random() * 15) + 80,
+          tag: job.tags[0] || "TECH",
+          tagColor: i === 0 ? "#3B82F6" : i === 1 ? "#1D4ED8" : "#7C3AED",
+          id: job.id
+        })));
+      }
+    }).catch(console.error);
+  }, []);
+
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [displaySlide, setDisplaySlide] = useState(0);
   const timerRef = useRef(null);
-  const total = SLIDES.length;
+  const total = slides.length;
 
   const goTo = useCallback((idx) => {
     const next = ((idx % total) + total) % total;
@@ -373,11 +410,11 @@ function Hero() {
   };
 
   const handleAction = () => {
-    if (!isAuthenticated) navigate("/login");
+    if (s.id) navigate(`/jobs/${s.id}`);
     else navigate("/jobs");
   };
 
-  const s = SLIDES[displaySlide];
+  const s = slides[displaySlide] || slides[0];
   const bgGrads = [
     "linear-gradient(135deg,#0D3D1F 0%,#0A2E1A 40%,#061A0F 100%)",
     "linear-gradient(135deg,#0A1628 0%,#071020 50%,#030810 100%)",
@@ -468,7 +505,7 @@ function Hero() {
       <div style={{ position:"absolute", right:"clamp(12px,4vw,48px)", bottom:48, zIndex:5, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10 }}>
         <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.55)" }}>{current+1}/{total}</span>
         <div style={{ display:"flex", gap:6 }}>
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <button key={i} onClick={() => goTo(i)} style={{
               height:7, width: i===current ? 28 : 7, borderRadius:4, border:"none", cursor:"pointer", padding:0,
               background: i===current ? O : "rgba(255,255,255,0.35)",
@@ -525,7 +562,27 @@ function Ticker() {
 /* ─── SEARCH SECTION ────────────────────────────────────────── */
 function SearchSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Tous");
+  const [searchKw, setSearchKw] = useState("");
+  const [locationKw, setLocationKw] = useState("");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchKw) params.append("search", searchKw);
+    if (locationKw) params.append("location", locationKw);
+    navigate(`/jobs?${params.toString()}`);
+  };
+
+  const handleFilterClick = (f) => {
+    setActiveFilter(f);
+    const params = new URLSearchParams();
+    if (f === "Remote") params.append("location", "Remote");
+    else if (f === "Full-time") params.append("type", "CDI");
+    else if (f === "Stage") params.append("type", "INTERNSHIP");
+    else if (f !== "Tous") params.append("search", f);
+    navigate(`/jobs?${params.toString()}`);
+  };
   return (
     <div style={{ background:"#fff", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,48px)", borderBottom:`1px solid ${BORDER}` }}>
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
@@ -533,20 +590,20 @@ function SearchSection() {
         <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
           <div style={{ flex:"1 1 200px", minWidth:0, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8, boxShadow:"0 2px 8px rgba(0,0,0,0.04)" }}>
             <span style={{ color:"#9CA3AF", fontSize:16, flexShrink:0 }}>🔍</span>
-            <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Titre de poste, compétence…" aria-label="Rechercher un poste"/>
+            <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Titre de poste, compétence…" aria-label="Rechercher un poste" value={searchKw} onChange={e => setSearchKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
           <div style={{ flex:"0 1 180px", minWidth:120, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8 }}>
             <span style={{ color:"#9CA3AF", fontSize:16, flexShrink:0 }}>📍</span>
-            <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Ville ou Remote" aria-label="Localisation"/>
+            <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Ville ou Remote" aria-label="Localisation" value={locationKw} onChange={e => setLocationKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
-          <button style={{ background:G, color:"white", border:"none", padding:"0 22px", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", minHeight:48, flexShrink:0, whiteSpace:"nowrap" }}>
+          <button onClick={handleSearch} style={{ background:G, color:"white", border:"none", padding:"0 22px", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", minHeight:48, flexShrink:0, whiteSpace:"nowrap" }}>
             {t('search.button')}
           </button>
         </div>
         {/* Filter pills */}
         <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           {FILTERS.map(f => (
-            <button key={f} onClick={() => setActiveFilter(f)} style={{
+            <button key={f} onClick={() => handleFilterClick(f)} style={{
               fontSize:12, fontWeight:500, padding:"6px 16px", borderRadius:20,
               border:`1.5px solid ${activeFilter===f ? G : BORDER}`,
               background: activeFilter===f ? G : "#fff",
@@ -676,8 +733,12 @@ function JobCard({ job, delay }) {
 
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
         <div style={{ display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-          <div style={{ width:40, height:40, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:12, color:G, flexShrink:0 }}>
-            {job.logo}
+          <div style={{ width:40, height:40, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", flexShrink:0 }}>
+            {job.logo ? (
+              <img src={job.logo} alt={`${job.company} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+            ) : (
+              <span style={{ fontWeight:800, fontSize:14, color:G }}>{job.company ? job.company.charAt(0) : "?"}</span>
+            )}
           </div>
           <div style={{ minWidth:0 }}>
             <div style={{ fontSize:12, color:MUTED, fontWeight:400, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{job.company}</div>
@@ -731,6 +792,20 @@ function JobCard({ job, delay }) {
 function JobsSection() {
   const { t } = useTranslation();                          // ← WAS MISSING
   const [ref, style] = useReveal(0);
+  const [jobs, setJobs] = useState(JOBS_MOCK);
+
+  useEffect(() => {
+    getJobs({ page: 1, limit: 6 }).then(res => {
+      if (res.data && res.data.length > 0) {
+        setJobs(res.data.map(job => ({
+          ...job,
+          match: Math.floor(Math.random() * 20) + 75,
+          applicants: Math.floor(Math.random() * 50) + 1,
+          posted: Math.max(0, Math.floor((Date.now() - new Date(job.postedAt).getTime()) / 86400000))
+        })));
+      }
+    }).catch(console.error);
+  }, []);
   return (
     <section style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
@@ -745,7 +820,7 @@ function JobsSection() {
           </Link>
         </div>
         <div className="kora-jobs-grid">
-          {JOBS.map((job, i) => <JobCard key={job.id} job={job} delay={[60,140,220,300,380,460][i]} />)}
+          {jobs.map((job, i) => <JobCard key={job.id} job={job} delay={[60,140,220,300,380,460][i] || 0} />)}
         </div>
       </div>
     </section>
@@ -757,6 +832,20 @@ function CategoriesSection() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
+  const [categories, setCategories] = useState(CATEGORIES_MOCK);
+
+  useEffect(() => {
+    getCategories().then(data => {
+      if (data && data.length > 0) {
+        setCategories(data.slice(0, 8).map((cat, i) => ({
+          name: cat.name,
+          count: Math.floor(Math.random() * 300) + 50,
+          trend: `+${Math.floor(Math.random() * 30) + 5}%`,
+          icon: cat.iconUrl || CATEGORIES_MOCK[i % CATEGORIES_MOCK.length].icon
+        })));
+      }
+    }).catch(console.error);
+  }, []);
   return (
     <section style={{ background:"#fff", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
@@ -766,7 +855,7 @@ function CategoriesSection() {
           <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>Survolez une carte pour voir le salaire moyen</p>
         </div>
         <div className="kora-categories-grid">
-          {CATEGORIES.map((cat, i) => {
+          {categories.map((cat, i) => {
             const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
             return (
               <div key={cat.name} ref={ref} style={{
@@ -774,7 +863,7 @@ function CategoriesSection() {
                 background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
                 cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
               }}
-                onClick={() => !isAuthenticated ? navigate('/login') : navigate('/jobs')}
+                onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
               >
@@ -796,8 +885,23 @@ function CompaniesSection() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
+  const [companies, setCompanies] = useState(COMPANIES_MOCK);
+
+  useEffect(() => {
+    getCompanies().then(data => {
+      if (data && data.length > 0) {
+        setCompanies(data.slice(0, 8).map((co, i) => ({
+          name: co.name,
+          abbr: co.name.substring(0, 3).toUpperCase(),
+          logo: co.logoUrl || null,
+          roles: Math.floor(Math.random() * 40) + 5,
+          hot: i < 4
+        })));
+      }
+    }).catch(console.error);
+  }, []);
   return (
-    <section style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
+    <section id="companies-section" style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
         <div ref={hRef} style={{ ...hStyle, textAlign:"center", marginBottom:40 }}>
           <div style={{ fontSize:11, fontWeight:700, color:O, letterSpacing:"2.5px", marginBottom:6 }}>RECRUTEURS</div>
@@ -808,7 +912,7 @@ function CompaniesSection() {
           </p>
         </div>
         <div className="kora-companies-grid">
-          {COMPANIES.map((co, i) => {
+          {companies.map((co, i) => {
             const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
             return (
               <div key={co.name} ref={ref} style={{
@@ -816,13 +920,17 @@ function CompaniesSection() {
                 background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
                 cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
               }}
-                onClick={() => !isAuthenticated ? navigate('/login') : navigate('/jobs')}
+                onClick={() => navigate(`/jobs?search=${encodeURIComponent(co.name)}`)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
               >
-                <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:G, position:"relative", flexShrink:0 }}>
-                  {co.abbr}
-                  {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite" }}/>}
+                <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
+                  {co.logo ? (
+                    <img src={co.logo} alt={`${co.name} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                  ) : (
+                    <span style={{ fontWeight:800, fontSize:12, color:G }}>{co.abbr}</span>
+                  )}
+                  {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite", zIndex:2 }}/>}
                 </div>
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontWeight:700, fontSize:13, color:INK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{co.name}</div>
@@ -849,7 +957,7 @@ function CtaSection() {
   };
 
   return (
-    <section style={{ background:`linear-gradient(135deg, ${O} 0%, #EA580C 100%)`, padding:"clamp(52px,8vw,88px) clamp(16px,4vw,48px)", position:"relative", overflow:"hidden" }}>
+    <section id="cta-section" style={{ background:`linear-gradient(135deg, ${O} 0%, #EA580C 100%)`, padding:"clamp(52px,8vw,88px) clamp(16px,4vw,48px)", position:"relative", overflow:"hidden" }}>
       <div style={{ position:"absolute", top:-80, right:-80, width:400, height:400, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }}/>
       <div style={{ position:"absolute", bottom:-100, left:-60, width:320, height:320, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }}/>
       <div ref={ref} style={{ ...style, maxWidth:1300, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr", gap:40, alignItems:"center", position:"relative", zIndex:1 }} className="kora-cta-grid">

@@ -12,7 +12,11 @@ import {
   fetchJobSeekers, suspendJobSeeker,
   fetchOverviewStats, fetchMarketInsights,
 } from '../../api/admin';
+import KoraNav from '../../components/KoraNav';
+import AdminSidebar from '../../components/admin/AdminSidebar';
+import '../../styles/employee-dashboard.css';
 import '../../styles/admin-dashboard.css';
+import '../../styles/profile.css';
 import KoraLogo from '../../assets/absolute-size-logo.png';
 
 // ─── Chart.js ─────────────────────────────────────────────────────────────────
@@ -978,14 +982,6 @@ function ReportsTab() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROOT — AdminDashboard
 // ═══════════════════════════════════════════════════════════════════════════════
-const NAV_ITEMS = [
-  { key: 'overview',   label: 'Vue d\'ensemble',    Icon: LayoutDashboard },
-  { key: 'employers',  label: 'Employeurs',          Icon: Building2 },
-  { key: 'jobs',       label: 'Offres d\'emploi',    Icon: Briefcase },
-  { key: 'seekers',    label: 'Chercheurs d\'emploi',Icon: Users },
-  { key: 'reports',    label: 'Rapports',            Icon: BarChart3 },
-];
-
 const TAB_TITLES = {
   overview:  { title: 'Vue d\'ensemble',    sub: 'Tableau de bord administrateur KORA' },
   employers: { title: 'Gestion des employeurs', sub: 'Approbation, suspension et suppression' },
@@ -995,114 +991,66 @@ const TAB_TITLES = {
 };
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [tab, setTab]           = useState('overview');
-  const [collapsed, setCollapsed] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
   const adminName = user?.name ?? user?.email ?? 'Admin';
-  const { title, sub } = TAB_TITLES[tab];
+  const { title, sub } = TAB_TITLES[tab] || TAB_TITLES.overview;
 
   return (
-    <div className="ad-shell">
-      {/* ── Sidebar ───────────────────────────────────────────── */}
-      <aside className={`ad-sidebar ${collapsed ? 'collapsed' : ''}`}>
-        {/* Logo */}
-        <div className="ad-sidebar-logo">
-          <img src={KoraLogo} alt="KORA" className="ad-logo-img" />
-          <div className="ad-logo-text">
-            <span className="ad-logo-name">KORA</span>
-            <span className="ad-logo-sub">Admin Panel</span>
-          </div>
-        </div>
+    <div className="ed-root">
+      <KoraNav />
+      <div className="ed-body">
+        
+        {/* ════════ SIDEBAR ════════ */}
+        <aside className="ed-sidebar kora-sidebar">
+          <AdminSidebar activeTab={tab} setActiveTab={setTab} />
+        </aside>
 
-        {/* Nav */}
-        <nav className="ad-nav">
-          <div className="ad-nav-section">
-            {!collapsed && <div className="ad-nav-section-title">Navigation</div>}
-            {NAV_ITEMS.map(({ key, label, Icon }) => (
-              <div
-                key={key}
-                className={`ad-nav-item ${tab === key ? 'active' : ''}`}
-                onClick={() => setTab(key)}
-                title={collapsed ? label : undefined}
-              >
-                <Icon className="ad-nav-icon" />
-                <span className="ad-nav-label">{label}</span>
-                {key === 'employers' && pendingCount > 0 && (
-                  <span className="ad-nav-badge">{pendingCount}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </nav>
-
-        {/* Footer */}
-        <div className="ad-sidebar-footer">
-          <div className="ad-avatar">{initials(adminName)}</div>
-          <div className="ad-sidebar-footer-info">
-            <div className="ad-footer-name">{adminName}</div>
-            <div className="ad-footer-role">Administrateur</div>
-          </div>
-          <button className="ad-logout-btn" onClick={logout} title="Déconnexion">
-            <LogOut size={15} />
-          </button>
-        </div>
-      </aside>
-
-      {/* ── Main ──────────────────────────────────────────────── */}
-      <div className="ad-main">
-        {/* Top bar */}
-        <div className="ad-topbar">
-          <button
-            className="ad-burger"
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
-            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
-            <span className={`ad-burger-bar ${collapsed ? 'open' : ''}`} />
-          </button>
-          <div className="ad-topbar-left">
-            <h1>{title}</h1>
-            <p>{sub}</p>
-          </div>
-          <div className="ad-topbar-right">
-            {pendingCount > 0 && (
-              <div
-                style={{
-                  background: 'var(--kora-orange-light)',
-                  color: 'var(--kora-orange)',
-                  borderRadius: 'var(--kora-r-pill)',
-                  padding: '5px 12px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  cursor: 'pointer',
-                }}
-                onClick={() => setTab('employers')}
-              >
-                <Clock size={13} />
-                {pendingCount} approbation{pendingCount > 1 ? 's' : ''} en attente
-              </div>
-            )}
-            <div className="ad-chip">
-              <div className="ad-chip-avatar">{initials(adminName)}</div>
-              <span className="ad-chip-name">{adminName}</span>
+        {/* ════════ MAIN CONTENT ════════ */}
+        <main className="ed-main">
+          
+          <div className="ed-welcome">
+            <div>
+              <h1 className="ed-welcome-title">{title}</h1>
+              <p className="ed-welcome-sub">{sub}</p>
+            </div>
+            
+            <div className="ed-topbar-actions">
+              {pendingCount > 0 && (
+                <div
+                  style={{
+                    background: 'var(--kora-orange-light)',
+                    color: 'var(--kora-orange)',
+                    borderRadius: 'var(--kora-r-pill)',
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setTab('employers')}
+                >
+                  <Clock size={15} />
+                  {pendingCount} approbation{pendingCount > 1 ? 's' : ''} en attente
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="ad-content">
-          {tab === 'overview'  && <OverviewTab pendingCount={pendingCount} />}
-          {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
-          {tab === 'jobs'      && <JobsTab />}
-          {tab === 'seekers'   && <SeekersTab />}
-          {tab === 'reports'   && <ReportsTab />}
-        </div>
+          {/* Content Route */}
+          <div className="ad-content">
+            {tab === 'overview'  && <OverviewTab pendingCount={pendingCount} />}
+            {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
+            {tab === 'jobs'      && <JobsTab />}
+            {tab === 'seekers'   && <SeekersTab />}
+            {tab === 'reports'   && <ReportsTab />}
+          </div>
+
+        </main>
       </div>
     </div>
   );

@@ -1,6 +1,11 @@
 import { useRef } from 'react';
 
-const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'];
+const JOB_TYPES = [
+  { label: 'Full-time (CDI)', value: 'CDI' },
+  { label: 'Contract (CDD)', value: 'CDD' },
+  { label: 'Internship', value: 'INTERNSHIP' },
+  { label: 'Freelance', value: 'FREELANCE' }
+];
 
 /**
  * JobFilters
@@ -72,7 +77,7 @@ export default function JobFilters({ filters, onChange, onReset }) {
           >
             <option value="">All types</option>
             {JOB_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
         </div>
