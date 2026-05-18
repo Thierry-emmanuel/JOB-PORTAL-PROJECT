@@ -44,6 +44,7 @@ public class SecurityConfig {
                         "/swagger-ui/**", "/v3/api-docs/**",
                         "/api/v1/jobs/**", "/api/jobs/**",
                         "/api/ai/**", "/api/v1/insights/**",
+                        "/api/v1/companies/**", "/api/v1/companies",
                         "/ws/**"                          // WebSocket SockJS handshake
                     ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")

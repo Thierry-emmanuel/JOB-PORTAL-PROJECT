@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 
 
-@Component
+// @Component
 @Order(2)
 @RequiredArgsConstructor
 @Slf4j

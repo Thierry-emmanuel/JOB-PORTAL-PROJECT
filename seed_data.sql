@@ -1,23 +1,55 @@
 -- ====================================================================
 -- KORA JOB PORTAL - MYSQL DATABASE SEED DATA
--- Generates 30 Cameroonian Job Seekers, 27 Employers, and 27 Companies
+-- Generates 30 Cameroonian Job Seekers, 27 Employers, 27 Companies,
+-- 1 Admin, 10 Categories, 8 Locations, 20 Skills, and 16 Job Postings.
 -- Default Password for all accounts: kora@2026#
 -- Password BCrypt Hash: $2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu
 -- ====================================================================
 
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE `role_permissions`;
+TRUNCATE TABLE `user_role_entities`;
+TRUNCATE TABLE `job_listing_skills`;
+TRUNCATE TABLE `job_listings`;
+TRUNCATE TABLE `job_listing_categories`;
+TRUNCATE TABLE `job_listing_locations`;
+TRUNCATE TABLE `listing_skills`;
+TRUNCATE TABLE `companies`;
+TRUNCATE TABLE `employers`;
+TRUNCATE TABLE `job_seekers`;
+TRUNCATE TABLE `admins`;
+TRUNCATE TABLE `users`;
+TRUNCATE TABLE `roles`;
+TRUNCATE TABLE `permissions`;
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- --------------------------------------------------------------------
--- 1. BASE SECURITY ROLES INITIALIZATION
+-- 1. BASE SECURITY ROLES & PERMISSIONS INITIALIZATION
 -- --------------------------------------------------------------------
 INSERT INTO `roles` (`id`, `name`) VALUES 
 (1, 'ROLE_JOB_SEEKER'),
 (2, 'ROLE_EMPLOYER'),
-(3, 'ROLE_ADMIN')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+(3, 'ROLE_ADMIN');
+
+INSERT INTO `permissions` (`id`, `name`) VALUES
+(1, 'CREATE_JOB'),
+(2, 'UPDATE_JOB'),
+(3, 'APPLY_JOB'),
+(4, 'MANAGE_USERS');
+
+INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
+(1, 3), -- ROLE_JOB_SEEKER has APPLY_JOB
+(2, 1), -- ROLE_EMPLOYER has CREATE_JOB
+(2, 2), -- ROLE_EMPLOYER has UPDATE_JOB
+(3, 1), -- ROLE_ADMIN has CREATE_JOB
+(3, 2), -- ROLE_ADMIN has UPDATE_JOB
+(3, 3), -- ROLE_ADMIN has APPLY_JOB
+(3, 4); -- ROLE_ADMIN has MANAGE_USERS
 
 -- --------------------------------------------------------------------
 -- 2. JOB SEEKERS (USERS TABLE - IDs 1 to 30)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `provider`, `provider_id`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `provider`, `provider_id`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'Samuel Eto\'o', 'samuel.etoo@kora.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'JOB_SEEKER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
 (2, 'Jean-Paul Mbarga', 'jeanpaul.mbarga@kora.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'JOB_SEEKER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
 (3, 'Florence Ngo Nonga', 'florence.nonga@kora.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'JOB_SEEKER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
@@ -52,7 +84,7 @@ INSERT IGNORE INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `pro
 -- --------------------------------------------------------------------
 -- 3. JOB SEEKERS PROFILES (JOB_SEEKERS TABLE - IDs 1 to 30)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `job_seekers` (`id`, `phone`, `city`, `region`, `profile_summary`, `avatar_url`, `linked_in_url`, `portfolio_url`, `profile_score`, `is_open_to_work`) VALUES
+INSERT INTO `job_seekers` (`id`, `phone`, `city`, `region`, `profile_summary`, `avatar_url`, `linked_in_url`, `portfolio_url`, `profile_score`, `is_open_to_work`) VALUES
 (1, '+237677112233', 'Douala', 'Littoral', 'Experienced software engineer specializing in high-performance web systems and databases. Excited about Kora.', 'https://res.cloudinary.com/dbwumcxvq/image/upload/v1778998904/balafon_cboywy.png', 'https://linkedin.com/in/samuel-etoo', 'https://samueletoo.dev', 90, 1),
 (2, '+237699445566', 'Yaoundé', 'Center', 'Junior fullstack developer focused on Spring Boot and React applications. Eager to join Cameroonian tech teams.', NULL, 'https://linkedin.com/in/jeanpaul-mbarga', NULL, 70, 1),
 (3, '+237655778899', 'Douala', 'Littoral', 'Senior UI/UX Designer dedicated to crafting accessible, beautiful, and dynamic interfaces for mobile and web products.', NULL, 'https://linkedin.com/in/florence-nonga', 'https://behance.net/florence-nonga', 80, 1),
@@ -87,42 +119,15 @@ INSERT IGNORE INTO `job_seekers` (`id`, `phone`, `city`, `region`, `profile_summ
 -- --------------------------------------------------------------------
 -- 4. ROLE ENTITY MAPPING FOR JOB SEEKERS (IDs 1 to 30)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `user_role_entities` (`user_id`, `role_entity_id`) VALUES
-(1, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(2, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(3, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(4, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(5, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(6, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(7, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(8, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(9, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(10, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(11, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(12, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(13, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(14, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(15, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(16, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(17, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(18, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(19, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(20, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(21, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(22, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(23, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(24, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(25, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(26, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(27, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(28, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(29, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1)),
-(30, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_JOB_SEEKER' LIMIT 1));
+INSERT INTO `user_role_entities` (`user_id`, `role_entity_id`) VALUES
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
+(11, 1), (12, 1), (13, 1), (14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1),
+(21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1);
 
 -- --------------------------------------------------------------------
 -- 5. EMPLOYER USER ACCOUNTS (USERS TABLE - IDs 31 to 57)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `provider`, `provider_id`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `provider`, `provider_id`, `is_active`, `created_at`, `updated_at`) VALUES
 (31, 'Pierre Moukoko', 'recruitment@uba.com', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'EMPLOYER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
 (32, 'Sarah Ebongue', 'careers@camtel.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'EMPLOYER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
 (33, 'Jean-Marc Ngassi', 'jobs@orange.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'EMPLOYER', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00'),
@@ -154,7 +159,7 @@ INSERT IGNORE INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `pro
 -- --------------------------------------------------------------------
 -- 6. EMPLOYER PROFILES (EMPLOYERS TABLE - IDs 31 to 57)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `employers` (`id`, `phone`, `city`, `region`, `avatar_url`, `job_title`, `bio`, `is_approved`, `profile_score`) VALUES
+INSERT INTO `employers` (`id`, `phone`, `city`, `region`, `avatar_url`, `job_title`, `bio`, `is_approved`, `profile_score`) VALUES
 (31, '+237677000101', 'Douala', 'Littoral', NULL, 'Talent Acquisition Director', 'Managing corporate recruits at UBA bank.', 1, 90),
 (32, '+237699000102', 'Yaoundé', 'Center', NULL, 'Head of Human Resources', 'Overseeing technical positions at Cameroon Telecommunications.', 1, 90),
 (33, '+237655000103', 'Douala', 'Littoral', NULL, 'Senior Staffing Partner', 'Directing staffing activities at Orange Cameroun.', 1, 90),
@@ -186,39 +191,27 @@ INSERT IGNORE INTO `employers` (`id`, `phone`, `city`, `region`, `avatar_url`, `
 -- --------------------------------------------------------------------
 -- 7. ROLE ENTITY MAPPING FOR EMPLOYERS (IDs 31 to 57)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `user_role_entities` (`user_id`, `role_entity_id`) VALUES
-(31, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(32, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(33, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(34, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(35, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(36, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(37, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(38, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(39, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(40, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(41, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(42, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(43, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(44, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(45, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(46, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(47, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(48, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(49, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(50, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(51, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(52, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(53, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(54, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(55, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(56, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1)),
-(57, (SELECT `id` FROM `roles` WHERE `name` = 'ROLE_EMPLOYER' LIMIT 1));
+INSERT INTO `user_role_entities` (`user_id`, `role_entity_id`) VALUES
+(31, 2), (32, 2), (33, 2), (34, 2), (35, 2), (36, 2), (37, 2), (38, 2), (39, 2), (40, 2),
+(41, 2), (42, 2), (43, 2), (44, 2), (45, 2), (46, 2), (47, 2), (48, 2), (49, 2), (50, 2),
+(51, 2), (52, 2), (53, 2), (54, 2), (55, 2), (56, 2), (57, 2);
 
 -- --------------------------------------------------------------------
--- 8. COMPANIES (COMPANIES TABLE - IDs 1 to 27)
+-- 8. ADMIN USER AND PROFILE (ID 58)
 -- --------------------------------------------------------------------
-INSERT IGNORE INTO `companies` (`id`, `name`, `description`, `sector`, `website_url`, `logo_url`, `city`, `country`, `contact_email`, `contact_phone`, `company_size`, `average_rating`, `rating_count`, `is_active`, `created_at`, `updated_at`, `employer_id`) VALUES
+INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `role`, `provider`, `provider_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(58, 'Test Admin', 'test.admin@kora.cm', '$2a$10$zPkaWMlGe7mHoMblhPHII.6GPZ9rgriBlY6bSdwe5R/G1Dp3Y7EOu', 'ADMIN', 'LOCAL', NULL, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00');
+
+INSERT INTO `admins` (`id`, `phone`, `department`, `avatar_url`, `admin_level`, `actions_performed`) VALUES
+(58, '+237677998877', 'IT & Security', NULL, 'SUPER_ADMIN', 0);
+
+INSERT INTO `user_role_entities` (`user_id`, `role_entity_id`) VALUES
+(58, 3);
+
+-- --------------------------------------------------------------------
+-- 9. COMPANIES (COMPANIES TABLE - IDs 1 to 27)
+-- --------------------------------------------------------------------
+INSERT INTO `companies` (`id`, `name`, `description`, `sector`, `website_url`, `logo_url`, `city`, `country`, `contact_email`, `contact_phone`, `company_size`, `average_rating`, `rating_count`, `is_active`, `created_at`, `updated_at`, `employer_id`) VALUES
 (1, 'United Bank for Africa Cameroon', 'One of Africa\'s leading financial institutions, offering elite banking solutions to businesses and individuals in Cameroon.', 'Banking & Finance', 'https://www.ubacameroon.com', 'https://res.cloudinary.com/dbwumcxvq/image/upload/v1778998913/uba_wzl00s.png', 'Douala', 'Cameroon', 'support@ubacameroon.com', '+237677000101', 'ENTERPRISE', 4.5, 12, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00', 31),
 (2, 'Camtel', 'Cameroon Telecommunications is the national telecommunications and internet service provider of Cameroon.', 'Telecommunications', 'https://www.camtel.cm', 'https://res.cloudinary.com/dbwumcxvq/image/upload/v1778998912/camtel_qspywo.jpg', 'Yaoundé', 'Cameroon', 'info@camtel.cm', '+237699000102', 'ENTERPRISE', 4.0, 8, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00', 32),
 (3, 'Orange Cameroun', 'A premier mobile network operator providing top tier 4G/5G communications and mobile money solutions across Cameroon.', 'Telecommunications', 'https://www.orange.cm', 'https://res.cloudinary.com/dbwumcxvq/image/upload/v1778998911/orange_djx5i3.png', 'Douala', 'Cameroon', 'customer@orange.cm', '+237655000103', 'ENTERPRISE', 4.6, 25, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00', 33),
@@ -248,17 +241,6 @@ INSERT IGNORE INTO `companies` (`id`, `name`, `description`, `sector`, `website_
 (27, 'Eneo Cameroon S.A.', 'The central electrical utility company of Cameroon, supplying electricity generation, distribution, and grid maintenance.', 'Energy & Utilities', 'https://www.eneocameroon.cm', 'https://res.cloudinary.com/dbwumcxvq/image/upload/v1778998876/eneo_pk2qwx.png', 'Douala', 'Cameroon', 'customer@eneo.cm', '+237658000127', 'ENTERPRISE', 3.8, 41, 1, '2026-05-17 07:00:00', '2026-05-17 07:00:00', 57);
 
 -- --------------------------------------------------------------------
--- 9. RESET REFERENCE AND TRANSACTIONAL TABLES FOR SEEDING
--- --------------------------------------------------------------------
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE `job_listing_skills`;
-TRUNCATE TABLE `job_listings`;
-TRUNCATE TABLE `job_listing_categories`;
-TRUNCATE TABLE `job_listing_locations`;
-TRUNCATE TABLE `listing_skills`;
-SET FOREIGN_KEY_CHECKS = 1;
-
--- --------------------------------------------------------------------
 -- 10. JOB LISTING CATEGORIES (JOB_LISTING_CATEGORIES TABLE)
 -- --------------------------------------------------------------------
 INSERT INTO `job_listing_categories` (`id`, `name`, `slug`, `icon_url`, `description`) VALUES
@@ -266,38 +248,53 @@ INSERT INTO `job_listing_categories` (`id`, `name`, `slug`, `icon_url`, `descrip
 (UUID_TO_BIN('10000000-0000-0000-0000-000000000002'), 'Finance & Accounting', 'finance-accounting', '💰', 'Accounting, auditing, financial analysis, banking'),
 (UUID_TO_BIN('10000000-0000-0000-0000-000000000003'), 'Healthcare', 'healthcare', '🏥', 'Medicine, nursing, pharmacy, public health'),
 (UUID_TO_BIN('10000000-0000-0000-0000-000000000004'), 'Education', 'education', '🎓', 'Teaching, training, academic research, e-learning'),
-(UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), 'Marketing & Sales', 'marketing-sales', '📢', 'Digital marketing, sales management, brand strategy'),
-(UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), 'Logistics & Transport', 'logistics-transport', '🚚', 'Supply chain, procurement, fleet management'),
-(UUID_TO_BIN('10000000-0000-0000-0000-000000000007'), 'Agribusiness & Food', 'agribusiness-food', '🌾', 'Agribusiness, agronomy, livestock, food production')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), 'Engineering', 'engineering', '⚙️', 'Civil, mechanical, electrical, software engineering'),
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), 'Marketing & Sales', 'marketing-sales', '📢', 'Digital marketing, sales management, brand strategy'),
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000007'), 'Human Resources', 'human-resources', '👥', 'Recruitment, HR management, payroll, training'),
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000008'), 'Legal', 'legal', '⚖️', 'Corporate law, compliance, contracts, legal advisory'),
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000009'), 'Logistics & Transport', 'logistics-transport', '🚚', 'Supply chain, procurement, fleet management'),
+(UUID_TO_BIN('10000000-0000-0000-0000-000000000010'), 'Agribusiness & Food', 'agribusiness-food', '🌾', 'Agribusiness, agronomy, livestock, food production');
 
 -- --------------------------------------------------------------------
--- 10. JOB LISTING LOCATIONS (JOB_LISTING_LOCATIONS TABLE)
+-- 11. JOB LISTING LOCATIONS (JOB_LISTING_LOCATIONS TABLE)
 -- --------------------------------------------------------------------
 INSERT INTO `job_listing_locations` (`id`, `city`, `state`, `country`, `latitude`, `longitude`) VALUES
 (UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Douala', 'Littoral', 'Cameroon', 4.0511, 9.7679),
 (UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Yaoundé', 'Centre', 'Cameroon', 3.8480, 11.5021),
-(UUID_TO_BIN('20000000-0000-0000-0000-000000000003'), 'Buea', 'Southwest', 'Cameroon', 4.1560, 9.2430),
-(UUID_TO_BIN('20000000-0000-0000-0000-000000000004'), 'Garoua', 'North', 'Cameroon', 9.3017, 13.3978),
-(UUID_TO_BIN('20000000-0000-0000-0000-000000000005'), 'Remote', NULL, 'Remote', 0.0000, 0.0000)
-ON DUPLICATE KEY UPDATE `city` = VALUES(`city`);
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000003'), 'Bafoussam', 'West', 'Cameroon', 5.4737, 10.4179),
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000004'), 'Bamenda', 'North West', 'Cameroon', 5.9631, 10.1591),
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000005'), 'Garoua', 'North', 'Cameroon', 9.3017, 13.3978),
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000006'), 'Maroua', 'Far North', 'Cameroon', 10.5910, 14.3195),
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000007'), 'Bertoua', 'East', 'Cameroon', 4.5789, 13.6841),
+(UUID_TO_BIN('20000000-0000-0000-0000-000000000008'), 'Remote', NULL, 'Remote', 0.0000, 0.0000);
 
 -- --------------------------------------------------------------------
--- 11. LISTING SKILLS (LISTING_SKILLS TABLE)
+-- 12. LISTING SKILLS (LISTING_SKILLS TABLE)
 -- --------------------------------------------------------------------
 INSERT INTO `listing_skills` (`id`, `name`) VALUES
 (UUID_TO_BIN('30000000-0000-0000-0000-000000000001'), 'Java'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000002'), 'React'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000003'), 'SQL'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000004'), 'Spring Boot'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000005'), 'Project Management'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000006'), 'Digital Marketing'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000007'), 'Logistics'),
-(UUID_TO_BIN('30000000-0000-0000-0000-000000000008'), 'Quality Assurance')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000002'), 'Python'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000003'), 'JavaScript'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000004'), 'TypeScript'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000005'), 'SQL'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000006'), 'Spring Boot'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000007'), 'React'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000008'), 'Angular'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000009'), 'Docker'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000010'), 'Kubernetes'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000011'), 'AWS'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000012'), 'Git'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000013'), 'Linux'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000014'), 'REST API'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000015'), 'Microservices'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000016'), 'Machine Learning'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000017'), 'Data Analysis'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000018'), 'Project Management'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000019'), 'Communication'),
+(UUID_TO_BIN('30000000-0000-0000-0000-000000000020'), 'Leadership');
 
 -- --------------------------------------------------------------------
--- 12. JOB LISTINGS (JOB_LISTINGS TABLE)
+-- 13. JOB LISTINGS (JOB_LISTINGS TABLE)
 -- --------------------------------------------------------------------
 INSERT INTO `job_listings` (`id`, `employer_id`, `company_id`, `category_id`, `location_id`, `title`, `description`, `job_type`, `salary_min`, `salary_max`, `experience_level`, `deadline`, `status`, `view_count`, `created_at`, `updated_at`) VALUES
 -- UBA (IT & Finance)
@@ -311,39 +308,70 @@ INSERT INTO `job_listings` (`id`, `employer_id`, `company_id`, `category_id`, `l
 (UUID_TO_BIN('40000000-0000-0000-0000-000000000004'), 33, 3, UUID_TO_BIN('10000000-0000-0000-0000-000000000001'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Frontend React Developer', 'Join Orange Cameroun\'s dynamic mobile money digital interface team. Build interactive dashboards, map responsive user flows, and optimize CSS transitions.', 'CDD', 350000.00, 650000.00, 'JUNIOR', '2026-06-10', 'ACTIVE', 22, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
 
 -- MTN (DevOps)
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), 34, 4, UUID_TO_BIN('10000000-0000-0000-0000-000000000001'), UUID_TO_BIN('20000000-0000-0000-0000-000000000005'), 'Cloud DevOps Architect', 'Help MTN Cameroon transition key communication layers to AWS. Build Docker containers, configure Kubernetes clusters, and automate our CI/CD pipelines.', 'CDI', 700000.00, 1400000.00, 'LEAD', '2026-06-25', 'ACTIVE', 19, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), 34, 4, UUID_TO_BIN('10000000-0000-0000-0000-000000000001'), UUID_TO_BIN('20000000-0000-0000-0000-000000000008'), 'Cloud DevOps Architect', 'Help MTN Cameroon transition key communication layers to AWS. Build Docker containers, configure Kubernetes clusters, and automate our CI/CD pipelines.', 'CDI', 700000.00, 1400000.00, 'LEAD', '2026-06-25', 'ACTIVE', 19, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
 
 -- Leelou Baby Food (QA)
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000006'), 36, 6, UUID_TO_BIN('10000000-0000-0000-0000-000000000007'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Food Quality Assurance Specialist', 'Direct sanitary packaging audits, oversee raw materials testing (cereals, fruits) and ensure premium organic certification for our baby food lines in Douala.', 'CDD', 200000.00, 350000.00, 'ENTRY', '2026-06-05', 'ACTIVE', 14, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000006'), 36, 6, UUID_TO_BIN('10000000-0000-0000-0000-000000000010'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Food Quality Assurance Specialist', 'Direct sanitary packaging audits, oversee raw materials testing (cereals, fruits) and ensure premium organic certification for our baby food lines in Douala.', 'CDD', 200000.00, 350000.00, 'ENTRY', '2026-06-05', 'ACTIVE', 14, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
 
 -- Dovv (Retail Manager)
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000007'), 38, 8, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Assistant Branch Manager', 'Supervise cash registers, direct grocery supply chain stocking, manage local floor attendants, and boost customer satisfaction at Dovv Yaoundé.', 'CDI', 250000.00, 450000.00, 'MID', '2026-06-18', 'ACTIVE', 11, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000007'), 38, 8, UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Assistant Branch Manager', 'Supervise cash registers, direct grocery supply chain stocking, manage local floor attendants, and boost customer satisfaction at Dovv Yaoundé.', 'CDI', 250000.00, 450000.00, 'MID', '2026-06-18', 'ACTIVE', 11, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
 
 -- ANTIC (IT)
 (UUID_TO_BIN('40000000-0000-0000-0000-000000000008'), 40, 10, UUID_TO_BIN('10000000-0000-0000-0000-000000000001'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Government Security Auditor', 'Audit regional public networks, secure state agencies information infrastructure and report vulnerabilities to director-level agencies at ANTIC Cameroon.', 'CDI', 500000.00, 950000.00, 'SENIOR', '2026-06-22', 'ACTIVE', 27, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
 
 -- Chococam (Marketing)
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000009'), 50, 20, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Brand Marketing Manager', 'Direct large scale commercial campaigns, manage social media influencer relationships and optimize marketing budgets for the iconic Mambo Chocolate brand.', 'CDI', 400000.00, 750000.00, 'MID', '2026-06-12', 'ACTIVE', 31, '2026-05-17 08:00:00', '2026-05-17 08:00:00')
-ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000009'), 50, 20, UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Brand Marketing Manager', 'Direct large scale commercial campaigns, manage social media influencer relationships and optimize marketing budgets for the iconic Mambo Chocolate brand.', 'CDI', 400000.00, 750000.00, 'MID', '2026-06-12', 'ACTIVE', 31, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- TotalEnergies (Engineering)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000010'), 52, 22, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Drilling Engineer', 'Supervise drilling operations, monitor equipment performance, ensure strict environmental and workplace safety protocols at offshore stations in Douala.', 'CDI', 800000.00, 1500000.00, 'SENIOR', '2026-07-10', 'ACTIVE', 5, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- SABC (Engineering)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000011'), 51, 21, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Brewery Maintenance Lead', 'Direct preventive maintenance of complex bottling machinery, coordinate technical technician shifts and manage mechanical hardware inventory in Douala.', 'CDI', 600000.00, 1100000.00, 'MID', '2026-06-28', 'ACTIVE', 9, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- CBC Bank (Finance)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000012'), 53, 23, UUID_TO_BIN('10000000-0000-0000-0000-000000000002'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'Risk Management Officer', 'Evaluate commercial credit applications, audit corporate loan portfolios, implement regulatory banking standards at Commercial Bank of Cameroon.', 'CDI', 500000.00, 900000.00, 'MID', '2026-06-25', 'ACTIVE', 7, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- Tradex (Engineering)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000013'), 54, 24, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'HSE Officer', 'Implement health, safety, and environmental security checklists at petroleum refueling installations and coordinate safety training sessions in Yaoundé.', 'CDD', 400000.00, 700000.00, 'MID', '2026-06-18', 'ACTIVE', 14, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- CRTV (Broadcasting/Media)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000014'), 55, 25, UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Multimedia Journalist', 'Produce premium news reels, conduct on-field political and cultural reporting, and coordinate video broadcast streams for CRTV national channels.', 'CDI', 300000.00, 600000.00, 'MID', '2026-06-15', 'ACTIVE', 23, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- Equinoxe TV (Broadcasting/Media)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000015'), 56, 26, UUID_TO_BIN('10000000-0000-0000-0000-000000000006'), UUID_TO_BIN('20000000-0000-0000-0000-000000000001'), 'News Presenter', 'Present main prime time news programs, structure television reporting scripts, and conduct live broadcast interviews at Equinoxe TV Douala.', 'CDD', 350000.00, 650000.00, 'MID', '2026-06-20', 'ACTIVE', 18, '2026-05-17 08:00:00', '2026-05-17 08:00:00'),
+
+-- Eneo (Engineering)
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000016'), 57, 27, UUID_TO_BIN('10000000-0000-0000-0000-000000000005'), UUID_TO_BIN('20000000-0000-0000-0000-000000000002'), 'Electrical Grid Administrator', 'Oversee high-voltage regional power line distributions, manage sub-station equipment performance, and direct electrical grid restoration operations.', 'CDI', 500000.00, 1000000.00, 'SENIOR', '2026-06-30', 'ACTIVE', 32, '2026-05-17 08:00:00', '2026-05-17 08:00:00');
 
 -- --------------------------------------------------------------------
--- 13. JOB LISTING SKILLS (JOB_LISTING_SKILLS TABLE)
+-- 14. JOB LISTING SKILLS (JOB_LISTING_SKILLS TABLE)
 -- --------------------------------------------------------------------
 INSERT INTO `job_listing_skills` (`job_listing_id`, `skill_id`) VALUES
 (UUID_TO_BIN('40000000-0000-0000-0000-000000000001'), UUID_TO_BIN('30000000-0000-0000-0000-000000000001')), -- UBA Senior Java -> Java
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000001'), UUID_TO_BIN('30000000-0000-0000-0000-000000000003')), -- UBA Senior Java -> SQL
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000001'), UUID_TO_BIN('30000000-0000-0000-0000-000000000004')), -- UBA Senior Java -> Spring Boot
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000002'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- UBA Financial Analyst -> Project Management
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000003'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- Camtel Security -> Project Management
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000004'), UUID_TO_BIN('30000000-0000-0000-0000-000000000002')), -- Orange React -> React
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- MTN Cloud -> Project Management
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000006'), UUID_TO_BIN('30000000-0000-0000-0000-000000000008')), -- Leelou QA -> Quality Assurance
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000007'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- Dovv Manager -> Project Management
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000008'), UUID_TO_BIN('30000000-0000-0000-0000-000000000003')), -- ANTIC Auditor -> SQL
-(UUID_TO_BIN('40000000-0000-0000-0000-000000000009'), UUID_TO_BIN('30000000-0000-0000-0000-000000000006'))  -- Chococam Marketing -> Digital Marketing
-ON DUPLICATE KEY UPDATE `skill_id` = VALUES(`skill_id`);
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000001'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- UBA Senior Java -> SQL
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000001'), UUID_TO_BIN('30000000-0000-0000-0000-000000000006')), -- UBA Senior Java -> Spring Boot
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000002'), UUID_TO_BIN('30000000-0000-0000-0000-000000000017')), -- UBA Financial Analyst -> Data Analysis
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000002'), UUID_TO_BIN('30000000-0000-0000-0000-000000000018')), -- UBA Financial Analyst -> Project Management
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000003'), UUID_TO_BIN('30000000-0000-0000-0000-000000000013')), -- Camtel Security -> Linux
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000003'), UUID_TO_BIN('30000000-0000-0000-0000-000000000020')), -- Camtel Security -> Leadership
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000004'), UUID_TO_BIN('30000000-0000-0000-0000-000000000003')), -- Orange React -> JavaScript
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000004'), UUID_TO_BIN('30000000-0000-0000-0000-000000000007')), -- Orange React -> React
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), UUID_TO_BIN('30000000-0000-0000-0000-000000000009')), -- MTN DevOps -> Docker
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), UUID_TO_BIN('30000000-0000-0000-0000-000000000010')), -- MTN DevOps -> Kubernetes
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000005'), UUID_TO_BIN('30000000-0000-0000-0000-000000000011')), -- MTN DevOps -> AWS
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000006'), UUID_TO_BIN('30000000-0000-0000-0000-000000000019')), -- Leelou QA -> Communication
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000007'), UUID_TO_BIN('30000000-0000-0000-0000-000000000018')), -- Dovv Retail -> Project Management
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000008'), UUID_TO_BIN('30000000-0000-0000-0000-000000000005')), -- ANTIC Auditor -> SQL
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000008'), UUID_TO_BIN('30000000-0000-0000-0000-000000000012')), -- ANTIC Auditor -> Git
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000009'), UUID_TO_BIN('30000000-0000-0000-0000-000000000019')), -- Chococam Marketing -> Communication
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000010'), UUID_TO_BIN('30000000-0000-0000-0000-000000000020')), -- TotalEnergies Drilling -> Leadership
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000011'), UUID_TO_BIN('30000000-0000-0000-0000-000000000018')), -- SABC Maintenance -> Project Management
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000012'), UUID_TO_BIN('30000000-0000-0000-0000-000000000017')), -- CBC Risk -> Data Analysis
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000013'), UUID_TO_BIN('30000000-0000-0000-0000-000000000019')), -- Tradex HSE -> Communication
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000014'), UUID_TO_BIN('30000000-0000-0000-0000-000000000019')), -- CRTV Journalist -> Communication
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000015'), UUID_TO_BIN('30000000-0000-0000-0000-000000000019')), -- Equinoxe TV News -> Communication
+(UUID_TO_BIN('40000000-0000-0000-0000-000000000016'), UUID_TO_BIN('30000000-0000-0000-0000-000000000020')); -- Eneo Administrator -> Leadership
 
--- --------------------------------------------------------------------
+-- ====================================================================
 -- SEED DATA LOADING COMPLETED SUCCESSFULLY
--- --------------------------------------------------------------------
-
+-- ====================================================================
