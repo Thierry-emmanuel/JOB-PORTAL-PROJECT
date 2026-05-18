@@ -15,6 +15,7 @@ import KoraNav from "../components/KoraNav";
 import "../styles/employee-dashboard.css";
 import "../styles/employer-dashboard.css";
 import "../styles/profile.css";
+import "../styles/employer-profile.css";
 
 // ── Skeleton Card ─────────────────────────────────────────
 function SkeletonStatCard() {
@@ -88,7 +89,7 @@ export default function EmployerDashboard() {
     loading, error, refreshing,
     refresh, markNotificationRead,
     markAllRead, updateApplicationStatus,
-    closeJobPosting,
+    updateJobPostingStatus,
   } = useEmployerDashboard();
 
   const filteredApplications = applications.filter((a) =>
@@ -341,9 +342,9 @@ export default function EmployerDashboard() {
                           <div className="ed-job-progress-fill" style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }} />
                         </div>
                         <div className="ed-job-card-actions">
-                          <button className="ed-job-action-btn"><Users size={12} /> Applicants</button>
-                          <button className="ed-job-action-btn"><Edit2 size={12} /> Edit</button>
-                          <button className="ed-job-action-btn danger" onClick={() => closeJobPosting(job.id)}><X size={12} /> Close</button>
+                          <button className="ed-job-action-btn" onClick={() => navigate("/employer/jobs")}><Users size={12} /> Applicants</button>
+                          <button className="ed-job-action-btn" onClick={() => navigate("/employer/jobs")}><Edit2 size={12} /> Edit</button>
+                          <button className="ed-job-action-btn danger" onClick={() => updateJobPostingStatus(job.id, "EXPIRED")}><X size={12} /> Close</button>
                         </div>
                       </div>
                     ))

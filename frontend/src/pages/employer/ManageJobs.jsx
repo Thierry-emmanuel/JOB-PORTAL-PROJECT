@@ -10,19 +10,14 @@ import KoraNav from "../../components/KoraNav";
 import "../../styles/employer-dashboard.css";
 import "../../styles/employee-dashboard.css";
 import "../../styles/profile.css";
+import "../../styles/ManageJobs.css";
 
 // ── Status Badge ──
 function StatusBadge({ status }) {
-  const map = {
-    ACTIVE:  { bg: "#F0FDF4", color: "#16A34A", icon: <CheckCircle size={12} /> },
-    DRAFT:   { bg: "#F3F4F6", color: "#4B5563", icon: <Edit2 size={12} /> },
-    EXPIRED: { bg: "#FFFBEB", color: "#D97706", icon: <Clock size={12} /> },
-    DELETED: { bg: "#FEF2F2", color: "#DC2626", icon: <XCircle size={12} /> },
-  };
-  const cfg = map[status] || map.DRAFT;
+  const statusClass = status.toLowerCase();
   return (
-    <span className="mj-status-badge" style={{ background: cfg.bg, color: cfg.color }}>
-      {cfg.icon}
+    <span className={`mj-status mj-status-${statusClass}`}>
+      <span className="mj-status-dot" />
       <span>{status}</span>
     </span>
   );
@@ -99,15 +94,15 @@ export default function ManageJobs() {
 
       {deleteTarget && (
         <>
-          <div className="mj-modal-overlay" onClick={() => setDeleteTarget(null)} />
-          <div className="mj-modal">
-            <div className="mj-modal-icon"><Trash2 size={24} /></div>
+          <div className="mj-confirm-overlay" onClick={() => setDeleteTarget(null)} />
+          <div className="mj-confirm-box">
+            <div className="mj-confirm-icon"><Trash2 size={24} /></div>
             <h3>Delete Job Posting</h3>
             <p>
               Are you sure you want to delete <strong>{deleteTarget.title}</strong>? 
               This action cannot be undone and will remove all associated applications.
             </p>
-            <div className="mj-modal-actions">
+            <div className="mj-confirm-actions">
               <button className="mj-btn-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
               <button className="mj-btn-danger" onClick={confirmDelete}>Delete Job</button>
             </div>
@@ -137,11 +132,51 @@ export default function ManageJobs() {
             </button>
           </div>
 
-          <div className="mj-tabs">
+          {/* Stats Row */}
+          <div className="mj-stats-row">
+            <div className="mj-stat-chip">
+              <div className="mj-stat-chip-icon" style={{ background: "rgba(22, 163, 74, 0.1)", color: "#16A34A" }}>
+                <CheckCircle size={20} />
+              </div>
+              <div>
+                <div className="mj-stat-chip-val">{localStats.active}</div>
+                <div className="mj-stat-chip-lbl">Active Jobs</div>
+              </div>
+            </div>
+            <div className="mj-stat-chip">
+              <div className="mj-stat-chip-icon" style={{ background: "rgba(75, 85, 99, 0.1)", color: "#4B5563" }}>
+                <Edit2 size={20} />
+              </div>
+              <div>
+                <div className="mj-stat-chip-val">{localStats.draft}</div>
+                <div className="mj-stat-chip-lbl">Drafts</div>
+              </div>
+            </div>
+            <div className="mj-stat-chip">
+              <div className="mj-stat-chip-icon" style={{ background: "rgba(217, 119, 6, 0.1)", color: "#D97706" }}>
+                <Clock size={20} />
+              </div>
+              <div>
+                <div className="mj-stat-chip-val">{localStats.expired}</div>
+                <div className="mj-stat-chip-lbl">Expired</div>
+              </div>
+            </div>
+            <div className="mj-stat-chip">
+              <div className="mj-stat-chip-icon" style={{ background: "rgba(20, 83, 116, 0.1)", color: "var(--kora-primary)" }}>
+                <Briefcase size={20} />
+              </div>
+              <div>
+                <div className="mj-stat-chip-val">{localStats.total}</div>
+                <div className="mj-stat-chip-lbl">Total Posted</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mj-tab-filters">
             {["ALL", "ACTIVE", "DRAFT", "EXPIRED", "DELETED"].map((tab) => (
               <button
                 key={tab}
-                className={`mj-tab ${activeTab === tab ? "active" : ""}`}
+                className={`mj-tab-filter ${activeTab === tab ? "active" : ""}`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab === "ALL" ? "All Jobs" : tab.charAt(0) + tab.slice(1).toLowerCase()}
@@ -153,7 +188,7 @@ export default function ManageJobs() {
           </div>
 
           <div className="mj-filters">
-            <div className="mj-search-box">
+            <div className="mj-search">
               <Search size={16} className="mj-search-icon" />
               <input
                 type="text"
@@ -208,7 +243,7 @@ export default function ManageJobs() {
                 )}
               </div>
             ) : (
-              <div className="mj-table-wrapper">
+              <div className="mj-table-wrap">
                 <table className="mj-table">
                   <thead>
                     <tr>
@@ -223,13 +258,11 @@ export default function ManageJobs() {
                     {filtered.map((job) => (
                       <tr key={job.id}>
                         <td>
-                          <div className="mj-td-role">
-                            <strong>{job.title}</strong>
-                            <div className="mj-td-meta">
-                              <span>{job.type}</span>
-                              <span className="mj-dot">•</span>
-                              <span>{job.location}</span>
-                            </div>
+                          <div className="mj-job-title-cell">{job.title}</div>
+                          <div className="mj-job-sub">
+                            <span>{job.type}</span>
+                            <span style={{ margin: "0 6px" }}>•</span>
+                            <span>{job.location}</span>
                           </div>
                         </td>
                         <td>
@@ -254,24 +287,24 @@ export default function ManageJobs() {
                           </div>
                         </td>
                         <td className="mj-td-actions">
-                          <div className="mj-action-buttons">
+                          <div className="mj-actions">
                             {job.status === "DRAFT" ? (
-                              <button className="mj-btn-icon publish" title="Publish" onClick={() => handlePublish(job.id)}>
+                              <button className="mj-action-btn success" title="Publish" onClick={() => handlePublish(job.id)}>
                                 <Play size={16} />
                               </button>
                             ) : job.status === "ACTIVE" ? (
-                              <button className="mj-btn-icon warning" title="Close Job" onClick={() => handleClose(job.id)}>
+                              <button className="mj-action-btn danger" title="Close Job" onClick={() => handleClose(job.id)}>
                                 <XCircle size={16} />
                               </button>
                             ) : null}
                             
-                            <button className="mj-btn-icon edit" title="Edit">
+                            <button className="mj-action-btn" title="Edit">
                               <Edit2 size={16} />
                             </button>
-                            <button className="mj-btn-icon danger" title="Delete" onClick={() => handleDelete(job)}>
+                            <button className="mj-action-btn danger" title="Delete" onClick={() => handleDelete(job)}>
                               <Trash2 size={16} />
                             </button>
-                            <button className="mj-btn-icon options" title="More options">
+                            <button className="mj-action-btn" title="More options">
                               <MoreVertical size={16} />
                             </button>
                           </div>

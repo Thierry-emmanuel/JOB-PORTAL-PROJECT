@@ -43,3 +43,8 @@ export const getPendingInterviewsBySeeker = async (seekerId) => {
   const response = await apiClient.get(`/api/v1/interviews/seekers/${seekerId}/pending`);
   return response.data.content || response.data;
 };
+
+export const getInterviewsByEmployer = async (employerId) => {
+  const response = await apiClient.get(`/api/v1/interviews/employers/${employerId}`);
+  return response.data.content || response.data;
+};

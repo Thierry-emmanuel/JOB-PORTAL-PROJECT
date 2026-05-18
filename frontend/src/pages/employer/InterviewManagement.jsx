@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getInterviewsByJobPosting, cancelInterview, recordInterviewResult } from '../../api/interviews';
+import { getInterviewsByEmployer, cancelInterview, recordInterviewResult } from '../../api/interviews';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import { Calendar, Filter, Search, ChevronRight } from 'lucide-react';
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
@@ -21,13 +21,10 @@ export default function InterviewManagement() {
   } = useEmployerDashboard();
 
   useEffect(() => {
-    // In a real app, we might want to fetch all interviews for ALL employer job postings
-    // For now, we'll try to fetch for a generic context or specific ID if available
     const fetchInterviews = async () => {
+      if (!user?.id) return;
       try {
-        // Mocking fetching for employer's active contexts
-        // In a real system, the backend might have /api/v1/interviews/employer/me
-        const data = await getInterviewsByJobPosting('all'); // Assuming backend handles 'all' or we iterate
+        const data = await getInterviewsByEmployer(user.id);
         setInterviews(data);
       } catch (err) {
         console.error(err);
