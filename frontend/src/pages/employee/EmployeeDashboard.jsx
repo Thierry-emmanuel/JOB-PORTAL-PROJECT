@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import KoraNav from '../../components/KoraNav';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import { getUserApplications, getJobs } from '../../api/jobs';
 import { getInterviewsBySeeker, cancelInterview } from '../../api/interviews';
-import { getJobSeekerProfile } from '../../api/profiles';
+import { getJobSeekerProfile, updateJobSeekerProfile } from '../../api/profiles';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/employee-dashboard.css';
@@ -128,6 +128,7 @@ MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
    ════════════════════════════════════════════════════════════ */
 export default function EmployeeDashboard() {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   // Merge auth user (has email/role) with any local profile overrides
   const [profile, setProfile] = useState({ ...EMPTY_PROFILE, ...(user || {}) });
   const completion = profileCompletion(profile);
@@ -153,7 +154,12 @@ export default function EmployeeDashboard() {
     getJobSeekerProfile(seekerId)
       .then((data) => {
         if (data) {
-          setProfile(prev => ({ ...prev, ...data }));
+          setProfile(prev => ({
+            ...prev,
+            ...data,
+            profilePhoto: data.avatarUrl || data.profilePhoto || null,
+            summary: data.profileSummary || data.summary || "",
+          }));
         }
       })
       .catch((err) => console.error('Failed to fetch profile:', err));
@@ -180,6 +186,39 @@ export default function EmployeeDashboard() {
       .finally(() => setJobsLoading(false));
   }, [user, token]);
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handlePhotoChange = async (file) => {
+    try {
+      const base64 = await fileToBase64(file);
+      const updatedProfileData = {
+        ...profile,
+        profilePhoto: base64,
+        avatarUrl: base64,
+        profileSummary: profile.summary,
+      };
+      const idToUpdate = user?.id || user?.jobSeekerId || 1;
+      const updated = await updateJobSeekerProfile(idToUpdate, updatedProfileData);
+      setProfile(prev => ({
+        ...prev,
+        ...updatedProfileData,
+        ...updated,
+        profilePhoto: updated.avatarUrl || base64,
+        summary: updated.profileSummary || profile.summary,
+      }));
+    } catch (err) {
+      console.error("Failed to upload photo", err);
+      alert("Failed to upload photo.");
+    }
+  };
+
   const handleCancelInterview = async (id) => {
     if (window.confirm('Cancel this interview?')) {
       try {
@@ -202,11 +241,8 @@ export default function EmployeeDashboard() {
           <ProfileSidebar
             profile={profile}
             completion={completion}
-            onEdit={() => {}}
-            onPhotoChange={(file) => {
-              const url = URL.createObjectURL(file);
-              setProfile((p) => ({ ...p, profilePhoto: url }));
-            }}
+            onEdit={() => navigate('/profile/job-seeker')}
+            onPhotoChange={handlePhotoChange}
           />
         </aside>
 

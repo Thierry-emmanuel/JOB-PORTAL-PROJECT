@@ -23,3 +23,16 @@ export const updateEmployerProfile = async (id, profileData) => {
   const response = await apiClient.put(`/api/v1/employers/${id}`, profileData);
   return response.data;
 };
+
+// ─── Admin API ──────────────────────────────────────────────────────────────
+
+export const getAdminProfile = async (id) => {
+  const response = await apiClient.get(`/api/v1/admins/${id}`);
+  return response.data;
+};
+
+export const updateAdminProfile = async (id, profileData) => {
+  const response = await apiClient.put(`/api/v1/admins/${id}`, profileData);
+  return response.data;
+};
+

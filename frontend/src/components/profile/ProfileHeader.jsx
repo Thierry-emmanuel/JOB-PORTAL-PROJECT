@@ -1,6 +1,6 @@
-import { MapPin, Mail, Phone, Calendar, Edit2, CheckCircle } from "lucide-react";
+import { MapPin, Mail, Phone, Calendar, Edit2, CheckCircle, Camera } from "lucide-react";
 
-export default function ProfileHeader({ profile, onEdit, completion }) {
+export default function ProfileHeader({ profile, onEdit, completion, onPhotoChange }) {
   const displayName = profile.fullName || profile.companyName || "User";
   const initials = displayName
     .split(" ")
@@ -19,7 +19,7 @@ export default function ProfileHeader({ profile, onEdit, completion }) {
 
       <div className="kora-header-body">
         {/* Avatar */}
-        <div className="kora-header-avatar-wrap">
+        <div className="kora-header-avatar-wrap uploadable">
           {profile.profilePhoto ? (
             <img
               src={profile.profilePhoto}
@@ -31,6 +31,22 @@ export default function ProfileHeader({ profile, onEdit, completion }) {
               <span>{initials}</span>
             </div>
           )}
+          <label className="kora-avatar-upload-overlay" htmlFor="avatar-file-input">
+            <Camera size={18} />
+            <span>Upload</span>
+          </label>
+          <input
+            type="file"
+            id="avatar-file-input"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && onPhotoChange) {
+                onPhotoChange(file);
+              }
+            }}
+          />
           <div className="kora-avatar-badge">
             <CheckCircle size={14} />
           </div>

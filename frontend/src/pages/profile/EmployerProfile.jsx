@@ -51,6 +51,9 @@ export default function EmployerProfile() {
         setProfile({
           ...FALLBACK_EMPLOYER,
           ...data,
+          companyName: data.fullName || data.companyName || "Employer",
+          description: data.bio || data.description || "",
+          logo: data.avatarUrl || data.logo || null,
           activeJobs: data.activeJobs || [],
         });
       } catch (err) {
@@ -72,8 +75,20 @@ export default function EmployerProfile() {
   const handleSave = async () => {
     try {
       const idToUpdate = user?.id || user?.employerId || 2;
-      const updated = await updateEmployerProfile(idToUpdate, form);
-      setProfile({ ...form, ...updated });
+      const payload = {
+        ...form,
+        fullName: form.companyName,
+        bio: form.description,
+        avatarUrl: form.logo,
+      };
+      const updated = await updateEmployerProfile(idToUpdate, payload);
+      setProfile({
+        ...form,
+        ...updated,
+        companyName: updated.fullName || form.companyName,
+        description: updated.bio || form.description,
+        logo: updated.avatarUrl || form.logo,
+      });
       setEditing(false);
     } catch (err) {
       console.error("Failed to update profile", err);
@@ -81,11 +96,41 @@ export default function EmployerProfile() {
     }
   };
 
-  const handleLogoChange = (file) => {
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleLogoChange = async (file) => {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setProfile((p) => ({ ...p, logo: url }));
-    setForm((f) => ({ ...f, logo: url }));
+    try {
+      const base64 = await fileToBase64(file);
+      const updatedProfileData = {
+        ...profile,
+        logo: base64,
+        avatarUrl: base64,
+        fullName: profile.companyName,
+        bio: profile.description,
+      };
+      const idToUpdate = user?.id || user?.employerId || 2;
+      const updated = await updateEmployerProfile(idToUpdate, updatedProfileData);
+      const merged = {
+        ...updatedProfileData,
+        ...updated,
+        companyName: updated.fullName || profile.companyName,
+        description: updated.bio || profile.description,
+        logo: updated.avatarUrl || base64,
+      };
+      setProfile(merged);
+      setForm(merged);
+    } catch (err) {
+      console.error("Failed to upload logo", err);
+      alert("Failed to upload logo.");
+    }
   };
 
   const removeJob = (id) => {
@@ -117,7 +162,7 @@ export default function EmployerProfile() {
               <div className="kora-banner-gradient" />
             </div>
             <div className="kora-header-body">
-              <div className="kora-header-avatar-wrap">
+              <div className="kora-header-avatar-wrap uploadable">
                 {profile.logo ? (
                   <img src={profile.logo} alt={profile.companyName} className="kora-header-avatar-img kora-employer-logo-img" />
                 ) : (
@@ -125,6 +170,20 @@ export default function EmployerProfile() {
                     <span>{initials}</span>
                   </div>
                 )}
+                <label className="kora-avatar-upload-overlay" htmlFor="logo-file-input">
+                  <Camera size={18} />
+                  <span>Upload</span>
+                </label>
+                <input
+                  type="file"
+                  id="logo-file-input"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoChange(file);
+                  }}
+                />
               </div>
               <div className="kora-header-info">
                 <div className="kora-header-name-row">

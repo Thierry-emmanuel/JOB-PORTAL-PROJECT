@@ -1,45 +1,48 @@
 import apiClient from './client';
 
-// ─── Employers ───────────────────────────────────────────────────────────────
+// ─── Employers ────────────────────────────────────────────────────────────────
+// Backend: /api/v1/employers  (EmployerController)
 
 export const fetchEmployers = async (filter = 'all') => {
   const endpoint =
     filter === 'pending'
-      ? '/api/employers/pending'
+      ? '/api/v1/employers/pending'
       : filter === 'approved'
-      ? '/api/employers/approved'
-      : '/api/employers';
+      ? '/api/v1/employers/approved'
+      : '/api/v1/employers';
   const { data } = await apiClient.get(endpoint);
   return Array.isArray(data) ? data : data.content ?? [];
 };
 
 export const approveEmployer = async (id) => {
-  const { data } = await apiClient.patch(`/api/employers/${id}/approve`);
+  const { data } = await apiClient.patch(`/api/v1/employers/${id}/approve`);
   return data;
 };
 
 export const suspendEmployer = async (id) => {
-  const { data } = await apiClient.patch(`/api/employers/${id}/deactivate`);
-  return data;
+  await apiClient.patch(`/api/v1/employers/${id}/deactivate`);
 };
 
 export const deleteEmployer = async (id) => {
-  const { data } = await apiClient.delete(`/api/employers/${id}`);
-  return data;
+  await apiClient.delete(`/api/v1/employers/${id}`);
 };
 
-// ─── Jobs ─────────────────────────────────────────────────────────────────────
+// ─── Jobs ──────────────────────────────────────────────────────────────────────
+// Backend: /api/admin/jobs  (AdminJobListingController)
+// Response shape: ApiResponse<Page<JobListingSummary>>
+//   → { success, message, data: { content: [...], totalPages, ... } }
 
 export const fetchAdminJobs = async ({ status = '', page = 0, size = 20 } = {}) => {
   const params = new URLSearchParams({ page, size });
   if (status) params.set('status', status);
   const { data } = await apiClient.get(`/api/admin/jobs?${params}`);
-  return data.data || data;
+  // Unwrap ApiResponse envelope: data.data is the Page object
+  return data.data ?? data;
 };
 
 export const approveJob = async (id) => {
   const { data } = await apiClient.patch(`/api/admin/jobs/${id}/approve`, { status: 'ACTIVE' });
-  return data.data || data;
+  return data.data ?? data;
 };
 
 export const flagJob = async (id, reason = '') => {
@@ -47,75 +50,54 @@ export const flagJob = async (id, reason = '') => {
     status: 'DRAFT',
     reason,
   });
-  return data.data || data;
+  return data.data ?? data;
 };
 
 export const deleteJob = async (id) => {
-  const { data } = await apiClient.delete(`/api/admin/jobs/${id}`);
-  return data.data || data;
+  await apiClient.delete(`/api/admin/jobs/${id}`);
 };
 
 // ─── Job Seekers ──────────────────────────────────────────────────────────────
+// Backend: /api/v1/jobseekers  (JobSeekerController)
 
 export const fetchJobSeekers = async () => {
-  const { data } = await apiClient.get('/api/job-seekers');
+  const { data } = await apiClient.get('/api/v1/jobseekers');
   return Array.isArray(data) ? data : data.content ?? [];
 };
 
 export const suspendJobSeeker = async (id) => {
-  const { data } = await apiClient.patch(`/api/job-seekers/${id}/deactivate`);
+  await apiClient.patch(`/api/v1/jobseekers/${id}/deactivate`);
+};
+
+// ─── Admin Users (all roles) ──────────────────────────────────────────────────
+// Backend: /api/admin/users  (AdminController)
+
+export const fetchAdminUsers = async () => {
+  const { data } = await apiClient.get('/api/admin/users');
+  return Array.isArray(data) ? data : [];
+};
+
+export const toggleUserStatus = async (id) => {
+  const { data } = await apiClient.put(`/api/admin/users/${id}/toggle-status`);
   return data;
 };
 
 // ─── Market / Reports ─────────────────────────────────────────────────────────
+// Backend: /api/v1/insights  (MarketInsightController)
 
 export const fetchMarketInsights = async () => {
   try {
-    const { data } = await apiClient.get('/api/market/insights');
+    const { data } = await apiClient.get('/api/v1/insights');
     return data;
   } catch {
     return null;
   }
 };
 
-// ─── Overview Stats (derived) ─────────────────────────────────────────────────
+// ─── Overview Stats ───────────────────────────────────────────────────────────
+// Backend: /api/admin/stats  (AdminController → AdminService)
 
 export const fetchOverviewStats = async () => {
-  const [jobsResp, seekersResp, employersResp] = await Promise.allSettled([
-    apiClient.get('/api/admin/jobs?size=1'),
-    apiClient.get('/api/job-seekers'),
-    apiClient.get('/api/employers'),
-  ]);
-
-  const totalJobs =
-    jobsResp.status === 'fulfilled'
-      ? jobsResp.value.data?.data?.totalElements ?? jobsResp.value.data?.totalElements ?? jobsResp.value.data?.length ?? 0
-      : 0;
-
-  const seekers =
-    seekersResp.status === 'fulfilled'
-      ? Array.isArray(seekersResp.value.data)
-        ? seekersResp.value.data
-        : seekersResp.value.data?.content ?? []
-      : [];
-
-  const employers =
-    employersResp.status === 'fulfilled'
-      ? Array.isArray(employersResp.value.data)
-        ? employersResp.value.data
-        : employersResp.value.data?.content ?? []
-      : [];
-
-  const pendingApprovals = employers.filter(
-    (e) => e.status === 'PENDING' || !e.isActive
-  ).length;
-
-  return {
-    totalUsers: seekers.length + employers.length,
-    activeJobs: totalJobs,
-    pendingApprovals,
-    totalApplications: 0, // placeholder — no direct endpoint
-    seekers,
-    employers,
-  };
-};
+  const { data } = await apiClient.get('/api/admin/stats');
+  return data;
+};

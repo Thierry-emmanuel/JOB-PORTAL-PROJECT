@@ -51,6 +51,8 @@ export default function JobSeekerProfile() {
         setProfile({
           ...FALLBACK_PROFILE,
           ...data,
+          profilePhoto: data.avatarUrl || data.profilePhoto || null,
+          summary: data.profileSummary || data.summary || "",
           experiences: data.experiences || [],
           education: data.education || [],
           skills: data.skills || [],
@@ -85,15 +87,57 @@ export default function JobSeekerProfile() {
     return score;
   };
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handlePhotoChange = async (file) => {
+    try {
+      const base64 = await fileToBase64(file);
+      const updatedProfileData = {
+        ...profile,
+        profilePhoto: base64,
+        avatarUrl: base64,
+        profileSummary: profile.summary,
+      };
+      const idToUpdate = user?.id || user?.jobSeekerId || 1;
+      const updated = await updateJobSeekerProfile(idToUpdate, updatedProfileData);
+      setProfile({
+        ...updatedProfileData,
+        ...updated,
+        profilePhoto: updated.avatarUrl || base64,
+        summary: updated.profileSummary || profile.summary,
+      });
+    } catch (err) {
+      console.error("Failed to upload photo", err);
+      alert("Failed to upload photo.");
+    }
+  };
+
   const openEdit = (section) => setEditModal({ open: true, section });
   const closeEdit = () => setEditModal({ open: false, section: null });
 
   const handleSave = async (section, data) => {
     try {
-      const updatedProfileData = { ...profile, ...data };
+      const updatedProfileData = {
+        ...profile,
+        ...data,
+        avatarUrl: data.profilePhoto || profile.profilePhoto || null,
+        profileSummary: data.summary || profile.summary || "",
+      };
       const idToUpdate = user?.id || user?.jobSeekerId || 1;
       const updated = await updateJobSeekerProfile(idToUpdate, updatedProfileData);
-      setProfile({ ...updatedProfileData, ...updated });
+      setProfile({
+        ...updatedProfileData,
+        ...updated,
+        profilePhoto: updated.avatarUrl || updatedProfileData.profilePhoto,
+        summary: updated.profileSummary || updatedProfileData.summary,
+      });
       closeEdit();
     } catch (err) {
       console.error("Failed to save profile", err);
@@ -123,6 +167,7 @@ export default function JobSeekerProfile() {
             profile={profile}
             onEdit={openEdit}
             completion={completionScore()}
+            onPhotoChange={handlePhotoChange}
           />
 
           <div className="kora-profile-actions-strip">

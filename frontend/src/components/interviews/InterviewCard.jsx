@@ -73,7 +73,7 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .kora-interview-card {
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(12px);

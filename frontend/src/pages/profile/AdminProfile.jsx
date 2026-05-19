@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import {
   Shield, Users, Briefcase, BarChart2, Bell, Settings,
   LogOut, Edit2, CheckCircle, XCircle, AlertCircle,
-  TrendingUp, Eye, Trash2, UserCheck, Search, KeyRound, PieChart
+  TrendingUp, Eye, Trash2, UserCheck, Search, KeyRound, PieChart, X, Camera
 } from "lucide-react";
 import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/admin-profile.css";
+import { useAuth } from "../../context/AuthContext";
+import { getAdminProfile, updateAdminProfile } from "../../api/profiles";
 
 const mockAdmin = {
   fullName: "Admin KORA",
@@ -227,12 +229,96 @@ function JobStatusChart({ active, expired, deleted }) {
   return <canvas ref={ref} />;
 }
 
+const FALLBACK_ADMIN = {
+  fullName: "Admin KORA",
+  email: "admin@kora.cm",
+  role: "ADMIN",
+  phone: "",
+  department: "",
+  avatarUrl: null,
+  adminLevel: "STANDARD",
+  actionsPerformed: 0,
+  stats: mockAdmin.stats,
+  recentUsers: mockAdmin.recentUsers
+};
+
 export default function AdminProfile() {
-  const [profile] = useState(mockAdmin);
+  const { user, token } = useAuth();
+  const [profile, setProfile] = useState(FALLBACK_ADMIN);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(FALLBACK_ADMIN);
   const [users, setUsers] = useState(mockAdmin.recentUsers);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [resetModal, setResetModal] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const idToFetch = user?.id || user?.adminId || 3; 
+      try {
+        const data = await getAdminProfile(idToFetch);
+        const mergedProfile = {
+          ...FALLBACK_ADMIN,
+          ...data,
+          stats: {
+            ...mockAdmin.stats,
+            ...(data.stats || {})
+          },
+          recentUsers: data.recentUsers || mockAdmin.recentUsers
+        };
+        setProfile(mergedProfile);
+        setUsers(data.recentUsers || mockAdmin.recentUsers);
+      } catch (err) {
+        console.error("Failed to fetch admin profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [user, token]);
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleAvatarChange = async (file) => {
+    if (!file) return;
+    try {
+      const base64 = await fileToBase64(file);
+      const updatedProfileData = { ...profile, avatarUrl: base64 };
+      const idToUpdate = user?.id || user?.adminId || 3;
+      await updateAdminProfile(idToUpdate, updatedProfileData);
+      setProfile(updatedProfileData);
+      setForm(updatedProfileData);
+    } catch (err) {
+      console.error("Failed to upload avatar", err);
+      alert("Failed to upload avatar.");
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const idToUpdate = user?.id || user?.adminId || 3;
+      const updated = await updateAdminProfile(idToUpdate, form);
+      setProfile({ ...form, ...updated });
+      setEditing(false);
+    } catch (err) {
+      console.error("Failed to update admin profile", err);
+      alert("Failed to save changes.");
+    }
+  };
 
   const filtered = users.filter(
     (u) =>
@@ -247,6 +333,10 @@ export default function AdminProfile() {
     if (window.confirm("Permanently delete this user?"))
       setUsers((prev) => prev.filter((u) => u.id !== id));
   };
+
+  if (loading) {
+    return <div style={{ padding: '50px', textAlign: 'center' }}>Loading admin profile...</div>;
+  }
 
   const { stats } = profile;
 
@@ -263,9 +353,17 @@ export default function AdminProfile() {
             </div>
 
             <div className="kora-sidebar-avatar-section">
-              <div className="kora-admin-avatar"><Shield size={32} /></div>
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt={profile.fullName} className="kora-admin-avatar-img" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--kora-border)', marginBottom: '10px' }} />
+              ) : (
+                <div className="kora-admin-avatar"><Shield size={32} /></div>
+              )}
               <p className="kora-sidebar-name">{profile.fullName}</p>
-              <p className="kora-sidebar-role">Platform Administrator</p>
+              {profile.department ? (
+                <p className="kora-sidebar-role">{profile.department} Department</p>
+              ) : (
+                <p className="kora-sidebar-role">Platform Administrator</p>
+              )}
             </div>
 
             <div className="kora-admin-quick-stat">
@@ -312,18 +410,40 @@ export default function AdminProfile() {
               <div className="kora-admin-banner-badge"><Shield size={16} />ADMINISTRATOR</div>
             </div>
             <div className="kora-header-body">
-              <div className="kora-header-avatar-wrap">
-                <div className="kora-header-avatar-placeholder kora-admin-avatar-large">
-                  <Shield size={36} />
-                </div>
+              <div className="kora-header-avatar-wrap uploadable">
+                {profile.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt={profile.fullName} className="kora-header-avatar-img kora-admin-avatar-large" style={{ width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--kora-white)' }} />
+                ) : (
+                  <div className="kora-header-avatar-placeholder kora-admin-avatar-large">
+                    <Shield size={36} />
+                  </div>
+                )}
+                <label className="kora-avatar-upload-overlay" htmlFor="admin-file-input">
+                  <Camera size={18} />
+                  <span>Upload</span>
+                </label>
+                <input
+                  type="file"
+                  id="admin-file-input"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleAvatarChange(file);
+                  }}
+                />
               </div>
               <div className="kora-header-info">
                 <div className="kora-header-name-row">
                   <h1 className="kora-header-name">{profile.fullName}</h1>
-                  <button className="kora-edit-btn"><Edit2 size={15} />Edit Info</button>
+                  <button className="kora-edit-btn" onClick={() => { setForm({ ...profile }); setEditing(true); }}>
+                    <Edit2 size={15} />Edit Info
+                  </button>
                 </div>
                 <div className="kora-header-meta">
                   <span className="kora-meta-chip">{profile.email}</span>
+                  {profile.phone && <span className="kora-meta-chip">{profile.phone}</span>}
+                  {profile.department && <span className="kora-meta-chip">{profile.department}</span>}
                   <span className="kora-meta-chip kora-admin-chip"><Shield size={12} />Full Access</span>
                 </div>
               </div>
@@ -465,6 +585,29 @@ export default function AdminProfile() {
           )}
         </main>
       </div>
+
+      {editing && (
+        <div className="kora-modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditing(false)}>
+          <div className="kora-modal">
+            <div className="kora-modal-header">
+              <h2>Edit Admin Info</h2>
+              <button className="kora-modal-close" onClick={() => setEditing(false)}><X size={20} /></button>
+            </div>
+            <div className="kora-modal-body">
+              <div className="kora-form-grid">
+                <div className="kora-field"><label>Full Name *</label><input value={form.fullName || ''} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></div>
+                <div className="kora-field"><label>Phone</label><input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                <div className="kora-field"><label>Department</label><input value={form.department || ''} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
+                <div className="kora-field"><label>Avatar URL</label><input value={form.avatarUrl || ''} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} /></div>
+              </div>
+              <div className="kora-modal-footer">
+                <button className="kora-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
+                <button className="kora-btn-primary" onClick={handleSave}>Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {resetModal && (
         <ResetPasswordModal onClose={() => setResetModal(false)} userEmail={profile.email} />

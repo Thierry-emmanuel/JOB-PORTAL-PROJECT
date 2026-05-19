@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Building2, Briefcase, Users, BarChart3,
   LogOut, ChevronLeft, ChevronRight, Check, Ban, Trash2,
   Eye, Flag, AlertCircle, X, Search, TrendingUp,
-  Award, Activity, CheckCircle, Clock, XCircle,
+  Award, Activity, CheckCircle, Clock, XCircle, Shield, Camera
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -17,23 +17,175 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import '../../styles/employee-dashboard.css';
 import '../../styles/admin-dashboard.css';
 import '../../styles/profile.css';
-import KoraLogo from '../../assets/absolute-size-logo.png';
+import '../../styles/admin-profile.css';
+import koraLogo from '../../assets/absolute-size-logo.png';
 
-// ─── Chart.js ─────────────────────────────────────────────────────────────────
-// Chart.js is loaded via CDN script (same pattern as AdminProfile.jsx)
-// This ref pattern avoids re-loading it if already present
-const CHART_CDN = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js';
-
-function useChartJs(cb, deps) {
-  const called = useRef(false);
+// ─── Chart.js Helper Hook ──────────────────────────────────────────────────
+function useChart(canvasRef, config, deps) {
   useEffect(() => {
-    if (window.Chart) { if (!called.current) { called.current = true; cb(); } return; }
-    const s = document.createElement('script');
-    s.src = CHART_CDN;
-    s.onload = () => { if (!called.current) { called.current = true; cb(); } };
-    document.head.appendChild(s);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!canvasRef.current || typeof window === "undefined") return;
+    let chart;
+    const init = () => {
+      if (!window.Chart) return;
+      if (chart) chart.destroy();
+      chart = new window.Chart(canvasRef.current, config());
+    };
+    if (window.Chart) {
+      init();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js";
+      script.onload = init;
+      document.head.appendChild(script);
+    }
+    return () => { if (chart) chart.destroy(); };
   }, deps);
+}
+
+// ─── Chart Components ───────────────────────────────────────────────────────
+function UserGrowthChart({ data }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "Job Seekers",
+          data: data.jobSeekers,
+          borderColor: "#7c3aed",
+          backgroundColor: "rgba(124,58,237,0.08)",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#7c3aed",
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: "Employers",
+          data: data.employers,
+          borderColor: "#F97316",
+          backgroundColor: "rgba(249,115,22,0.08)",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#F97316",
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", labels: { font: { family: "Poppins", size: 12 }, boxWidth: 14, padding: 16 } },
+        tooltip: { mode: "index", intersect: false },
+      },
+      scales: {
+        x: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "Poppins" } } },
+        y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "Poppins" } } },
+      },
+    },
+  }), [data]);
+  return <canvas ref={ref} />;
+}
+
+function ApplicationsByCategoryChart({ data }) {
+  const ref = useRef();
+  const labels = Object.keys(data || {});
+  const values = Object.values(data || {});
+  useChart(ref, () => ({
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Applications",
+        data: values,
+        backgroundColor: ["#7c3aed","#1a4a42","#F97316","#f5a05a","#b5c4c1","#3a5550"],
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} applications` } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: "Poppins", size: 11 } } },
+        y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { family: "Poppins" } } },
+      },
+    },
+  }), [data]);
+  return <canvas ref={ref} />;
+}
+
+function ApplicationStatusChart({ data }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "doughnut",
+    data: {
+      labels: Object.keys(data || {}),
+      datasets: [{
+        data: Object.values(data || {}),
+        backgroundColor: ["#7c3aed","#F97316","#22c55e","#ef4444"],
+        borderWidth: 3,
+        borderColor: "#ffffff",
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "65%",
+      plugins: {
+        legend: {
+          position: "right",
+          labels: { font: { family: "Poppins", size: 12 }, boxWidth: 14, padding: 14 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((ctx.parsed / total) * 100).toFixed(1);
+              return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  }), [data]);
+  return <canvas ref={ref} />;
+}
+
+function JobStatusChart({ active, expired, deleted }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: "pie",
+    data: {
+      labels: ["Active", "Expired", "Deleted"],
+      datasets: [{
+        data: [active, expired, deleted],
+        backgroundColor: ["#7c3aed","#f59e0b","#ef4444"],
+        borderWidth: 3,
+        borderColor: "#ffffff",
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: { font: { family: "Poppins", size: 12 }, boxWidth: 14, padding: 14 },
+        },
+      },
+    },
+  }), [active, expired, deleted]);
+  return <canvas ref={ref} />;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,6 +259,26 @@ function ErrorBanner({ message }) {
   );
 }
 
+// ─── Stat Card (from Employee Dashboard) ──────────────────────────────────────
+function StatCard({ icon, value, label, delta, accent }) {
+  return (
+    <div className="ed-stat-card">
+      <div
+        className="ed-stat-icon"
+        style={{ background: `${accent}18`, color: accent }}
+        aria-hidden="true"
+      >
+        {icon}
+      </div>
+      <div className="ed-stat-body">
+        <div className="ed-stat-value">{value}</div>
+        <div className="ed-stat-label">{label}</div>
+        {delta && <div className="ed-stat-delta">{delta}</div>}
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB 1 — Overview
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -114,10 +286,6 @@ function OverviewTab({ pendingCount }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const lineRef  = useRef(null);
-  const doughRef = useRef(null);
-  const lineChart  = useRef(null);
-  const doughChart = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -127,164 +295,84 @@ function OverviewTab({ pendingCount }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const buildCharts = useCallback(() => {
-    if (!window.Chart || !stats) return;
-    const C = window.Chart;
-
-    // Destroy previous instances
-    if (lineChart.current)  { lineChart.current.destroy();  lineChart.current  = null; }
-    if (doughChart.current) { doughChart.current.destroy(); doughChart.current = null; }
-
-    // Line chart — User growth (mock monthly data)
-    if (lineRef.current) {
-      const labels = ['Dec', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
-      const seekers = stats.seekers?.length ?? 0;
-      const employers = stats.employers?.length ?? 0;
-      const growth = (base, total) =>
-        Array.from({ length: 6 }, (_, i) => Math.round(total * (0.4 + i * 0.12 + Math.random() * 0.06)));
-
-      lineChart.current = new C(lineRef.current, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Chercheurs d\'emploi',
-              data: growth(0, seekers),
-              borderColor: '#1A5C2E',
-              backgroundColor: 'rgba(26,92,46,0.08)',
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#1A5C2E',
-              pointRadius: 4,
-            },
-            {
-              label: 'Employeurs',
-              data: growth(0, employers),
-              borderColor: '#F97316',
-              backgroundColor: 'rgba(249,115,22,0.08)',
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#F97316',
-              pointRadius: 4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 11 } } } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'Poppins', size: 11 } } },
-            y: { beginAtZero: true, ticks: { font: { family: 'Poppins', size: 11 }, precision: 0 } },
-          },
-        },
-      });
-    }
-
-    // Doughnut chart — Application status
-    if (doughRef.current) {
-      const total = stats.totalApplications || 40;
-      doughChart.current = new C(doughRef.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Soumises', 'Présélection', 'Embauchés', 'Rejetées'],
-          datasets: [{
-            data: [
-              Math.round(total * 0.45),
-              Math.round(total * 0.25),
-              Math.round(total * 0.15),
-              Math.round(total * 0.15),
-            ],
-            backgroundColor: ['#1A5C2E', '#F97316', '#3B82F6', '#EF4444'],
-            borderWidth: 0,
-            hoverOffset: 6,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '68%',
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { font: { family: 'Poppins', size: 11 }, padding: 12 },
-            },
-          },
-        },
-      });
-    }
-  }, [stats]);
-
-  useChartJs(buildCharts, [stats]);
-  useEffect(() => { if (stats) buildCharts(); }, [stats, buildCharts]);
-
   if (loading) return <Loading />;
+  if (error) return <ErrorBanner message={error} />;
+  if (!stats) return null;
 
   return (
     <>
-      {error && <ErrorBanner message={error} />}
+      {/* ── KPI Cards ── */}
+      <div className="ed-stats-row" style={{ marginBottom: '28px' }}>
+        <StatCard label="Utilisateurs" value={stats.totalUsers?.toLocaleString() ?? 0} icon={<Users size={20} />} accent="#7c3aed" />
+        <StatCard label="Chercheurs" value={stats.totalJobSeekers?.toLocaleString() ?? 0} icon={<Users size={20} />} accent="#1a4a42" />
+        <StatCard label="Employeurs" value={stats.totalEmployers?.toLocaleString() ?? 0} icon={<Building2 size={20} />} accent="#F97316" />
+        <StatCard label="Offres actives" value={stats.activeJobs?.toLocaleString() ?? 0} icon={<Briefcase size={20} />} accent="#7c3aed" />
+        <StatCard label="Candidatures" value={stats.totalApplications?.toLocaleString() ?? 0} icon={<BarChart3 size={20} />} accent="#1a4a42" />
+        <StatCard label="Taux d'embauche" value={`${stats.hireRate ?? 0}%`} icon={<CheckCircle size={20} />} accent="#22c55e" />
+      </div>
 
-      {/* Stat Cards */}
-      <div className="ad-stats-row">
-        <div className="ad-stat-card">
-          <div className="ad-stat-header">
-            <span className="ad-stat-label">Utilisateurs totaux</span>
-            <span className="ad-stat-icon green"><Users size={18} /></span>
+      {/* Row 1: User Growth + Applications by Category */}
+      <div className="kora-charts-row" style={{ marginBottom: '20px' }}>
+        <div className="kora-chart-card">
+          <div className="kora-chart-header">
+            <TrendingUp size={16} />
+            <h3>Croissance des utilisateurs (6 derniers mois)</h3>
           </div>
-          <div className="ad-stat-value">{stats?.totalUsers ?? 0}</div>
-          <div className="ad-stat-sub">Chercheurs + Employeurs</div>
+          <div className="kora-chart-area">
+            {stats.usersOverTime ? (
+              <UserGrowthChart data={stats.usersOverTime} />
+            ) : (
+              <div className="ad-empty">Aucune donnée disponible.</div>
+            )}
+          </div>
         </div>
 
-        <div className="ad-stat-card">
-          <div className="ad-stat-header">
-            <span className="ad-stat-label">Offres actives</span>
-            <span className="ad-stat-icon blue"><Briefcase size={18} /></span>
+        <div className="kora-chart-card">
+          <div className="kora-chart-header">
+            <BarChart3 size={16} />
+            <h3>Candidatures par catégorie</h3>
           </div>
-          <div className="ad-stat-value">{stats?.activeJobs ?? 0}</div>
-          <div className="ad-stat-sub">Postes publiés</div>
-        </div>
-
-        <div className="ad-stat-card">
-          <div className="ad-stat-header">
-            <span className="ad-stat-label">Approbations en attente</span>
-            <span className="ad-stat-icon orange"><Clock size={18} /></span>
+          <div className="kora-chart-area">
+            {stats.applicationsByCategory && Object.keys(stats.applicationsByCategory).length > 0 ? (
+              <ApplicationsByCategoryChart data={stats.applicationsByCategory} />
+            ) : (
+              <div className="ad-empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>Aucune candidature enregistrée.</div>
+            )}
           </div>
-          <div className="ad-stat-value">
-            {stats?.pendingApprovals ?? pendingCount ?? 0}
-          </div>
-          {(stats?.pendingApprovals || pendingCount) > 0 && (
-            <div className="ad-stat-sub">
-              <span className="ad-stat-badge">Action requise</span>
-            </div>
-          )}
-          {!(stats?.pendingApprovals || pendingCount) && (
-            <div className="ad-stat-sub">Aucune en attente</div>
-          )}
-        </div>
-
-        <div className="ad-stat-card">
-          <div className="ad-stat-header">
-            <span className="ad-stat-label">Candidatures totales</span>
-            <span className="ad-stat-icon purple"><Activity size={18} /></span>
-          </div>
-          <div className="ad-stat-value">{stats?.totalApplications ?? 0}</div>
-          <div className="ad-stat-sub">Toutes périodes confondues</div>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="ad-charts-row">
-        <div className="ad-chart-card">
-          <p className="ad-chart-title">Croissance des utilisateurs (6 derniers mois)</p>
-          <div className="ad-chart-wrap">
-            <canvas ref={lineRef} />
+      {/* Row 2: Application Status + Job Status */}
+      <div className="kora-charts-row">
+        <div className="kora-chart-card">
+          <div className="kora-chart-header">
+            <BarChart3 size={16} />
+            <h3>Répartition des statuts de candidature</h3>
+          </div>
+          <div className="kora-chart-area">
+            {stats.applicationStatusBreakdown && Object.keys(stats.applicationStatusBreakdown).length > 0 ? (
+              <ApplicationStatusChart data={stats.applicationStatusBreakdown} />
+            ) : (
+              <div className="ad-empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>Aucun statut de candidature disponible.</div>
+            )}
           </div>
         </div>
-        <div className="ad-chart-card">
-          <p className="ad-chart-title">Statuts des candidatures</p>
-          <div className="ad-chart-wrap">
-            <canvas ref={doughRef} />
+
+        <div className="kora-chart-card">
+          <div className="kora-chart-header">
+            <Briefcase size={16} />
+            <h3>Offres d'emploi par statut</h3>
+          </div>
+          <div className="kora-chart-area">
+            <JobStatusChart
+              active={stats.activeJobs}
+              expired={stats.expiredJobs}
+              deleted={stats.deletedJobs}
+            />
+          </div>
+          <div className="kora-hire-rate-callout" style={{ marginTop: '15px' }}>
+            <span>Taux de conversion candidature-à-embauche</span>
+            <strong>{stats.hireRate}%</strong>
           </div>
         </div>
       </div>
@@ -310,7 +398,8 @@ function EmployerTab({ onPendingUpdate }) {
     fetchEmployers(f)
       .then((data) => {
         setEmployers(data);
-        const pending = data.filter((e) => (e.status ?? '').toLowerCase() === 'pending' || !e.isActive).length;
+        // Employer uses isApproved (boolean) for approval state, isActive for suspension
+        const pending = data.filter((e) => e.isApproved === false).length;
         onPendingUpdate?.(pending);
       })
       .catch(() => setError('Impossible de charger les employeurs.'))
@@ -344,13 +433,20 @@ function EmployerTab({ onPendingUpdate }) {
 
   const filtered = employers.filter((e) => {
     const q = search.toLowerCase();
+    // Employer extends User: name is in fullName, no companyName field
     return (
       !q ||
-      (e.companyName ?? '').toLowerCase().includes(q) ||
+      (e.fullName ?? '').toLowerCase().includes(q) ||
       (e.email ?? '').toLowerCase().includes(q) ||
-      (e.contactPerson ?? '').toLowerCase().includes(q)
+      (e.jobTitle ?? '').toLowerCase().includes(q) ||
+      (e.city ?? '').toLowerCase().includes(q)
     );
   });
+
+  // For 'suspended' filter, handle client-side since backend only has /approved and /pending
+  const displayList = filter === 'suspended'
+    ? filtered.filter((e) => e.isActive === false)
+    : filtered;
 
   return (
     <>
@@ -380,12 +476,12 @@ function EmployerTab({ onPendingUpdate }) {
         </div>
       </div>
 
-      <div className="ad-table-card">
-        <div className="ad-table-header">
-          <span className="ad-table-title">
-            <Building2 size={16} />
+      <div className="ed-section">
+        <div className="ed-section-header">
+          <h2 className="ed-section-title">
+            <Building2 size={16} style={{ display: 'inline', marginRight: 8, verticalAlign: 'text-bottom' }} />
             Employeurs ({filtered.length})
-          </span>
+          </h2>
         </div>
 
         {loading ? <Loading /> : (
@@ -402,15 +498,25 @@ function EmployerTab({ onPendingUpdate }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {displayList.length === 0 ? (
                   <tr><td colSpan={6}><div className="ad-empty">Aucun employeur trouvé.</div></td></tr>
-                ) : filtered.map((emp) => {
-                  const status = (emp.status ?? (emp.isActive ? 'ACTIVE' : 'PENDING')).toUpperCase();
-                  const id = emp.id ?? emp.userId;
+                ) : displayList.map((emp) => {
+                  // Employer: isApproved=false → PENDING, isActive=false → SUSPENDED, otherwise ACTIVE
+                  const status = emp.isApproved === false ? 'PENDING'
+                    : emp.isActive === false ? 'SUSPENDED'
+                    : 'ACTIVE';
+                  const id = emp.id;
                   return (
                     <tr key={id}>
-                      <td><strong>{fmt(emp.companyName)}</strong></td>
-                      <td>{fmt(emp.contactPerson)}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div className="ad-chip-avatar" style={{ width: 30, height: 30, fontSize: 12, background: '#7c3aed', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+                            {(emp.fullName ?? '?')[0].toUpperCase()}
+                          </div>
+                          <strong>{fmt(emp.fullName)}</strong>
+                        </div>
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--kora-muted)' }}>{fmt(emp.jobTitle)}</td>
                       <td style={{ color: 'var(--kora-muted)', fontSize: 12 }}>{fmt(emp.email)}</td>
                       <td><StatusBadge status={status} /></td>
                       <td style={{ fontSize: 12 }}>{fmtDate(emp.createdAt)}</td>
@@ -430,6 +536,14 @@ function EmployerTab({ onPendingUpdate }) {
                               onClick={() => setModal({ type: 'suspend', employer: emp })}
                             >
                               <Ban size={12} /> Suspendre
+                            </button>
+                          )}
+                          {status === 'SUSPENDED' && (
+                            <button
+                              className="ad-btn ad-btn-approve"
+                              onClick={() => setModal({ type: 'approve', employer: emp })}
+                            >
+                              <Check size={12} /> Réactiver
                             </button>
                           )}
                           <button
@@ -452,7 +566,7 @@ function EmployerTab({ onPendingUpdate }) {
       {modal && (
         <ConfirmModal
           title={modal.type === 'approve' ? 'Approuver cet employeur ?' : modal.type === 'suspend' ? 'Suspendre cet employeur ?' : 'Supprimer cet employeur ?'}
-          message={`${modal.type === 'delete' ? 'Cette action est irréversible. ' : ''}Voulez-vous vraiment ${modal.type === 'approve' ? 'approuver' : modal.type === 'suspend' ? 'suspendre' : 'supprimer'} l'employeur "${modal.employer.companyName}" ?`}
+          message={`${modal.type === 'delete' ? 'Cette action est irréversible. ' : ''}Voulez-vous vraiment ${modal.type === 'approve' ? 'approuver' : modal.type === 'suspend' ? 'suspendre' : 'supprimer'} l'employeur "${modal.employer.fullName}" ?`}
           danger={modal.type !== 'approve'}
           onConfirm={handleAction}
           onCancel={() => setModal(null)}
@@ -545,9 +659,12 @@ function JobsTab() {
         </div>
       </div>
 
-      <div className="ad-table-card">
-        <div className="ad-table-header">
-          <span className="ad-table-title"><Briefcase size={16} /> Offres d'emploi ({filtered.length})</span>
+      <div className="ed-section">
+        <div className="ed-section-header">
+          <h2 className="ed-section-title">
+            <Briefcase size={16} style={{ display: 'inline', marginRight: 8, verticalAlign: 'text-bottom' }} /> 
+            Offres d'emploi ({filtered.length})
+          </h2>
         </div>
 
         {loading ? <Loading /> : (
@@ -695,8 +812,8 @@ function SeekersTab() {
 
   const filtered = seekers.filter((s) => {
     const q = search.toLowerCase();
-    const name = `${s.firstName ?? ''} ${s.lastName ?? ''}`.toLowerCase();
-    return !q || name.includes(q) || (s.email ?? '').toLowerCase().includes(q);
+    // JobSeeker extends User: name is in fullName
+    return !q || (s.fullName ?? '').toLowerCase().includes(q) || (s.email ?? '').toLowerCase().includes(q);
   });
 
   return (
@@ -711,9 +828,12 @@ function SeekersTab() {
         </div>
       </div>
 
-      <div className="ad-table-card">
-        <div className="ad-table-header">
-          <span className="ad-table-title"><Users size={16} /> Chercheurs d'emploi ({filtered.length})</span>
+      <div className="ed-section">
+        <div className="ed-section-header">
+          <h2 className="ed-section-title">
+            <Users size={16} style={{ display: 'inline', marginRight: 8, verticalAlign: 'text-bottom' }} /> 
+            Chercheurs d'emploi ({filtered.length})
+          </h2>
         </div>
 
         {loading ? <Loading /> : (
@@ -736,13 +856,13 @@ function SeekersTab() {
                   const status = s.status ?? (s.isActive === false ? 'SUSPENDED' : 'ACTIVE');
                   const skills = Array.isArray(s.keywords) ? s.keywords : [];
                   return (
-                    <tr key={s.id ?? s.seekerId ?? s.userId}>
+                    <tr key={s.id}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div className="ad-chip-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
-                            {initials(`${s.firstName ?? ''} ${s.lastName ?? ''}`)}
+                            {initials(s.fullName ?? s.email ?? '')}
                           </div>
-                          <strong>{fmt(`${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.email)}</strong>
+                          <strong>{fmt(s.fullName || s.email)}</strong>
                         </div>
                       </td>
                       <td style={{ fontSize: 12, color: 'var(--kora-muted)' }}>{fmt(s.email)}</td>
@@ -780,7 +900,7 @@ function SeekersTab() {
       {modal && (
         <ConfirmModal
           title="Suspendre ce chercheur ?"
-          message={`Voulez-vous suspendre "${modal.firstName} ${modal.lastName}" ?`}
+          message={`Voulez-vous suspendre "${modal.fullName ?? modal.email}" ?`}
           danger
           onConfirm={handleSuspend}
           onCancel={() => setModal(null)}
@@ -807,25 +927,28 @@ function SeekersTab() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 22, fontWeight: 800,
                 }}>
-                  {initials(`${slideOver.firstName ?? ''} ${slideOver.lastName ?? ''}`)}
+                  {initials(slideOver.fullName ?? slideOver.email ?? '')}
                 </div>
                 <div>
                   <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--kora-ink)' }}>
-                    {`${slideOver.firstName ?? ''} ${slideOver.lastName ?? ''}`.trim() || '—'}
+                    {slideOver.fullName || '—'}
                   </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--kora-muted)' }}>{slideOver.headline ?? 'Chercheur d\'emploi'}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--kora-muted)' }}>{slideOver.profileSummary ?? 'Chercheur d\'emploi'}</div>
                 </div>
-              </div>
+              </div>{/* end avatar+name flex row */}
 
               <div className="ad-detail-section">
                 <div className="ad-detail-section-title">Informations générales</div>
                 {[
                   ['Email', slideOver.email],
                   ['Téléphone', slideOver.phone],
-                  ['Localisation', slideOver.locationId ?? slideOver.city],
-                  ['Expérience', slideOver.totalExperience ? `${slideOver.totalExperience} ans` : null],
+                  ['Ville', slideOver.city],
+                  ['Région', slideOver.region],
                   ['Inscrit le', fmtDate(slideOver.createdAt)],
-                  ['Statut', slideOver.status ?? (slideOver.isActive !== false ? 'ACTIVE' : 'SUSPENDED')],
+                  ['Statut', slideOver.isActive === false ? 'SUSPENDED' : 'ACTIVE'],
+                  ['Ouvert au travail', slideOver.isOpenToWork ? 'Oui' : 'Non'],
+                  ['LinkedIn', slideOver.linkedInUrl],
+                  ['Portfolio', slideOver.portfolioUrl],
                 ].map(([k, v]) => (
                   <div key={k} className="ad-detail-row">
                     <span className="key">{k}</span>
@@ -890,14 +1013,15 @@ function ReportsTab() {
   // Compute metrics
   const totalApps = jobs.reduce((acc, j) => acc + (j.applicationCount ?? 0), 0);
   const hired     = jobs.reduce((acc, j) => acc + (j.hiredCount ?? 0), 0);
-  const activeJ   = jobs.filter((j) => (j.postingStatus ?? j.status ?? '').toUpperCase() === 'ACTIVE');
+  // JobListingSummary has status (PostingStatus enum) not postingStatus
+  const activeJ   = jobs.filter((j) => (j.status ?? '').toString().toUpperCase() === 'ACTIVE');
   const hireRate  = totalApps > 0 ? ((hired / totalApps) * 100).toFixed(1) : '—';
   const avgApps   = activeJ.length > 0 ? (totalApps / activeJ.length).toFixed(1) : '—';
 
-  // Category aggregation
+  // Category aggregation — JobListingSummary has 'categoryName' field
   const catMap = {};
   jobs.forEach((j) => {
-    const cat = j.category ?? j.categoryId ?? 'Autre';
+    const cat = j.categoryName ?? j.category ?? j.categoryId ?? 'Autre';
     catMap[cat] = (catMap[cat] ?? 0) + (j.applicationCount ?? 1);
   });
   const topCats = Object.entries(catMap)
@@ -917,7 +1041,7 @@ function ReportsTab() {
           label: 'Candidatures',
           data: topCats.map(([, v]) => v),
           backgroundColor: [
-            '#1A5C2E','#F97316','#3B82F6','#7C3AED','#EF4444','#10B981',
+            '#7c3aed','#F97316','#3B82F6','#7C3AED','#EF4444','#10B981',
           ],
           borderRadius: 6,
           borderSkipped: false,
@@ -936,8 +1060,31 @@ function ReportsTab() {
     });
   }, [topCats]);
 
-  useChartJs(buildBar, [jobs]);
-  useEffect(() => { if (!loading) buildBar(); }, [loading, buildBar]);
+  useChart(barRef, () => ({
+    type: 'bar',
+    data: {
+      labels: topCats.map(([k]) => k),
+      datasets: [{
+        label: 'Candidatures',
+        data: topCats.map(([, v]) => v),
+        backgroundColor: [
+          '#7c3aed','#F97316','#3B82F6','#7C3AED','#EF4444','#10B981',
+        ],
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { font: { family: 'Poppins', size: 11 }, precision: 0 } },
+        y: { ticks: { font: { family: 'Poppins', size: 11 } } },
+      },
+    },
+  }), [topCats]);
 
   if (loading) return <Loading />;
 
@@ -945,26 +1092,16 @@ function ReportsTab() {
     <>
       {error && <ErrorBanner message={error} />}
 
-      <div className="ad-reports-kpi-row">
-        <div className="ad-kpi-card">
-          <div className="ad-kpi-label">Taux d'embauche</div>
-          <div className="ad-kpi-value">{hireRate}{hireRate !== '—' ? '%' : ''}</div>
-          <div className="ad-kpi-sub">Candidatures → Embauches</div>
-        </div>
-        <div className="ad-kpi-card orange">
-          <div className="ad-kpi-label">Catégorie la plus active</div>
-          <div className="ad-kpi-value" style={{ fontSize: 22, marginTop: 4 }}>{mostActive}</div>
-          <div className="ad-kpi-sub">Par nombre d'offres</div>
-        </div>
-        <div className="ad-kpi-card blue">
-          <div className="ad-kpi-label">Moy. candidatures/offre</div>
-          <div className="ad-kpi-value">{avgApps}</div>
-          <div className="ad-kpi-sub">Sur offres actives</div>
-        </div>
+      <div className="ed-stats-row" style={{ marginBottom: '28px' }}>
+        <StatCard label="Taux d'embauche" value={`${hireRate}${hireRate !== '—' ? '%' : ''}`} icon={<CheckCircle size={20} />} accent="#22c55e" delta="Candidatures → Embauches" />
+        <StatCard label="Catégorie active" value={mostActive} icon={<Activity size={20} />} accent="#F97316" delta="Par nombre d'offres" />
+        <StatCard label="Moy. candidatures" value={avgApps} icon={<TrendingUp size={20} />} accent="#3B82F6" delta="Par offre active" />
       </div>
 
-      <div className="ad-chart-card">
-        <p className="ad-chart-title">Candidatures par catégorie (Top 6)</p>
+      <div className="ed-section">
+        <div className="ed-section-header">
+          <h2 className="ed-section-title">Candidatures par catégorie (Top 6)</h2>
+        </div>
         <div className="ad-chart-wrap" style={{ height: 260 }}>
           {topCats.length > 0 ? (
             <canvas ref={barRef} />
@@ -995,54 +1132,37 @@ export default function AdminDashboard() {
   const [tab, setTab]           = useState('overview');
   const [pendingCount, setPendingCount] = useState(0);
 
-  const adminName = user?.name ?? user?.email ?? 'Admin';
   const { title, sub } = TAB_TITLES[tab] || TAB_TITLES.overview;
 
+  const firstName  = user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'Admin';
+
   return (
-    <div className="ed-root">
+    <div className="ed-root admin">
       <KoraNav />
       <div className="ed-body">
         
         {/* ════════ SIDEBAR ════════ */}
-        <aside className="ed-sidebar kora-sidebar">
+        <aside className="ed-sidebar kora-sidebar kora-admin-sidebar">
           <AdminSidebar activeTab={tab} setActiveTab={setTab} />
         </aside>
 
         {/* ════════ MAIN CONTENT ════════ */}
         <main className="ed-main">
           
+          {/* Welcome */}
           <div className="ed-welcome">
             <div>
-              <h1 className="ed-welcome-title">{title}</h1>
-              <p className="ed-welcome-sub">{sub}</p>
-            </div>
-            
-            <div className="ed-topbar-actions">
-              {pendingCount > 0 && (
-                <div
-                  style={{
-                    background: 'var(--kora-orange-light)',
-                    color: 'var(--kora-orange)',
-                    borderRadius: 'var(--kora-r-pill)',
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setTab('employers')}
-                >
-                  <Clock size={15} />
-                  {pendingCount} approbation{pendingCount > 1 ? 's' : ''} en attente
-                </div>
-              )}
+              <h1 className="ed-welcome-title">
+                {title}
+              </h1>
+              <p className="ed-welcome-sub">
+                {sub}
+              </p>
             </div>
           </div>
 
           {/* Content Route */}
-          <div className="ad-content">
+          <div className="ad-content" style={{ padding: 0 }}>
             {tab === 'overview'  && <OverviewTab pendingCount={pendingCount} />}
             {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
             {tab === 'jobs'      && <JobsTab />}
@@ -1054,4 +1174,4 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
-}
+}

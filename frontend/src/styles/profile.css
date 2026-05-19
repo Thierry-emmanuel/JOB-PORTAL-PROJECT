@@ -1139,3 +1139,35 @@
   .kora-cv-uploaded { flex-wrap: wrap; }
   .kora-cv-actions { width: 100%; justify-content: flex-start; }
 }
+
+/* Uploadable Avatar Hover Overlay Styling */
+.kora-header-avatar-wrap.uploadable {
+  cursor: pointer;
+}
+.kora-avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(11, 43, 38, 0.65);
+  backdrop-filter: blur(2px);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  cursor: pointer;
+  z-index: 2;
+  border: 4px solid white;
+}
+.kora-header-avatar-wrap.uploadable:hover .kora-avatar-upload-overlay {
+  opacity: 1;
+}
+

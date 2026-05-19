@@ -53,8 +53,32 @@ export default function ProfileSidebar({ profile, completion, onEdit, onPhotoCha
             onChange={(e) => e.target.files[0] && onPhotoChange(e.target.files[0])}
           />
         </div>
-        <p className="kora-sidebar-name">{displayName}</p>
+        <p
+          className="kora-sidebar-name"
+          onClick={onEdit}
+          style={{ cursor: "pointer" }}
+          title="Go to My Profile"
+        >
+          {displayName}
+        </p>
         <p className="kora-sidebar-role">Job Seeker</p>
+        <button
+          onClick={onEdit}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--kora-accent)",
+            fontSize: "12px",
+            fontWeight: "600",
+            cursor: "pointer",
+            marginTop: "6px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px"
+          }}
+        >
+          Edit Profile →
+        </button>
       </div>
 
       {/* Completion */}
