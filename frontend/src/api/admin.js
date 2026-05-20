@@ -41,14 +41,18 @@ export const fetchAdminJobs = async ({ status = '', page = 0, size = 20 } = {}) 
 };
 
 export const approveJob = async (id) => {
-  const { data } = await apiClient.patch(`/api/admin/jobs/${id}/approve`, { status: 'ACTIVE' });
+  const { data } = await apiClient.patch(`/api/admin/jobs/${id}/approve`, {
+    status: 'ACTIVE',
+    reason: 'Approved by platform administrator'
+  });
   return data.data ?? data;
 };
 
 export const flagJob = async (id, reason = '') => {
+  const validReason = reason.length >= 10 ? reason : 'Flagged by platform administrator';
   const { data } = await apiClient.patch(`/api/admin/jobs/${id}/approve`, {
     status: 'DRAFT',
-    reason,
+    reason: validReason,
   });
   return data.data ?? data;
 };

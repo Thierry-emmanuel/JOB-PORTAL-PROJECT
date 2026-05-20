@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/jobseekers")
@@ -70,6 +71,7 @@ public class JobSeekerController {
 
     // PATCH /api/v1/jobseekers/{id}/deactivate
     // Deactivates a JobSeeker account (soft delete)
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<Void> deactivateJobSeeker(@PathVariable Long id) {
         try {
@@ -82,6 +84,7 @@ public class JobSeekerController {
 
     // DELETE /api/v1/jobseekers/{id}
     // Permanently deletes a JobSeeker
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteJobSeeker(@PathVariable Long id) {
         try {

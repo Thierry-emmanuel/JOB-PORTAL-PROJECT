@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/employers")
@@ -62,6 +63,7 @@ public class EmployerController {
 
     // PATCH /api/v1/employers/{id}/approve
     // Approves an Employer account - Admin action (FR07)
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/approve")
     public ResponseEntity<Employer> approveEmployer(@PathVariable Long id) {
         try {
@@ -90,6 +92,7 @@ public class EmployerController {
 
     // PATCH /api/v1/employers/{id}/deactivate
     // Deactivates an Employer account (soft delete)
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<Void> deactivateEmployer(@PathVariable Long id) {
         try {
@@ -102,6 +105,7 @@ public class EmployerController {
 
     // DELETE /api/v1/employers/{id}
     // Permanently deletes an Employer
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployer(@PathVariable Long id) {
         try {
