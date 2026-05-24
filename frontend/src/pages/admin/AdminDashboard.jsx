@@ -1408,6 +1408,9 @@ export default function AdminDashboard() {
   const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
 
   return (
+    /* ed-root.admin is a full-height flex column — the bg reaches the
+       very bottom of the viewport so no bare white/black strip appears
+       when scrolling past the last content element.                    */
     <div className="ed-root admin">
       <KoraNav />
 
@@ -1418,7 +1421,13 @@ export default function AdminDashboard() {
         </aside>
 
         {/* ═══ MAIN CONTENT ═══ */}
-        <main className="ed-main">
+        {/* ed-main is a flex column so ad-content can stretch to fill
+            all remaining height — prevents a background mismatch at the
+            bottom of shorter tab views.                                 */}
+        <main
+          className="ed-main"
+          style={{ display: 'flex', flexDirection: 'column' }}
+        >
           {/* Page header */}
           <div className="ed-welcome">
             <div>
@@ -1446,8 +1455,9 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Tab content */}
-          <div className="ad-content">
+          {/* Tab content — flex:1 fills remaining space so the bg bg
+              never cuts short on tabs with little content.             */}
+          <div className="ad-content" style={{ flex: 1 }}>
             {tab === 'overview'  && <OverviewTab />}
             {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
             {tab === 'jobs'      && <JobsTab />}
