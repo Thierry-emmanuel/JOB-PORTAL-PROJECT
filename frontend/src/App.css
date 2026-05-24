@@ -1,77 +1,48 @@
-/* KORA — Global Reset & Base */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ═══════════════════════════════════════════════════════════════════════
+   KORA — Global Application Styles
+   Loaded by App.jsx on every route. Only truly global rules belong here.
+   ═══════════════════════════════════════════════════════════════════════ */
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-}
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a { color: inherit; }
-
-button { font-family: inherit; }
-
-img { max-width: 100%; height: auto; }
-
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(11,43,38,0.2);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(11,43,38,0.4); }
-
-/* ============================================================
-   KORA JOB PORTAL — Global Responsiveness & Grid Layouts
-   ============================================================ */
-
+/* ── Responsive nav helpers ─────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .kora-desktop-nav { display: none !important; }
-  .kora-hero-arrow { display: none !important; }
-  .kora-stats-grid { grid-template-columns: 1fr !important; }
-  .kora-cta-grid { grid-template-columns: 1fr !important; }
-  .kora-footer-grid { 
-    display: flex !important; 
-    flex-direction: column !important; 
-    gap: 32px !important; 
+  .kora-desktop-nav  { display: none !important; }
+  .kora-hero-arrow   { display: none !important; }
+  .kora-stats-grid   { grid-template-columns: 1fr !important; }
+  .kora-cta-grid     { grid-template-columns: 1fr !important; }
+  .kora-footer-grid  {
+    display:        flex !important;
+    flex-direction: column !important;
+    gap:            32px !important;
   }
 }
 
 @media (min-width: 769px) {
-  .kora-mobile-nav { display: none !important; }
-  .kora-stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
-  .kora-cta-grid { grid-template-columns: 1fr 1fr !important; }
-  .kora-footer-grid { 
-    display: grid !important; 
-    grid-template-columns: 2fr 1fr 1fr 1fr !important; 
-    gap: 20px !important; 
+  .kora-mobile-nav   { display: none !important; }
+  .kora-stats-grid   { grid-template-columns: repeat(4, 1fr) !important; }
+  .kora-cta-grid     { grid-template-columns: 1fr 1fr !important; }
+  .kora-footer-grid  {
+    display:               grid !important;
+    grid-template-columns: 2fr 1fr 1fr 1fr !important;
+    gap:                   20px !important;
   }
 }
 
-/* Grid Layouts for Home Page Sections */
-.kora-jobs-grid, .kora-categories-grid, .kora-companies-grid {
+/* ── Home-page grid layouts ─────────────────────────────────────────── */
+.kora-jobs-grid,
+.kora-categories-grid,
+.kora-companies-grid {
   display: grid;
   gap: 20px;
 }
 
 @media (min-width: 600px) {
-  .kora-jobs-grid { grid-template-columns: 1fr 1fr; }
-  .kora-categories-grid { grid-template-columns: 1fr 1fr; }
-  .kora-companies-grid { grid-template-columns: 1fr 1fr; }
+  .kora-jobs-grid        { grid-template-columns: 1fr 1fr; }
+  .kora-categories-grid  { grid-template-columns: 1fr 1fr; }
+  .kora-companies-grid   { grid-template-columns: 1fr 1fr; }
 }
 
 @media (min-width: 1024px) {
-  .kora-jobs-grid { grid-template-columns: repeat(3, 1fr); }
-  .kora-categories-grid { grid-template-columns: repeat(4, 1fr); }
-  .kora-companies-grid { grid-template-columns: repeat(4, 1fr); }
+  .kora-jobs-grid        { grid-template-columns: repeat(3, 1fr); }
+  .kora-categories-grid  { grid-template-columns: repeat(4, 1fr); }
+  .kora-companies-grid   { grid-template-columns: repeat(4, 1fr); }
 }
