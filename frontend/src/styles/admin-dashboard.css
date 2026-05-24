@@ -6,11 +6,16 @@
    Requires:      src/styles/theme.css  +  src/styles/employee-dashboard.css
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── 1. Admin accent override (scoped to .ed-root.admin) ─────────────────── */
+/* ── 1. Admin accent + background override (scoped to .ed-root.admin) ──── */
 .ed-root.admin {
   --kora-green:        #7c3aed;
   --kora-green-dark:   #6d28d9;
   --kora-green-light:  rgba(124, 58, 237, 0.08);
+
+  /* Fill the entire viewport height — prevents the bg from ending at
+     the last content element and showing raw white/OS colour below. */
+  background: var(--kora-bg);
+
   /* Status semantic colours — used by StatusBadge & all tables */
   --ad-status-active-bg:    #f0fdf4;
   --ad-status-active-fg:    #166534;
@@ -28,7 +33,7 @@
   --ad-status-hired-fg:     #15803d;
 }
 
-/* ── 2. Shell override — Admin sidebar has a clean white card look ────────── */
+/* ── 2. Shell override — Admin sidebar has a clean white card look ────── */
 .kora-admin-sidebar {
   border: 1px solid var(--kora-border);
   background: var(--kora-white);
@@ -85,13 +90,18 @@
   color: var(--kora-green);
 }
 
-/* ── 3. Page structure helpers ───────────────────────────────────────────── */
+/* ── 3. Page structure helpers ─────────────────────────────────────────── */
 .ad-content {
-  /* Container reset — padding already handled by ed-main */
+  /* Container reset — padding already handled by ed-main.
+     Give it the page background so it fills all remaining space
+     when content is short (e.g., empty tables or single chart).    */
   padding: 0;
+  background: var(--kora-bg);
+  /* Let the flex child grow so the bg always fills the visible area */
+  flex: 1;
 }
 
-/* ── 4. Status Badges ────────────────────────────────────────────────────── */
+/* ── 4. Status Badges ──────────────────────────────────────────────────── */
 .ad-badge {
   display: inline-flex;
   align-items: center;
@@ -122,7 +132,7 @@
 .ad-badge.expired   { background: var(--ad-status-expired-bg);   color: var(--ad-status-expired-fg); }
 .ad-badge.hired     { background: var(--ad-status-hired-bg);     color: var(--ad-status-hired-fg); }
 
-/* ── 5. Toast Notification ───────────────────────────────────────────────── */
+/* ── 5. Toast Notification ─────────────────────────────────────────────── */
 .ad-toast {
   position: fixed;
   bottom: 28px;
@@ -152,7 +162,7 @@
   to   { transform: translateY(0)    scale(1);    opacity: 1; }
 }
 
-/* ── 6. Loading Spinner ──────────────────────────────────────────────────── */
+/* ── 6. Loading Spinner ────────────────────────────────────────────────── */
 .ad-spinner-wrap {
   display: flex;
   flex-direction: column;
@@ -178,7 +188,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── 7. Error Banner ─────────────────────────────────────────────────────── */
+/* ── 7. Error Banner ───────────────────────────────────────────────────── */
 .ad-error-banner {
   display: flex;
   align-items: center;
@@ -194,7 +204,7 @@
   font-family: var(--kora-font);
 }
 
-/* ── 8. Empty State ──────────────────────────────────────────────────────── */
+/* ── 8. Empty State ────────────────────────────────────────────────────── */
 .ad-empty {
   text-align: center;
   padding: 36px 24px;
@@ -204,7 +214,7 @@
   line-height: 1.6;
 }
 
-/* ── 9. Avatar Chip ──────────────────────────────────────────────────────── */
+/* ── 9. Avatar Chip ────────────────────────────────────────────────────── */
 .ad-chip-avatar {
   width: 32px;
   height: 32px;
@@ -220,7 +230,7 @@
   letter-spacing: -0.5px;
 }
 
-/* ── 10. Filter Bar ──────────────────────────────────────────────────────── */
+/* ── 10. Filter Bar ────────────────────────────────────────────────────── */
 .ad-filter-bar {
   display: flex;
   align-items: center;
@@ -258,7 +268,7 @@
   color: var(--kora-ink);
 }
 
-/* ── 11. Search ──────────────────────────────────────────────────────────── */
+/* ── 11. Search ────────────────────────────────────────────────────────── */
 .ad-search-wrap {
   display: flex;
   align-items: center;
@@ -296,7 +306,7 @@
   color: var(--kora-muted);
 }
 
-/* ── 12. Table ───────────────────────────────────────────────────────────── */
+/* ── 12. Table ─────────────────────────────────────────────────────────── */
 .ad-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -330,6 +340,9 @@
   font-size: 13px;
   vertical-align: middle;
   transition: background 0.12s;
+  /* Ensure table cells inherit the white surface from their card parent,
+     not the bg colour — prevents dark-stripe effect on scroll.          */
+  background: var(--kora-white);
 }
 
 .ad-table tbody tr:last-child td {
@@ -340,7 +353,7 @@
   background: var(--kora-green-light);
 }
 
-/* ── 13. Action Buttons ──────────────────────────────────────────────────── */
+/* ── 13. Action Buttons ────────────────────────────────────────────────── */
 .ad-actions {
   display: flex;
   gap: 6px;
@@ -418,7 +431,7 @@
   background: var(--kora-border);
 }
 
-/* ── 14. Modal ───────────────────────────────────────────────────────────── */
+/* ── 14. Modal ─────────────────────────────────────────────────────────── */
 .ad-modal-overlay {
   position: fixed;
   inset: 0;
@@ -491,7 +504,7 @@
   background: var(--kora-border);
 }
 
-/* ── 15. Textarea (inside modal for flag reason) ─────────────────────────── */
+/* ── 15. Textarea (inside modal for flag reason) ───────────────────────── */
 .ad-textarea {
   width: 100%;
   border: 1px solid var(--kora-border);
@@ -514,7 +527,7 @@
   background: var(--kora-white);
 }
 
-/* ── 16. Pagination ──────────────────────────────────────────────────────── */
+/* ── 16. Pagination ────────────────────────────────────────────────────── */
 .ad-pagination {
   display: flex;
   align-items: center;
@@ -571,7 +584,7 @@
   cursor: not-allowed;
 }
 
-/* ── 17. Slide-Over Panel ────────────────────────────────────────────────── */
+/* ── 17. Slide-Over Panel ──────────────────────────────────────────────── */
 .ad-slideover-overlay {
   position: fixed;
   inset: 0;
@@ -645,7 +658,7 @@
   scrollbar-color: var(--kora-border) transparent;
 }
 
-/* ── 18. Slide-Over Detail Rows ──────────────────────────────────────────── */
+/* ── 18. Slide-Over Detail Rows ────────────────────────────────────────── */
 .ad-detail-section {
   margin-bottom: 28px;
 }
@@ -683,7 +696,7 @@
   word-break: break-word;
 }
 
-/* ── 19. Skill Chip ──────────────────────────────────────────────────────── */
+/* ── 19. Skill Chip ────────────────────────────────────────────────────── */
 .ad-skill-chip {
   display: inline-flex;
   align-items: center;
@@ -697,7 +710,7 @@
   font-family: var(--kora-font);
 }
 
-/* ── 20. Charts ──────────────────────────────────────────────────────────── */
+/* ── 20. Charts ────────────────────────────────────────────────────────── */
 .kora-charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -746,7 +759,7 @@
   width: 100%;
 }
 
-/* ── 21. Hire Rate Callout ───────────────────────────────────────────────── */
+/* ── 21. Hire Rate Callout ─────────────────────────────────────────────── */
 .kora-hire-rate-callout {
   display: flex;
   align-items: center;
@@ -767,7 +780,7 @@
   color: var(--kora-green);
 }
 
-/* ── 22. Admin sidebar logo ──────────────────────────────────────────────── */
+/* ── 22. Admin sidebar logo ────────────────────────────────────────────── */
 .kora-sidebar-logo {
   display: flex;
   justify-content: center;
@@ -781,7 +794,7 @@
   object-fit: contain;
 }
 
-/* ── 23. Section header with icon ────────────────────────────────────────── */
+/* ── 23. Section header with icon ──────────────────────────────────────── */
 .ed-section-title svg {
   display: inline;
   vertical-align: text-bottom;
@@ -790,7 +803,7 @@
   opacity: 0.85;
 }
 
-/* ── 24. Responsive ──────────────────────────────────────────────────────── */
+/* ── 24. Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .kora-charts-row {
     grid-template-columns: 1fr;
