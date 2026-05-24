@@ -5,18 +5,29 @@
 
 /* ── Page wrapper ────────────────────────────────────────── */
 .ed-root {
+  /* Use min-height instead of height so the page can grow with
+     its content. The background must reach the true bottom of
+     the viewport so the scroll-past area never shows raw white
+     or the OS body colour.                                     */
   min-height: 100vh;
   background: var(--kora-bg);
   font-family: var(--kora-font);
   color: var(--kora-ink);
+  /* Ensure this stacking context clips its own bg to full height */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Body: sidebar + main ────────────────────────────────── */
 .ed-body {
   display: flex;
+  flex: 1;                   /* grow to fill remaining vertical space   */
   max-width: var(--kora-max-w);
   margin: 0 auto;
-  padding: 0 32px 80px;
+  width: 100%;
+  /* Top padding accounts for the sticky nav so content isn't hidden.
+     Bottom padding provides breathing room at the page foot.          */
+  padding: var(--kora-nav-h) 32px 80px;
   gap: 28px;
   align-items: flex-start;
 }
@@ -394,7 +405,7 @@
 }
 @media (max-width: 900px) {
   .ed-sidebar { display: none; }
-  .ed-body    { padding: 0 16px 40px; }
+  .ed-body    { padding: var(--kora-nav-h) 16px 40px; }
 }
 @media (max-width: 640px) {
   .ed-stats-row    { grid-template-columns: 1fr 1fr; gap: 10px; }
