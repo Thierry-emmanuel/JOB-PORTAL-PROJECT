@@ -1,42 +1,53 @@
-/* ═══════════════════════════════════════════════════════════
-   AdminDashboard — override styles
-   Requires: src/styles/employee-dashboard.css
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   KORA Admin Dashboard — Unified Design System
+   ─────────────────────────────────────────────────────────────────────────
+   Design tokens: ALL from theme.css (--kora-*) — NO rogue variables.
+   Admin accent:  Purple (#7c3aed) aliased onto --kora-green inside .ed-root.admin
+   Requires:      src/styles/theme.css  +  src/styles/employee-dashboard.css
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Re-use Employee Dashboard vocabulary with admin purple accent */
+/* ── 1. Admin accent override (scoped to .ed-root.admin) ─────────────────── */
 .ed-root.admin {
-  --kora-green: #7c3aed;
-  --kora-green-light: rgba(124, 58, 237, 0.08);
-  --kora-green-dark: #6d28d9;
+  --kora-green:        #7c3aed;
+  --kora-green-dark:   #6d28d9;
+  --kora-green-light:  rgba(124, 58, 237, 0.08);
+  /* Status semantic colours — used by StatusBadge & all tables */
+  --ad-status-active-bg:    #f0fdf4;
+  --ad-status-active-fg:    #166534;
+  --ad-status-pending-bg:   #fefce8;
+  --ad-status-pending-fg:   #854d0e;
+  --ad-status-suspended-bg: #fef2f2;
+  --ad-status-suspended-fg: #991b1b;
+  --ad-status-deleted-bg:   #f1f5f9;
+  --ad-status-deleted-fg:   #475569;
+  --ad-status-draft-bg:     #f1f5f9;
+  --ad-status-draft-fg:     #475569;
+  --ad-status-expired-bg:   #fff7ed;
+  --ad-status-expired-fg:   #9a3412;
+  --ad-status-hired-bg:     #f0fdf4;
+  --ad-status-hired-fg:     #15803d;
 }
 
-.admin-banner {
-  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
-  position: relative;
-  height: 180px;
-  border-radius: var(--kora-r-lg);
-  overflow: hidden;
-  margin-bottom: 32px;
-}
-
+/* ── 2. Shell override — Admin sidebar has a clean white card look ────────── */
 .kora-admin-sidebar {
   border: 1px solid var(--kora-border);
   background: var(--kora-white);
+  box-shadow: var(--kora-shadow-sm);
 }
 
-.kora-sidebar-avatar-section {
+/* Sidebar avatar section within Admin context */
+.ed-root.admin .kora-sidebar-avatar-section {
   text-align: center;
-  padding: 24px 0 16px;
+  padding: 20px 0 16px;
   border-bottom: 1px solid var(--kora-border);
   margin-bottom: 16px;
 }
 
-.kora-sidebar-avatar {
+.ed-root.admin .kora-sidebar-avatar {
   width: 64px;
   height: 64px;
   margin: 0 auto 12px;
   border-radius: 50%;
-  overflow: hidden;
   background: var(--kora-green-light);
   display: flex;
   align-items: center;
@@ -44,126 +55,231 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--kora-green);
-  border: 2px solid white;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+  border: 2.5px solid var(--kora-white);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.18);
 }
 
-.kora-sidebar-name {
+.ed-root.admin .kora-sidebar-name {
   font-size: 15px;
   font-weight: 700;
   color: var(--kora-ink);
   margin: 0 0 2px;
+  line-height: 1.3;
 }
 
-.kora-sidebar-role {
-  font-size: 13px;
+.ed-root.admin .kora-sidebar-role {
+  font-size: 12px;
+  font-weight: 500;
   color: var(--kora-muted);
   margin: 0;
 }
 
-/* Charts */
-.kora-charts-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.ed-root.admin .kora-sidebar-nav-item.active,
+.ed-root.admin .kora-sidebar-nav-item[data-active="true"] {
+  background: var(--kora-green-light);
+  color: var(--kora-green);
 }
 
-.kora-chart-card {
-  background: var(--kora-white);
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-r-lg);
-  padding: 20px;
-  box-shadow: var(--kora-shadow-sm);
-  display: flex;
-  flex-direction: column;
+.ed-root.admin .kora-sidebar-nav-item:hover {
+  background: var(--kora-green-light);
+  color: var(--kora-green);
 }
 
-.kora-chart-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  color: var(--kora-ink);
+/* ── 3. Page structure helpers ───────────────────────────────────────────── */
+.ad-content {
+  /* Container reset — padding already handled by ed-main */
+  padding: 0;
 }
 
-.kora-chart-header h3 {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.kora-chart-area {
-  flex: 1;
-  min-height: 250px;
-  position: relative;
-}
-
-/* Specific buttons / tags for Admin */
-.ad-btn {
-  background: none;
-  border: none;
-  padding: 6px 12px;
-  border-radius: var(--kora-r-sm);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+/* ── 4. Status Badges ────────────────────────────────────────────────────── */
+.ad-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--kora-r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  text-transform: uppercase;
 }
 
-.ad-btn-approve {
-  color: #166534;
-  background: #f0fdf4;
+.ad-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
-.ad-btn-approve:hover {
-  background: #dcfce7;
-}
+.ad-badge.active    { background: var(--ad-status-active-bg);    color: var(--ad-status-active-fg); }
+.ad-badge.pending   { background: var(--ad-status-pending-bg);   color: var(--ad-status-pending-fg); }
+.ad-badge.suspended { background: var(--ad-status-suspended-bg); color: var(--ad-status-suspended-fg); }
+.ad-badge.deleted   { background: var(--ad-status-deleted-bg);   color: var(--ad-status-deleted-fg); }
+.ad-badge.draft     { background: var(--ad-status-draft-bg);     color: var(--ad-status-draft-fg); }
+.ad-badge.expired   { background: var(--ad-status-expired-bg);   color: var(--ad-status-expired-fg); }
+.ad-badge.hired     { background: var(--ad-status-hired-bg);     color: var(--ad-status-hired-fg); }
 
-.ad-btn-suspend {
-  color: #991b1b;
-  background: #fef2f2;
-}
-
-.ad-btn-suspend:hover {
-  background: #fee2e2;
-}
-
-.ad-btn-danger {
-  color: var(--kora-white);
-  background: #ef4444;
-}
-
-.ad-btn-danger:hover {
-  background: #dc2626;
-}
-
-.ad-btn-view {
-  color: var(--kora-ink);
-  background: var(--kora-bg);
-  border: 1px solid var(--kora-border);
-}
-
-.ad-btn-view:hover {
-  background: var(--kora-border);
-}
-
-.ad-actions {
+/* ── 5. Toast Notification ───────────────────────────────────────────────── */
+.ad-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 2000;
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 10px;
+  background: var(--kora-ink);
+  color: var(--kora-white);
+  font-family: var(--kora-font);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 14px 20px;
+  border-radius: var(--kora-r-md);
+  box-shadow: var(--kora-shadow-lg);
+  animation: ad-toast-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  max-width: 360px;
 }
 
+.ad-toast.error {
+  background: #991b1b;
+}
+
+@keyframes ad-toast-in {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── 6. Loading Spinner ──────────────────────────────────────────────────── */
+.ad-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px 24px;
+  color: var(--kora-muted);
+  font-size: 13px;
+  font-family: var(--kora-font);
+}
+
+.ad-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--kora-green-light);
+  border-top-color: var(--kora-green);
+  border-radius: 50%;
+  animation: ad-spin 0.7s linear infinite;
+}
+
+@keyframes ad-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 7. Error Banner ─────────────────────────────────────────────────────── */
+.ad-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 13px 16px;
+  border-radius: var(--kora-r-sm);
+  margin-bottom: 20px;
+  font-family: var(--kora-font);
+}
+
+/* ── 8. Empty State ──────────────────────────────────────────────────────── */
+.ad-empty {
+  text-align: center;
+  padding: 36px 24px;
+  color: var(--kora-muted);
+  font-size: 13.5px;
+  font-family: var(--kora-font);
+  line-height: 1.6;
+}
+
+/* ── 9. Avatar Chip ──────────────────────────────────────────────────────── */
+.ad-chip-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--kora-green);
+  color: var(--kora-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+/* ── 10. Filter Bar ──────────────────────────────────────────────────────── */
+.ad-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  background: var(--kora-white);
+  border: 1px solid var(--kora-border);
+  border-radius: var(--kora-r-sm);
+  padding: 6px 8px;
+  box-shadow: var(--kora-shadow-sm);
+}
+
+.ad-filter-tab {
+  background: none;
+  border: none;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kora-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  font-family: var(--kora-font);
+  white-space: nowrap;
+}
+
+.ad-filter-tab.active {
+  background: var(--kora-green-light);
+  color: var(--kora-green);
+}
+
+.ad-filter-tab:hover:not(.active) {
+  background: var(--kora-bg);
+  color: var(--kora-ink);
+}
+
+/* ── 11. Search ──────────────────────────────────────────────────────────── */
 .ad-search-wrap {
   display: flex;
   align-items: center;
-  background: var(--kora-white);
+  background: var(--kora-bg);
   border: 1px solid var(--kora-border);
   border-radius: var(--kora-r-sm);
   padding: 8px 12px;
-  width: 250px;
+  min-width: 220px;
+  gap: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ad-search-wrap:focus-within {
+  border-color: var(--kora-green);
+  box-shadow: 0 0 0 3px var(--kora-green-light);
+  background: var(--kora-white);
+}
+
+.ad-search-icon {
+  color: var(--kora-muted);
+  flex-shrink: 0;
 }
 
 .ad-search {
@@ -174,132 +290,246 @@
   font-size: 13px;
   font-family: var(--kora-font);
   color: var(--kora-ink);
-  margin-left: 8px;
 }
 
-.ad-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.ad-filter-tab {
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
+.ad-search::placeholder {
   color: var(--kora-muted);
-  cursor: pointer;
+}
+
+/* ── 12. Table ───────────────────────────────────────────────────────────── */
+.ad-table-wrap {
+  width: 100%;
+  overflow-x: auto;
   border-radius: var(--kora-r-sm);
-  transition: all 0.2s;
 }
 
-.ad-filter-tab.active {
-  background: var(--kora-green-light);
-  color: var(--kora-green);
+.ad-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
 }
 
-.ad-filter-tab:hover:not(.active) {
+.ad-table th {
+  padding: 10px 14px;
   background: var(--kora-bg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--kora-muted);
+  border-bottom: 2px solid var(--kora-border);
+  white-space: nowrap;
 }
 
-/* Modals */
+.ad-table th:first-child { border-radius: var(--kora-r-sm) 0 0 0; }
+.ad-table th:last-child  { border-radius: 0 var(--kora-r-sm) 0 0; }
+
+.ad-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--kora-border);
+  font-size: 13px;
+  vertical-align: middle;
+  transition: background 0.12s;
+}
+
+.ad-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ad-table tbody tr:hover td {
+  background: var(--kora-green-light);
+}
+
+/* ── 13. Action Buttons ──────────────────────────────────────────────────── */
+.ad-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--kora-font);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.ad-btn:active {
+  transform: scale(0.97);
+}
+
+/* Approve / Reactivate */
+.ad-btn-approve {
+  color: var(--ad-status-active-fg);
+  background: var(--ad-status-active-bg);
+}
+.ad-btn-approve:hover {
+  background: #dcfce7;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.15);
+}
+
+/* Suspend */
+.ad-btn-suspend {
+  color: var(--ad-status-suspended-fg);
+  background: var(--ad-status-suspended-bg);
+}
+.ad-btn-suspend:hover {
+  background: #fee2e2;
+  box-shadow: 0 2px 8px rgba(153, 27, 27, 0.15);
+}
+
+/* Delete / Danger */
+.ad-btn-danger {
+  color: var(--kora-white);
+  background: #ef4444;
+}
+.ad-btn-danger:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+/* Flag */
+.ad-btn-flag {
+  color: var(--ad-status-expired-fg);
+  background: var(--ad-status-expired-bg);
+}
+.ad-btn-flag:hover {
+  background: #fed7aa;
+  box-shadow: 0 2px 8px rgba(154, 52, 18, 0.15);
+}
+
+/* View / Neutral */
+.ad-btn-view {
+  color: var(--kora-ink);
+  background: var(--kora-bg);
+  border: 1px solid var(--kora-border);
+}
+.ad-btn-view:hover {
+  background: var(--kora-border);
+}
+
+/* ── 14. Modal ───────────────────────────────────────────────────────────── */
 .ad-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: ad-overlay-in 0.2s ease both;
+}
+
+@keyframes ad-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .ad-modal {
   background: var(--kora-white);
   border-radius: var(--kora-r-lg);
-  padding: 24px;
+  padding: 28px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 420px;
+  box-shadow: var(--kora-shadow-lg);
+  animation: ad-modal-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border: 1px solid var(--kora-border);
+}
+
+@keyframes ad-modal-in {
+  from { transform: scale(0.94) translateY(8px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);   opacity: 1; }
 }
 
 .ad-modal h3 {
   font-size: 18px;
   font-weight: 700;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--kora-ink);
+  letter-spacing: -0.3px;
 }
 
 .ad-modal p {
   font-size: 14px;
   color: var(--kora-muted);
-  margin: 0 0 24px;
-  line-height: 1.5;
+  margin: 0 0 22px;
+  line-height: 1.55;
 }
 
 .ad-modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
-.ad-btn-cancel {
+/* Modal inline cancel button */
+.ad-modal-actions button:first-child {
   background: var(--kora-bg);
   border: 1px solid var(--kora-border);
   color: var(--kora-ink);
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: var(--kora-r-sm);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
+  font-family: var(--kora-font);
 }
-
-.ad-btn-cancel:hover {
+.ad-modal-actions button:first-child:hover {
   background: var(--kora-border);
 }
 
-.ad-btn-confirm {
-  background: var(--kora-green);
-  border: none;
-  color: var(--kora-white);
-  padding: 10px 16px;
+/* ── 15. Textarea (inside modal for flag reason) ─────────────────────────── */
+.ad-textarea {
+  width: 100%;
+  border: 1px solid var(--kora-border);
   border-radius: var(--kora-r-sm);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 12px 14px;
+  font-family: var(--kora-font);
+  font-size: 13.5px;
+  color: var(--kora-ink);
+  min-height: 86px;
+  margin-bottom: 20px;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: var(--kora-bg);
 }
 
-.ad-btn-confirm:hover {
-  background: var(--kora-green-dark);
+.ad-textarea:focus {
+  outline: none;
+  border-color: var(--kora-green);
+  box-shadow: 0 0 0 3px var(--kora-green-light);
+  background: var(--kora-white);
 }
 
-.ad-btn-confirm.danger {
-  background: #ef4444;
-}
-
-.ad-btn-confirm.danger:hover {
-  background: #dc2626;
-}
-
-/* Pagination */
+/* ── 16. Pagination ──────────────────────────────────────────────────────── */
 .ad-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 20px;
-  padding-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid var(--kora-border);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .ad-pagination-info {
   font-size: 13px;
   color: var(--kora-muted);
+  font-family: var(--kora-font);
 }
 
 .ad-pagination-controls {
@@ -319,31 +549,36 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
+  font-family: var(--kora-font);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .ad-page-btn:hover:not(:disabled) {
   background: var(--kora-bg);
+  border-color: var(--kora-muted);
 }
 
 .ad-page-btn.active {
   background: var(--kora-green);
   color: var(--kora-white);
   border-color: var(--kora-green);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
 }
 
 .ad-page-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Slide over */
+/* ── 17. Slide-Over Panel ────────────────────────────────────────────────── */
 .ad-slideover-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
   z-index: 999;
+  animation: ad-overlay-in 0.2s ease both;
 }
 
 .ad-slideover {
@@ -353,31 +588,35 @@
   bottom: 0;
   width: 400px;
   background: var(--kora-white);
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+  box-shadow: -6px 0 28px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.3s ease-out;
+  animation: ad-slide-in 0.3s cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  border-left: 1px solid var(--kora-border);
 }
 
-@keyframes slideIn {
+@keyframes ad-slide-in {
   from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  to   { transform: translateX(0); }
 }
 
 .ad-slideover-header {
-  padding: 24px;
+  padding: 22px 24px;
   border-bottom: 1px solid var(--kora-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--kora-bg);
 }
 
 .ad-slideover-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--kora-ink);
+  letter-spacing: -0.2px;
 }
 
 .ad-slideover-close {
@@ -385,34 +624,38 @@
   border: none;
   color: var(--kora-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: var(--kora-r-sm);
-  transition: background 0.2s;
+  transition: background 0.15s, color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .ad-slideover-close:hover {
-  background: var(--kora-bg);
+  background: var(--kora-border);
+  color: var(--kora-ink);
 }
 
 .ad-slideover-body {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--kora-border) transparent;
 }
 
+/* ── 18. Slide-Over Detail Rows ──────────────────────────────────────────── */
 .ad-detail-section {
   margin-bottom: 28px;
 }
 
 .ad-detail-section-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--kora-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--kora-border);
@@ -420,69 +663,151 @@
 
 .ad-detail-row {
   display: flex;
-  margin-bottom: 12px;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
   font-size: 13px;
+  font-family: var(--kora-font);
 }
 
 .ad-detail-row .key {
   width: 120px;
-  color: var(--kora-muted);
   flex-shrink: 0;
+  color: var(--kora-muted);
+  font-size: 12.5px;
 }
 
 .ad-detail-row .val {
   color: var(--kora-ink);
   font-weight: 500;
+  word-break: break-word;
 }
 
+/* ── 19. Skill Chip ──────────────────────────────────────────────────────── */
 .ad-skill-chip {
+  display: inline-flex;
+  align-items: center;
   background: var(--kora-bg);
   border: 1px solid var(--kora-border);
   color: var(--kora-ink);
   font-size: 11px;
-  padding: 4px 10px;
+  font-weight: 500;
+  padding: 3px 10px;
   border-radius: var(--kora-r-pill);
-}
-
-.ad-textarea {
-  width: 100%;
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-r-sm);
-  padding: 12px;
   font-family: var(--kora-font);
-  font-size: 14px;
-  min-height: 80px;
+}
+
+/* ── 20. Charts ──────────────────────────────────────────────────────────── */
+.kora-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
   margin-bottom: 20px;
-  resize: vertical;
 }
 
-.ad-textarea:focus {
-  outline: none;
-  border-color: var(--kora-green);
+.kora-chart-card {
+  background: var(--kora-white);
+  border: 1px solid var(--kora-border);
+  border-radius: var(--kora-r-lg);
+  padding: 22px;
+  box-shadow: var(--kora-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.18s;
 }
 
-/* Table styles matching ed-app-table */
-.ad-table-wrap {
-  width: 100%;
-  overflow-x: auto;
+.kora-chart-card:hover {
+  box-shadow: var(--kora-shadow-md);
 }
 
-.ad-table { width: 100%; border-collapse: collapse; text-align: left; }
-.ad-table th {
-  padding: 8px 12px;
-  background: var(--kora-bg);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.kora-chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
   color: var(--kora-muted);
-  border-bottom: 4px solid var(--kora-white);
 }
-.ad-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid var(--kora-border);
+
+.kora-chart-header h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--kora-ink);
+}
+
+.kora-chart-area {
+  flex: 1;
+  min-height: 250px;
+  position: relative;
+}
+
+.ad-chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* ── 21. Hire Rate Callout ───────────────────────────────────────────────── */
+.kora-hire-rate-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--kora-green-light);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: var(--kora-r-sm);
+  padding: 10px 16px;
   font-size: 13px;
-  transition: background 0.15s;
+  color: var(--kora-ink);
+  font-family: var(--kora-font);
+  font-weight: 500;
 }
-.ad-table tbody tr:last-child td { border-bottom: none; }
-.ad-table tbody tr:hover td { background: var(--kora-green-light); }
+
+.kora-hire-rate-callout strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--kora-green);
+}
+
+/* ── 22. Admin sidebar logo ──────────────────────────────────────────────── */
+.kora-sidebar-logo {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+  margin-bottom: 4px;
+}
+
+.kora-sidebar-logo img {
+  width: 96px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ── 23. Section header with icon ────────────────────────────────────────── */
+.ed-section-title svg {
+  display: inline;
+  vertical-align: text-bottom;
+  margin-right: 7px;
+  color: var(--kora-green);
+  opacity: 0.85;
+}
+
+/* ── 24. Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .kora-charts-row {
+    grid-template-columns: 1fr;
+  }
+  .ed-stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .ad-slideover {
+    width: 100%;
+  }
+  .ed-stats-row {
+    grid-template-columns: 1fr !important;
+  }
+  .ad-filter-bar {
+    gap: 4px;
+  }
+}
