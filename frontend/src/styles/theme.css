@@ -1,53 +1,98 @@
-/* ═══════════════════════════════════════════════════════
-   KORA – Global Theme Variables
-   Source of truth for all design tokens.
-   Mirrors KoraHome.jsx constants exactly:
-     G  = #1A5C2E  G2 = #0D3D1F  G_L = #E8F5EE
-     O  = #F97316  O_L = #FFF3EA
-     INK = #111827  MUTED = #6B7280  BORDER = #E5E7EB
-   Import this FIRST in App.jsx before any page CSS.
-   Usage example:
-     background: var(--kora-green);
-     font-family: var(--kora-font);
-   ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   KORA — Global Design System Tokens  (v2 — unified)
+   ─────────────────────────────────────────────────────────────────────────
+   Single source of truth for ALL pages.
+   Both token families are declared here so any page can import only this
+   file and reference any variable without undefined-variable fallbacks.
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+   Primary alias map (keeps backward-compat for files using the old names):
+     --kora-primary      → --kora-green       (#1A5C2E)
+     --kora-surface      → --kora-white       (#ffffff)
+     --kora-text-dark    → --kora-ink         (#111827)
+     --kora-text-muted   → --kora-muted       (#6B7280)
+     --kora-accent       → --kora-orange      (#F97316)
+     --kora-radius       → --kora-r-lg        (16px)
+     --kora-radius-sm    → --kora-r-sm        (8px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-  /* ── Brand palette ──────────────────────────────────── */
+  /* ── Brand palette ──────────────────────────────────────────────────────── */
   --kora-green:        #1A5C2E;
   --kora-green-dark:   #0D3D1F;
   --kora-green-light:  #E8F5EE;
   --kora-orange:       #F97316;
   --kora-orange-light: #FFF3EA;
 
-  /* ── Neutrals ────────────────────────────────────────── */
+  /* ── Neutrals ─────────────────────────────────────────────────────────── */
   --kora-ink:    #111827;
   --kora-muted:  #6B7280;
   --kora-border: #E5E7EB;
   --kora-bg:     #F9FAFB;
   --kora-white:  #ffffff;
 
-  /* ── Typography ──────────────────────────────────────── */
-  --kora-font: 'Poppins', 'DM Sans', sans-serif;
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --kora-font:         'Poppins', 'DM Sans', sans-serif;
+  --kora-font-display: 'Playfair Display', serif;
+  --kora-font-body:    'DM Sans', 'Poppins', sans-serif;
 
-  /* ── Shadows ─────────────────────────────────────────── */
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
   --kora-shadow-sm: 0 2px 8px  rgba(0, 0, 0, 0.05);
   --kora-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
   --kora-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --kora-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.14);
 
-  /* ── Border radii ────────────────────────────────────── */
+  /* ── Border radii ─────────────────────────────────────────────────────── */
   --kora-r-sm:   8px;
   --kora-r-md:   12px;
   --kora-r-lg:   16px;
   --kora-r-pill: 999px;
 
-  /* ── Layout ──────────────────────────────────────────── */
+  /* ── Layout ───────────────────────────────────────────────────────────── */
   --kora-nav-h: 72px;
   --kora-max-w: 1300px;
+  --sidebar-width: 280px;
+
+  /* ── Focus ring ───────────────────────────────────────────────────────── */
+  --kora-focus-ring: 0 0 0 3px rgba(26, 92, 46, 0.2);
+
+  /* ════════════════════════════════════════════════════════════════════════
+     BACKWARD-COMPATIBILITY ALIASES
+     Files using the "profile.css / Employer-Dashboard.css" token namespace
+     (--kora-primary, --kora-accent, --kora-surface, --kora-text-*, etc.)
+     will resolve correctly via these aliases.
+     ════════════════════════════════════════════════════════════════════════ */
+
+  /* Primary → green */
+  --kora-primary:       var(--kora-green);
+  --kora-primary-light: #15423b;
+  --kora-primary-pale:  var(--kora-green-light);
+  --kora-primary-glow:  rgba(26, 92, 46, 0.15);
+
+  /* Accent → orange */
+  --kora-accent:       var(--kora-orange);
+  --kora-accent-light: var(--kora-orange-light);
+  --kora-accent-glow:  rgba(249, 115, 22, 0.15);
+
+  /* Surface → white */
+  --kora-surface: var(--kora-white);
+
+  /* Input background */
+  --kora-input-bg: var(--kora-bg);
+
+  /* Text tokens */
+  --kora-text-dark:  var(--kora-ink);
+  --kora-text-mid:   #475569;
+  --kora-text-muted: var(--kora-muted);
+
+  /* Radius aliases */
+  --kora-radius:      var(--kora-r-lg);
+  --kora-radius-sm:   var(--kora-r-sm);
+  --kora-radius-pill: var(--kora-r-pill);
 }
 
-/* ── Accessibility helper ───────────────────────────────── */
+/* ── Accessibility helper ─────────────────────────────────────────────────── */
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;
@@ -57,15 +102,9 @@
   border: 0;
 }
 
-/* ══════════════════════════════════════════════════════════
-   KoraNav – shared top navigation bar
-   Used by: EmployeeDashboard, JobList, JobDetails, ApplyPage
-   Visual spec mirrors KoraHome.jsx Navbar exactly:
-     • Sticky, white, 72 px tall
-     • absolute-size-logo.png + "KORA" / "UNLOCK YOUR CAREER"
-     • Active link: orange text + 2 px orange underline bar
-     • Primary CTA: orange bg, white text, 8 px radius
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   KoraNav — shared sticky top navigation bar
+   ══════════════════════════════════════════════════════════════════════════════ */
 .kn-nav {
   position: sticky;
   top: 0;
@@ -89,7 +128,7 @@
   gap: 24px;
 }
 
-/* Logo block */
+/* Logo */
 .kn-logo {
   display: flex;
   align-items: center;
@@ -135,8 +174,8 @@
   white-space: nowrap;
   transition: color 0.18s;
 }
-.kn-link:hover        { color: var(--kora-orange); }
-.kn-link--active      { color: var(--kora-orange); }
+.kn-link:hover    { color: var(--kora-orange); }
+.kn-link--active  { color: var(--kora-orange); }
 .kn-link-bar {
   position: absolute;
   bottom: -2px;
@@ -185,7 +224,7 @@
   box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
 }
 
-/* ── Shared spinner ──────────────────────────────────────── */
+/* ── Shared spinner ───────────────────────────────────────────────────────── */
 .kora-spinner {
   width: 36px; height: 36px;
   border: 3px solid var(--kora-green-light);
@@ -195,16 +234,16 @@
 }
 @keyframes kora-spin { to { transform: rotate(360deg); } }
 
-/* ── Responsive ──────────────────────────────────────────── */
+/* ── Responsive nav ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .kn-nav    { padding: 0 20px; }
   .kn-links  { display: none; }
   .kn-logo img { width: 56px; height: 40px; }
 }
 
-/* ══════════════════════════════════════════════════════════
-   ProfileSidebar — shared left-panel for all dashboards
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   ProfileSidebar — shared left panel for all dashboard contexts
+   ══════════════════════════════════════════════════════════════════════════════ */
 .kora-sidebar-inner {
   background: var(--kora-white);
   border: 1px solid var(--kora-border);
@@ -382,11 +421,18 @@
   background: var(--kora-green-light);
   color: var(--kora-green);
 }
+.kora-sidebar-nav-item.active {
+  background: var(--kora-green-light);
+  color: var(--kora-green);
+  font-weight: 600;
+}
 .kora-sidebar-nav-item svg {
   flex-shrink: 0;
   opacity: 0.65;
 }
-.kora-sidebar-nav-item:hover svg { opacity: 1; }
+.kora-sidebar-nav-item:hover svg,
+.kora-sidebar-nav-item.active svg { opacity: 1; }
+
 .kora-nav-badge {
   margin-left: auto;
   background: var(--kora-orange);
@@ -401,7 +447,7 @@
 /* Reset password button */
 .kora-reset-pwd-btn {
   margin-top: 4px;
-  color: #6B7280;
+  color: var(--kora-muted);
 }
 .kora-reset-pwd-btn:hover {
   background: #FEF2F2;
