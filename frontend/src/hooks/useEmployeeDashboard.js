@@ -1,34 +1,36 @@
 /**
- * useEmployeeDashboard.js  (v2 — with inline Jobs Browser)
+ * useEmployeeDashboard.js
  * ─────────────────────────────────────────────────────────────
- * Added:
- *   activeSection  — 'dashboard' | 'jobs'
- *   setActiveSection
- *   allJobs, allJobsLoading, allJobsError
- *   jobSearch, setJobSearch
- *   jobFilters, setJobFilters
- *   jobPage, setJobPage   (client-side pagination)
- *   filteredJobs          (derived — search + filter applied)
+ * Central data-fetching hook for the Employee Dashboard.
+ * Separates all async concerns from the UI component so the
+ * dashboard JSX stays purely presentational.
+ *
+ * Returns:
+ *   profile, completion, firstName
+ *   applications, appsLoading, appsError, retryApps
+ *   interviews, interLoading
+ *   recJobs, jobsLoading
+ *   handlePhotoChange, handleCancelInterview
  * ─────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getUserApplications, getJobs } from '../api/jobs';
 import { getInterviewsBySeeker, cancelInterview } from '../api/interviews';
 import { getJobSeekerProfile, updateJobSeekerProfile } from '../api/profiles';
 
-/* ── Profile completion ──────────────────────────────────── */
+/* ── Profile completion formula (mirrors JobSeekerProfile) ── */
 export function profileCompletion(p) {
   if (!p) return 0;
   let score = 0;
-  if (p.profilePhoto)            score += 15;
-  if (p.summary)                 score += 15;
-  if (p.phone)                   score += 10;
-  if (p.cvUrl)                   score += 20;
-  if (p.experiences?.length > 0) score += 15;
-  if (p.education?.length > 0)   score += 10;
-  if (p.skills?.length >= 3)     score += 10;
-  if (p.languages?.length > 0)   score += 5;
+  if (p.profilePhoto)              score += 15;
+  if (p.summary)                   score += 15;
+  if (p.phone)                     score += 10;
+  if (p.cvUrl)                     score += 20;
+  if (p.experiences?.length > 0)   score += 15;
+  if (p.education?.length > 0)     score += 10;
+  if (p.skills?.length >= 3)       score += 10;
+  if (p.languages?.length > 0)     score += 5;
   return Math.min(score, 100);
 }
 
@@ -37,8 +39,6 @@ const EMPTY_PROFILE = {
   profilePhoto: null, summary: '', cvUrl: null, cvFileName: null,
   experiences: [], education: [], skills: [], languages: [],
 };
-
-const JOBS_PER_PAGE = 9;
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -52,26 +52,15 @@ function fileToBase64(file) {
 export default function useEmployeeDashboard() {
   const { user, token } = useAuth();
 
-  /* ── Core state ─────────────────────────────────────────── */
-  const [profile,         setProfile]         = useState({ ...EMPTY_PROFILE, ...(user || {}) });
-  const [applications,    setApplications]    = useState([]);
-  const [appsLoading,     setAppsLoading]     = useState(true);
-  const [appsError,       setAppsError]       = useState(null);
-  const [interviews,      setInterviews]      = useState([]);
-  const [interLoading,    setInterLoading]    = useState(true);
-  const [recJobs,         setRecJobs]         = useState([]);
-  const [jobsLoading,     setJobsLoading]     = useState(true);
+  const [profile,       setProfile]       = useState({ ...EMPTY_PROFILE, ...(user || {}) });
+  const [applications,  setApplications]  = useState([]);
+  const [appsLoading,   setAppsLoading]   = useState(true);
+  const [appsError,     setAppsError]     = useState(null);
+  const [interviews,    setInterviews]    = useState([]);
+  const [interLoading,  setInterLoading]  = useState(true);
+  const [recJobs,       setRecJobs]       = useState([]);
+  const [jobsLoading,   setJobsLoading]   = useState(true);
 
-  /* ── Jobs browser state ─────────────────────────────────── */
-  const [activeSection,   setActiveSection]   = useState('dashboard'); // 'dashboard' | 'jobs'
-  const [allJobs,         setAllJobs]         = useState([]);
-  const [allJobsLoading,  setAllJobsLoading]  = useState(false);
-  const [allJobsError,    setAllJobsError]    = useState(null);
-  const [jobSearch,       setJobSearch]       = useState('');
-  const [jobFilters,      setJobFilters]      = useState({ type: '', location: '' });
-  const [jobPage,         setJobPage]         = useState(1);
-
-  /* ── Derived ─────────────────────────────────────────────── */
   const completion = profileCompletion(profile);
   const firstName  = (
     profile.fullName?.split(' ')[0] ||
@@ -80,107 +69,50 @@ export default function useEmployeeDashboard() {
     'there'
   );
 
-  /* ── Filter + search jobs (client-side) ─────────────────── */
-  const filteredJobs = useMemo(() => {
-    let list = allJobs;
-    const q = jobSearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter(j =>
-        j.title?.toLowerCase().includes(q)        ||
-        j.company?.toLowerCase().includes(q)      ||
-        j.location?.toLowerCase().includes(q)     ||
-        j.tags?.some(t => t.toLowerCase().includes(q))
-      );
-    }
-    if (jobFilters.type) {
-      list = list.filter(j => j.type === jobFilters.type);
-    }
-    if (jobFilters.location) {
-      list = list.filter(j =>
-        j.location?.toLowerCase().includes(jobFilters.location.toLowerCase())
-      );
-    }
-    return list;
-  }, [allJobs, jobSearch, jobFilters]);
-
-  const paginatedJobs = useMemo(() => {
-    const start = (jobPage - 1) * JOBS_PER_PAGE;
-    return filteredJobs.slice(start, start + JOBS_PER_PAGE);
-  }, [filteredJobs, jobPage]);
-
-  const totalJobPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
-
-  /* ── Reset page when search/filter changes ──────────────── */
-  useEffect(() => { setJobPage(1); }, [jobSearch, jobFilters]);
-
-  /* ── Bootstrap dashboard data ───────────────────────────── */
+  /* ── Bootstrap all data ─────────────────────────────────── */
   useEffect(() => {
     if (!token || !user?.id) return;
     const id = user.id;
 
+    // Profile
     getJobSeekerProfile(id)
-      .then(data => {
+      .then((data) => {
         if (data) setProfile(prev => ({
           ...prev, ...data,
           profilePhoto: data.avatarUrl || data.profilePhoto || null,
           summary:      data.profileSummary || data.summary || '',
         }));
       })
-      .catch(err => console.error('[Dashboard] profile:', err));
+      .catch((err) => console.error('[Dashboard] profile fetch:', err));
 
+    // Applications
     fetchApplications(id);
 
+    // Interviews
     getInterviewsBySeeker(id)
-      .then(data => setInterviews(data || []))
-      .catch(err => { console.error('[Dashboard] interviews:', err.message); setInterviews([]); })
+      .then((data) => setInterviews(Array.isArray(data) ? data : []))
+      .catch((err) => { console.error('[Dashboard] interviews:', err.message); setInterviews([]); })
       .finally(() => setInterLoading(false));
 
-    // Recommended jobs (small set for dashboard widget)
+    // Recommended jobs
     getJobs({ limit: 6 })
-      .then(res => setRecJobs(res.data || []))
+      .then((res) => setRecJobs(res.data || []))
       .catch(() => {})
       .finally(() => setJobsLoading(false));
   }, [user, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Fetch all jobs (called once when user opens Jobs tab) ── */
-  const fetchAllJobs = useCallback(() => {
-    if (allJobs.length > 0) return; // already loaded — don't re-fetch
-    setAllJobsLoading(true);
-    setAllJobsError(null);
-    getJobs({ limit: 100 })
-      .then(res => setAllJobs(res.data || []))
-      .catch(() => setAllJobsError('Could not load jobs. Please try again.'))
-      .finally(() => setAllJobsLoading(false));
-  }, [allJobs.length]);
-
-  /* ── Switch section ─────────────────────────────────────── */
-  const openJobsBrowser = useCallback(() => {
-    setActiveSection('jobs');
-    fetchAllJobs();
-  }, [fetchAllJobs]);
-
-  const openDashboard = useCallback(() => {
-    setActiveSection('dashboard');
-  }, []);
-
-  const retryAllJobs = useCallback(() => {
-    setAllJobs([]);      // clear so fetchAllJobs re-fetches
-    setAllJobsLoading(true);
-    setAllJobsError(null);
-    getJobs({ limit: 100 })
-      .then(res => setAllJobs(res.data || []))
-      .catch(() => setAllJobsError('Could not load jobs. Please try again.'))
-      .finally(() => setAllJobsLoading(false));
-  }, []);
-
-  /* ── Applications ───────────────────────────────────────── */
+  /* ── Fetch / retry applications ──────────────────────────── */
   const fetchApplications = useCallback((id) => {
     const seekerId = id || user?.id;
     if (!seekerId) return;
     setAppsLoading(true);
     setAppsError(null);
     getUserApplications(seekerId)
-      .then(res => setApplications(res.data || []))
+      .then((res) => {
+        // getUserApplications already extracts data.content || data from the
+        // ApplicationPageResponse envelope, so res is the plain array here.
+        setApplications(Array.isArray(res) ? res : (res?.content || []));
+      })
       .catch(() => {
         setAppsError('Could not load applications. Please try again.');
         setApplications([]);
@@ -194,8 +126,14 @@ export default function useEmployeeDashboard() {
   const handlePhotoChange = useCallback(async (file) => {
     try {
       const base64 = await fileToBase64(file);
-      const payload = { ...profile, profilePhoto: base64, avatarUrl: base64, profileSummary: profile.summary };
-      const updated = await updateJobSeekerProfile(user?.id || 1, payload);
+      const payload = {
+        ...profile,
+        profilePhoto:   base64,
+        avatarUrl:      base64,
+        profileSummary: profile.summary,
+      };
+      const idToUpdate = user?.id || user?.jobSeekerId || 1;
+      const updated = await updateJobSeekerProfile(idToUpdate, payload);
       setProfile(prev => ({
         ...prev, ...payload, ...updated,
         profilePhoto: updated.avatarUrl || base64,
@@ -225,17 +163,9 @@ export default function useEmployeeDashboard() {
     applications, appsLoading, appsError, retryApps,
     /* Interviews */
     interviews, interLoading,
-    /* Dashboard recommended jobs */
+    /* Jobs */
     recJobs, jobsLoading,
     /* Actions */
     handlePhotoChange, handleCancelInterview,
-    /* ── Jobs browser ── */
-    activeSection, openJobsBrowser, openDashboard,
-    allJobs, allJobsLoading, allJobsError, retryAllJobs,
-    jobSearch, setJobSearch,
-    jobFilters, setJobFilters,
-    jobPage, setJobPage,
-    paginatedJobs, filteredJobs, totalJobPages,
-    JOBS_PER_PAGE,
   };
 }
