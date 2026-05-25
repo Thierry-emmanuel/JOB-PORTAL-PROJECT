@@ -29,8 +29,8 @@
   width: 240px;
   flex-shrink: 0;
   position: sticky;
-  top: calc(var(--kora-nav-h) + 16px);
-  height: calc(100vh - var(--kora-nav-h) - 32px);
+  top: 16px;
+  height: calc(100vh - 32px);
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--kora-white);

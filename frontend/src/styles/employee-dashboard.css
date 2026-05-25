@@ -25,9 +25,7 @@
   max-width: var(--kora-max-w);
   margin: 0 auto;
   width: 100%;
-  /* Top padding accounts for the sticky nav so content isn't hidden.
-     Bottom padding provides breathing room at the page foot.          */
-  padding: var(--kora-nav-h) 32px 80px;
+  padding: 24px 32px 80px;
   gap: 28px;
   align-items: flex-start;
 }
@@ -37,8 +35,8 @@
   width: 272px;
   flex-shrink: 0;
   position: sticky;
-  top: calc(var(--kora-nav-h) + 16px);
-  max-height: calc(100vh - var(--kora-nav-h) - 32px);
+  top: 16px;
+  max-height: calc(100vh - 32px);
   overflow-y: auto;
   border-radius: var(--kora-r-lg);
   scrollbar-width: none; /* Firefox */
@@ -405,7 +403,7 @@
 }
 @media (max-width: 900px) {
   .ed-sidebar { display: none; }
-  .ed-body    { padding: var(--kora-nav-h) 16px 40px; }
+  .ed-body    { padding: 16px 16px 40px; }
 }
 @media (max-width: 640px) {
   .ed-stats-row    { grid-template-columns: 1fr 1fr; gap: 10px; }
