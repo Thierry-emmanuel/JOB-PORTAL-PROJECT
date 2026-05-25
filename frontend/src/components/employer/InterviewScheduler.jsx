@@ -2,13 +2,16 @@ import { useState } from "react";
 import {
   X, Video, Phone, MapPin, Calendar, Clock,
   Link2, Copy, CheckCircle, Bell, Send, Briefcase,
-  Info
+  Info, AlertCircle
 } from "lucide-react";
+import { scheduleInterview } from "../../api/interviews";
 import "../../styles/interview-scheduler.css";
 
 // ── Helpers ───────────────────────────────────────────────
 
-// Generates a fake Google Meet link (replace with real Google Calendar API in production)
+// Generates a Google Meet-style link for video interviews.
+// The backend's GoogleCalendarService will create the real calendar event;
+// this link is stored on the Interview entity as meetingLink.
 function generateMeetLink() {
   const chars   = "abcdefghijklmnopqrstuvwxyz";
   const segment = (len) =>
@@ -43,6 +46,12 @@ function getTomorrow() {
   return d.toISOString().split("T")[0];
 }
 
+// Build ISO-8601 LocalDateTime string from separate date + time inputs.
+// The backend ScheduleInterviewRequest expects a LocalDateTime (no timezone offset).
+function buildScheduledAt(date, time) {
+  return `${date}T${time}:00`;
+}
+
 // ── Interview Types ───────────────────────────────────────
 const INTERVIEW_TYPES = [
   {
@@ -60,7 +69,7 @@ const INTERVIEW_TYPES = [
     bg:    "#e8f5e9",
   },
   {
-    key:   "ONSITE",
+    key:   "IN_PERSON",
     label: "On-site",
     icon:  <MapPin size={18} />,
     color: "#E07B39",
@@ -81,12 +90,13 @@ const INITIAL_FORM = {
 
 // ── Main Component ────────────────────────────────────────
 export default function InterviewScheduler({ application, onClose, onScheduled }) {
-  const [step,      setStep]      = useState("form");   // "form" | "confirm" | "success"
-  const [form,      setForm]      = useState(INITIAL_FORM);
-  const [errors,    setErrors]    = useState({});
-  const [meetLink,  setMeetLink]  = useState("");
-  const [copied,    setCopied]    = useState(false);
-  const [sending,   setSending]   = useState(false);
+  const [step,       setStep]       = useState("form");   // "form" | "confirm" | "success"
+  const [form,       setForm]       = useState(INITIAL_FORM);
+  const [errors,     setErrors]     = useState({});
+  const [meetLink,   setMeetLink]   = useState("");
+  const [copied,     setCopied]     = useState(false);
+  const [sending,    setSending]    = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   // ── Applicant initials ──
   const initials = application?.applicant
@@ -97,7 +107,7 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
     const e = {};
     if (!form.date)     e.date     = "Please select a date.";
     if (!form.time)     e.time     = "Please select a time.";
-    if (form.type === "ONSITE" && !form.location.trim())
+    if (form.type === "IN_PERSON" && !form.location.trim())
       e.location = "Please enter the interview location.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -106,10 +116,12 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
   // ── Go to confirm step ──
   const handleNext = () => {
     if (!validate()) return;
-    // Generate Google Meet link for video interviews
+    // Generate Google Meet link for video interviews upfront so the employer
+    // can copy/share it before sending the invitation.
     if (form.type === "VIDEO") {
       setMeetLink(generateMeetLink());
     }
+    setSubmitError(null);
     setStep("confirm");
   };
 
@@ -121,38 +133,55 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
   };
 
   // ── Send interview invitation ──
+  // Calls POST /api/v1/interviews/applications/{applicationId} with the
+  // ScheduleInterviewRequest payload.  On success the backend:
+  //   1. Persists an Interview row linked to the Application.
+  //   2. Triggers GoogleCalendarService.createInterviewEvent() (non-blocking).
+  //   3. (Optionally) fires a NotificationEvent to email the candidate.
   const handleSend = async () => {
+    if (!application?.id) {
+      setSubmitError("Cannot schedule: application ID is missing.");
+      return;
+    }
+
     setSending(true);
+    setSubmitError(null);
 
-    // Simulate API call to:
-    // 1. Create interview in DB: POST /api/v1/interviews
-    // 2. Send email to job seeker: Spring Mail triggered automatically
-    // 3. Create in-app notification: POST /api/v1/notifications
-    //
-    // In production:
-    // await fetch("/api/v1/interviews", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    //   body: JSON.stringify({
-    //     applicationId: application.id,
-    //     type: form.type,
-    //     scheduledAt: `${form.date}T${form.time}:00`,
-    //     durationMinutes: parseInt(form.duration),
-    //     meetingLink: meetLink,
-    //     location: form.location,
-    //     message: form.message,
-    //   })
-    // });
+    // Build the platform string — for IN_PERSON we pass the location address as
+    // the platform field (the backend stores it in `platform` column).
+    const platform =
+      form.type === "IN_PERSON"
+        ? form.location
+        : form.type === "VIDEO"
+        ? "Google Meet"
+        : "Phone";
 
-    await new Promise((r) => setTimeout(r, 1400));
-    setSending(false);
-    setStep("success");
-    onScheduled?.({
-      ...form,
-      meetLink,
-      applicant: application.applicant,
-      job: application.job,
-    });
+    const payload = {
+      scheduledAt: buildScheduledAt(form.date, form.time),
+      type:        form.type,
+      platform:    platform,
+      meetingLink: form.type === "VIDEO" ? meetLink : null,
+    };
+
+    try {
+      await scheduleInterview(application.id, payload);
+
+      setSending(false);
+      setStep("success");
+      onScheduled?.({
+        ...form,
+        meetLink,
+        applicant: application.applicant,
+        job:       application.job,
+      });
+    } catch (err) {
+      setSending(false);
+      const serverMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Failed to schedule the interview. Please try again.";
+      setSubmitError(serverMessage);
+    }
   };
 
   // ── Selected type object ──
@@ -278,8 +307,8 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
                   </select>
                 </div>
 
-                {/* Location — only for ONSITE */}
-                {form.type === "ONSITE" && (
+                {/* Location — only for IN_PERSON */}
+                {form.type === "IN_PERSON" && (
                   <div className="is-field is-field-full">
                     <label>Interview Location <span>*</span></label>
                     <input
@@ -350,7 +379,6 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
                   </label>
                   <div className="is-meet-preview">
                     <div className="is-meet-icon">
-                      {/* Google Meet SVG icon */}
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                         <path d="M19.5 4.5H15V3h-6v1.5H4.5C3.675 4.5 3 5.175 3 6v13.5c0 .825.675 1.5 1.5 1.5h15c.825 0 1.5-.675 1.5-1.5V6c0-.825-.675-1.5-1.5-1.5zm-9 10.5H7.5v-1.5H10.5v1.5zm0-3H7.5V10.5H10.5V12zm6 3H13.5v-1.5H16.5v1.5zm0-3H13.5V10.5H16.5V12z" fill="#1a73e8"/>
                         <circle cx="20" cy="20" r="4" fill="#34a853"/>
@@ -401,7 +429,7 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
                   <Info size={15} />
                   <span>{form.timezone}</span>
                 </div>
-                {form.type === "ONSITE" && form.location && (
+                {form.type === "IN_PERSON" && form.location && (
                   <div className="is-summary-row">
                     <MapPin size={15} />
                     <span>{form.location}</span>
@@ -425,11 +453,29 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
                 <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: "12.5px", color: "#7c3800", lineHeight: 1.8 }}>
                   <li>Email with interview date, time and details</li>
                   {form.type === "VIDEO" && <li>Google Meet link to join the call</li>}
-                  {form.type === "ONSITE" && <li>Location and directions</li>}
+                  {form.type === "IN_PERSON" && <li>Location and directions</li>}
                   <li>In-app notification on their Kora dashboard</li>
                   {form.message && <li>Your personal message</li>}
                 </ul>
               </div>
+
+              {/* API error banner */}
+              {submitError && (
+                <div
+                  role="alert"
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: "8px",
+                    padding: "10px 14px",
+                    background: "#fef2f2", border: "1px solid #fca5a5",
+                    borderRadius: "9px", marginTop: "8px",
+                  }}
+                >
+                  <AlertCircle size={15} color="#dc2626" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontSize: "12.5px", color: "#991b1b", lineHeight: 1.5 }}>
+                    {submitError}
+                  </span>
+                </div>
+              )}
 
             </div>
 
@@ -442,7 +488,7 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
               <div className="is-footer-right">
                 <button
                   className="kora-btn-secondary"
-                  onClick={() => setStep("form")}
+                  onClick={() => { setStep("form"); setSubmitError(null); }}
                   disabled={sending}
                 >
                   ← Edit
@@ -526,6 +572,7 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
                   setStep("form");
                   setForm(INITIAL_FORM);
                   setMeetLink("");
+                  setSubmitError(null);
                 }}
               >
                 Schedule Another
