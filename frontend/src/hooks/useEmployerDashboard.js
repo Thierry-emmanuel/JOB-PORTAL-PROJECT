@@ -96,8 +96,8 @@ export function useEmployerDashboard() {
         ]);
 
         rawJobs = Array.isArray(jobsRes) ? jobsRes : [];
-        const rawAppsList = Array.isArray(appsRes) ? appsRes : (appsRes?.content || []);
-        rawApps = rawAppsList;
+        // getEmployerApplications returns data.content || data, so already an array
+        rawApps = Array.isArray(appsRes) ? appsRes : (appsRes?.content || []);
       } catch (err) {
         console.error("Failed to load jobs or applications:", err);
       }
@@ -116,53 +116,74 @@ export function useEmployerDashboard() {
           console.warn(`Failed to fetch seeker profile for seekerId ${app.seekerId}:`, e);
         }
 
-        // Find matching job posting to get the title
-        const matchingJob = rawJobs.find(j => j.id === app.jobPostingId || String(j.id) === String(app.jobPostingId));
-        const jobTitle = matchingJob ? matchingJob.title : "Unknown Position";
+        // Find matching job posting to get the title.
+        // app.jobPostingId (Long) must be compared against job.id (UUID string from backend).
+        // The backend JobListingSummary.id is a UUID; the application stores it as a numeric
+        // job_posting_id. We do a loose string comparison to handle both.
+        const matchingJob = rawJobs.find(
+          j => String(j.id) === String(app.jobPostingId) || j.numericId === app.jobPostingId
+        );
+        const jobTitle = matchingJob ? matchingJob.title : `Job #${app.jobPostingId}`;
 
         return {
-          id: app.id,
-          seekerId: app.seekerId,
-          applicant: applicantName,
-          job: jobTitle,
-          status: app.status,
-          date: new Date(app.appliedAt || new Date()).toISOString().split('T')[0],
-          avatar: avatar,
+          id:             app.id,
+          seekerId:       app.seekerId,
+          applicant:      applicantName,
+          job:            jobTitle,
+          jobPostingId:   app.jobPostingId,
+          status:         app.status,
+          date:           new Date(app.appliedAt || new Date()).toISOString().split('T')[0],
+          avatar:         avatar,
           expectedSalary: app.expectedSalary,
-          coverLetter: app.coverLetter,
+          coverLetter:    app.coverLetter,
         };
       });
 
       const resolvedApps = await Promise.all(appPromises);
 
-      // 4. Map jobs to fit frontend UI properties
+      // 4. Map jobs to frontend UI shape.
+      // JobListingSummary fields: id (UUID), title, status (PostingStatus), jobType,
+      // salaryMin, salaryMax, experienceLevel, deadline, viewCount,
+      // categoryName, companyName, companyLogoUrl, locationCity, locationCountry, createdAt
       const mappedJobs = rawJobs.map(job => {
-        // Count applications for this specific job
-        const appCount = resolvedApps.filter(a => String(a.seekerId) === String(job.id) || job.id === a.seekerId).length;
-        
+        // Count applications belonging to this specific job posting.
+        // app.jobPostingId is a numeric Long; job.id is a UUID string — compare via String().
+        const appCount = resolvedApps.filter(
+          a => String(a.jobPostingId) === String(job.id)
+        ).length;
+
         let daysLeft = 30;
         if (job.deadline) {
           const diffTime = new Date(job.deadline) - new Date();
           daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
         }
 
+        // Build a readable location string from the two location sub-fields
+        const location = [job.locationCity, job.locationCountry]
+          .filter(Boolean)
+          .join(', ') || 'Remote';
+
         return {
-          id: job.id,
-          title: job.title,
-          type: job.jobType || "CDI",
-          applications: appCount || Math.floor(Math.random() * 5), // dynamic with random fallback to keep UI populated
-          views: job.viewCount || 0,
-          deadline: job.deadline,
-          status: job.status || "ACTIVE",
-          daysLeft: daysLeft
+          id:           job.id,
+          title:        job.title,
+          type:         job.jobType || "FULL_TIME",
+          category:     job.categoryName || "",
+          location:     location,
+          applications: appCount,
+          views:        job.viewCount || 0,
+          deadline:     job.deadline,
+          postedAt:     job.createdAt,
+          expiresAt:    job.deadline,
+          status:       job.status || "ACTIVE",
+          daysLeft:     daysLeft,
         };
       });
 
       // 5. Calculate statistics dynamically
       const activeJobsCount = mappedJobs.filter(j => j.status === "ACTIVE").length;
-      const totalAppsCount = resolvedApps.length;
+      const totalAppsCount  = resolvedApps.length;
       const totalViewsCount = mappedJobs.reduce((sum, j) => sum + (j.views || 0), 0);
-      const hiredCount = resolvedApps.filter(a => a.status === "HIRED").length;
+      const hiredCount      = resolvedApps.filter(a => a.status === "HIRED").length;
 
       setEmployer(empDetails);
       setJobPostings(mappedJobs);
@@ -204,31 +225,25 @@ export function useEmployerDashboard() {
 
   // ── Update application status on backend ──
   const updateApplicationStatus = useCallback(async (appId, newStatus) => {
-    // Find matching application to see current status
     const targetApp = applications.find(a => a.id === appId);
     if (!targetApp) return;
 
     try {
       await apiUpdateStatus(appId, newStatus, targetApp.status);
-      
-      // Update UI state
+
+      // Optimistic UI update
       setApplications((prev) =>
         prev.map((a) => a.id === appId ? { ...a, status: newStatus } : a)
       );
 
-      // Re-trigger stats calculation dynamically
       setStats((prev) => {
         if (!prev) return prev;
-        const wasHired = targetApp.status === "HIRED";
+        const wasHired  = targetApp.status === "HIRED";
         const isHiredNow = newStatus === "HIRED";
         let newHiredCount = prev.hired;
         if (!wasHired && isHiredNow) newHiredCount += 1;
         if (wasHired && !isHiredNow) newHiredCount = Math.max(0, newHiredCount - 1);
-
-        return {
-          ...prev,
-          hired: newHiredCount
-        };
+        return { ...prev, hired: newHiredCount };
       });
     } catch (err) {
       alert("Failed to update application status: " + (err.response?.data?.message || err.message));
@@ -239,28 +254,19 @@ export function useEmployerDashboard() {
   const updateJobPostingStatus = useCallback(async (jobId, newStatus) => {
     try {
       await apiChangeJobStatus(jobId, newStatus);
-      
-      // Update local state dynamically without removing it from the list
+
       setJobPostings((prev) => prev.map((j) => j.id === jobId ? { ...j, status: newStatus } : j));
-      
+
       setStats((prev) => {
         if (!prev) return prev;
-        
-        // Find the job in the current state to check its previous status
         const job = jobPostings.find(j => j.id === jobId);
         if (!job) return prev;
-        
-        const wasActive = job.status === "ACTIVE";
+        const wasActive  = job.status === "ACTIVE";
         const isActiveNow = newStatus === "ACTIVE";
         let newActiveJobs = prev.activeJobs;
-        
         if (wasActive && !isActiveNow) newActiveJobs = Math.max(0, newActiveJobs - 1);
         if (!wasActive && isActiveNow) newActiveJobs += 1;
-        
-        return {
-          ...prev,
-          activeJobs: newActiveJobs
-        };
+        return { ...prev, activeJobs: newActiveJobs };
       });
     } catch (err) {
       alert("Failed to update job status: " + (err.response?.data?.message || err.message));
@@ -271,10 +277,9 @@ export function useEmployerDashboard() {
   const deleteJobPosting = useCallback(async (jobId) => {
     try {
       await apiDeleteJob(jobId);
-      
-      // Remove from local state
+
       setJobPostings((prev) => prev.filter((j) => j.id !== jobId));
-      
+
       setStats((prev) => {
         if (!prev) return prev;
         const job = jobPostings.find(j => j.id === jobId);
@@ -282,10 +287,7 @@ export function useEmployerDashboard() {
         if (job && job.status === "ACTIVE") {
           newActiveJobs = Math.max(0, newActiveJobs - 1);
         }
-        return {
-          ...prev,
-          activeJobs: newActiveJobs
-        };
+        return { ...prev, activeJobs: newActiveJobs };
       });
     } catch (err) {
       alert("Failed to delete job listing: " + (err.response?.data?.message || err.message));
