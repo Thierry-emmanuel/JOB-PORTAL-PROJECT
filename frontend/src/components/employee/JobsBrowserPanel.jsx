@@ -14,7 +14,7 @@ import {
   ChevronLeft, ChevronRight, ArrowRight, RefreshCw,
   AlertCircle, Clock, Building2, Tag,
 } from 'lucide-react';
-import '../styles/jobs-browser-panel.css';
+import '../../styles/jobs-browser-panel.css';
 
 /* ─── Job type options ──────────────────────────────────── */
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'];

@@ -15,7 +15,7 @@ import {
   ArrowRight, MapPin, Zap, FileText, AlertCircle,
   RefreshCw, CheckCircle2, XCircle, Eye, Clock,
 } from 'lucide-react';
-import EmployeeLayout from '../../components/employee/EmployeeLayout';
+import EmployeeLayout from '../../layouts/EmployeeLayout';
 import JobsBrowserPanel from '../../components/employee/JobsBrowserPanel';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import useEmployeeDashboard from '../../hooks/useEmployeeDashboard';
