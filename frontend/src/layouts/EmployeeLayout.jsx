@@ -1,94 +1,56 @@
-/**
- * EmployeeLayout.jsx
- * ─────────────────────────────────────────────────────────────
- * Shared layout shell for ALL employee-facing pages.
- * Provides: collapsible sidebar + main content area (no top nav bar).
- *
- * Usage:
- *   <EmployeeLayout profile={profile} completion={completion}
- *                   onEdit={...} onPhotoChange={...}
- *                   activeSection="dashboard">
- *     {children}
- *   </EmployeeLayout>
- * ─────────────────────────────────────────────────────────────
- */
 import { useState, useEffect, memo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
   LayoutDashboard, Briefcase, Bookmark, CalendarCheck,
-  User, BarChart2, ChevronLeft, ChevronRight, Menu, X,
-  Bell, Settings, LogOut,
+  User, BarChart2, Menu, X, Settings, LogOut,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
-import ProfileSidebar from '../components/profile/ProfileSidebar';
 import { useAuth } from '../context/AuthContext';
-import '../styles/employee-layout.css';
+import koraLogo from '../assets/absolute-size-logo.png';
+import '../styles/dashboard-shell.css';
 
-/* ── Navigation items ────────────────────────────────────── */
 const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Dashboard',        icon: LayoutDashboard, to: '/employee/dashboard' },
-  { key: 'jobs',         label: 'Browse Jobs',       icon: Briefcase,       to: '/jobs' },
-  { key: 'applications', label: 'My Applications',   icon: Briefcase,       to: '/employee/applications' },
-  { key: 'saved',        label: 'Saved Jobs',        icon: Bookmark,        to: '/employee/saved' },
-  { key: 'interviews',   label: 'Interviews',        icon: CalendarCheck,   to: '/employee/interviews' },
-  { key: 'profile',      label: 'My Profile',        icon: User,            to: '/profile/job-seeker' },
-  { key: 'insights',     label: 'Market Insights',   icon: BarChart2,       to: '/insights' },
+  { key: 'dashboard',    label: 'Dashboard',      icon: LayoutDashboard, to: '/employee/dashboard' },
+  { key: 'jobs',         label: 'Browse Jobs',     icon: Briefcase,       to: '/jobs'               },
+  { key: 'applications', label: 'My Applications', icon: Briefcase,       to: '/employee/applications' },
+  { key: 'saved',        label: 'Saved Jobs',      icon: Bookmark,        to: '/employee/saved'     },
+  { key: 'interviews',   label: 'Interviews',      icon: CalendarCheck,   to: '/employee/interviews' },
+  { key: 'profile',      label: 'My Profile',      icon: User,            to: '/profile/job-seeker' },
+  { key: 'insights',     label: 'Market Insights', icon: BarChart2,       to: '/insights'           },
 ];
 
-/* ── Nav Item ─────────────────────────────────────────────── */
 const NavItem = memo(function NavItem({ item, active, collapsed, badge }) {
   const Icon = item.icon;
   return (
     <Link
       to={item.to}
-      className={`el-nav-item ${active ? 'el-nav-item--active' : ''} ${collapsed ? 'el-nav-item--collapsed' : ''}`}
+      className={`ds-nav-item${active ? ' active' : ''}`}
       aria-label={collapsed ? item.label : undefined}
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
     >
-      <span className="el-nav-icon" aria-hidden="true">
-        <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-      </span>
-      {!collapsed && (
-        <>
-          <span className="el-nav-label">{item.label}</span>
-          {badge > 0 && (
-            <span className="el-nav-badge" aria-label={`${badge} pending`}>{badge}</span>
-          )}
-        </>
-      )}
-      {collapsed && badge > 0 && (
-        <span className="el-nav-badge-dot" aria-label={`${badge} pending`} />
-      )}
+      <span className="ds-nav-icon"><Icon size={17} strokeWidth={active ? 2.2 : 1.8} /></span>
+      {!collapsed && <span className="ds-nav-label">{item.label}</span>}
+      {!collapsed && badge > 0 && <span className="ds-nav-badge">{badge}</span>}
     </Link>
   );
 });
 
-/* ════════════════════════════════════════════════════════════
-   EmployeeLayout
-   ════════════════════════════════════════════════════════════ */
-export default function EmployeeLayout({
-  profile,
-  completion,
-  onEdit,
-  onPhotoChange,
-  children,
-  appsBadge = 0,
-}) {
+export default function EmployeeLayout({ profile, completion, onEdit, onPhotoChange, children, appsBadge = 0 }) {
   const location   = useLocation();
   const navigate   = useNavigate();
   const { logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
 
-  /* Close mobile drawer on route change */
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
-  /* Persist collapsed state */
   useEffect(() => {
     const saved = localStorage.getItem('kora-sidebar-collapsed');
     if (saved !== null) setCollapsed(saved === 'true');
   }, []);
+
   const toggleCollapsed = () => {
     setCollapsed(prev => {
       localStorage.setItem('kora-sidebar-collapsed', String(!prev));
@@ -96,159 +58,105 @@ export default function EmployeeLayout({
     });
   };
 
-  /* Detect active nav item */
   const activeKey = NAV_ITEMS.find(n => location.pathname.startsWith(n.to))?.key || 'dashboard';
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const initials = (profile?.fullName || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
-    <div className="el-root">
+    <div className="ds-root">
+      {/* Mobile overlay */}
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
 
-      {/* ── Mobile overlay ──────────────────────────────── */}
-      {mobileOpen && (
-        <div
-          className="el-mobile-overlay"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* ── Mobile menu trigger ──────────────────────────── */}
-      <button
-        className="el-mobile-trigger"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation menu"
-        aria-expanded={mobileOpen}
-      >
+      {/* FAB trigger (mobile) */}
+      <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
         <Menu size={20} />
       </button>
 
-      <div className="el-body">
-        {/* ════ SIDEBAR ════════════════════════════════════ */}
+      <div className="ds-body">
+        {/* ════ SIDEBAR ════ */}
         <aside
-          className={`el-sidebar ${collapsed ? 'el-sidebar--collapsed' : ''} ${mobileOpen ? 'el-sidebar--mobile-open' : ''}`}
+          className={`ds-sidebar${collapsed ? ' ds-sidebar--collapsed' : ''}${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}
           aria-label="Employee navigation"
         >
-          {/* Mobile close button */}
-          <button
-            className="el-mobile-close"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X size={18} />
-          </button>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)} aria-label="Close"><X size={16} /></button>
 
-          {/* Profile mini card */}
-          <div className={`el-sidebar-profile ${collapsed ? 'el-sidebar-profile--collapsed' : ''}`}>
+          {/* Logo */}
+          <div className="ds-sb-header" style={{ cursor: 'pointer' }} onClick={() => navigate('/employee/dashboard')}>
+            <img src={koraLogo} alt="Kora" className="ds-sb-logo" />
+            {!collapsed && <span className="ds-sb-brand">Kora</span>}
+          </div>
+
+          {/* Identity */}
+          <div className="ds-sb-identity">
             <div
-              className="el-sidebar-avatar"
-              style={{ cursor: 'pointer' }}
+              className="ds-sb-avatar"
               onClick={onEdit}
-              aria-label="Edit profile"
               role="button"
               tabIndex={0}
+              style={{ cursor: 'pointer' }}
               onKeyDown={e => e.key === 'Enter' && onEdit?.()}
+              title="Edit profile"
             >
-              {profile?.profilePhoto ? (
-                <img src={profile.profilePhoto} alt="Profile" />
-              ) : (
-                <span className="el-sidebar-initials">
-                  {(profile?.fullName || 'U').charAt(0).toUpperCase()}
-                </span>
-              )}
-              <span className="el-sidebar-status-dot" aria-label="Online" />
+              {profile?.profilePhoto
+                ? <img src={profile.profilePhoto} alt="Profile" />
+                : <span>{initials}</span>}
+              <span className="ds-sb-avatar-status" />
             </div>
-
-            {!collapsed && (
-              <div className="el-sidebar-profile-info">
-                <p className="el-sidebar-name">{profile?.fullName?.split(' ')[0] || 'User'}</p>
-                <p className="el-sidebar-role">Job Seeker</p>
-              </div>
-            )}
-
-            {/* Collapse toggle — desktop only */}
-            <button
-              className="el-collapse-btn"
-              onClick={toggleCollapsed}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-            </button>
+            <div className="ds-sb-identity-info">
+              <p className="ds-sb-name">{profile?.fullName?.split(' ')[0] || 'User'}</p>
+              <span className="ds-sb-role">Job Seeker</span>
+            </div>
           </div>
 
           {/* Progress bar */}
           {!collapsed && (
-            <div className="el-sidebar-progress">
-              <div className="el-sidebar-progress-header">
+            <div className="ds-sb-progress">
+              <div className="ds-sb-progress-header">
                 <span>Profile strength</span>
                 <strong>{completion}%</strong>
               </div>
-              <div
-                className="el-sidebar-progress-bar"
-                role="progressbar"
-                aria-valuenow={completion}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`Profile ${completion}% complete`}
-              >
-                <div
-                  className="el-sidebar-progress-fill"
-                  style={{ width: `${completion}%` }}
-                />
+              <div className="ds-sb-progress-track" role="progressbar" aria-valuenow={completion} aria-valuemin={0} aria-valuemax={100}>
+                <div className="ds-sb-progress-fill" style={{ width: `${completion}%` }} />
               </div>
             </div>
           )}
 
-          {/* Nav items */}
-          {!collapsed && (
-            <p className="el-nav-section-label">MENU</p>
-          )}
-          <nav className="el-nav" aria-label="Main navigation">
-            {NAV_ITEMS.map(item => (
-              <NavItem
-                key={item.key}
-                item={item}
-                active={activeKey === item.key}
-                collapsed={collapsed}
-                badge={item.key === 'applications' ? appsBadge : 0}
-              />
-            ))}
-          </nav>
+          {/* Nav */}
+          <div className="ds-sb-nav-wrap">
+            {!collapsed && <p className="ds-sb-nav-label">Menu</p>}
+            <nav aria-label="Main navigation">
+              {NAV_ITEMS.map(item => (
+                <NavItem key={item.key} item={item} active={activeKey === item.key} collapsed={collapsed} badge={item.key === 'applications' ? appsBadge : 0} />
+              ))}
+            </nav>
+          </div>
 
-          {/* Bottom actions */}
-          <div className="el-sidebar-bottom">
-            {!collapsed && <p className="el-nav-section-label">ACCOUNT</p>}
-            <Link
-              to="/profile/job-seeker"
-              className={`el-nav-item ${collapsed ? 'el-nav-item--collapsed' : ''}`}
-              title={collapsed ? 'Settings' : undefined}
-            >
-              <span className="el-nav-icon" aria-hidden="true"><Settings size={17} /></span>
-              {!collapsed && <span className="el-nav-label">Settings</span>}
+          {/* Footer */}
+          <div className="ds-sb-footer">
+            {!collapsed && <p className="ds-sb-nav-label">Account</p>}
+            <Link to="/profile/job-seeker" className="ds-nav-item" title={collapsed ? 'Settings' : undefined}>
+              <span className="ds-nav-icon"><Settings size={17} /></span>
+              {!collapsed && <span className="ds-nav-label">Settings</span>}
             </Link>
             <button
-              className={`el-nav-item el-nav-logout ${collapsed ? 'el-nav-item--collapsed' : ''}`}
-              onClick={handleLogout}
+              className="ds-nav-item logout"
+              onClick={() => { logout(); navigate('/login'); }}
               title={collapsed ? 'Sign Out' : undefined}
               aria-label="Sign out"
             >
-              <span className="el-nav-icon" aria-hidden="true"><LogOut size={17} /></span>
-              {!collapsed && <span className="el-nav-label">Sign Out</span>}
+              <span className="ds-nav-icon"><LogOut size={17} /></span>
+              {!collapsed && <span className="ds-nav-label">Sign Out</span>}
             </button>
           </div>
+
+          {/* Collapse toggle */}
+          <button className="ds-sb-collapse" onClick={toggleCollapsed} title={collapsed ? 'Expand' : 'Collapse'}>
+            {collapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /><span style={{ fontSize: 11, fontWeight: 600 }}>Collapse</span></>}
+          </button>
         </aside>
 
-        {/* ════ MAIN ═══════════════════════════════════════ */}
-        <main
-          className={`el-main ${collapsed ? 'el-main--sidebar-collapsed' : ''}`}
-          id="main-content"
-        >
-          {children}
-        </main>
+        {/* ════ MAIN ════ */}
+        <main className="ds-main" id="main-content">{children}</main>
       </div>
     </div>
   );

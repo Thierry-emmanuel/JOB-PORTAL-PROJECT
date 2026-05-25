@@ -1,149 +1,110 @@
-import { useRef } from "react";
-import {
-  Camera, Briefcase, Calendar as CalendarIcon,
-  LogOut, LayoutDashboard, CheckCircle
-} from "lucide-react";
-import koraLogo from "../../assets/absolute-size-logo.png";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRef } from 'react';
+import { Camera, Briefcase, CalendarCheck, LayoutDashboard, LogOut, CheckCircle } from 'lucide-react';
+import koraLogo from '../../assets/absolute-size-logo.png';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function EmployerSidebar({
-  employer,
-  loading,
-  stats,
-  onPhotoChange
-}) {
-  const fileRef = useRef();
+const NAV = [
+  { path: '/employer/dashboard',   label: 'Overview',      icon: LayoutDashboard },
+  { path: '/employer/jobs',        label: 'Job Postings',  icon: Briefcase        },
+  { path: '/employer/interviews',  label: 'Interviews',    icon: CalendarCheck    },
+];
+
+export default function EmployerSidebar({ employer, loading, stats, onPhotoChange }) {
+  const fileRef  = useRef();
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const displayName = employer?.companyName || "My Company";
-  const contactName = employer?.contactName || "HR Manager";
-
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "E";
-
   const isActive = (path) => location.pathname === path;
 
+  const displayName = employer?.companyName || 'Employer';
+  const contactName = employer?.contactName  || 'HR Manager';
+  const initials = displayName.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'E';
+
   return (
-    <div className="kora-sidebar-inner">
+    <>
       {/* Logo */}
-      <div
-        className="kora-sidebar-logo"
-        onClick={() => navigate('/employer/dashboard')}
-      >
-        <img src={koraLogo} alt="KORA" />
+      <div className="ds-sb-header" style={{ cursor: 'pointer' }} onClick={() => navigate('/employer/dashboard')}>
+        <img src={koraLogo} alt="Kora" className="ds-sb-logo" />
+        <span className="ds-sb-brand">Kora</span>
       </div>
 
-      {/* Avatar & Company Info */}
-      <div className="kora-sidebar-avatar-section">
-        <div className="kora-sidebar-avatar">
-          {employer?.logo ? (
-            <img src={employer.logo} alt={displayName} />
-          ) : (
-            <span className="kora-sidebar-initials">{initials}</span>
+      {/* Identity */}
+      <div className="ds-sb-identity">
+        <div className="ds-sb-avatar">
+          {employer?.logo
+            ? <img src={employer.logo} alt={displayName} />
+            : <span>{initials}</span>}
+          {onPhotoChange && (
+            <>
+              <button className="ds-sb-photo-btn" onClick={() => fileRef.current?.click()} title="Change logo">
+                <Camera size={10} />
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={e => e.target.files[0] && onPhotoChange(e.target.files[0])} />
+            </>
           )}
-
-          <button
-            className="kora-photo-overlay"
-            onClick={() => fileRef.current?.click()}
-            title="Change company logo"
-          >
-            <Camera size={16} />
-          </button>
-
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => e.target.files?.[0] && onPhotoChange?.(e.target.files[0])}
-          />
         </div>
-
-        <p className="kora-sidebar-name">
-          {loading ? "Loading..." : displayName}
-        </p>
-        <p className="kora-sidebar-role">{contactName}</p>
-
-        {!loading && employer?.isApproved && (
-          <span className="kora-verified-badge">
-            <CheckCircle size={12} /> Verified Employer
-          </span>
-        )}
-      </div>
-
-      {/* Quick Stats */}
-      {!loading && stats && (
-        <div className="kora-sidebar-completion">
-          <div className="kora-sidebar-stat-row">
-            <span>Active Jobs</span>
-            <strong>{stats.activeJobs || 0}</strong>
-          </div>
-          <div className="kora-sidebar-stat-row">
-            <span>New Applications</span>
-            <strong>{stats.newApplications || 0}</strong>
-          </div>
-          {stats.upcomingInterviews > 0 && (
-            <div className="kora-sidebar-stat-row">
-              <span>Interviews</span>
-              <strong>{stats.upcomingInterviews}</strong>
+        <div className="ds-sb-identity-info">
+          <p className="ds-sb-name">{loading ? '…' : displayName}</p>
+          <span className="ds-sb-role">{loading ? '' : contactName}</span>
+          {!loading && employer?.isApproved && (
+            <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--ds-accent)', fontWeight: 600 }}>
+              <CheckCircle size={11} /> Verified
             </div>
           )}
         </div>
+      </div>
+
+      {/* Stats strip */}
+      {!loading && stats && (
+        <div className="ds-sb-stats">
+          <div className="ds-sb-stat">
+            <div className="ds-sb-stat-val">{stats.activeJobs ?? 0}</div>
+            <div className="ds-sb-stat-label">Active</div>
+          </div>
+          <div className="ds-sb-stat">
+            <div className="ds-sb-stat-val">{stats.totalApplications ?? 0}</div>
+            <div className="ds-sb-stat-label">Apps</div>
+          </div>
+          <div className="ds-sb-stat">
+            <div className="ds-sb-stat-val">{stats.hired ?? 0}</div>
+            <div className="ds-sb-stat-label">Hired</div>
+          </div>
+        </div>
       )}
 
-      {/* Navigation */}
-      <nav className="kora-sidebar-nav">
-        <p className="kora-sidebar-nav-label">MAIN MENU</p>
+      {/* Nav */}
+      <div className="ds-sb-nav-wrap">
+        <p className="ds-sb-nav-label">Navigation</p>
+        <nav>
+          {NAV.map(({ path, label, icon: Icon }) => (
+            <button
+              key={path}
+              className={`ds-nav-item${isActive(path) ? ' active' : ''}`}
+              onClick={() => navigate(path)}
+              aria-current={isActive(path) ? 'page' : undefined}
+            >
+              <span className="ds-nav-icon"><Icon size={17} /></span>
+              <span className="ds-nav-label">{label}</span>
+              {label === 'Job Postings' && stats?.activeJobs > 0 && (
+                <span className="ds-nav-badge">{stats.activeJobs}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
 
+      {/* Footer */}
+      <div className="ds-sb-footer">
         <button
-          className={`kora-sidebar-nav-item ${isActive('/employer/dashboard') ? 'active' : ''}`}
-          onClick={() => navigate('/employer/dashboard')}
+          className="ds-nav-item logout"
+          onClick={() => { logout(); navigate('/login'); }}
         >
-          <LayoutDashboard size={16} />
-          <span>Overview</span>
+          <span className="ds-nav-icon"><LogOut size={17} /></span>
+          <span className="ds-nav-label">Sign Out</span>
         </button>
-
-        <button
-          className={`kora-sidebar-nav-item ${isActive('/employer/jobs') ? 'active' : ''}`}
-          onClick={() => navigate('/employer/jobs')}
-        >
-          <Briefcase size={16} />
-          <span>Job Postings</span>
-          {stats?.activeJobs > 0 && <span className="kora-nav-badge">{stats.activeJobs}</span>}
-        </button>
-
-        <button
-          className={`kora-sidebar-nav-item ${isActive('/employer/interviews') ? 'active' : ''}`}
-          onClick={() => navigate('/employer/interviews')}
-        >
-          <CalendarIcon size={16} />
-          <span>Interviews</span>
-          {stats?.upcomingInterviews > 0 && (
-            <span className="kora-nav-badge" style={{ background: 'var(--kora-blue)' }}>
-              {stats.upcomingInterviews}
-            </span>
-          )}
-        </button>
-      </nav>
-
-      {/* Logout */}
-      <button className="kora-sidebar-logout" onClick={handleLogout}>
-        <LogOut size={16} />
-        Sign Out
-      </button>
-    </div>
+      </div>
+    </>
   );
 }

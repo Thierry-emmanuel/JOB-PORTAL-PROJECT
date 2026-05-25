@@ -13,7 +13,7 @@ import {
   fetchOverviewStats, fetchMarketInsights,
 } from '../../api/admin';
 import AdminSidebar from '../../components/admin/AdminSidebar';
-import '../../styles/employee-dashboard.css';
+import '../../styles/dashboard-shell.css';
 import '../../styles/admin-dashboard.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -301,28 +301,85 @@ function ErrorBanner({ message }) {
   );
 }
 
-/* KPI Stat Card — uses ed-stat-* vocabulary from employee-dashboard.css */
+/* ── KPI Stat Card ───────────────────────────────────────── */
 function StatCard({ icon, value, label, delta, accent }) {
   return (
-    <div className="ed-stat-card">
-      <div
-        className="ed-stat-icon"
-        style={{ background: `${accent}18`, color: accent }}
-        aria-hidden="true"
-      >
+    <div className="ds-stat-card" style={{ '--ds-accent': accent, '--ds-accent-light': accent + '18' }}>
+      <div className="ds-stat-icon" style={{ background: accent + '18', color: accent }} aria-hidden="true">
         {icon}
       </div>
-      <div className="ed-stat-body">
-        <div className="ed-stat-value">{value}</div>
-        <div className="ed-stat-label">{label}</div>
-        {delta && <div className="ed-stat-delta">{delta}</div>}
+      <div className="ds-stat-body">
+        <p className="ds-stat-label">{label}</p>
+        <p className="ds-stat-value">{value}</p>
+        {delta && <div className="ds-stat-change neutral">{delta}</div>}
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TAB 1 — Overview
+const TAB_META = {
+  overview:  { title: 'Overview',            sub: 'KORA Platform Administrator Dashboard'          },
+  employers: { title: 'Employer Management', sub: 'Approve, suspend and delete employer accounts'  },
+  jobs:      { title: 'Job Moderation',       sub: 'Approve and remove job listings'               },
+  seekers:   { title: 'Job Seekers',          sub: 'Manage candidate profiles'                     },
+  reports:   { title: 'Reports & Analytics',  sub: 'Platform performance metrics'                  },
+};
+
+export default function AdminDashboard() {
+  const { user } = useAuth();
+  const [tab,          setTab]          = useState('overview');
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
+
+  return (
+    <div className="ds-root admin">
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+      <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+        ☰
+      </button>
+
+      <div className="ds-body">
+        {/* SIDEBAR */}
+        <aside className={`ds-sidebar${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}>✕</button>
+          <AdminSidebar activeTab={tab} setActiveTab={(t) => { setTab(t); setMobileOpen(false); }} />
+        </aside>
+
+        {/* MAIN */}
+        <main className="ds-main">
+          {/* Page header */}
+          <div className="ds-page-header">
+            <div>
+              <h1 className="ds-page-title">{title}</h1>
+              <p className="ds-page-sub">{sub}</p>
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              fontSize: 12, fontWeight: 700, color: 'var(--ds-accent)',
+              background: 'var(--ds-accent-light)',
+              padding: '6px 14px', borderRadius: 999,
+              border: '1px solid rgba(109,40,217,0.15)', flexShrink: 0,
+            }}>
+              <Shield size={13} />
+              {user?.fullName?.split(' ')[0] ?? 'Admin'} · Super Admin
+            </div>
+          </div>
+
+          {/* Tab content */}
+          <div style={{ flex: 1 }}>
+            {tab === 'overview'  && <OverviewTab />}
+            {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
+            {tab === 'jobs'      && <JobsTab />}
+            {tab === 'seekers'   && <SeekersTab />}
+            {tab === 'reports'   && <ReportsTab />}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
    ═══════════════════════════════════════════════════════════════════════════ */
 function OverviewTab() {
   const [stats, setStats] = useState(null);
@@ -344,7 +401,7 @@ function OverviewTab() {
   return (
     <>
       {/* ── KPI Cards ── */}
-      <div className="ed-stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
+      <div className="ds-stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
         <StatCard
           label="Total Users"
           value={stats.totalUsers?.toLocaleString() ?? 0}
@@ -556,9 +613,9 @@ function EmployerTab({ onPendingUpdate }) {
       </div>
 
       {/* Table section */}
-      <div className="ed-section">
-        <div className="ed-section-header">
-          <h2 className="ed-section-title">
+      <div className="ds-card">
+        <div className="ds-card-header">
+          <h2 className="ds-card-title">
             <Building2 size={16} />
             Employers
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
@@ -790,9 +847,9 @@ function JobsTab() {
       </div>
 
       {/* Table section */}
-      <div className="ed-section">
-        <div className="ed-section-header">
-          <h2 className="ed-section-title">
+      <div className="ds-card">
+        <div className="ds-card-header">
+          <h2 className="ds-card-title">
             <Briefcase size={16} />
             Job Postings
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
@@ -1034,9 +1091,9 @@ function SeekersTab() {
       </div>
 
       {/* Table section */}
-      <div className="ed-section">
-        <div className="ed-section-header">
-          <h2 className="ed-section-title">
+      <div className="ds-card">
+        <div className="ds-card-header">
+          <h2 className="ds-card-title">
             <Users size={16} />
             Job Seekers
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
@@ -1343,7 +1400,7 @@ function ReportsTab() {
       {error && <ErrorBanner message={error} />}
 
       {/* KPI row */}
-      <div className="ed-stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
+      <div className="ds-stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
         <StatCard
           label="Hire Rate"
           value={`${hireRate}${hireRate !== '—' ? '%' : ''}`}
@@ -1368,9 +1425,9 @@ function ReportsTab() {
       </div>
 
       {/* Bar chart section */}
-      <div className="ed-section">
-        <div className="ed-section-header">
-          <h2 className="ed-section-title">
+      <div className="ds-card">
+        <div className="ds-card-header">
+          <h2 className="ds-card-title">
             Applications by Category — Top 6
           </h2>
         </div>
@@ -1389,81 +1446,4 @@ function ReportsTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ROOT — AdminDashboard
-   ═══════════════════════════════════════════════════════════════════════════ */
-const TAB_META = {
-  overview:  { title: 'Overview',           sub: 'KORA Platform Administrator Dashboard' },
-  employers: { title: 'Employer Management', sub: 'Approve, suspend and delete employer accounts' },
-  jobs:      { title: 'Job Moderation',      sub: 'Approve and remove job listings' },
-  seekers:   { title: 'Job Seekers',         sub: 'Manage candidate profiles' },
-  reports:   { title: 'Reports & Analytics', sub: 'Platform performance metrics' },
-};
-
-export default function AdminDashboard() {
-  const { user } = useAuth();
-  const [tab, setTab]               = useState('overview');
-  const [pendingCount, setPendingCount] = useState(0);
-
-  const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
-
-  return (
-    /* ed-root.admin is a full-height flex column — the bg reaches the
-       very bottom of the viewport so no bare white/black strip appears
-       when scrolling past the last content element.                    */
-    <div className="ed-root admin">
-
-      <div className="ed-body">
-        {/* ═══ SIDEBAR ═══ */}
-        <aside className="ed-sidebar kora-sidebar kora-admin-sidebar">
-          <AdminSidebar activeTab={tab} setActiveTab={setTab} />
-        </aside>
-
-        {/* ═══ MAIN CONTENT ═══ */}
-        {/* ed-main is a flex column so ad-content can stretch to fill
-            all remaining height — prevents a background mismatch at the
-            bottom of shorter tab views.                                 */}
-        <main
-          className="ed-main"
-          style={{ display: 'flex', flexDirection: 'column' }}
-        >
-          {/* Page header */}
-          <div className="ed-welcome">
-            <div>
-              <h1 className="ed-welcome-title">{title}</h1>
-              <p className="ed-welcome-sub">{sub}</p>
-            </div>
-            {/* Admin identity badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                fontSize: 12,
-                fontWeight: 700,
-                color: 'var(--kora-green)',
-                background: 'var(--kora-green-light)',
-                padding: '6px 14px',
-                borderRadius: 'var(--kora-r-pill)',
-                border: '1px solid rgba(124,58,237,0.15)',
-                flexShrink: 0,
-              }}
-            >
-              <Shield size={13} />
-              {user?.fullName?.split(' ')[0] ?? 'Admin'} · Super Admin
-            </div>
-          </div>
-
-          {/* Tab content — flex:1 fills remaining space so the bg bg
-              never cuts short on tabs with little content.             */}
-          <div className="ad-content" style={{ flex: 1 }}>
-            {tab === 'overview'  && <OverviewTab />}
-            {tab === 'employers' && <EmployerTab onPendingUpdate={setPendingCount} />}
-            {tab === 'jobs'      && <JobsTab />}
-            {tab === 'seekers'   && <SeekersTab />}
-            {tab === 'reports'   && <ReportsTab />}
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
+/* ═══ end of AdminDashboard ═══ */

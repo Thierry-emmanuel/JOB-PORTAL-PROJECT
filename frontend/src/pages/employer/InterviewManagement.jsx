@@ -5,8 +5,8 @@ import InterviewCard from '../../components/interviews/InterviewCard';
 import { Calendar, Filter, Search, ChevronRight } from 'lucide-react';
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
-import "../../styles/employee-dashboard.css";
-import "../../styles/employer-dashboard.css";
+import "../../styles/dashboard-shell.css";
+
 import "../../styles/profile.css";
 
 export default function InterviewManagement() {
@@ -67,16 +67,16 @@ export default function InterviewManagement() {
   });
 
   return (
-    <div className="ed-root">
-      <div className="ed-body">
+    <div className="ds-root employer">
+      <div className="ds-body">
 
         {/* ════════ SIDEBAR ════════ */}
-        <aside className="ed-sidebar kora-sidebar">
+        <aside className="ds-sidebar">
           <EmployerSidebar employer={employer} loading={loading} stats={stats} />
         </aside>
 
         {/* ════════ MAIN CONTENT ════════ */}
-        <main className="ed-main">
+        <main className="ds-main">
 
           <div className="ed-welcome">
             <div>

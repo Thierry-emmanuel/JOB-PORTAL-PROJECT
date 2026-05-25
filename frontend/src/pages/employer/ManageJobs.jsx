@@ -6,8 +6,8 @@ import {
   CheckCircle, Clock, Users, Eye, XCircle, Trash2, Edit2, Play, Calendar as CalendarIcon, Briefcase
 } from "lucide-react";
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
-import "../../styles/employer-dashboard.css";
-import "../../styles/employee-dashboard.css";
+
+import "../../styles/dashboard-shell.css";
 import "../../styles/profile.css";
 import "../../styles/ManageJobs.css";
 
@@ -71,12 +71,12 @@ export default function ManageJobs() {
 
   if (error) {
     return (
-      <div className="ed-root">
-        <div className="ed-body">
-          <aside className="ed-sidebar kora-sidebar">
+      <div className="ds-root employer">
+        <div className="ds-body">
+          <aside className="ds-sidebar">
              <EmployerSidebar employer={employer} loading={loading} stats={stats} />
           </aside>
-          <main className="ed-main">
+          <main className="ds-main">
             <div className="kora-empty-state">
               <p>Failed to load jobs: {error}</p>
             </div>
@@ -87,7 +87,7 @@ export default function ManageJobs() {
   }
 
   return (
-    <div className="ed-root">
+    <div className="ds-root employer">
 
       {deleteTarget && (
         <>
@@ -107,14 +107,14 @@ export default function ManageJobs() {
         </>
       )}
 
-      <div className="ed-body">
+      <div className="ds-body">
         {/* ════════ SIDEBAR ════════ */}
-        <aside className="ed-sidebar kora-sidebar">
+        <aside className="ds-sidebar">
           <EmployerSidebar employer={employer} loading={loading} stats={stats} />
         </aside>
 
         {/* ════════ MAIN CONTENT ════════ */}
-        <main className="ed-main">
+        <main className="ds-main">
 
           <div className="ed-welcome">
             <div>
