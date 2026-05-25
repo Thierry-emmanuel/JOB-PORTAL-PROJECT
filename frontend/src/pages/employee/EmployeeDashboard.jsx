@@ -19,15 +19,16 @@ import EmployeeLayout from '../../layouts/EmployeeLayout';
 import JobsBrowserPanel from '../../components/employee/JobsBrowserPanel';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import useEmployeeDashboard from '../../hooks/useEmployeeDashboard';
+import { useTranslation } from 'react-i18next';
 import '../../styles/employee-dashboard.css';
 import '../../styles/jobs-browser-panel.css';
 
 /* ─── Helpers ───────────────────────────────────────────── */
-function getGreeting() {
+function getGreeting(t) {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return t('dashboard.welcome') + ' (morning)';
+  if (h < 17) return t('dashboard.welcome') + ' (afternoon)';
+  return t('dashboard.welcome') + ' (evening)';
 }
 function formatDate(str) {
   if (!str) return '—';
@@ -108,6 +109,11 @@ const Skeleton = memo(({ rows = 3, grid = false }) => (
   </div>
 ));
 
+Skeleton.propTypes = {
+  rows: PropTypes.number,
+  grid: PropTypes.bool,
+};
+
 /* ─── Empty state ───────────────────────────────────────── */
 const EmptyState = memo(({ icon: Icon, title, sub, cta, ctaTo, ctaOnClick }) => (
   <div className="ed-empty" role="status">
@@ -123,11 +129,20 @@ const EmptyState = memo(({ icon: Icon, title, sub, cta, ctaTo, ctaOnClick }) => 
   </div>
 ));
 
+EmptyState.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  title: PropTypes.string.isRequired,
+  sub: PropTypes.string,
+  cta: PropTypes.string,
+  ctaTo: PropTypes.string,
+  ctaOnClick: PropTypes.func,
+};
+
 /* ─── Section ───────────────────────────────────────────── */
 const Section = memo(({ titleId, title, badge, seeAllTo, seeAllLabel, seeAllOnClick, children }) => (
   <section className="ed-section" aria-labelledby={titleId}>
     <div className="ed-section-header">
-      <div className="ed-section-header-left">
+      <div className="el-section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <h2 id={titleId} className="ed-section-title">{title}</h2>
         {badge > 0 && <span className="ed-section-badge">{badge}</span>}
       </div>
@@ -146,38 +161,56 @@ const Section = memo(({ titleId, title, badge, seeAllTo, seeAllLabel, seeAllOnCl
   </section>
 ));
 
+Section.propTypes = {
+  titleId: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  badge: PropTypes.number,
+  seeAllTo: PropTypes.string,
+  seeAllLabel: PropTypes.string,
+  seeAllOnClick: PropTypes.func,
+  children: PropTypes.node.isRequired,
+};
+
 /* ─── Mini job card (dashboard widget) ──────────────────── */
-const MiniJobCard = memo(({ job, onViewInBrowser }) => (
-  <div
-    className="ed-mini-job-card"
-    role="article"
-    aria-label={`${job.title} at ${job.company}`}
-  >
-    <div className="ed-mini-job-header">
-      <div className="ed-mini-job-logo" aria-hidden="true">
-        {job.logo
-          ? <img src={job.logo} alt="" loading="lazy" />
-          : <span>{job.company?.charAt(0)?.toUpperCase()}</span>}
+const MiniJobCard = memo(({ job, onViewInBrowser }) => {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="ed-mini-job-card"
+      role="article"
+      aria-label={`${job.title} at ${job.company}`}
+    >
+      <div className="ed-mini-job-header">
+        <div className="ed-mini-job-logo" aria-hidden="true">
+          {job.logo
+            ? <img src={job.logo} alt="" loading="lazy" />
+            : <span>{job.company?.charAt(0)?.toUpperCase()}</span>}
+        </div>
+        {job.type && <span className="ed-type-badge">{job.type}</span>}
       </div>
-      {job.type && <span className="ed-type-badge">{job.type}</span>}
-    </div>
-    <h3 className="ed-mini-job-title">{job.title}</h3>
-    <p className="ed-mini-job-company">{job.company}</p>
-    <div className="ed-mini-job-meta">
-      {job.location && <span><MapPin size={11} /> {job.location}</span>}
-      {job.salary   && <span>💰 {job.salary}</span>}
-    </div>
-    <div className="ed-mini-job-footer">
-      <div className="ed-mini-job-tags">
-        {job.tags?.slice(0, 2).map(t => <span key={t} className="ed-tag">{t}</span>)}
+      <h3 className="ed-mini-job-title">{job.title}</h3>
+      <p className="ed-mini-job-company">{job.company}</p>
+      <div className="ed-mini-job-meta">
+        {job.location && <span><MapPin size={11} /> {job.location}</span>}
+        {job.salary   && <span>💰 {job.salary}</span>}
       </div>
-      {/* Keep deep-link to job detail page for direct apply */}
-      <Link to={`/jobs/${job.id}`} className="ed-mini-job-cta">
-        Apply <ArrowRight size={11} />
-      </Link>
+      <div className="ed-mini-job-footer">
+        <div className="ed-mini-job-tags">
+          {job.tags?.slice(0, 2).map(t => <span key={t} className="ed-tag">{t}</span>)}
+        </div>
+        {/* Keep deep-link to job detail page for direct apply */}
+        <Link to={`/jobs/${job.id}`} className="ed-mini-job-cta">
+          {t('jobs.apply')} <ArrowRight size={11} />
+        </Link>
+      </div>
     </div>
-  </div>
-));
+  );
+});
+
+MiniJobCard.propTypes = {
+  job: PropTypes.object.isRequired,
+  onViewInBrowser: PropTypes.func,
+};
 
 /* ─── Nudge checklist ────────────────────────────────────── */
 const NUDGE_ITEMS = [
@@ -203,6 +236,7 @@ function missingItems(profile) {
    ════════════════════════════════════════════════════════════ */
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const {
     /* profile */
@@ -274,12 +308,12 @@ export default function EmployeeDashboard() {
                   <span className="ed-hero-dot" aria-hidden="true" />{today}
                 </p>
                 <h1 className="ed-hero-title">
-                  {getGreeting()}, <span className="ed-hero-name">{firstName}</span> 👋
+                  {t('dashboard.welcome')}, <span className="ed-hero-name">{firstName}</span> 👋
                 </h1>
                 <p className="ed-hero-sub">
                   {applications.length === 0
-                    ? 'Start your journey — find roles that match your ambitions.'
-                    : `You have ${applications.length} application${applications.length !== 1 ? 's' : ''} in progress.`}
+                    ? t('home.hero_subtitle')
+                    : `${t('dashboard.welcome')} ${applications.length} ${t('employee.recent_applications').toLowerCase()}`}
                 </p>
               </div>
               <div className="ed-hero-ctas">
@@ -289,10 +323,10 @@ export default function EmployeeDashboard() {
                   className="ed-btn-primary"
                   onClick={openJobsBrowser}
                 >
-                  <Briefcase size={15} aria-hidden="true" /> Browse Jobs
+                  <Briefcase size={15} aria-hidden="true" /> {t('employee.browse_jobs')}
                 </button>
                 <Link to="/profile/job-seeker" className="ed-btn-outline">
-                  Edit Profile
+                  {t('employee.edit_profile')}
                 </Link>
               </div>
             </div>
@@ -301,7 +335,7 @@ export default function EmployeeDashboard() {
               <div className="ed-hero-progress">
                 <div className="ed-hero-progress-meta">
                   <Zap size={13} aria-hidden="true" />
-                  <span>Profile strength</span>
+                  <span>{t('employee.profile_strength')}</span>
                   <strong>{completion}%</strong>
                 </div>
                 <div
@@ -322,7 +356,7 @@ export default function EmployeeDashboard() {
             <StatCard
               icon={FileText}
               value={applications.length}
-              label="Applications"
+              label={t('employee.recent_applications')}
               sub={pendingApps > 0 ? `${pendingApps} under review` : 'None pending'}
               accent="#1A5C2E"
               to="/employee/applications"
@@ -330,7 +364,7 @@ export default function EmployeeDashboard() {
             <StatCard
               icon={Bookmark}
               value={5}
-              label="Saved Jobs"
+              label={t('employee.saved_jobs')}
               sub="View your wishlist"
               accent="#F97316"
               to="/employee/saved"
@@ -338,7 +372,7 @@ export default function EmployeeDashboard() {
             <StatCard
               icon={CalendarCheck}
               value={upcomingInter}
-              label="Interviews"
+              label={t('employee.upcoming_interviews')}
               sub={upcomingInter > 0 ? 'Scheduled upcoming' : 'None yet'}
               accent="#3B82F6"
               to="/employee/interviews"
@@ -346,7 +380,7 @@ export default function EmployeeDashboard() {
             <StatCard
               icon={Star}
               value={`${completion}%`}
-              label="Profile Score"
+              label={t('employee.profile_score')}
               sub={completion < 100 ? `${missing.length} items missing` : '✓ Complete!'}
               accent="#8B5CF6"
               to="/profile/job-seeker"
@@ -359,13 +393,13 @@ export default function EmployeeDashboard() {
               <div className="ed-nudge-left">
                 <div className="ed-nudge-icon-ring" aria-hidden="true"><Zap size={17} /></div>
                 <div className="ed-nudge-text">
-                  <strong>Boost your visibility</strong>
+                  <strong>{t('employee.boost_visibility')}</strong>
                   <p>
                     {completion < 40
-                      ? "Your profile is almost empty — employers can't find you."
+                      ? t('employee.boost_sub_empty')
                       : completion < 60
-                      ? 'Add experience and education to stand out.'
-                      : 'Almost there! Upload your CV to get shortlisted faster.'}
+                      ? t('employee.boost_sub_partial')
+                      : t('employee.boost_sub_almost')}
                   </p>
                   {missing.length > 0 && (
                     <div className="ed-nudge-checklist">
@@ -383,17 +417,17 @@ export default function EmployeeDashboard() {
                   )}
                 </div>
               </div>
-              <Link to="/profile/job-seeker" className="ed-nudge-btn">Complete Profile</Link>
+              <Link to="/profile/job-seeker" className="ed-nudge-btn">{t('employee.complete_profile')}</Link>
             </div>
           )}
 
           {/* ── Recent Applications ────────────────────────── */}
           <Section
             titleId="apps-heading"
-            title="Recent Applications"
+            title={t('employee.recent_applications')}
             badge={applications.length}
             seeAllTo="/employee/applications"
-            seeAllLabel="View all"
+            seeAllLabel={t('employee.see_all_jobs')}
           >
             {appsLoading && <Skeleton rows={4} />}
 
@@ -402,7 +436,7 @@ export default function EmployeeDashboard() {
                 <AlertCircle size={15} aria-hidden="true" />
                 <span>{appsError}</span>
                 <button className="ed-retry-btn" onClick={retryApps}>
-                  <RefreshCw size={12} /> Retry
+                  <RefreshCw size={12} /> {t('common.retry')}
                 </button>
               </div>
             )}
@@ -410,9 +444,9 @@ export default function EmployeeDashboard() {
             {!appsLoading && !appsError && applications.length === 0 && (
               <EmptyState
                 icon={Briefcase}
-                title="No applications yet"
-                sub="Start applying to roles that match your skills."
-                cta="Find your first job"
+                title={t('employee.no_applications')}
+                sub={t('employee.find_first_job')}
+                cta={t('employee.find_first_job')}
                 ctaOnClick={openJobsBrowser}
               />
             )}
@@ -420,10 +454,10 @@ export default function EmployeeDashboard() {
             {!appsLoading && !appsError && applications.length > 0 && (
               <div className="ed-app-table" role="table" aria-label="Recent applications">
                 <div className="ed-app-thead" role="row">
-                  <span role="columnheader">Position</span>
-                  <span role="columnheader">Company</span>
-                  <span role="columnheader">Status</span>
-                  <span role="columnheader">Applied</span>
+                  <span role="columnheader">{t('employee.position')}</span>
+                  <span role="columnheader">{t('employee.company')}</span>
+                  <span role="columnheader">{t('employee.status')}</span>
+                  <span role="columnheader">{t('employee.applied')}</span>
                 </div>
                 {applications.slice(0, 5).map(app => (
                   <div key={app.id} className="ed-app-row" role="row">
@@ -445,15 +479,15 @@ export default function EmployeeDashboard() {
           </Section>
 
           {/* ── Upcoming Interviews ────────────────────────── */}
-          <Section titleId="inter-heading" title="Upcoming Interviews" badge={upcomingInter}>
+          <Section titleId="inter-heading" title={t('employee.upcoming_interviews')} badge={upcomingInter}>
             {interLoading
               ? <Skeleton rows={2} grid />
               : interviews.length === 0
               ? <EmptyState
                   icon={CalendarCheck}
-                  title="No interviews scheduled"
-                  sub="Keep applying — invitations will appear here."
-                  cta="Browse open roles"
+                  title={t('employee.no_interviews')}
+                  sub={t('employee.browse_roles')}
+                  cta={t('employee.browse_roles')}
                   ctaOnClick={openJobsBrowser}
                 />
               : (
@@ -469,8 +503,8 @@ export default function EmployeeDashboard() {
           {/* ── Jobs For You ───────────────────────────────── */}
           <Section
             titleId="recjobs-heading"
-            title="Jobs For You"
-            seeAllLabel="See all jobs"
+            title={t('employee.jobs_for_you')}
+            seeAllLabel={t('employee.see_all_jobs')}
             seeAllOnClick={openJobsBrowser}   /* ← opens browser, no redirect */
           >
             {jobsLoading
@@ -478,9 +512,9 @@ export default function EmployeeDashboard() {
               : recJobs.length === 0
               ? <EmptyState
                   icon={Briefcase}
-                  title="No recommendations yet"
-                  sub="Complete your profile to unlock personalised matches."
-                  cta="Browse all jobs"
+                  title={t('employee.no_recommendations')}
+                  sub={t('employee.complete_profile')}
+                  cta={t('employee.see_all_jobs')}
                   ctaOnClick={openJobsBrowser}
                 />
               : (

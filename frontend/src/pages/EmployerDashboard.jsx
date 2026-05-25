@@ -4,6 +4,7 @@ import {
   Briefcase, Users, Eye, Star, Bell, Plus, ChevronRight,
   Clock, Video, Search, TrendingUp, RefreshCw, AlertTriangle
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useEmployerDashboard } from "../hooks/useEmployerDashboard";
 import InterviewScheduler from "../components/employer/InterviewScheduler";
@@ -21,6 +22,7 @@ import "../styles/employee-dashboard.css";   // ← Main unified stylesheet
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [schedulerTarget, setSchedulerTarget] = useState(null);
 
@@ -48,7 +50,7 @@ export default function EmployerDashboard() {
 
   const firstName = employer?.contactName
     ? employer.contactName.split(" ")[0]
-    : "Employer";
+    : t("employer.welcome");
 
   const handleInterviewScheduled = () => {
     if (schedulerTarget) {
@@ -86,17 +88,17 @@ export default function EmployerDashboard() {
       <div className="ed-welcome">
         <div>
           <h1 className="ed-welcome-title">
-            Welcome back, {loading ? "..." : firstName} 👋
+            {t("employer.welcome")}, {loading ? t("common.loading") : firstName} 👋
           </h1>
           <p className="ed-welcome-sub">
-            Here's what's happening with your company today.
+            {t("employer.welcome")}
           </p>
         </div>
         <button
           className="ed-find-jobs-btn"
           onClick={() => navigate("/employer/post-job")}
         >
-          <Plus size={16} /> Post New Job
+          <Plus size={16} /> {t("employer.post_new_job")}
         </button>
       </div>
 
@@ -108,10 +110,10 @@ export default function EmployerDashboard() {
           ))
         ) : (
           <>
-            <StatCard icon={<Briefcase size={22} />} label="Active Jobs" value={stats?.activeJobs || 0} change={stats?.activeJobsChange} color="#0B2B26" />
-            <StatCard icon={<Users size={22} />} label="Applications" value={stats?.totalApplications || 0} change={stats?.totalApplicationsChange} color="#E07B39" />
-            <StatCard icon={<Eye size={22} />} label="Profile Views" value={stats?.totalViews || 0} change={stats?.totalViewsChange} color="#3B82F6" />
-            <StatCard icon={<Star size={22} />} label="Candidates Hired" value={stats?.hired || 0} change={stats?.hiredChange} color="#10B981" />
+            <StatCard icon={<Briefcase size={22} />} label={t("employer.active_jobs")} value={stats?.activeJobs || 0} change={stats?.activeJobsChange} color="#0B2B26" />
+            <StatCard icon={<Users size={22} />} label={t("employer.total_applications")} value={stats?.totalApplications || 0} change={stats?.totalApplicationsChange} color="#E07B39" />
+            <StatCard icon={<Eye size={22} />} label={t("employer.total_applications")} value={stats?.totalViews || 0} change={stats?.totalViewsChange} color="#3B82F6" />
+            <StatCard icon={<Star size={22} />} label={t("employer.interviews_scheduled")} value={stats?.hired || 0} change={stats?.hiredChange} color="#10B981" />
           </>
         )}
       </div>
@@ -123,10 +125,10 @@ export default function EmployerDashboard() {
           <div className="kora-section-header">
             <div className="kora-section-title">
               <Users size={18} />
-              <h2>Recent Applications</h2>
+              <h2>{t("employer.recent_jobs")}</h2>
             </div>
             <button className="ed-view-all-btn" onClick={() => navigate("/employer/jobs")}>
-              View All <ChevronRight size={14} />
+              {t("employer.manage_jobs")} <ChevronRight size={14} />
             </button>
           </div>
 
@@ -134,7 +136,7 @@ export default function EmployerDashboard() {
             <Search size={14} />
             <input
               type="text"
-              placeholder="Search applicants or jobs..."
+              placeholder={t("employer.no_jobs_posted")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -156,7 +158,7 @@ export default function EmployerDashboard() {
         <div className="kora-section-header">
           <div className="kora-section-title">
             <TrendingUp size={18} />
-            <h2>Quick Actions</h2>
+            <h2>{t("employer.quick_actions")}</h2>
           </div>
         </div>
         <div className="ed-quick-actions">

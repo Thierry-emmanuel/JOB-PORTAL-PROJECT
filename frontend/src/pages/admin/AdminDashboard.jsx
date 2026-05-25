@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Building2, Briefcase, Users, BarChart3,
   ChevronLeft, ChevronRight, Check, Ban, Trash2,
@@ -262,6 +263,7 @@ function Toast({ message, type = 'success', onDone }) {
 
 /* Confirmation modal */
 function ConfirmModal({ title, message, onConfirm, onCancel, danger = true, children }) {
+  const { t } = useTranslation();
   return (
     <div className="ad-modal-overlay" onClick={onCancel}>
       <div className="ad-modal" onClick={(e) => e.stopPropagation()}>
@@ -269,12 +271,12 @@ function ConfirmModal({ title, message, onConfirm, onCancel, danger = true, chil
         <p>{message}</p>
         {children}
         <div className="ad-modal-actions">
-          <button onClick={onCancel}>Annuler</button>
+          <button onClick={onCancel}>{t('common.cancel')}</button>
           <button
             className={danger ? 'ad-btn ad-btn-danger' : 'ad-btn ad-btn-approve'}
             onClick={onConfirm}
           >
-            Confirmer
+            {t('admin.confirm')}
           </button>
         </div>
       </div>
@@ -284,10 +286,11 @@ function ConfirmModal({ title, message, onConfirm, onCancel, danger = true, chil
 
 /* Loading spinner */
 function Loading() {
+  const { t } = useTranslation();
   return (
     <div className="ad-spinner-wrap">
       <div className="ad-spinner" />
-      <span>Chargement…</span>
+      <span>{t('common.loading')}</span>
     </div>
   );
 }
@@ -326,6 +329,7 @@ function StatCard({ icon, value, label, delta, accent }) {
    TAB 1 — Overview
    ═══════════════════════════════════════════════════════════════════════════ */
 function OverviewTab() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -334,7 +338,7 @@ function OverviewTab() {
     setLoading(true);
     fetchOverviewStats()
       .then(setStats)
-      .catch(() => setError('Impossible de charger les statistiques.'))
+      .catch(() => setError(t('admin.load_stats_error')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -347,37 +351,37 @@ function OverviewTab() {
       {/* ── KPI Cards ── */}
       <div className="ed-stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
         <StatCard
-          label="Total Users"
+          label={t('admin.total_users')}
           value={stats.totalUsers?.toLocaleString() ?? 0}
           icon={<Users size={20} />}
           accent={COLORS.purple}
         />
         <StatCard
-          label="Job Seekers"
+          label={t('admin.active_seekers')}
           value={stats.totalJobSeekers?.toLocaleString() ?? 0}
           icon={<Users size={20} />}
           accent={COLORS.green}
         />
         <StatCard
-          label="Employers"
+          label={t('admin.active_employers')}
           value={stats.totalEmployers?.toLocaleString() ?? 0}
           icon={<Building2 size={20} />}
           accent={COLORS.orange}
         />
         <StatCard
-          label="Active Jobs"
+          label={t('employer.active_jobs')}
           value={stats.activeJobs?.toLocaleString() ?? 0}
           icon={<Briefcase size={20} />}
           accent={COLORS.purple}
         />
         <StatCard
-          label="Applications"
+          label={t('employer.total_applications')}
           value={stats.totalApplications?.toLocaleString() ?? 0}
           icon={<BarChart3 size={20} />}
           accent={COLORS.teal}
         />
         <StatCard
-          label="Hire Rate"
+          label={t('admin.hire_rate')}
           value={`${stats.hireRate ?? 0}%`}
           icon={<CheckCircle size={20} />}
           accent={COLORS.success}
@@ -389,13 +393,13 @@ function OverviewTab() {
         <div className="kora-chart-card">
           <div className="kora-chart-header">
             <TrendingUp size={15} />
-            <h3>User Growth (last 6 months)</h3>
+            <h3>{t('admin.user_growth')}</h3>
           </div>
           <div className="kora-chart-area">
             {stats.usersOverTime ? (
               <UserGrowthChart data={stats.usersOverTime} />
             ) : (
-              <div className="ad-empty">No data available.</div>
+              <div className="ad-empty">{t('admin.no_data')}</div>
             )}
           </div>
         </div>
@@ -403,14 +407,14 @@ function OverviewTab() {
         <div className="kora-chart-card">
           <div className="kora-chart-header">
             <BarChart3 size={15} />
-            <h3>Applications by Category</h3>
+            <h3>{t('admin.apps_by_category')}</h3>
           </div>
           <div className="kora-chart-area">
             {stats.applicationsByCategory &&
             Object.keys(stats.applicationsByCategory).length > 0 ? (
               <ApplicationsByCategoryChart data={stats.applicationsByCategory} />
             ) : (
-              <div className="ad-empty">No application data recorded.</div>
+              <div className="ad-empty">{t('admin.no_application_data')}</div>
             )}
           </div>
         </div>
@@ -421,14 +425,14 @@ function OverviewTab() {
         <div className="kora-chart-card">
           <div className="kora-chart-header">
             <BarChart3 size={15} />
-            <h3>Application Status Breakdown</h3>
+            <h3>{t('admin.app_status_breakdown')}</h3>
           </div>
           <div className="kora-chart-area">
             {stats.applicationStatusBreakdown &&
             Object.keys(stats.applicationStatusBreakdown).length > 0 ? (
               <ApplicationStatusChart data={stats.applicationStatusBreakdown} />
             ) : (
-              <div className="ad-empty">No application status data available.</div>
+              <div className="ad-empty">{t('admin.no_status_data')}</div>
             )}
           </div>
         </div>
@@ -436,7 +440,7 @@ function OverviewTab() {
         <div className="kora-chart-card">
           <div className="kora-chart-header">
             <Briefcase size={15} />
-            <h3>Job Postings by Status</h3>
+            <h3>{t('admin.jobs_by_status')}</h3>
           </div>
           <div className="kora-chart-area">
             <JobStatusChart
@@ -446,7 +450,7 @@ function OverviewTab() {
             />
           </div>
           <div className="kora-hire-rate-callout" style={{ marginTop: 16 }}>
-            <span>Application-to-hire conversion rate</span>
+            <span>{t('admin.hire_conversion_rate')}</span>
             <strong>{stats.hireRate}%</strong>
           </div>
         </div>
@@ -459,6 +463,7 @@ function OverviewTab() {
    TAB 2 — Employer Management
    ═══════════════════════════════════════════════════════════════════════════ */
 function EmployerTab({ onPendingUpdate }) {
+  const { t } = useTranslation();
   const [employers, setEmployers] = useState([]);
   const [filter, setFilter]       = useState('all');
   const [loading, setLoading]     = useState(true);
@@ -476,7 +481,7 @@ function EmployerTab({ onPendingUpdate }) {
         const pending = data.filter((e) => e.isApproved === false).length;
         onPendingUpdate?.(pending);
       })
-      .catch(() => setError('Unable to load employers.'))
+      .catch(() => setError(t('admin.load_employers_error')))
       .finally(() => setLoading(false));
   }, [onPendingUpdate]);
 
@@ -493,21 +498,19 @@ function EmployerTab({ onPendingUpdate }) {
       if (type === 'suspend') await suspendEmployer(id);
       if (type === 'delete')  await deleteEmployer(id);
       showToast(
-        `Employer ${
-          type === 'approve' ? 'approved' : type === 'suspend' ? 'suspended' : 'deleted'
-        } successfully.`
+        type === 'approve' ? t('admin.employer_approved') : type === 'suspend' ? t('admin.employer_suspended') : t('admin.employer_deleted')
       );
       load(filter);
     } catch {
-      showToast('An error occurred. Please try again.', 'error');
+      showToast(t('admin.action_error'), 'error');
     }
   };
 
   const TABS = [
-    { key: 'all',       label: 'All' },
-    { key: 'pending',   label: 'Pending' },
-    { key: 'approved',  label: 'Approved' },
-    { key: 'suspended', label: 'Suspended' },
+    { key: 'all',       label: t('admin.tab_all') },
+    { key: 'pending',   label: t('admin.tab_pending') },
+    { key: 'approved',  label: t('admin.tab_approved') },
+    { key: 'suspended', label: t('admin.tab_suspended') },
   ];
 
   const filtered = employers.filter((e) => {
@@ -549,7 +552,7 @@ function EmployerTab({ onPendingUpdate }) {
           <Search className="ad-search-icon" size={14} />
           <input
             className="ad-search"
-            placeholder="Search employers…"
+            placeholder={t('admin.search_employers')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -561,7 +564,7 @@ function EmployerTab({ onPendingUpdate }) {
         <div className="ed-section-header">
           <h2 className="ed-section-title">
             <Building2 size={16} />
-            Employers
+            {t('admin.employers_title')}
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
               ({displayList.length})
             </span>
@@ -575,19 +578,19 @@ function EmployerTab({ onPendingUpdate }) {
             <table className="ad-table">
               <thead>
                 <tr>
-                  <th>Company</th>
-                  <th>Contact Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Registered</th>
-                  <th>Actions</th>
+                  <th>{t('admin.col_company')}</th>
+                  <th>{t('admin.col_contact_role')}</th>
+                  <th>{t('auth.email')}</th>
+                  <th>{t('common.status')}</th>
+                  <th>{t('admin.col_registered')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {displayList.length === 0 ? (
                   <tr>
                     <td colSpan={6}>
-                      <div className="ad-empty">No employers found.</div>
+                      <div className="ad-empty">{t('admin.no_employers_found')}</div>
                     </td>
                   </tr>
                 ) : (
@@ -625,7 +628,7 @@ function EmployerTab({ onPendingUpdate }) {
                                 className="ad-btn ad-btn-approve"
                                 onClick={() => setModal({ type: 'approve', employer: emp })}
                               >
-                                <Check size={12} /> Approve
+                                <Check size={12} /> {t('admin.approve')}
                               </button>
                             )}
                             {status === 'ACTIVE' && (
@@ -633,7 +636,7 @@ function EmployerTab({ onPendingUpdate }) {
                                 className="ad-btn ad-btn-suspend"
                                 onClick={() => setModal({ type: 'suspend', employer: emp })}
                               >
-                                <Ban size={12} /> Suspend
+                                <Ban size={12} /> {t('admin.suspend')}
                               </button>
                             )}
                             {status === 'SUSPENDED' && (
@@ -641,7 +644,7 @@ function EmployerTab({ onPendingUpdate }) {
                                 className="ad-btn ad-btn-approve"
                                 onClick={() => setModal({ type: 'approve', employer: emp })}
                               >
-                                <Check size={12} /> Reactivate
+                                <Check size={12} /> {t('admin.reactivate')}
                               </button>
                             )}
                             <button
@@ -668,20 +671,16 @@ function EmployerTab({ onPendingUpdate }) {
         <ConfirmModal
           title={
             modal.type === 'approve'
-              ? 'Approve this employer?'
+              ? t('admin.confirm_approve_employer')
               : modal.type === 'suspend'
-              ? 'Suspend this employer?'
-              : 'Delete this employer?'
+              ? t('admin.confirm_suspend_employer')
+              : t('admin.confirm_delete_employer')
           }
-          message={`${
-            modal.type === 'delete' ? 'This action is irreversible. ' : ''
-          }Are you sure you want to ${
-            modal.type === 'approve'
-              ? 'approve'
-              : modal.type === 'suspend'
-              ? 'suspend'
-              : 'delete'
-          } "${modal.employer.fullName}"?`}
+          message={
+            modal.type === 'delete'
+              ? `${t('admin.irreversible')} ${t('admin.confirm_action_msg', { name: modal.employer.fullName })}`
+              : t('admin.confirm_action_msg', { name: modal.employer.fullName })
+          }
           danger={modal.type !== 'approve'}
           onConfirm={handleAction}
           onCancel={() => setModal(null)}
@@ -695,6 +694,7 @@ function EmployerTab({ onPendingUpdate }) {
    TAB 3 — Job Moderation
    ═══════════════════════════════════════════════════════════════════════════ */
 function JobsTab() {
+  const { t } = useTranslation();
   const [jobs, setJobs]               = useState([]);
   const [page, setPage]               = useState(0);
   const [totalPages, setTotalPages]   = useState(1);
@@ -715,7 +715,7 @@ function JobsTab() {
         setJobs(content);
         setTotalPages(data.totalPages ?? 1);
       })
-      .catch(() => setError('Unable to load job postings.'))
+      .catch(() => setError(t('admin.load_jobs_error')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -732,23 +732,21 @@ function JobsTab() {
       if (type === 'flag')    await flagJob(id, flagReason);
       if (type === 'delete')  await deleteJob(id);
       showToast(
-        `Job ${
-          type === 'approve' ? 'approved' : type === 'flag' ? 'flagged' : 'deleted'
-        } successfully.`
+        type === 'approve' ? t('admin.job_approved') : type === 'flag' ? t('admin.job_flagged') : t('admin.job_deleted')
       );
       load(filter, page);
     } catch {
-      showToast('An error occurred. Please try again.', 'error');
+      showToast(t('admin.action_error'), 'error');
     }
     setFlagReason('');
   };
 
   const TABS = [
-    { key: '',        label: 'All' },
-    { key: 'ACTIVE',  label: 'Active' },
-    { key: 'DRAFT',   label: 'Draft' },
-    { key: 'EXPIRED', label: 'Expired' },
-    { key: 'DELETED', label: 'Deleted' },
+    { key: '',        label: t('admin.tab_all') },
+    { key: 'ACTIVE',  label: t('admin.tab_active') },
+    { key: 'DRAFT',   label: t('admin.tab_draft') },
+    { key: 'EXPIRED', label: t('admin.tab_expired') },
+    { key: 'DELETED', label: t('admin.tab_deleted') },
   ];
 
   const filtered = jobs.filter((j) => {
@@ -783,7 +781,7 @@ function JobsTab() {
           <Search className="ad-search-icon" size={14} />
           <input
             className="ad-search"
-            placeholder="Search jobs…"
+            placeholder={t('admin.search_jobs')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -795,7 +793,7 @@ function JobsTab() {
         <div className="ed-section-header">
           <h2 className="ed-section-title">
             <Briefcase size={16} />
-            Job Postings
+            {t('admin.job_listings')}
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
               ({filtered.length})
             </span>
@@ -810,19 +808,19 @@ function JobsTab() {
               <table className="ad-table">
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Employer</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Posted</th>
-                    <th>Actions</th>
+                    <th>{t('admin.col_title')}</th>
+                    <th>{t('admin.col_employer')}</th>
+                    <th>{t('employer.category')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('admin.col_posted')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6}>
-                        <div className="ad-empty">No jobs found.</div>
+                        <div className="ad-empty">{t('admin.no_jobs_found')}</div>
                       </td>
                     </tr>
                   ) : (
@@ -855,7 +853,7 @@ function JobsTab() {
                                   className="ad-btn ad-btn-approve"
                                   onClick={() => setModal({ type: 'approve', job })}
                                 >
-                                  <Check size={12} /> Approve
+                                  <Check size={12} /> {t('admin.approve')}
                                 </button>
                               )}
                               {status === 'ACTIVE' && (
@@ -866,7 +864,7 @@ function JobsTab() {
                                     setModal({ type: 'flag', job });
                                   }}
                                 >
-                                  <Flag size={12} /> Flag
+                                  <Flag size={12} /> {t('admin.flag')}
                                 </button>
                               )}
                               <button
@@ -890,7 +888,7 @@ function JobsTab() {
             {totalPages > 1 && (
               <div className="ad-pagination">
                 <span className="ad-pagination-info">
-                  Page {page + 1} of {totalPages}
+                  {t('admin.page_of', { current: page + 1, total: totalPages })}
                 </span>
                 <div className="ad-pagination-controls">
                   <button
@@ -932,15 +930,15 @@ function JobsTab() {
       {/* Flag modal */}
       {modal?.type === 'flag' && (
         <ConfirmModal
-          title="Flag this job?"
-          message={`Move "${modal.job.title}" to Draft. Please state the reason:`}
+          title={t('admin.flag_job_title')}
+          message={t('admin.flag_job_msg', { title: modal.job.title })}
           onConfirm={handleAction}
           onCancel={() => setModal(null)}
           danger
         >
           <textarea
             className="ad-textarea"
-            placeholder="Reason for flagging…"
+            placeholder={t('admin.flag_reason_placeholder')}
             value={flagReason}
             onChange={(e) => setFlagReason(e.target.value)}
           />
@@ -952,14 +950,10 @@ function JobsTab() {
         <ConfirmModal
           title={
             modal.type === 'approve'
-              ? 'Approve this job?'
-              : 'Delete this job?'
+              ? t('admin.confirm_approve_job')
+              : t('admin.confirm_delete_job')
           }
-          message={`Are you sure you want to ${
-            modal.type === 'approve'
-              ? 'approve'
-              : 'permanently delete'
-          } "${modal.job.title}"?`}
+          message={t('admin.confirm_action_msg', { name: modal.job.title })}
           danger={modal.type === 'delete'}
           onConfirm={handleAction}
           onCancel={() => setModal(null)}
@@ -973,6 +967,7 @@ function JobsTab() {
    TAB 4 — Job Seekers
    ═══════════════════════════════════════════════════════════════════════════ */
 function SeekersTab() {
+  const { t } = useTranslation();
   const [seekers, setSeekers]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
@@ -985,7 +980,7 @@ function SeekersTab() {
     setLoading(true);
     fetchJobSeekers()
       .then(setSeekers)
-      .catch(() => setError("Unable to load job seekers."))
+      .catch(() => setError(t('admin.load_seekers_error')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -999,9 +994,9 @@ function SeekersTab() {
           x.id === s.id ? { ...x, status: 'SUSPENDED', isActive: false } : x
         )
       );
-      setToast({ msg: 'Job seeker suspended successfully.', type: 'success' });
+      setToast({ msg: t('admin.seeker_suspended'), type: 'success' });
     } catch {
-      setToast({ msg: 'Error while suspending.', type: 'error' });
+      setToast({ msg: t('admin.action_error'), type: 'error' });
     }
   };
 
@@ -1027,7 +1022,7 @@ function SeekersTab() {
           <Search className="ad-search-icon" size={14} />
           <input
             className="ad-search"
-            placeholder="Search by name or email…"
+            placeholder={t('admin.search_seekers')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -1039,7 +1034,7 @@ function SeekersTab() {
         <div className="ed-section-header">
           <h2 className="ed-section-title">
             <Users size={16} />
-            Job Seekers
+            {t('admin.job_seekers_title')}
             <span style={{ fontWeight: 400, color: 'var(--kora-muted)', marginLeft: 6 }}>
               ({filtered.length})
             </span>
@@ -1053,19 +1048,19 @@ function SeekersTab() {
             <table className="ad-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Skills</th>
-                  <th>Status</th>
-                  <th>Registered</th>
-                  <th>Actions</th>
+                  <th>{t('admin.col_name')}</th>
+                  <th>{t('auth.email')}</th>
+                  <th>{t('admin.col_skills')}</th>
+                  <th>{t('common.status')}</th>
+                  <th>{t('admin.col_registered')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6}>
-                      <div className="ad-empty">No results found.</div>
+                      <div className="ad-empty">{t('admin.no_results')}</div>
                     </td>
                   </tr>
                 ) : (
@@ -1109,14 +1104,14 @@ function SeekersTab() {
                               className="ad-btn ad-btn-view"
                               onClick={() => setSlideOver(s)}
                             >
-                              <Eye size={12} /> Profile
+                              <Eye size={12} /> {t('admin.profile')}
                             </button>
                             {status.toUpperCase() !== 'SUSPENDED' && (
                               <button
                                 className="ad-btn ad-btn-suspend"
                                 onClick={() => setModal(s)}
                               >
-                                <Ban size={12} /> Suspend
+                                <Ban size={12} /> {t('admin.suspend')}
                               </button>
                             )}
                           </div>
@@ -1134,10 +1129,8 @@ function SeekersTab() {
       {/* Suspend confirm */}
       {modal && (
         <ConfirmModal
-          title="Suspend this job seeker?"
-          message={`Are you sure you want to suspend "${
-            modal.fullName ?? modal.email
-          }"?`}
+          title={t('admin.confirm_suspend_seeker')}
+          message={t('admin.confirm_action_msg', { name: modal.fullName ?? modal.email })}
           danger
           onConfirm={handleSuspend}
           onCancel={() => setModal(null)}
@@ -1151,9 +1144,9 @@ function SeekersTab() {
             className="ad-slideover-overlay"
             onClick={() => setSlideOver(null)}
           />
-          <div className="ad-slideover" role="dialog" aria-label="Job Seeker Profile">
+          <div className="ad-slideover" role="dialog" aria-label={t('admin.job_seeker_profile')}>
             <div className="ad-slideover-header">
-              <h3>Job Seeker Profile</h3>
+              <h3>{t('admin.job_seeker_profile')}</h3>
               <button
                 className="ad-slideover-close"
                 onClick={() => setSlideOver(null)}
@@ -1204,14 +1197,14 @@ function SeekersTab() {
                     {slideOver.fullName || '—'}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--kora-muted)' }}>
-                    {slideOver.profileSummary ?? 'Job Seeker'}
+                    {slideOver.profileSummary ?? t('admin.job_seeker')}
                   </div>
                 </div>
               </div>
 
               {/* General info */}
               <div className="ad-detail-section">
-                <div className="ad-detail-section-title">General Information</div>
+                <div className="ad-detail-section-title">{t('admin.general_information')}</div>
                 {[
                   ['Email',        slideOver.email],
                   ['Phone',        slideOver.phone],
@@ -1233,7 +1226,7 @@ function SeekersTab() {
               {/* Skills */}
               {(slideOver.keywords?.length > 0 || slideOver.skills?.length > 0) && (
                 <div className="ad-detail-section">
-                  <div className="ad-detail-section-title">Skills</div>
+                  <div className="ad-detail-section-title">{t('admin.col_skills')}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {(slideOver.keywords ?? slideOver.skills ?? []).map((sk) => (
                       <span key={sk} className="ad-skill-chip">{sk}</span>
@@ -1245,9 +1238,9 @@ function SeekersTab() {
               {/* Education */}
               {slideOver.degree && (
                 <div className="ad-detail-section">
-                  <div className="ad-detail-section-title">Education</div>
+                  <div className="ad-detail-section-title">{t('admin.education')}</div>
                   <div className="ad-detail-row">
-                    <span className="key">Degree</span>
+                    <span className="key">{t('admin.degree')}</span>
                     <span className="val">{slideOver.degree}</span>
                   </div>
                 </div>
@@ -1264,6 +1257,7 @@ function SeekersTab() {
    TAB 5 — Reports
    ═══════════════════════════════════════════════════════════════════════════ */
 function ReportsTab() {
+  const { t } = useTranslation();
   const [jobs, setJobs]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -1280,7 +1274,7 @@ function ReportsTab() {
         const content = Array.isArray(data) ? data : data.content ?? [];
         setJobs(content);
       })
-      .catch(() => setError('Unable to load reports.'))
+      .catch(() => setError(t('admin.load_reports_error')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -1346,25 +1340,25 @@ function ReportsTab() {
       {/* KPI row */}
       <div className="ed-stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
         <StatCard
-          label="Hire Rate"
+          label={t('admin.hire_rate')}
           value={`${hireRate}${hireRate !== '—' ? '%' : ''}`}
           icon={<CheckCircle size={20} />}
           accent={COLORS.success}
-          delta="Applications → Hires"
+          delta={t('admin.apps_to_hires')}
         />
         <StatCard
-          label="Top Category"
+          label={t('admin.top_category')}
           value={mostActive}
           icon={<Activity size={20} />}
           accent={COLORS.orange}
-          delta="By number of postings"
+          delta={t('admin.by_postings')}
         />
         <StatCard
-          label="Avg Applications"
+          label={t('admin.avg_applications')}
           value={avgApps}
           icon={<TrendingUp size={20} />}
           accent={COLORS.blue}
-          delta="Per active job"
+          delta={t('admin.per_active_job')}
         />
       </div>
 
@@ -1372,7 +1366,7 @@ function ReportsTab() {
       <div className="ed-section">
         <div className="ed-section-header">
           <h2 className="ed-section-title">
-            Applications by Category — Top 6
+            {t('admin.apps_by_category_top6')}
           </h2>
         </div>
         <div className="ad-chart-wrap" style={{ height: 260 }}>
@@ -1380,7 +1374,7 @@ function ReportsTab() {
             <canvas ref={barRef} />
           ) : (
             <div className="ad-empty">
-              No category data available at the moment.
+              {t('admin.no_category_data')}
             </div>
           )}
         </div>
@@ -1392,19 +1386,21 @@ function ReportsTab() {
 /* ═══════════════════════════════════════════════════════════════════════════
    ROOT — AdminDashboard
    ═══════════════════════════════════════════════════════════════════════════ */
-const TAB_META = {
-  overview:  { title: 'Overview',           sub: 'KORA Platform Administrator Dashboard' },
-  employers: { title: 'Employer Management', sub: 'Approve, suspend and delete employer accounts' },
-  jobs:      { title: 'Job Moderation',      sub: 'Approve and remove job listings' },
-  seekers:   { title: 'Job Seekers',         sub: 'Manage candidate profiles' },
-  reports:   { title: 'Reports & Analytics', sub: 'Platform performance metrics' },
-};
+// TAB_META is now resolved dynamically inside the component using t()
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [tab, setTab]               = useState('overview');
   const [pendingCount, setPendingCount] = useState(0);
 
+  const TAB_META = {
+    overview:  { title: t('admin.tab_overview'),   sub: t('admin.tab_overview_sub') },
+    employers: { title: t('admin.tab_employers'),  sub: t('admin.tab_employers_sub') },
+    jobs:      { title: t('admin.tab_jobs'),       sub: t('admin.tab_jobs_sub') },
+    seekers:   { title: t('admin.tab_seekers'),    sub: t('admin.tab_seekers_sub') },
+    reports:   { title: t('admin.tab_reports'),    sub: t('admin.tab_reports_sub') },
+  };
   const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
 
   return (
@@ -1442,7 +1438,7 @@ export default function AdminDashboard() {
               }}
             >
               <Shield size={13} />
-              {user?.fullName?.split(' ')[0] ?? 'Admin'} · Super Admin
+              {user?.fullName?.split(' ')[0] ?? t('admin.admin_label')} · {t('admin.super_admin')}
             </div>
           </div>
 

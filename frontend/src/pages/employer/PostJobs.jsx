@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
   Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
@@ -51,6 +52,7 @@ const INITIAL_FORM = {
 
 // ── Step Indicator ────────────────────────────────────────
 function StepIndicator({ current }) {
+  const { t } = useTranslation();
   return (
     <div className="pj-steps">
       {STEPS.map((step, idx) => {
@@ -76,21 +78,22 @@ function StepIndicator({ current }) {
 
 // ── Live Preview ──────────────────────────────────────────
 function JobPreview({ form }) {
+  const { t } = useTranslation();
   const isEmpty = !form.title && !form.category && !form.type;
   return (
     <div>
       <div className="pj-preview-card">
         <div className="pj-preview-title">
-          <Eye size={15} /> Live Preview
+          <Eye size={15} /> {t('employer.live_preview')}
         </div>
         {isEmpty ? (
           <div className="pj-preview-empty">
-            Start filling the form to see a live preview of your job posting.
+            {t('employer.preview_empty')}
           </div>
         ) : (
           <>
             <div className="pj-preview-job-title">
-              {form.title || "Job Title"}
+              {form.title || t('employer.job_title')}
             </div>
             <div className="pj-preview-company">TechCam Solutions</div>
             <div className="pj-preview-meta">
@@ -120,13 +123,13 @@ function JobPreview({ form }) {
               {form.deadline && (
                 <div className="pj-preview-meta-item">
                   <Calendar size={13} />
-                  <span>Deadline: {form.deadline}</span>
+                  <span>{t('employer.deadline')}: {form.deadline}</span>
                 </div>
               )}
               {form.experience && (
                 <div className="pj-preview-meta-item">
                   <CheckCircle size={13} />
-                  <span>{form.experience} experience</span>
+                  <span>{form.experience} {t('employer.experience_suffix')}</span>
                 </div>
               )}
             </div>
@@ -135,7 +138,7 @@ function JobPreview({ form }) {
               <>
                 <div className="pj-preview-divider" />
                 <div style={{ fontSize: "11px", color: "var(--kora-text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Required Skills
+                  {t('employer.required_skills')}
                 </div>
                 <div className="pj-preview-skills">
                   {form.skills.map((s) => (
@@ -159,14 +162,14 @@ function JobPreview({ form }) {
 
       <div className="pj-tips-card">
         <div className="pj-tips-title">
-          <Lightbulb size={14} /> Tips for a great post
+          <Lightbulb size={14} /> {t('employer.tips_title')}
         </div>
         <div className="pj-tips-list">
-          <div className="pj-tip">Write a clear, specific job title</div>
-          <div className="pj-tip">Include salary range to attract more applicants</div>
-          <div className="pj-tip">List the top 5–8 required skills only</div>
-          <div className="pj-tip">Be specific about experience level needed</div>
-          <div className="pj-tip">Set a realistic application deadline</div>
+          <div className="pj-tip">{t('employer.tip_1')}</div>
+          <div className="pj-tip">{t('employer.tip_2')}</div>
+          <div className="pj-tip">{t('employer.tip_3')}</div>
+          <div className="pj-tip">{t('employer.tip_4')}</div>
+          <div className="pj-tip">{t('employer.tip_5')}</div>
         </div>
       </div>
     </div>
@@ -175,20 +178,21 @@ function JobPreview({ form }) {
 
 // ── Step 1 — Basic Info ───────────────────────────────────
 function Step1({ form, setForm, errors }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="pj-form-card-title">
-        <Briefcase size={18} color="var(--kora-primary)" /> Basic Information
+        <Briefcase size={18} color="var(--kora-primary)" /> {t('employer.basic_info')}
       </div>
       <div className="pj-form-card-sub">
-        Start with the essential details about the position.
+        {t('employer.basic_info_sub')}
       </div>
       <div className="pj-form-grid">
         <div className="pj-field pj-field-full">
-          <label>Job Title <span>*</span></label>
+          <label>{t('employer.job_title')} <span>*</span></label>
           <input
             className={`pj-input ${errors.title ? "error" : ""}`}
-            placeholder="e.g. Senior Java Developer"
+            placeholder={t('employer.job_title_placeholder')}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
@@ -196,13 +200,13 @@ function Step1({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field">
-          <label>Category <span>*</span></label>
+          <label>{t('employer.category')} <span>*</span></label>
           <select
             className={`pj-select ${errors.category ? "error" : ""}`}
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
-            <option value="">Select category...</option>
+            <option value="">{t('employer.select_category')}</option>
             {JOB_CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -211,26 +215,26 @@ function Step1({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field">
-          <label>Contract Type <span>*</span></label>
+          <label>{t('employer.job_type')} <span>*</span></label>
           <select
             className={`pj-select ${errors.type ? "error" : ""}`}
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
           >
-            <option value="">Select type...</option>
-            <option value="CDI">CDI (Permanent)</option>
-            <option value="CDD">CDD (Fixed Term)</option>
-            <option value="Internship">Internship</option>
-            <option value="Freelance">Freelance</option>
+            <option value="">{t('employer.select_type')}</option>
+            <option value="CDI">{t('employer.cdi')}</option>
+            <option value="CDD">{t('employer.cdd')}</option>
+            <option value="Internship">{t('employer.internship')}</option>
+            <option value="Freelance">{t('employer.freelance')}</option>
           </select>
           {errors.type && <span className="pj-error-msg">{errors.type}</span>}
         </div>
 
         <div className="pj-field">
-          <label>Location <span>*</span></label>
+          <label>{t('employer.location')} <span>*</span></label>
           <input
             className={`pj-input ${errors.location ? "error" : ""}`}
-            placeholder="e.g. Douala, Yaoundé, Remote"
+            placeholder={t('employer.location_placeholder')}
             value={form.location}
             onChange={(e) => setForm({ ...form, location: e.target.value })}
           />
@@ -238,12 +242,12 @@ function Step1({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field pj-field-full">
-          <label>Salary Range (optional)</label>
+          <label>{t('employer.salary_range')}</label>
           <div className="pj-salary-row">
             <input
               className="pj-input"
               type="number"
-              placeholder="Min e.g. 300000"
+              placeholder={t('employer.salary_min')}
               value={form.salaryMin}
               onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
             />
@@ -251,7 +255,7 @@ function Step1({ form, setForm, errors }) {
             <input
               className="pj-input"
               type="number"
-              placeholder="Max e.g. 600000"
+              placeholder={t('employer.salary_max')}
               value={form.salaryMax}
               onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
             />
@@ -259,7 +263,7 @@ function Step1({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field">
-          <label>Currency</label>
+          <label>{t('employer.currency')}</label>
           <select
             className="pj-select"
             value={form.currency}
@@ -272,7 +276,7 @@ function Step1({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field">
-          <label>Application Deadline <span>*</span></label>
+          <label>{t('employer.deadline')} <span>*</span></label>
           <input
             className={`pj-input ${errors.deadline ? "error" : ""}`}
             type="date"
@@ -289,20 +293,21 @@ function Step1({ form, setForm, errors }) {
 
 // ── Step 2 — Description ──────────────────────────────────
 function Step2({ form, setForm, errors }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="pj-form-card-title">
-        <FileText size={18} color="var(--kora-primary)" /> Job Description
+        <FileText size={18} color="var(--kora-primary)" /> {t('employer.description')}
       </div>
       <div className="pj-form-card-sub">
-        Describe the role, responsibilities and what success looks like.
+        {t('employer.description_sub')}
       </div>
       <div className="pj-form-grid">
         <div className="pj-field pj-field-full">
-          <label>Job Description <span>*</span></label>
+          <label>{t('employer.description')} <span>*</span></label>
           <textarea
             className={`pj-textarea ${errors.description ? "error" : ""}`}
-            placeholder="Describe the role, key responsibilities, team environment, and what success looks like in this position..."
+            placeholder={t('employer.description_placeholder')}
             value={form.description}
             rows={8}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -317,30 +322,30 @@ function Step2({ form, setForm, errors }) {
         </div>
 
         <div className="pj-field">
-          <label>Experience Level <span>*</span></label>
+          <label>{t('employer.exp_level')} <span>*</span></label>
           <select
             className={`pj-select ${errors.experience ? "error" : ""}`}
             value={form.experience}
             onChange={(e) => setForm({ ...form, experience: e.target.value })}
           >
-            <option value="">Select level...</option>
-            <option value="No experience">No experience required</option>
-            <option value="0-1 year">0 – 1 year</option>
-            <option value="1-3 years">1 – 3 years</option>
-            <option value="3-5 years">3 – 5 years</option>
-            <option value="5+ years">5+ years</option>
+            <option value="">{t('employer.select_level')}</option>
+            <option value="No experience">{t('employer.exp_none')}</option>
+            <option value="0-1 year">{t('employer.exp_0_1')}</option>
+            <option value="1-3 years">{t('employer.exp_1_3')}</option>
+            <option value="3-5 years">{t('employer.exp_3_5')}</option>
+            <option value="5+ years">{t('employer.exp_5plus')}</option>
           </select>
           {errors.experience && <span className="pj-error-msg">{errors.experience}</span>}
         </div>
 
         <div className="pj-field">
-          <label>Education Level</label>
+          <label>{t('employer.education_level')}</label>
           <select
             className="pj-select"
             value={form.education}
             onChange={(e) => setForm({ ...form, education: e.target.value })}
           >
-            <option value="">Any level</option>
+            <option value="">{t('employer.edu_any')}</option>
             <option value="BAC">BAC</option>
             <option value="BTS / HND">BTS / HND</option>
             <option value="Licence / Bachelor">Licence / Bachelor</option>
@@ -357,7 +362,7 @@ function Step2({ form, setForm, errors }) {
               onChange={(e) => setForm({ ...form, remote: e.target.checked })}
               style={{ width: "16px", height: "16px", accentColor: "var(--kora-primary)", cursor: "pointer" }}
             />
-            This position is open to remote work
+            {t('employer.remote_ok')}
           </label>
         </div>
       </div>
@@ -367,6 +372,7 @@ function Step2({ form, setForm, errors }) {
 
 // ── Step 3 — Skills ───────────────────────────────────────
 function Step3({ form, setForm, errors }) {
+  const { t } = useTranslation();
   const [skillInput, setSkillInput] = useState("");
 
   const addSkill = (skill) => {
@@ -390,14 +396,14 @@ function Step3({ form, setForm, errors }) {
   return (
     <div>
       <div className="pj-form-card-title">
-        <Tag size={18} color="var(--kora-primary)" /> Required Skills
+        <Tag size={18} color="var(--kora-primary)" /> {t('employer.required_skills')}
       </div>
       <div className="pj-form-card-sub">
-        Add the skills required for this position. Press Enter or comma to add.
+        {t('employer.skills_sub')}
       </div>
       <div className="pj-form-grid">
         <div className="pj-field pj-field-full">
-          <label>Skills <span>*</span></label>
+          <label>{t('employer.skills_label')} <span>*</span></label>
           <div className="pj-skills-wrap">
             <div className="pj-skills-cloud">
               {form.skills.map((skill) => (
@@ -410,14 +416,14 @@ function Step3({ form, setForm, errors }) {
               ))}
               {form.skills.length === 0 && (
                 <span style={{ fontSize: "12.5px", color: "var(--kora-text-muted)", fontStyle: "italic" }}>
-                  No skills added yet...
+                  {t('employer.no_skills_yet')}
                 </span>
               )}
             </div>
             <div className="pj-skills-input-row">
               <input
                 className="pj-input"
-                placeholder="Type a skill and press Enter..."
+                placeholder={t('employer.skill_input_placeholder')}
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -427,18 +433,18 @@ function Step3({ form, setForm, errors }) {
                 onClick={() => addSkill(skillInput)}
                 disabled={!skillInput.trim()}
               >
-                <Plus size={14} /> Add
+                <Plus size={14} /> {t('employer.add_skill')}
               </button>
             </div>
             <div className="pj-skills-hint">
-              {form.skills.length}/15 skills added
+              {form.skills.length}/15 {t('employer.skills_added')}
             </div>
           </div>
           {errors.skills && <span className="pj-error-msg">{errors.skills}</span>}
         </div>
 
         <div className="pj-field pj-field-full">
-          <label>Suggested Skills</label>
+          <label>{t('employer.suggested_skills')}</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "4px" }}>
             {SKILL_SUGGESTIONS.filter((s) => !form.skills.includes(s)).map((skill) => (
               <button
@@ -470,27 +476,28 @@ function Step3({ form, setForm, errors }) {
 
 // ── Step 4 — Review ───────────────────────────────────────
 function Step4({ form }) {
+  const { t } = useTranslation();
   const rows = [
-    { label: "Job Title",       value: form.title       },
-    { label: "Category",        value: form.category    },
-    { label: "Contract Type",   value: form.type        },
-    { label: "Location",        value: form.location + (form.remote ? " (Remote OK)" : "") },
-    { label: "Salary",          value: form.salaryMin || form.salaryMax
+    { label: t('employer.job_title'),     value: form.title       },
+    { label: t('employer.category'),      value: form.category    },
+    { label: t('employer.job_type'),      value: form.type        },
+    { label: t('employer.location'),      value: form.location + (form.remote ? ` (${t('employer.remote_ok_short')})` : "") },
+    { label: t('employer.salary_label'),  value: form.salaryMin || form.salaryMax
         ? `${Number(form.salaryMin || 0).toLocaleString()} – ${Number(form.salaryMax || 0).toLocaleString()} ${form.currency}`
-        : "Not specified" },
-    { label: "Deadline",        value: form.deadline    },
-    { label: "Experience",      value: form.experience  },
-    { label: "Education",       value: form.education || "Any level" },
-    { label: "Skills",          value: form.skills.length > 0 ? form.skills.join(", ") : "None" },
+        : t('employer.not_specified') },
+    { label: t('employer.deadline'),      value: form.deadline    },
+    { label: t('employer.experience'),    value: form.experience  },
+    { label: t('employer.education'),     value: form.education || t('employer.edu_any') },
+    { label: t('employer.required_skills'), value: form.skills.length > 0 ? form.skills.join(", ") : t('common.none') },
   ];
 
   return (
     <div>
       <div className="pj-form-card-title">
-        <Eye size={18} color="var(--kora-primary)" /> Review Your Posting
+        <Eye size={18} color="var(--kora-primary)" /> {t('employer.review_title')}
       </div>
       <div className="pj-form-card-sub">
-        Review all details before publishing. You can go back to edit.
+        {t('employer.review_sub')}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -511,7 +518,7 @@ function Step4({ form }) {
               {label}
             </div>
             <div style={{ fontSize: "13.5px", color: "var(--kora-text-dark)", flex: 1 }}>
-              {value || <span style={{ color: "var(--kora-text-muted)", fontStyle: "italic" }}>Not provided</span>}
+              {value || <span style={{ color: "var(--kora-text-muted)", fontStyle: "italic" }}>{t('employer.not_provided')}</span>}
             </div>
           </div>
         ))}
@@ -526,7 +533,7 @@ function Step4({ form }) {
             }}
           >
             <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--kora-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
-              Description
+              {t('employer.description')}
             </div>
             <div style={{ fontSize: "13.5px", color: "var(--kora-text-dark)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
               {form.description}
@@ -540,6 +547,7 @@ function Step4({ form }) {
 
 // ── Main Component ────────────────────────────────────────
 export default function PostJob({ onBack, onSuccess }) {
+  const { t } = useTranslation();
   const [step, setStep]               = useState(1);
   const [form, setForm]               = useState(INITIAL_FORM);
   const [errors, setErrors]           = useState({});
@@ -552,19 +560,19 @@ export default function PostJob({ onBack, onSuccess }) {
   const validate = (currentStep) => {
     const e = {};
     if (currentStep === 1) {
-      if (!form.title.trim())    e.title    = "Job title is required.";
-      if (!form.category)        e.category = "Please select a category.";
-      if (!form.type)            e.type     = "Please select a contract type.";
-      if (!form.location.trim()) e.location = "Location is required.";
-      if (!form.deadline)        e.deadline = "Please set an application deadline.";
+      if (!form.title.trim())    e.title    = t('employer.error_title_required');
+      if (!form.category)        e.category = t('employer.error_category_required');
+      if (!form.type)            e.type     = t('employer.error_type_required');
+      if (!form.location.trim()) e.location = t('employer.error_location_required');
+      if (!form.deadline)        e.deadline = t('employer.error_deadline_required');
     }
     if (currentStep === 2) {
-      if (!form.description.trim()) e.description = "Job description is required.";
-      if (form.description.length > 3000) e.description = "Description must be under 3000 characters.";
-      if (!form.experience) e.experience = "Please select an experience level.";
+      if (!form.description.trim()) e.description = t('employer.error_description_required');
+      if (form.description.length > 3000) e.description = t('employer.error_description_too_long');
+      if (!form.experience) e.experience = t('employer.error_experience_required');
     }
     if (currentStep === 3) {
-      if (form.skills.length === 0) e.skills = "Please add at least one required skill.";
+      if (form.skills.length === 0) e.skills = t('employer.error_skills_required');
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -581,7 +589,7 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const handleSaveDraft = () => {
     setSavingDraft(true);
-    setTimeout(() => { setSavingDraft(false); alert("Draft saved successfully!"); }, 800);
+    setTimeout(() => { setSavingDraft(false); alert(t('employer.draft_saved')); }, 800);
   };
 
   const handlePublish = () => {
@@ -589,11 +597,11 @@ export default function PostJob({ onBack, onSuccess }) {
   };
 
   const navItems = [
-    { key: "dashboard", icon: <BarChart2 size={16} />, label: "Dashboard"   },
-    { key: "jobs",      icon: <Briefcase size={16} />, label: "Job Postings" },
-    { key: "apps",      icon: <Users size={16} />,     label: "Applications" },
-    { key: "notifs",    icon: <Bell size={16} />,      label: "Notifications" },
-    { key: "settings",  icon: <Settings size={16} />,  label: "Settings"     },
+    { key: "dashboard", icon: <BarChart2 size={16} />, label: t('employer.nav_dashboard')   },
+    { key: "jobs",      icon: <Briefcase size={16} />, label: t('employer.nav_job_postings') },
+    { key: "apps",      icon: <Users size={16} />,     label: t('employer.nav_applications') },
+    { key: "notifs",    icon: <Bell size={16} />,      label: t('employer.nav_notifications') },
+    { key: "settings",  icon: <Settings size={16} />,  label: t('employer.nav_settings')     },
   ];
 
   if (submitted) {
@@ -616,26 +624,25 @@ export default function PostJob({ onBack, onSuccess }) {
                   </button>
                 ))}
               </nav>
-              <button className="kora-sidebar-logout"><LogOut size={15} /> Sign Out</button>
+              <button className="kora-sidebar-logout"><LogOut size={15} /> {t('nav.sign_out')}</button>
             </div>
           </aside>
           <main className="kora-main-content">
             <div className="pj-success">
               <div className="pj-success-icon"><CheckCircle size={36} /></div>
-              <h2>Job Posted Successfully! 🎉</h2>
+              <h2>{t('employer.job_posted_success')} 🎉</h2>
               <p>
-                <strong>"{form.title}"</strong> has been published and is now live on the Kora platform.
-                Candidates can start applying immediately.
+                <strong>"{form.title}"</strong> {t('employer.job_posted_desc')}
               </p>
               <div className="pj-success-actions">
                 <button className="kora-btn-secondary" onClick={onBack}>
-                  <ArrowLeft size={14} /> Back to Jobs
+                  <ArrowLeft size={14} /> {t('employer.back_to_jobs')}
                 </button>
                 <button
                   className="kora-btn-primary"
                   onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL_FORM); setErrors({}); }}
                 >
-                  <Plus size={14} /> Post Another Job
+                  <Plus size={14} /> {t('employer.post_another_job')}
                 </button>
               </div>
             </div>
@@ -672,15 +679,15 @@ export default function PostJob({ onBack, onSuccess }) {
               <p className="kora-sidebar-name">TechCam Solutions</p>
               <p className="kora-sidebar-role">Jean-Pierre MVONDO</p>
               <span className="kora-verified-badge">
-                <CheckCircle size={12} /> Verified Employer
+                <CheckCircle size={12} /> {t('employer.verified_employer')}
               </span>
             </div>
             <div className="kora-employer-stats">
-              <div className="kora-stat-pill"><strong>3</strong><span>Active Jobs</span></div>
-              <div className="kora-stat-pill"><strong>24</strong><span>Applications</span></div>
+              <div className="kora-stat-pill"><strong>3</strong><span>{t('employer.active_jobs')}</span></div>
+              <div className="kora-stat-pill"><strong>24</strong><span>{t('employer.nav_applications')}</span></div>
             </div>
             <nav className="kora-sidebar-nav">
-              <p className="kora-sidebar-nav-label">Main Menu</p>
+              <p className="kora-sidebar-nav-label">{t('common.main_menu')}</p>
               {navItems.map(({ key, icon, label }) => (
                 <button
                   key={key}
@@ -692,7 +699,7 @@ export default function PostJob({ onBack, onSuccess }) {
               ))}
             </nav>
             <button className="kora-sidebar-logout">
-              <LogOut size={15} /> Sign Out
+              <LogOut size={15} /> {t('nav.sign_out')}
             </button>
           </div>
         </aside>
@@ -707,20 +714,20 @@ export default function PostJob({ onBack, onSuccess }) {
                 <Menu size={18} />
               </button>
               <div className="pj-topbar-left">
-                <h1>Post a New Job</h1>
-                <p>Fill in the details to publish your job posting on Kora.</p>
+                <h1>{t('employer.post_job_title')}</h1>
+                <p>{t('employer.post_job_sub')}</p>
               </div>
             </div>
             <div className="pj-topbar-actions">
               <button className="kora-btn-secondary" onClick={onBack}>
-                <ArrowLeft size={14} /> Back to Jobs
+                <ArrowLeft size={14} /> {t('employer.back_to_jobs')}
               </button>
               <button
                 className="kora-btn-secondary"
                 onClick={handleSaveDraft}
                 disabled={savingDraft}
               >
-                {savingDraft ? "Saving..." : "Save Draft"}
+                {savingDraft ? t('common.saving') : t('employer.create_draft')}
               </button>
             </div>
           </div>
@@ -743,21 +750,21 @@ export default function PostJob({ onBack, onSuccess }) {
                 <div>
                   {step > 1 && (
                     <button className="kora-btn-secondary" onClick={handleBack}>
-                      <ArrowLeft size={14} /> Back
+                      <ArrowLeft size={14} /> {t('common.back')}
                     </button>
                   )}
                 </div>
                 <div className="pj-step-nav-right">
                   <span style={{ fontSize: "12px", color: "var(--kora-text-muted)" }}>
-                    Step {step} of {STEPS.length}
+                    {t('common.step_of', { step, total: STEPS.length })}
                   </span>
                   {step < STEPS.length ? (
                     <button className="kora-btn-primary" onClick={handleNext}>
-                      Next <ArrowRight size={14} />
+                      {t('common.next')} <ArrowRight size={14} />
                     </button>
                   ) : (
                     <button className="kora-btn-primary" onClick={handlePublish}>
-                      <CheckCircle size={14} /> Publish Job
+                      <CheckCircle size={14} /> {t('employer.publish_now')}
                     </button>
                   )}
                 </div>

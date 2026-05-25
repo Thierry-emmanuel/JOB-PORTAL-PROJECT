@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 import {
   Search, Plus, Filter, MoreVertical,
@@ -24,6 +25,7 @@ function StatusBadge({ status }) {
 }
 
 export default function ManageJobs() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     employer, stats, jobPostings,
@@ -80,7 +82,7 @@ export default function ManageJobs() {
           </aside>
           <main className="ed-main">
             <div className="kora-empty-state">
-              <p>Failed to load jobs: {error}</p>
+              <p>{t('employer.failed_to_load_jobs')}: {error}</p>
             </div>
           </main>
         </div>
@@ -97,14 +99,14 @@ export default function ManageJobs() {
           <div className="mj-confirm-overlay" onClick={() => setDeleteTarget(null)} />
           <div className="mj-confirm-box">
             <div className="mj-confirm-icon"><Trash2 size={24} /></div>
-            <h3>Delete Job Posting</h3>
+            <h3>{t('employer.delete_job_posting')}</h3>
             <p>
-              Are you sure you want to delete <strong>{deleteTarget.title}</strong>? 
-              This action cannot be undone and will remove all associated applications.
+              {t('employer.delete_confirm_msg')} <strong>{deleteTarget.title}</strong>?{" "}
+              {t('employer.delete_confirm_warning')}
             </p>
             <div className="mj-confirm-actions">
-              <button className="mj-btn-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className="mj-btn-danger" onClick={confirmDelete}>Delete Job</button>
+              <button className="mj-btn-cancel" onClick={() => setDeleteTarget(null)}>{t('common.cancel')}</button>
+              <button className="mj-btn-danger" onClick={confirmDelete}>{t('employer.delete_job')}</button>
             </div>
           </div>
         </>
@@ -121,14 +123,14 @@ export default function ManageJobs() {
           
           <div className="ed-welcome">
             <div>
-              <h1 className="ed-welcome-title">Manage Job Postings</h1>
+              <h1 className="ed-welcome-title">{t('employer.manage_job_postings')}</h1>
               <p className="ed-welcome-sub">
-                {localStats.total} total · {localStats.active} active · {localStats.draft} draft
+                {localStats.total} {t('employer.stat_total')} · {localStats.active} {t('employer.stat_active')} · {localStats.draft} {t('employer.stat_draft')}
               </p>
             </div>
             <button className="ed-find-jobs-btn" onClick={() => navigate("/employer/post-job")}>
               <Plus size={15} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-              Post New Job
+              {t('employer.post_new_job')}
             </button>
           </div>
 
@@ -140,7 +142,7 @@ export default function ManageJobs() {
               </div>
               <div>
                 <div className="mj-stat-chip-val">{localStats.active}</div>
-                <div className="mj-stat-chip-lbl">Active Jobs</div>
+                <div className="mj-stat-chip-lbl">{t('employer.active_jobs')}</div>
               </div>
             </div>
             <div className="mj-stat-chip">
@@ -149,7 +151,7 @@ export default function ManageJobs() {
               </div>
               <div>
                 <div className="mj-stat-chip-val">{localStats.draft}</div>
-                <div className="mj-stat-chip-lbl">Drafts</div>
+                <div className="mj-stat-chip-lbl">{t('employer.drafts')}</div>
               </div>
             </div>
             <div className="mj-stat-chip">
@@ -158,7 +160,7 @@ export default function ManageJobs() {
               </div>
               <div>
                 <div className="mj-stat-chip-val">{localStats.expired}</div>
-                <div className="mj-stat-chip-lbl">Expired</div>
+                <div className="mj-stat-chip-lbl">{t('employer.expired')}</div>
               </div>
             </div>
             <div className="mj-stat-chip">
@@ -167,7 +169,7 @@ export default function ManageJobs() {
               </div>
               <div>
                 <div className="mj-stat-chip-val">{localStats.total}</div>
-                <div className="mj-stat-chip-lbl">Total Posted</div>
+                <div className="mj-stat-chip-lbl">{t('employer.total_posted')}</div>
               </div>
             </div>
           </div>
@@ -179,7 +181,7 @@ export default function ManageJobs() {
                 className={`mj-tab-filter ${activeTab === tab ? "active" : ""}`}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab === "ALL" ? "All Jobs" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                {tab === "ALL" ? t('employer.tab_all_jobs') : tab.charAt(0) + tab.slice(1).toLowerCase()}
                 <span className="mj-tab-count">
                   {tab === "ALL" ? localStats.total : localStats[tab.toLowerCase()] || 0}
                 </span>
@@ -192,7 +194,7 @@ export default function ManageJobs() {
               <Search size={16} className="mj-search-icon" />
               <input
                 type="text"
-                placeholder="Search by title, location, or category..."
+                placeholder={t('employer.search_jobs_placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -205,11 +207,11 @@ export default function ManageJobs() {
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
-                <option value="ALL">All Types</option>
-                <option value="CDI">Full-time (CDI)</option>
-                <option value="CDD">Contract (CDD)</option>
-                <option value="STAGE">Internship (Stage)</option>
-                <option value="FREELANCE">Freelance</option>
+                <option value="ALL">{t('employer.all_types')}</option>
+                <option value="CDI">{t('employer.fulltime_cdi')}</option>
+                <option value="CDD">{t('employer.contract_cdd')}</option>
+                <option value="STAGE">{t('employer.internship_stage')}</option>
+                <option value="FREELANCE">{t('employer.freelance')}</option>
               </select>
             </div>
           </div>
@@ -217,20 +219,20 @@ export default function ManageJobs() {
           <div className="mj-list-container">
             {loading ? (
               <div style={{ padding: "40px", textAlign: "center", color: "var(--kora-muted)" }}>
-                Loading jobs...
+                {t('common.loading_jobs')}
               </div>
             ) : filtered.length === 0 ? (
               <div className="mj-empty-state">
                 <div className="mj-empty-icon"><Briefcase size={32} /></div>
-                <h3>No jobs found</h3>
-                <p>We couldn't find any job postings matching your current filters.</p>
+                <h3>{t('employer.no_jobs_found')}</h3>
+                <p>{t('employer.no_jobs_desc')}</p>
                 {activeTab !== "ALL" || searchQuery !== "" ? (
                   <button 
                     className="mj-btn-outline" 
                     onClick={() => { setActiveTab("ALL"); setSearchQuery(""); setFilterType("ALL"); }}
                     style={{ marginTop: "16px" }}
                   >
-                    Clear Filters
+                    {t('common.clear_filters')}
                   </button>
                 ) : (
                   <button 
@@ -238,7 +240,7 @@ export default function ManageJobs() {
                     onClick={() => navigate("/employer/post-job")}
                     style={{ marginTop: "16px" }}
                   >
-                    Create First Job
+                    {t('employer.create_first_job')}
                   </button>
                 )}
               </div>
@@ -247,11 +249,11 @@ export default function ManageJobs() {
                 <table className="mj-table">
                   <thead>
                     <tr>
-                      <th>Job Role</th>
-                      <th>Status</th>
-                      <th>Metrics</th>
-                      <th>Dates</th>
-                      <th className="mj-th-actions">Actions</th>
+                      <th>{t('employer.col_job_role')}</th>
+                      <th>{t('employer.col_status')}</th>
+                      <th>{t('employer.col_metrics')}</th>
+                      <th>{t('employer.col_dates')}</th>
+                      <th className="mj-th-actions">{t('employer.col_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,41 +272,41 @@ export default function ManageJobs() {
                         </td>
                         <td>
                           <div className="mj-td-metrics">
-                            <div className="mj-metric" title="Total Applications">
+                            <div className="mj-metric" title={t('employer.total_applications')}>
                               <Users size={14} /> <strong>{job.applications}</strong>
                             </div>
-                            <div className="mj-metric" title="Total Views">
+                            <div className="mj-metric" title={t('employer.total_views')}>
                               <Eye size={14} /> <span>{job.views}</span>
                             </div>
                           </div>
                         </td>
                         <td>
                           <div className="mj-td-dates">
-                            <span>Posted: {job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'N/A'}</span>
+                            <span>{t('employer.posted')}: {job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'N/A'}</span>
                             <span className={job.daysLeft <= 7 && job.status === "ACTIVE" ? "mj-date-urgent" : ""}>
-                              Expires: {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : 'N/A'}
+                              {t('employer.expires')}: {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : 'N/A'}
                             </span>
                           </div>
                         </td>
                         <td className="mj-td-actions">
                           <div className="mj-actions">
                             {job.status === "DRAFT" ? (
-                              <button className="mj-action-btn success" title="Publish" onClick={() => handlePublish(job.id)}>
+                              <button className="mj-action-btn success" title={t('employer.action_publish')} onClick={() => handlePublish(job.id)}>
                                 <Play size={16} />
                               </button>
                             ) : job.status === "ACTIVE" ? (
-                              <button className="mj-action-btn danger" title="Close Job" onClick={() => handleClose(job.id)}>
+                              <button className="mj-action-btn danger" title={t('employer.action_close')} onClick={() => handleClose(job.id)}>
                                 <XCircle size={16} />
                               </button>
                             ) : null}
                             
-                            <button className="mj-action-btn" title="Edit">
+                            <button className="mj-action-btn" title={t('common.edit')}>
                               <Edit2 size={16} />
                             </button>
-                            <button className="mj-action-btn danger" title="Delete" onClick={() => handleDelete(job)}>
+                            <button className="mj-action-btn danger" title={t('common.delete')} onClick={() => handleDelete(job)}>
                               <Trash2 size={16} />
                             </button>
-                            <button className="mj-action-btn" title="More options">
+                            <button className="mj-action-btn" title={t('common.more_options')}>
                               <MoreVertical size={16} />
                             </button>
                           </div>

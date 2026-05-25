@@ -4,8 +4,10 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +41,7 @@ export default function Login() {
       const msg =
         typeof err.response?.data === 'string'
           ? err.response.data
-          : err.message || 'Invalid email or password';
+          : err.message || t('auth.passwords_dont_match');
       setError(msg);
     } finally {
       setLoading(false);
@@ -56,16 +58,16 @@ export default function Login() {
             <img src={logo} alt="KORA" className="kora-auth-logo" />
             <div className="kora-auth-brand-name">KORA</div>
           </div>
-          <h1 className="kora-auth-left-title">Welcome back!</h1>
+          <h1 className="kora-auth-left-title">{t('auth.welcome_back')}</h1>
           <p className="kora-auth-left-subtitle">
-            You can sign in to access with your existing account.
+            {t('auth.sign_in_subtitle')}
           </p>
         </div>
 
         {/* Right Side */}
         <div className="kora-auth-right">
-          <h2 className="kora-auth-title">Sign In</h2>
-          <p className="kora-auth-subtitle">Enter your details to proceed.</p>
+          <h2 className="kora-auth-title">{t('auth.sign_in')}</h2>
+          <p className="kora-auth-subtitle">{t('auth.enter_details')}</p>
 
           <form className="kora-auth-form" onSubmit={handleSubmit}>
             {error && (
@@ -80,7 +82,7 @@ export default function Login() {
                 <input
                   type="email"
                   className="kora-auth-input"
-                  placeholder="Email Address"
+                  placeholder={t('auth.email')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -94,7 +96,7 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   className="kora-auth-input"
-                  placeholder="Password"
+                  placeholder={t('auth.password')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -112,18 +114,18 @@ export default function Login() {
             <div className="kora-auth-options">
               <label className="kora-auth-checkbox">
                 <input type="checkbox" />
-                Remember me
+                {t('auth.remember_me')}
               </label>
               <Link to="/forgot-password" style={{ color: '#666', textDecoration: 'none' }}>
-                Forgot password?
+                {t('auth.forgot_password')}
               </Link>
             </div>
 
             <button type="submit" className="kora-auth-btn" disabled={loading}>
-              {loading ? "Signing in…" : "Sign In"}
+              {loading ? t('auth.signing_in') : t('auth.sign_in')}
             </button>
 
-            <div className="kora-auth-divider">Or continue with</div>
+            <div className="kora-auth-divider">{t('auth.or_continue_with')}</div>
 
             <a
               href="http://localhost:8083/oauth2/authorization/google"
@@ -136,12 +138,12 @@ export default function Login() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continue with Google
+              {t('auth.continue_google')}
             </a>
           </form>
 
           <div className="kora-auth-footer">
-            New here? <Link to="/register" className="kora-auth-link">Create an Account</Link>
+            {t('auth.new_here')} <Link to="/register" className="kora-auth-link">{t('auth.create_account')}</Link>
           </div>
         </div>
       </div>

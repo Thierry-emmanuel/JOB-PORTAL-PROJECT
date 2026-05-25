@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getJobs } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';          // ← added
 import JobCard from '../../components/jobs/JobCard';
@@ -13,6 +14,7 @@ const PAGE_SIZE = 6;
 export default function JobList() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const getQueryParam = (param) => {
     return new URLSearchParams(location.search).get(param) || '';
@@ -58,12 +60,12 @@ export default function JobList() {
         setTotal(res.total ?? 0);
         setTotalPages(res.totalPages ?? 1);
       } catch {
-        setError('Failed to load jobs. Please try again.');
+        setError(t('jobs.error_load_jobs'));
       } finally {
         setLoading(false);
       }
     },
-    []
+    [t]
   );
 
   useEffect(() => {
@@ -90,15 +92,15 @@ export default function JobList() {
           <button
             className="jl-back-btn"
             onClick={() => navigate(-1)}
-            aria-label="Go back"
+            aria-label={t('common.go_back')}
           >
-            ← Back
+            {t('common.back')}
           </button>
-          <h1 className="jl-title">Find Your Next Role</h1>
+          <h1 className="jl-title">{t('jobs.find_next_role')}</h1>
           <p className="jl-subtitle">
             {loading
-              ? 'Loading opportunities…'
-              : `${total.toLocaleString()} job${total !== 1 ? 's' : ''} available right now`}
+              ? t('jobs.loading_opportunities')
+              : t('jobs.jobs_available', { count: total, total: total.toLocaleString() })}
           </p>
         </div>
       </header>
@@ -115,14 +117,16 @@ export default function JobList() {
         {/* Status bar */}
         <div className="jl-status-bar" aria-live="polite" aria-atomic="true">
           {loading ? (
-            <p className="jl-loading-text">Loading jobs…</p>
+            <p className="jl-loading-text">{t('jobs.loading_jobs')}</p>
           ) : !error && total > 0 ? (
             <p className="jl-result-count">
-              Showing{' '}
+              {t('jobs.showing')}{' '}
               <strong>
-                {Math.min(jobs.length, total)} of {total}
+                {Math.min(jobs.length, total)} {t('common.of')} {total}
               </strong>{' '}
-              {filters.search ? `jobs for "${filters.search}"` : 'jobs'}
+              {filters.search
+                ? t('jobs.jobs_for_search', { query: filters.search })
+                : t('jobs.jobs')}
             </p>
           ) : null}
         </div>
@@ -133,7 +137,7 @@ export default function JobList() {
             <span aria-hidden="true">⚠️</span>
             {error}
             <button className="jl-retry-btn" onClick={handleRetry}>
-              Retry
+              {t('common.retry')}
             </button>
           </div>
         )}
@@ -142,7 +146,7 @@ export default function JobList() {
         {!error && (
           <div
             className={`jl-grid${loading ? ' jl-grid--loading' : ''}`}
-            aria-label="Job listings"
+            aria-label={t('jobs.job_listings')}
           >
             {loading
               ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
@@ -162,13 +166,13 @@ export default function JobList() {
         {!loading && !error && jobs.length === 0 && (
           <div className="jl-empty" role="status">
             <span className="jl-empty-icon" aria-hidden="true">🔍</span>
-            <h2>No jobs match your search</h2>
-            <p>Try adjusting your filters or search terms.</p>
+            <h2>{t('jobs.no_jobs_match')}</h2>
+            <p>{t('jobs.adjust_filters')}</p>
             <button
               className="jl-btn jl-btn--primary"
               onClick={() => handleFilterChange({ search: '', location: '', type: '' })}
             >
-              Clear filters
+              {t('jobs.clear_filters')}
             </button>
           </div>
         )}

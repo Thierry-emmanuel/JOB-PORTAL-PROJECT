@@ -21,38 +21,27 @@ import {
   Bell, Settings, LogOut,
 } from 'lucide-react';
 import KoraNav from '../components/KoraNav';
-import ProfileSidebar from '../components/profile/ProfileSidebar';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import '../styles/employee-layout.css';
 
-/* ── Navigation items ────────────────────────────────────── */
-const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Dashboard',        icon: LayoutDashboard, to: '/employee/dashboard' },
-  { key: 'jobs',         label: 'Browse Jobs',       icon: Briefcase,       to: '/jobs' },
-  { key: 'applications', label: 'My Applications',   icon: Briefcase,       to: '/employee/applications' },
-  { key: 'saved',        label: 'Saved Jobs',        icon: Bookmark,        to: '/employee/saved' },
-  { key: 'interviews',   label: 'Interviews',        icon: CalendarCheck,   to: '/employee/interviews' },
-  { key: 'profile',      label: 'My Profile',        icon: User,            to: '/profile/job-seeker' },
-  { key: 'insights',     label: 'Market Insights',   icon: BarChart2,       to: '/insights' },
-];
-
 /* ── Nav Item ─────────────────────────────────────────────── */
-const NavItem = memo(function NavItem({ item, active, collapsed, badge }) {
+const NavItem = memo(function NavItem({ item, label, active, collapsed, badge }) {
   const Icon = item.icon;
   return (
     <Link
       to={item.to}
       className={`el-nav-item ${active ? 'el-nav-item--active' : ''} ${collapsed ? 'el-nav-item--collapsed' : ''}`}
-      aria-label={collapsed ? item.label : undefined}
+      aria-label={collapsed ? label : undefined}
       aria-current={active ? 'page' : undefined}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? label : undefined}
     >
       <span className="el-nav-icon" aria-hidden="true">
         <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
       </span>
       {!collapsed && (
         <>
-          <span className="el-nav-label">{item.label}</span>
+          <span className="el-nav-label">{label}</span>
           {badge > 0 && (
             <span className="el-nav-badge" aria-label={`${badge} pending`}>{badge}</span>
           )}
@@ -65,6 +54,14 @@ const NavItem = memo(function NavItem({ item, active, collapsed, badge }) {
   );
 });
 
+NavItem.propTypes = {
+  item: PropTypes.object.isRequired,
+  label: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
+  collapsed: PropTypes.bool.isRequired,
+  badge: PropTypes.number,
+};
+
 /* ════════════════════════════════════════════════════════════
    EmployeeLayout
    ════════════════════════════════════════════════════════════ */
@@ -76,11 +73,22 @@ export default function EmployeeLayout({
   children,
   appsBadge = 0,
 }) {
+  const { t } = useTranslation();
   const location   = useLocation();
   const navigate   = useNavigate();
   const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const NAV_ITEMS = [
+    { key: 'dashboard',    label: t('nav.dashboard'),        icon: LayoutDashboard, to: '/employee/dashboard' },
+    { key: 'jobs',         label: t('employee.browse_jobs'),       icon: Briefcase,       to: '/jobs' },
+    { key: 'applications', label: t('employee.recent_applications'),   icon: Briefcase,       to: '/employee/applications' },
+    { key: 'saved',        label: t('employee.saved_jobs'),        icon: Bookmark,        to: '/employee/saved' },
+    { key: 'interviews',   label: t('nav.interviews'),        icon: CalendarCheck,   to: '/employee/interviews' },
+    { key: 'profile',      label: t('nav.my_profile'),        icon: User,            to: '/profile/job-seeker' },
+    { key: 'insights',     label: t('nav.insights'),   icon: BarChart2,       to: '/insights' },
+  ];
 
   /* Close mobile drawer on route change */
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -167,7 +175,7 @@ export default function EmployeeLayout({
             {!collapsed && (
               <div className="el-sidebar-profile-info">
                 <p className="el-sidebar-name">{profile?.fullName?.split(' ')[0] || 'User'}</p>
-                <p className="el-sidebar-role">Job Seeker</p>
+                <p className="el-sidebar-role">{t('auth.job_seeker')}</p>
               </div>
             )}
 
@@ -186,7 +194,7 @@ export default function EmployeeLayout({
           {!collapsed && (
             <div className="el-sidebar-progress">
               <div className="el-sidebar-progress-header">
-                <span>Profile strength</span>
+                <span>{t('employee.profile_strength')}</span>
                 <strong>{completion}%</strong>
               </div>
               <div
@@ -214,6 +222,7 @@ export default function EmployeeLayout({
               <NavItem
                 key={item.key}
                 item={item}
+                label={item.label}
                 active={activeKey === item.key}
                 collapsed={collapsed}
                 badge={item.key === 'applications' ? appsBadge : 0}
@@ -227,19 +236,19 @@ export default function EmployeeLayout({
             <Link
               to="/profile/job-seeker"
               className={`el-nav-item ${collapsed ? 'el-nav-item--collapsed' : ''}`}
-              title={collapsed ? 'Settings' : undefined}
+              title={collapsed ? t('nav.my_profile') : undefined}
             >
               <span className="el-nav-icon" aria-hidden="true"><Settings size={17} /></span>
-              {!collapsed && <span className="el-nav-label">Settings</span>}
+              {!collapsed && <span className="el-nav-label">{t('nav.my_profile')}</span>}
             </Link>
             <button
               className={`el-nav-item el-nav-logout ${collapsed ? 'el-nav-item--collapsed' : ''}`}
               onClick={handleLogout}
-              title={collapsed ? 'Sign Out' : undefined}
+              title={collapsed ? t('nav.sign_out') : undefined}
               aria-label="Sign out"
             >
               <span className="el-nav-icon" aria-hidden="true"><LogOut size={17} /></span>
-              {!collapsed && <span className="el-nav-label">Sign Out</span>}
+              {!collapsed && <span className="el-nav-label">{t('nav.sign_out')}</span>}
             </button>
           </div>
         </aside>
