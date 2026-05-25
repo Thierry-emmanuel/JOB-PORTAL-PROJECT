@@ -4,8 +4,10 @@ import { Mail, Lock, User, Briefcase, Eye, EyeOff } from "lucide-react";
 import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function Register() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -26,11 +28,11 @@ export default function Register() {
     setError('');
     
     if (password !== confirmPassword) {
-      return setError('Passwords do not match');
+      return setError(t('auth.passwords_dont_match'));
     }
     
     if (!role) {
-      return setError('Please select a role');
+      return setError(t('auth.select_role_error'));
     }
 
     setLoading(true);
@@ -66,16 +68,16 @@ export default function Register() {
           <div className="kora-auth-logo-wrapper">
             <img src={logo} alt="KORA" className="kora-auth-logo" />
           </div>
-          <h1 className="kora-auth-left-title">Join KORA</h1>
+          <h1 className="kora-auth-left-title">{t('auth.join_kora')}</h1>
           <p className="kora-auth-left-subtitle">
-            Create your account and start your journey to finding the perfect job.
+            {t('auth.join_subtitle')}
           </p>
         </div>
 
         {/* Right Side - Form */}
         <div className="kora-auth-right" style={{ padding: '40px 50px' }}>
-          <h2 className="kora-auth-title">Create Account</h2>
-          <p className="kora-auth-subtitle">Join us today. It only takes a minute.</p>
+          <h2 className="kora-auth-title">{t('auth.create_account')}</h2>
+          <p className="kora-auth-subtitle">{t('auth.join_today_subtitle')}</p>
 
           <form className="kora-auth-form" onSubmit={handleSubmit} style={{ gap: '15px' }}>
             {error && <div style={{color: 'red', marginBottom: '5px', fontSize: '14px'}}>{error}</div>}
@@ -86,7 +88,7 @@ export default function Register() {
                 <input
                   type="text"
                   className="kora-auth-input"
-                  placeholder="Full Name"
+                  placeholder={t('auth.full_name')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -100,7 +102,7 @@ export default function Register() {
                 <input
                   type="email"
                   className="kora-auth-input"
-                  placeholder="Email Address"
+                  placeholder={t('auth.email')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -118,9 +120,9 @@ export default function Register() {
                   style={{ appearance: 'none' }}
                   required
                 >
-                  <option value="" disabled>Select your role</option>
-                  <option value="JOB_SEEKER">Job Seeker</option>
-                  <option value="EMPLOYER">Employer</option>
+                  <option value="" disabled>{t('auth.select_role')}</option>
+                  <option value="JOB_SEEKER">{t('auth.job_seeker')}</option>
+                  <option value="EMPLOYER">{t('auth.employer')}</option>
                 </select>
               </div>
             </div>
@@ -131,7 +133,7 @@ export default function Register() {
                 <input
                   type={showPassword ? "text" : "password"}
                   className="kora-auth-input"
-                  placeholder="Password"
+                  placeholder={t('auth.password')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -152,7 +154,7 @@ export default function Register() {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   className="kora-auth-input"
-                  placeholder="Confirm Password"
+                  placeholder={t('auth.confirm_password')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -170,15 +172,15 @@ export default function Register() {
             <div className="kora-auth-options" style={{ marginTop: '0' }}>
               <label className="kora-auth-checkbox">
                 <input type="checkbox" required />
-                <span style={{ fontSize: '12px' }}>I agree to the Terms and Privacy Policy</span>
+                <span style={{ fontSize: '12px' }}>{t('auth.agree_terms')}</span>
               </label>
             </div>
 
             <button type="submit" className="kora-auth-btn" style={{ marginTop: '5px' }} disabled={loading}>
-              {loading ? "Creating..." : "Create Account"}
+              {loading ? t('auth.creating') : t('auth.create_account')}
             </button>
 
-            <div className="kora-auth-divider">Or sign up with</div>
+            <div className="kora-auth-divider">{t('auth.or_continue_with')}</div>
 
             <button type="button" className="kora-auth-social-btn">
               <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -187,17 +189,15 @@ export default function Register() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continue with Google
+              {t('auth.continue_google')}
             </button>
           </form>
 
           <div className="kora-auth-footer" style={{ marginTop: '20px' }}>
-            Already have an account? <Link to="/login" className="kora-auth-link">Sign in here</Link>
+            {t('auth.already_have_account')} <Link to="/login" className="kora-auth-link">{t('auth.sign_in_here')}</Link>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

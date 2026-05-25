@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getJob, saveJob } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';          // ← added
 import '../../styles/job-list.css';
@@ -7,6 +8,7 @@ import '../../styles/job-list.css';
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [job,     setJob]     = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,14 +27,14 @@ export default function JobDetails() {
           setSaved(data.saved ?? false);
         }
       } catch {
-        if (!cancelled) setError('Could not load this job.');
+        if (!cancelled) setError(t('jobs.error_load_job'));
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, t]);
 
   /* ── Save toggle ──────────────────────────────────────── */
   const handleSave = async () => {
@@ -54,7 +56,7 @@ export default function JobDetails() {
         <KoraNav />
         <div className="jd-loading" aria-busy="true">
           <div className="ed-spinner" />
-          <p>Loading job details…</p>
+          <p>{t('jobs.loading_job_details')}</p>
         </div>
       </div>
     );
@@ -65,9 +67,9 @@ export default function JobDetails() {
       <div className="jd-page">
         <KoraNav />
         <div className="jd-error" role="alert">
-          <p>{error || 'Job not found.'}</p>
+          <p>{error || t('jobs.job_not_found')}</p>
           <Link to="/jobs" className="jl-btn jl-btn--primary">
-            Back to Jobs
+            {t('jobs.back_to_jobs')}
           </Link>
         </div>
       </div>
@@ -85,9 +87,9 @@ export default function JobDetails() {
         <button
           className="jl-back-btn"
           onClick={() => navigate(-1)}
-          aria-label="Back to job listings"
+          aria-label={t('jobs.back_to_listings_aria')}
         >
-          ← Back to Jobs
+          {t('jobs.back_to_jobs')}
         </button>
 
         <div className="jd-layout">
@@ -97,7 +99,7 @@ export default function JobDetails() {
             <div className="jd-header">
               <div className="jd-logo" aria-hidden="true">
                 {job.logo
-                  ? <img src={job.logo} alt={`${job.company} logo`} />
+                  ? <img src={job.logo} alt={t('jobs.company_logo_alt', { company: job.company })} />
                   : <span>{job.company.charAt(0)}</span>
                 }
               </div>
@@ -109,20 +111,20 @@ export default function JobDetails() {
                 className={`jd-save-btn${saved ? ' saved' : ''}`}
                 onClick={handleSave}
                 disabled={saving}
-                aria-label={saved ? 'Remove from saved jobs' : 'Save this job'}
+                aria-label={saved ? t('jobs.remove_from_saved') : t('jobs.save_this_job')}
               >
-                {saved ? '🔖 Saved' : '🔖 Save'}
+                {saved ? t('jobs.saved_label') : t('jobs.save_label')}
               </button>
             </div>
 
             {/* Quick facts */}
-            <div className="jd-facts" aria-label="Job details">
+            <div className="jd-facts" aria-label={t('jobs.job_details_aria')}>
               {[
                 { icon: '📍', val: job.location },
                 { icon: '💼', val: job.type },
-                job.salary && { icon: '💰', val: job.salary },
-                job.remote  && { icon: '🌐', val: 'Remote OK' },
-                job.applicants != null && { icon: '👥', val: `${job.applicants} applicants` },
+                job.salary  && { icon: '💰', val: job.salary },
+                job.remote  && { icon: '🌐', val: t('jobs.remote_ok') },
+                job.applicants != null && { icon: '👥', val: t('jobs.applicants_count', { count: job.applicants }) },
               ]
                 .filter(Boolean)
                 .map((f) => (
@@ -134,9 +136,9 @@ export default function JobDetails() {
 
             {/* Tags */}
             {job.tags?.length > 0 && (
-              <div className="jd-tags" aria-label="Required skills">
-                {job.tags.map((t) => (
-                  <span key={t} className="jd-tag">{t}</span>
+              <div className="jd-tags" aria-label={t('jobs.required_skills_aria')}>
+                {job.tags.map((tag) => (
+                  <span key={tag} className="jd-tag">{tag}</span>
                 ))}
               </div>
             )}
@@ -144,35 +146,35 @@ export default function JobDetails() {
             {/* Description */}
             {job.description && (
               <>
-                <h2 className="jd-section-heading">Job Description</h2>
+                <h2 className="jd-section-heading">{t('jobs.job_description')}</h2>
                 <div className="jd-description">{job.description}</div>
               </>
             )}
 
             {/* Company info */}
-            <h2 className="jd-section-heading">About {job.company}</h2>
+            <h2 className="jd-section-heading">{t('jobs.about_company', { company: job.company })}</h2>
             <dl className="jd-company-dl">
               {job.location && (
                 <div>
-                  <dt>Location</dt>
+                  <dt>{t('common.location')}</dt>
                   <dd>{job.location}</dd>
                 </div>
               )}
               {job.type && (
                 <div>
-                  <dt>Type</dt>
+                  <dt>{t('common.type')}</dt>
                   <dd>{job.type}</dd>
                 </div>
               )}
               {job.salary && (
                 <div>
-                  <dt>Salary</dt>
+                  <dt>{t('common.salary')}</dt>
                   <dd>{job.salary}</dd>
                 </div>
               )}
               {job.website && (
                 <div>
-                  <dt>Website</dt>
+                  <dt>{t('common.website')}</dt>
                   <dd>
                     <a
                       href={job.website}
@@ -188,26 +190,26 @@ export default function JobDetails() {
           </div>
 
           {/* ── Right: apply card (sticky) ───────────── */}
-          <aside className="jd-sidebar" aria-label="Apply for this job">
+          <aside className="jd-sidebar" aria-label={t('jobs.apply_for_job_aria')}>
             <div className="jd-apply-card">
-              <h2 className="jd-apply-title">Ready to Apply?</h2>
+              <h2 className="jd-apply-title">{t('jobs.ready_to_apply')}</h2>
               <p className="jd-apply-sub">
                 {job.applicants != null
-                  ? `${job.applicants} people have already applied.`
-                  : 'Be among the first to apply.'}
+                  ? t('jobs.people_applied', { count: job.applicants })
+                  : t('jobs.be_first_to_apply')}
               </p>
 
               {job.applied ? (
                 <div className="jd-applied-badge" role="status">
-                  ✓ Application Submitted
+                  {t('jobs.application_submitted')}
                 </div>
               ) : (
                 <Link
                   to={`/jobs/${id}/apply`}
                   className="jd-apply-btn"
-                  aria-label={`Apply for ${job.title}`}
+                  aria-label={t('jobs.apply_for_title_aria', { title: job.title })}
                 >
-                  Apply Now →
+                  {t('jobs.apply_now')}
                 </Link>
               )}
 
@@ -215,9 +217,13 @@ export default function JobDetails() {
                 className={`jd-save-sidebar-btn${saved ? ' saved' : ''}`}
                 onClick={handleSave}
                 disabled={saving}
-                aria-label={saved ? 'Remove from saved jobs' : 'Save this job for later'}
+                aria-label={saved ? t('jobs.remove_from_saved') : t('jobs.save_for_later_aria')}
               >
-                {saving ? 'Saving…' : saved ? '🔖 Saved' : '🔖 Save for Later'}
+                {saving
+                  ? t('jobs.saving')
+                  : saved
+                    ? t('jobs.saved_label')
+                    : t('jobs.save_for_later')}
               </button>
             </div>
           </aside>

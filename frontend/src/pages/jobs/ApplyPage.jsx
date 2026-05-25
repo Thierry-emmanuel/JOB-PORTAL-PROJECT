@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getJob, applyToJob } from '../../api/jobs';
 import { useAuth } from '../../context/AuthContext';
 import KoraNav from '../../components/KoraNav';
@@ -9,6 +10,7 @@ export default function ApplyPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   /* ── State ────────────────────────────────────────────── */
   const [job, setJob] = useState(null);
@@ -32,23 +34,23 @@ export default function ApplyPage() {
         const data = await getJob(id);
         setJob(data);
       } catch {
-        setJobError('Could not load job details.');
+        setJobError(t('jobs.error_load_job_details'));
       } finally {
         setJobLoading(false);
       }
     }
     load();
-  }, [id]);
+  }, [id, t]);
 
   /* ── Validation ───────────────────────────────────────── */
   const validate = () => {
     const errs = {};
     if (!form.expectedSalary) {
-      errs.expectedSalary = 'Expected salary is required.';
+      errs.expectedSalary = t('jobs.validation_salary_required');
     } else {
       const salary = parseFloat(form.expectedSalary);
       if (isNaN(salary) || salary <= 0) {
-        errs.expectedSalary = 'Expected salary must be a positive number.';
+        errs.expectedSalary = t('jobs.validation_salary_positive');
       }
     }
     return errs;
@@ -70,7 +72,7 @@ export default function ApplyPage() {
     }
     
     if (!user || !user.id) {
-      setSubmitError('You must be logged in to apply.');
+      setSubmitError(t('jobs.must_be_logged_in'));
       return;
     }
 
@@ -85,7 +87,7 @@ export default function ApplyPage() {
       await applyToJob(user.id, requestBody);
       setSubmitted(true);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to submit your application. Please try again.';
+      const msg = err.response?.data?.message || t('jobs.error_submit_application');
       setSubmitError(msg);
       console.error(err);
     } finally {
@@ -100,7 +102,7 @@ export default function ApplyPage() {
         <KoraNav />
         <div className="ap-loading" aria-busy="true">
           <div className="kora-spinner" />
-          <p>Loading job details…</p>
+          <p>{t('jobs.loading_job_details')}</p>
         </div>
       </div>
     );
@@ -112,7 +114,7 @@ export default function ApplyPage() {
         <KoraNav />
         <div className="ap-error" role="alert">
           <p>{jobError}</p>
-          <Link to="/jobs" className="ap-btn ap-btn--primary">Back to Jobs</Link>
+          <Link to="/jobs" className="ap-btn ap-btn--primary">{t('jobs.back_to_jobs')}</Link>
         </div>
       </div>
     );
@@ -126,17 +128,18 @@ export default function ApplyPage() {
         <div className="ap-container ap-container--narrow">
           <div className="ap-already-applied">
             <span className="ap-success-icon" aria-hidden="true">✅</span>
-            <h1>Already Applied</h1>
+            <h1>{t('jobs.already_applied_title')}</h1>
             <p>
-              You have already submitted an application for{' '}
-              <strong>{job.title}</strong>.
+              {t('jobs.already_applied_msg_prefix')}{' '}
+              <strong>{job.title}</strong>
+              {t('jobs.already_applied_msg_suffix')}
             </p>
             <div className="ap-already-actions">
               <Link to="/employee/dashboard" className="ap-btn ap-btn--primary">
-                View Dashboard
+                {t('common.view_dashboard')}
               </Link>
               <Link to="/jobs" className="ap-btn ap-btn--outline">
-                Browse More Jobs
+                {t('jobs.browse_more_jobs')}
               </Link>
             </div>
           </div>
@@ -153,18 +156,16 @@ export default function ApplyPage() {
         <div className="ap-container ap-container--narrow">
           <div className="ap-success" role="status">
             <span className="ap-success-icon" aria-hidden="true">🎉</span>
-            <h1 className="ap-success-title">Application Submitted!</h1>
+            <h1 className="ap-success-title">{t('jobs.application_submitted_title')}</h1>
             <p className="ap-success-msg">
-              Your application for <strong>{job?.title}</strong> at{' '}
-              <strong>{job?.company}</strong> has been sent.
-              We'll notify you about next steps.
+              {t('jobs.application_success_msg', { title: job?.title, company: job?.company })}
             </p>
             <div className="ap-success-actions">
               <Link to="/employee/dashboard" className="ap-btn ap-btn--primary">
-                View Dashboard
+                {t('common.view_dashboard')}
               </Link>
               <Link to="/jobs" className="ap-btn ap-btn--outline">
-                Browse More Jobs
+                {t('jobs.browse_more_jobs')}
               </Link>
             </div>
           </div>
@@ -182,16 +183,16 @@ export default function ApplyPage() {
         <button
           className="ap-back-btn"
           onClick={() => navigate(-1)}
-          aria-label="Go back"
+          aria-label={t('common.go_back')}
         >
-          ← Back
+          {t('common.back')}
         </button>
 
         {job && (
-          <div className="ap-job-banner" aria-label={`Applying for ${job.title}`}>
+          <div className="ap-job-banner" aria-label={t('jobs.applying_for_aria', { title: job.title })}>
             <div className="ap-job-logo" aria-hidden="true">
               {job.logo
-                ? <img src={job.logo} alt={`${job.company} logo`} />
+                ? <img src={job.logo} alt={t('jobs.company_logo_alt', { company: job.company })} />
                 : <span>{job.company.charAt(0)}</span>
               }
             </div>
@@ -210,29 +211,29 @@ export default function ApplyPage() {
             className="ap-form"
             onSubmit={handleSubmit}
             noValidate
-            aria-label="Job application form"
+            aria-label={t('jobs.application_form_aria')}
           >
-            <h2 className="ap-form-heading">Your Application</h2>
+            <h2 className="ap-form-heading">{t('jobs.your_application')}</h2>
 
             {submitError && (
               <div className="ap-submit-error" role="alert">{submitError}</div>
             )}
 
             <fieldset className="ap-fieldset">
-              <legend className="ap-legend">Profile & Resume</legend>
+              <legend className="ap-legend">{t('jobs.profile_and_resume')}</legend>
               <div className="ap-profile-hint">
                 <p style={{ fontSize: '14px', color: '#374151', background: '#F3F4F6', padding: '12px', borderRadius: '8px' }}>
-                  <span aria-hidden="true">📄</span> <strong>Your profile details and uploaded CV</strong> will be automatically attached to this application. Please ensure your profile is up to date in your dashboard before applying.
+                  <span aria-hidden="true">📄</span> <strong>{t('jobs.profile_hint_bold')}</strong> {t('jobs.profile_hint_text')}
                 </p>
               </div>
             </fieldset>
 
             <fieldset className="ap-fieldset">
-              <legend className="ap-legend">Job Requirements</legend>
+              <legend className="ap-legend">{t('jobs.job_requirements')}</legend>
 
               <div className="ap-field">
                 <label htmlFor="ap-expectedSalary" className="ap-label">
-                  Expected Salary (Monthly){' '}
+                  {t('jobs.expected_salary_label')}{' '}
                   <span aria-hidden="true" className="ap-required">*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -249,7 +250,7 @@ export default function ApplyPage() {
                     aria-required="true"
                     aria-invalid={!!errors.expectedSalary}
                     aria-describedby={errors.expectedSalary ? 'ap-salary-error' : undefined}
-                    placeholder="e.g. 500000"
+                    placeholder={t('jobs.salary_placeholder')}
                   />
                 </div>
                 {errors.expectedSalary && (
@@ -262,24 +263,24 @@ export default function ApplyPage() {
 
             <fieldset className="ap-fieldset">
               <legend className="ap-legend">
-                Cover Letter{' '}
-                <span className="ap-optional">(optional)</span>
+                {t('jobs.cover_letter')}{' '}
+                <span className="ap-optional">{t('common.optional')}</span>
               </legend>
               <div className="ap-field">
                 <label htmlFor="ap-coverLetter" className="ap-label">
-                  Tell the employer why you're a great fit
+                  {t('jobs.cover_letter_label')}
                 </label>
                 <textarea
                   id="ap-coverLetter"
                   className="ap-textarea"
                   rows={6}
-                  placeholder="Write a short cover letter highlighting your relevant experience and enthusiasm for this role…"
+                  placeholder={t('jobs.cover_letter_placeholder')}
                   value={form.coverLetter}
                   onChange={(e) => handleChange('coverLetter', e.target.value)}
                   maxLength={1000}
                 />
                 <p className="ap-char-count" aria-live="polite">
-                  {form.coverLetter.length}/1000 characters
+                  {t('jobs.char_count', { count: form.coverLetter.length })}
                 </p>
               </div>
             </fieldset>
@@ -294,10 +295,10 @@ export default function ApplyPage() {
                 {submitting ? (
                   <>
                     <span className="ap-btn-spinner" aria-hidden="true" />
-                    Submitting…
+                    {t('jobs.submitting')}
                   </>
                 ) : (
-                  'Submit Application'
+                  t('jobs.submit_application')
                 )}
               </button>
               <button
@@ -306,15 +307,15 @@ export default function ApplyPage() {
                 onClick={() => navigate(-1)}
                 disabled={submitting}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>
 
           {job && (
-            <aside className="ap-sidebar" aria-label="Job summary">
+            <aside className="ap-sidebar" aria-label={t('jobs.job_summary_aria')}>
               <div className="ap-summary-card">
-                <h2 className="ap-summary-title">Application Summary</h2>
+                <h2 className="ap-summary-title">{t('jobs.application_summary')}</h2>
                 <div className="ap-summary-job">
                   <strong>{job.title}</strong>
                   <span>{job.company}</span>
@@ -322,15 +323,15 @@ export default function ApplyPage() {
                   {job.salary && <span>{job.salary}</span>}
                 </div>
                 {job.tags?.length > 0 && (
-                  <div className="ap-summary-tags" aria-label="Required skills">
-                    {job.tags.map((t) => (
-                      <span key={t} className="ap-tag">{t}</span>
+                  <div className="ap-summary-tags" aria-label={t('jobs.required_skills_aria')}>
+                    {job.tags.map((tag) => (
+                      <span key={tag} className="ap-tag">{tag}</span>
                     ))}
                   </div>
                 )}
                 <p className="ap-summary-note">
                   <span aria-hidden="true">ℹ️</span>
-                  Your application will be reviewed by the hiring team.
+                  {t('jobs.application_reviewed_note')}
                 </p>
               </div>
             </aside>

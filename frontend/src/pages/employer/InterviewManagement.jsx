@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { getInterviewsByEmployer, cancelInterview, recordInterviewResult } from '../../api/interviews';
 import InterviewCard from '../../components/interviews/InterviewCard';
@@ -11,6 +12,7 @@ import "../../styles/employer-dashboard.css";
 import "../../styles/profile.css";
 
 export default function InterviewManagement() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [interviews, setInterviews] = useState([]);
   const [localLoading, setLocalLoading] = useState(true);
@@ -36,27 +38,27 @@ export default function InterviewManagement() {
   }, [user]);
 
   const handleCancel = async (id) => {
-    if (window.confirm('Are you sure you want to cancel this interview?')) {
+    if (window.confirm(t('employer.interviews_scheduled'))) {
       try {
         await cancelInterview(id);
         setInterviews(interviews.filter(i => i.id !== id));
       } catch (err) {
-        alert('Failed to cancel interview');
+        alert(t('common.retry'));
       }
     }
   };
 
   const handleRecordResult = async (interview) => {
-    const result = window.prompt('Enter result (PASSED/FAILED):', 'PASSED');
+    const result = window.prompt(t('employer.interviews_scheduled'), 'PASSED');
     if (result) {
       try {
-        const feedback = window.prompt('Enter feedback:');
+        const feedback = window.prompt(t('employer.interviews_scheduled'));
         await recordInterviewResult(interview.id, { result, feedback });
         // Refresh list
         const updated = interviews.map(i => i.id === interview.id ? { ...i, result, pending: false, completed: true } : i);
         setInterviews(updated);
       } catch (err) {
-        alert('Failed to record result');
+        alert(t('common.retry'));
       }
     }
   };
@@ -82,9 +84,9 @@ export default function InterviewManagement() {
           
           <div className="ed-welcome">
             <div>
-              <h1 className="ed-welcome-title">Interview Management</h1>
+              <h1 className="ed-welcome-title">{t('employer.manage_jobs')}</h1>
               <p className="ed-welcome-sub">
-                Track and manage candidate evaluations
+                {t('employer.recent_jobs')}
               </p>
             </div>
           </div>
@@ -95,18 +97,18 @@ export default function InterviewManagement() {
             <div className="kora-section">
               <div className="ed-search-bar" style={{ marginBottom: "20px" }}>
                 <Search size={14} />
-                <input type="text" placeholder="Search candidates..." />
+                <input type="text" placeholder={t('employer.no_jobs_posted')} />
               </div>
 
               {localLoading ? (
                 <div style={{ padding: "40px", textAlign: "center", color: "var(--kora-muted)" }}>
-                  <p>Loading interviews...</p>
+                  <p>{t('common.loading')}</p>
                 </div>
               ) : filteredInterviews.length === 0 ? (
                 <div className="kora-empty-state">
                   <Calendar size={48} />
-                  <h3>No interviews found</h3>
-                  <p>Scheduled interviews will appear here.</p>
+                  <h3>{t('employer.no_jobs_posted')}</h3>
+                  <p>{t('employer.post_first_job')}</p>
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
@@ -129,7 +131,7 @@ export default function InterviewManagement() {
                 <div className="kora-section-header">
                   <div className="kora-section-title">
                     <Filter size={18} />
-                    <h2>Status Filter</h2>
+                    <h2>{t('employer.active_jobs')}</h2>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
