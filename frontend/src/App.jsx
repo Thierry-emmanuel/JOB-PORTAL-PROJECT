@@ -24,6 +24,11 @@ const EmployerDashboard= lazy(() => import("./pages/EmployerDashboard"));
 const ManageJobs       = lazy(() => import("./pages/employer/ManageJobs"));
 const PostJob          = lazy(() => import("./pages/employer/PostJobs"));
 const EmployeeDashboard= lazy(() => import('./pages/employee/EmployeeDashboard'));
+const ApplicationsPage = lazy(() => import('./pages/employee/applications/ApplicationsPage'));
+const SavedJobsPage    = lazy(() => import('./pages/employee/saved/SavedJobsPage'));
+const InterviewsPage   = lazy(() => import('./pages/employee/interviews/InterviewsPage'));
+const BrowseJobsPage   = lazy(() => import('./pages/employee/jobs/BrowseJobsPage'));
+const InsightsDashPage = lazy(() => import('./pages/employee/insights/InsightsDashPage'));
 const JobList          = lazy(() => import('./pages/jobs/JobList'));
 const JobDetails       = lazy(() => import('./pages/jobs/JobDetails'));
 const ApplyPage        = lazy(() => import('./pages/jobs/ApplyPage'));
@@ -105,15 +110,21 @@ export default function App() {
                 } />
 
                 {/* ── Job Seeker ── */}
-                <Route path="/profile/job-seeker" element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
-                <Route path="/employee/dashboard" element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
+                <Route path="/profile/job-seeker"    element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
+                <Route path="/employee/dashboard"    element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
+                <Route path="/employee/applications" element={<ProtectedRoute role="JOB_SEEKER"><ApplicationsPage /></ProtectedRoute>} />
+                <Route path="/employee/saved"        element={<ProtectedRoute role="JOB_SEEKER"><SavedJobsPage /></ProtectedRoute>} />
+                <Route path="/employee/interviews"   element={<ProtectedRoute role="JOB_SEEKER"><InterviewsPage /></ProtectedRoute>} />
+                <Route path="/employee/jobs"         element={<ProtectedRoute role="JOB_SEEKER"><BrowseJobsPage /></ProtectedRoute>} />
+                <Route path="/employee/insights"     element={<ProtectedRoute role="JOB_SEEKER"><InsightsDashPage /></ProtectedRoute>} />
 
                 {/* ── Employer ── */}
-                <Route path="/profile/employer"   element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
-                <Route path="/dashboard/employer" element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
-                <Route path="/employer/jobs"      element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-                <Route path="/employer/post-job"  element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-                <Route path="/employer/interviews" element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
+                <Route path="/profile/employer"      element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
+                <Route path="/dashboard/employer"    element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
+                <Route path="/employer/dashboard"    element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
+                <Route path="/employer/jobs"         element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+                <Route path="/employer/post-job"     element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
+                <Route path="/employer/interviews"   element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
 
                 {/* ── Public ── */}
                 <Route path="/login"           element={<Login />} />
