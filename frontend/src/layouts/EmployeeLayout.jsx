@@ -3,21 +3,20 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
   LayoutDashboard, Briefcase, Bookmark, CalendarCheck,
-  User, BarChart2, Menu, X, Settings, LogOut,
-  ChevronLeft, ChevronRight,
+  BarChart2, Menu, X, Settings, LogOut,
+  ChevronLeft, ChevronRight, User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import koraLogo from '../assets/absolute-size-logo.png';
 import '../styles/dashboard-shell.css';
 
 const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Dashboard',      icon: LayoutDashboard, to: '/employee/dashboard' },
-  { key: 'jobs',         label: 'Browse Jobs',     icon: Briefcase,       to: '/jobs'               },
+  { key: 'dashboard',    label: 'Dashboard',      icon: LayoutDashboard, to: '/employee/dashboard'    },
+  { key: 'jobs',         label: 'Browse Jobs',     icon: Briefcase,       to: '/employee/jobs'         },
   { key: 'applications', label: 'My Applications', icon: Briefcase,       to: '/employee/applications' },
-  { key: 'saved',        label: 'Saved Jobs',      icon: Bookmark,        to: '/employee/saved'     },
-  { key: 'interviews',   label: 'Interviews',      icon: CalendarCheck,   to: '/employee/interviews' },
-  { key: 'profile',      label: 'My Profile',      icon: User,            to: '/profile/job-seeker' },
-  { key: 'insights',     label: 'Market Insights', icon: BarChart2,       to: '/insights'           },
+  { key: 'saved',        label: 'Saved Jobs',      icon: Bookmark,        to: '/employee/saved'        },
+  { key: 'interviews',   label: 'Interviews',      icon: CalendarCheck,   to: '/employee/interviews'   },
+  { key: 'insights',     label: 'Market Insights', icon: BarChart2,       to: '/employee/insights'     },
 ];
 
 const NavItem = memo(function NavItem({ item, active, collapsed, badge }) {
@@ -134,9 +133,9 @@ export default function EmployeeLayout({ profile, completion, onEdit, onPhotoCha
           {/* Footer */}
           <div className="ds-sb-footer">
             {!collapsed && <p className="ds-sb-nav-label">Account</p>}
-            <Link to="/profile/job-seeker" className="ds-nav-item" title={collapsed ? 'Settings' : undefined}>
-              <span className="ds-nav-icon"><Settings size={17} /></span>
-              {!collapsed && <span className="ds-nav-label">Settings</span>}
+            <Link to="/profile/job-seeker" className="ds-nav-item" title={collapsed ? 'My Profile' : undefined}>
+              <span className="ds-nav-icon"><User size={17} /></span>
+              {!collapsed && <span className="ds-nav-label">My Profile</span>}
             </Link>
             <button
               className="ds-nav-item logout"
