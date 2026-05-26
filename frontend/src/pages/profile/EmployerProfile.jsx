@@ -2,14 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import {
   Building2, Globe, MapPin, Mail, Phone, Edit2, Plus,
   Trash2, Camera, Briefcase, Users, CheckCircle,
-  ExternalLink, LogOut, Bell, Settings, BarChart2, KeyRound, X
+  ExternalLink, KeyRound, X, Save, AlertTriangle
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
+import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import "../../styles/profile.css";
 import "../../styles/employer-profile.css";
+import "../../styles/dashboard-shell.css";
 import { useAuth } from "../../context/AuthContext";
 import { getEmployerProfile, updateEmployerProfile } from "../../api/profiles";
+import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 
 const FALLBACK_EMPLOYER = {
   companyName: "Employer",
@@ -45,7 +49,7 @@ export default function EmployerProfile() {
     const fetchProfile = async () => {
       // In a real app, user object might contain the employerId
       // For now, if we have a user.id, we use it, otherwise we try id 2 as a fallback for demo
-      const idToFetch = user?.id || user?.employerId || 2; 
+      const idToFetch = user?.id || user?.employerId || 2;
       try {
         const data = await getEmployerProfile(idToFetch);
         setProfile({
@@ -139,23 +143,34 @@ export default function EmployerProfile() {
   };
 
   if (loading) {
-    return <div style={{ padding: '50px', textAlign: 'center' }}>Loading employer profile...</div>;
+    return (
+      <div className="ds-root employer" style={{ alignItems:'center', justifyContent:'center' }}>
+        <div style={{ width:32, height:32, border:'3px solid #E5E7EB', borderTopColor:'#E07B39', borderRadius:'50%', animation:'ds-spin 0.8s linear infinite' }} />
+      </div>
+    );
   }
 
   if (error && !profile.id) {
-    return <div style={{ padding: '50px', textAlign: 'center', color: 'red' }}>{error}</div>;
+    return (
+      <div className="ds-root employer" style={{ alignItems:'center', justifyContent:'center' }}>
+        <div className="ds-error">
+          <div className="ds-error-icon"><AlertTriangle size={26} /></div>
+          <p style={{ fontWeight:700 }}>Could not load profile</p>
+          <p style={{ fontSize:13, color:'#6B7280' }}>{error}</p>
+        </div>
+      </div>
+    );
   }
 
   const initials = profile.companyName?.split(" ").map((w) => w[0]).slice(0, 2).join("") || "E";
 
   return (
-    <div className="kora-profile-root employer">
-      <KoraNav />
-      <div className="kora-bg-mesh" />
-      <div className="kora-profile-layout no-sidebar">
-
-        {/* ── MAIN ── */}
-        <main className="kora-main-content">
+    <div className="ds-root employer">
+      <div className="ds-body">
+        <aside className="ds-sidebar">
+          <EmployerSidebar employer={{ companyName: profile.companyName, contactName: profile.contactName, logo: profile.logo, isApproved: true }} loading={false} stats={null} />
+        </aside>
+        <main className="ds-main">
           <div className="kora-profile-header">
             <div className="kora-header-banner employer-banner">
               <div className="kora-banner-pattern" />
