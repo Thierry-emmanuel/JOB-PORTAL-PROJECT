@@ -13,6 +13,43 @@ import "../../styles/employer-profile.css";
 import "../../styles/dashboard-shell.css";
 import { useAuth } from "../../context/AuthContext";
 import { getEmployerProfile, updateEmployerProfile } from "../../api/profiles";
+
+/* ─── Micro components ───────────────────────────────────── */
+function Toast({ msg, type, onClose }) {
+  if (!msg) return null;
+  return (
+    <div style={{ position:"fixed", top:20, right:20, zIndex:9999, display:"flex", alignItems:"center", gap:10,
+      background: type==="error" ? "#FEF2F2" : "#ECFDF5",
+      border:`1.5px solid ${type==="error" ? "#FCA5A5" : "#6EE7B7"}`,
+      borderRadius:12, padding:"12px 16px", boxShadow:"0 4px 20px rgba(0,0,0,0.12)", minWidth:260 }}>
+      {type==="error" ? <AlertTriangle size={16} color="#DC2626"/> : <CheckCircle size={16} color="#10B981"/>}
+      <span style={{ fontSize:13, fontWeight:600, color:type==="error"?"#991B1B":"#065F46", flex:1 }}>{msg}</span>
+      <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:0 }}><X size={14}/></button>
+    </div>
+  );
+}
+
+function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <>
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:2000 }} onClick={onCancel}/>
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"#fff", borderRadius:16, padding:24, width:"min(360px,90vw)", zIndex:2001, boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:"#FEF2F2", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <AlertTriangle size={20} color="#DC2626"/>
+          </div>
+          <h3 style={{ fontSize:15, fontWeight:700, margin:0, color:"#111827" }}>{title}</h3>
+        </div>
+        <p style={{ fontSize:13, color:"#6B7280", marginBottom:20, lineHeight:1.6 }}>{body}</p>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onCancel}  style={{ background:"#F3F4F6", border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:600, cursor:"pointer", color:"#374151" }}>Cancel</button>
+          <button onClick={onConfirm} style={{ background:"#DC2626",  border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>Remove</button>
+        </div>
+      </div>
+    </>
+  );
+}
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 
 const FALLBACK_EMPLOYER = {
@@ -43,6 +80,7 @@ export default function EmployerProfile() {
   const [form, setForm] = useState(FALLBACK_EMPLOYER);
   const [activeTab, setActiveTab] = useState("overview");
   const [resetModal, setResetModal] = useState(false);
+  const [toast, setToast] = useState(null);
   const logoRef = useRef();
 
   useEffect(() => {
@@ -96,7 +134,7 @@ export default function EmployerProfile() {
       setEditing(false);
     } catch (err) {
       console.error("Failed to update profile", err);
-      alert("Failed to save changes.");
+      setToast({ msg: "Failed to save changes.", type: "error" });
     }
   };
 
@@ -133,13 +171,15 @@ export default function EmployerProfile() {
       setForm(merged);
     } catch (err) {
       console.error("Failed to upload logo", err);
-      alert("Failed to upload logo.");
+      setToast({ msg: "Failed to upload logo. Please try again.", type: "error" });
     }
   };
 
-  const removeJob = (id) => {
-    if (window.confirm("Remove this job posting?"))
-      setProfile((p) => ({ ...p, activeJobs: p.activeJobs.filter((j) => j.id !== id) }));
+  const [removeJobId, setRemoveJobId] = useState(null);
+  const removeJob = (id) => setRemoveJobId(id);
+  const confirmRemoveJob = () => {
+    setProfile((p) => ({ ...p, activeJobs: p.activeJobs.filter((j) => j.id !== removeJobId) }));
+    setRemoveJobId(null);
   };
 
   if (loading) {
@@ -166,6 +206,8 @@ export default function EmployerProfile() {
 
   return (
     <div className="ds-root employer">
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      <ConfirmModal open={!!removeJobId} title="Remove Job Posting" body="Remove this job posting from your profile?" onConfirm={confirmRemoveJob} onCancel={() => setRemoveJobId(null)} />
       <div className="ds-body">
         <aside className="ds-sidebar">
           <EmployerSidebar employer={{ companyName: profile.companyName, contactName: profile.contactName, logo: profile.logo, isApproved: true }} loading={false} stats={null} />

@@ -11,6 +11,28 @@ import "../../styles/admin-profile.css";
 import { useAuth } from "../../context/AuthContext";
 import { getAdminProfile, updateAdminProfile } from "../../api/profiles";
 
+function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <>
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:2000 }} onClick={onCancel}/>
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"#fff", borderRadius:16, padding:24, width:"min(360px,90vw)", zIndex:2001, boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:"#FEF2F2", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <span style={{ fontSize:18 }}>⚠️</span>
+          </div>
+          <h3 style={{ fontSize:15, fontWeight:700, margin:0, color:"#111827" }}>{title}</h3>
+        </div>
+        <p style={{ fontSize:13, color:"#6B7280", marginBottom:20, lineHeight:1.6 }}>{body}</p>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onCancel}  style={{ background:"#F3F4F6", border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:600, cursor:"pointer", color:"#374151" }}>Cancel</button>
+          <button onClick={onConfirm} style={{ background:"#DC2626",  border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>Delete</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 const mockAdmin = {
   fullName: "Admin KORA",
   email: "admin@kora.cm",
@@ -253,10 +275,12 @@ export default function AdminProfile() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [resetModal, setResetModal] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const idToFetch = user?.id || user?.adminId || 3; 
+      const idToFetch = user?.id || user?.adminId || 3;
       try {
         const data = await getAdminProfile(idToFetch);
         const mergedProfile = {
@@ -304,7 +328,7 @@ export default function AdminProfile() {
       setForm(updatedProfileData);
     } catch (err) {
       console.error("Failed to upload avatar", err);
-      alert("Failed to upload avatar.");
+      setToast({ msg: "Failed to upload photo. Please try again.", type: "error" });
     }
   };
 
@@ -316,7 +340,7 @@ export default function AdminProfile() {
       setEditing(false);
     } catch (err) {
       console.error("Failed to update admin profile", err);
-      alert("Failed to save changes.");
+      setToast({ msg: "Failed to save changes.", type: "error" });
     }
   };
 
@@ -329,9 +353,10 @@ export default function AdminProfile() {
   const updateStatus = (id, status) =>
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
 
-  const deleteUser = (id) => {
-    if (window.confirm("Permanently delete this user?"))
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+  const deleteUser = (id) => setDeleteUserId(id);
+  const confirmDeleteUser = () => {
+    setUsers((prev) => prev.filter((u) => u.id !== deleteUserId));
+    setDeleteUserId(null);
   };
 
   if (loading) {
@@ -342,6 +367,7 @@ export default function AdminProfile() {
 
   return (
     <div className="kora-profile-root admin">
+      <ConfirmModal open={!!deleteUserId} title="Delete User" body="Permanently delete this user? This cannot be undone." onConfirm={confirmDeleteUser} onCancel={() => setDeleteUserId(null)} />
       <div className="kora-bg-mesh" />
       <div className="kora-profile-layout">
 
