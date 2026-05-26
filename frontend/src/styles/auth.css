@@ -19,7 +19,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #081d1a; /* Dark background to make the card pop */
+  background: #F4F6F9;
   font-family: 'Inter', 'DM Sans', sans-serif;
   padding: 20px;
 }
@@ -31,7 +31,7 @@
   background: var(--kora-white);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 /* Left Side - Branding & Patterns */
@@ -80,7 +80,7 @@
   height: 100%;
   top: 0;
   left: -25%;
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 30%, transparent 40%, rgba(255, 255, 255, 0.03) 41%, transparent 42%),
     radial-gradient(circle at 80% 70%, transparent 40%, rgba(255, 255, 255, 0.03) 41%, transparent 42%);
   pointer-events: none;
@@ -331,4 +331,3 @@ select.kora-auth-input {
     font-size: 28px;
   }
 }
-

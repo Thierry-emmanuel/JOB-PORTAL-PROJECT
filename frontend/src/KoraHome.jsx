@@ -119,12 +119,16 @@ function useReveal(delay = 0) {
 
 /* ─── NAVBAR ────────────────────────────────────────────────── */
 function Navbar({ logoSrc, onLogoUpload }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [scrolled, setScrolled]     = useState(false);
   const [activeNav, setActiveNav]   = useState("Offres");
   const [menuOpen, setMenuOpen]     = useState(false);
+
+  // Re-read auth from localStorage as fallback to avoid stale Suspense cache
+  const lsToken = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  const effectivelyAuth = isAuthenticated || !!lsToken;
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -217,18 +221,18 @@ function Navbar({ logoSrc, onLogoUpload }) {
         <div className="kora-desktop-nav" style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
           {/* Language Switcher */}
           <div style={{ display:"flex", background:"#F3F4F6", borderRadius:8, padding:2, marginRight:8 }}>
-            <button 
+            <button
               onClick={() => i18n.changeLanguage('fr')}
               style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'fr' ? "#fff" : "transparent", color: i18n.language === 'fr' ? G : MUTED, boxShadow: i18n.language === 'fr' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
             >FR</button>
-            <button 
+            <button
               onClick={() => i18n.changeLanguage('en')}
               style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'en' ? "#fff" : "transparent", color: i18n.language === 'en' ? G : MUTED, boxShadow: i18n.language === 'en' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
             >EN</button>
           </div>
 
-          {isAuthenticated ? (
-            <Link 
+          {effectivelyAuth ? (
+            <Link
               to={getDashboardPath()}
               style={{ background:G, color:"white", textDecoration: "none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(26,92,46,0.2)" }}
             >
@@ -236,13 +240,13 @@ function Navbar({ logoSrc, onLogoUpload }) {
             </Link>
           ) : (
             <>
-              <Link 
+              <Link
                 to="/login"
                 style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color:"#374151", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit", textDecoration: "none" }}
               >
                 {t('nav.login')}
               </Link>
-              <Link 
+              <Link
                 to="/register"
                 style={{ background:O, color:"white", border:"none", padding:"10px 22px", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(249,115,22,0.3)", textDecoration: "none" }}
               >
@@ -254,15 +258,15 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
         {/* Mobile: auth + hamburger */}
         <div className="kora-mobile-nav" style={{ display:"flex", gap:8, alignItems:"center", marginLeft:"auto" }}>
-          {isAuthenticated ? (
-            <Link 
+          {effectivelyAuth ? (
+            <Link
               to={getDashboardPath()}
               style={{ background:G, color:"white", textDecoration: "none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
             >
               Dashboard
             </Link>
           ) : (
-            <Link 
+            <Link
               to="/register"
               style={{ background:O, color:"white", border:"none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit", textDecoration: "none" }}
             >
@@ -321,7 +325,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
               {link.label}
             </button>
           ))}
-          {isAuthenticated ? (
+          {effectivelyAuth ? (
             <Link 
               to={getDashboardPath()}
               onClick={() => setMenuOpen(false)}
