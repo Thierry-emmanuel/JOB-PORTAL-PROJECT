@@ -1,20 +1,22 @@
-import { useRef } from "react";
-import { Upload, FileText, Download, Trash2, CheckCircle } from "lucide-react";
+import { useRef, useState } from "react";
+import { Upload, FileText, Download, Trash2, CheckCircle, AlertCircle, X } from "lucide-react";
 
 const MAX_SIZE_MB = 5;
 
 export default function CVUploadSection({ cvUrl, cvFileName, onUpload }) {
   const fileRef = useRef();
+  const [fileError, setFileError] = useState(null);
 
   const handleFile = (file) => {
     if (!file) return;
+    setFileError(null);
     const ext = file.name.split(".").pop().toLowerCase();
     if (!["pdf", "docx"].includes(ext)) {
-      alert("Only PDF or DOCX files are accepted.");
+      setFileError("Only PDF or DOCX files are accepted.");
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`File size must be under ${MAX_SIZE_MB} MB.`);
+      setFileError(`File size must be under ${MAX_SIZE_MB} MB.`);
       return;
     }
     onUpload(file);
@@ -27,6 +29,13 @@ export default function CVUploadSection({ cvUrl, cvFileName, onUpload }) {
 
   return (
     <section className="kora-section">
+      {fileError && (
+        <div style={{ display:"flex", alignItems:"center", gap:8, background:"#FEF2F2", border:"1.5px solid #FCA5A5", borderRadius:10, padding:"10px 14px", marginBottom:12 }}>
+          <AlertCircle size={14} color="#DC2626" style={{flexShrink:0}}/>
+          <span style={{ fontSize:13, color:"#991B1B", flex:1 }}>{fileError}</span>
+          <button onClick={() => setFileError(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:0 }}><X size={13}/></button>
+        </div>
+      )}
       <div className="kora-section-header">
         <div className="kora-section-title">
           <FileText size={18} />
