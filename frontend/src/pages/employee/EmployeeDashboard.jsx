@@ -433,7 +433,7 @@ export default function EmployeeDashboard() {
             />
           : (
             <div className="ds-mini-jobs-grid">
-              {recJobs.map(job => <MiniJobCard key={job.id} job={job} />)}
+              {recJobs.slice(0, 3).map(job => <MiniJobCard key={job.id} job={job} />)}
             </div>
           )
         }
