@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { KeyRound } from "lucide-react";
-import KoraNav from "../../components/KoraNav";
+import EmployeeLayout from "../../layouts/EmployeeLayout";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import ExperienceSection from "../../components/profile/ExperienceSection";
 import EducationSection from "../../components/profile/EducationSection";
@@ -146,23 +145,36 @@ export default function JobSeekerProfile() {
   };
 
   if (loading) {
-    return <div style={{ padding: '50px', textAlign: 'center' }}>Loading profile...</div>;
+    return (
+      <EmployeeLayout profile={profile} completion={0}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"80px 0" }}>
+          <div style={{ width:32, height:32, border:"3px solid #E5E7EB", borderTopColor:"#1A5C2E", borderRadius:"50%", animation:"ds-spin 0.8s linear infinite" }} />
+        </div>
+      </EmployeeLayout>
+    );
   }
 
   if (error && !profile.id) {
-    return <div style={{ padding: '50px', textAlign: 'center', color: 'red' }}>{error}</div>;
+    return (
+      <EmployeeLayout profile={profile} completion={0}>
+        <div className="ds-error">
+          <p style={{ fontWeight:700 }}>Could not load profile</p>
+          <p style={{ fontSize:13, color:"#6B7280" }}>{error}</p>
+        </div>
+      </EmployeeLayout>
+    );
   }
 
   return (
-    <div className="kora-profile-root">
-      <KoraNav />
-      
-      {/* Ambient background */}
-      <div className="kora-bg-mesh" />
-
-      <div className="kora-profile-layout no-sidebar">
-        {/* MAIN CONTENT */}
-        <main className="kora-main-content">
+    <EmployeeLayout profile={profile} completion={completionScore()} onPhotoChange={handlePhotoChange}>
+      <div className="ds-page-header">
+        <div>
+          <h1 className="ds-page-title">My Profile</h1>
+          <p className="ds-page-sub">Manage your professional profile to attract employers.</p>
+        </div>
+        <button className="ds-btn ds-btn-ghost" onClick={() => setResetModal(true)}><KeyRound size={14} /> Reset Password</button>
+      </div>
+        <div className="ds-card">
           <ProfileHeader
             profile={profile}
             onEdit={openEdit}
@@ -231,8 +243,7 @@ export default function JobSeekerProfile() {
               />
             )}
           </div>
-        </main>
-      </div>
+        </div>
 
       {/* Edit Modal */}
       {editModal.open && (
@@ -248,6 +259,6 @@ export default function JobSeekerProfile() {
       {resetModal && (
         <ResetPasswordModal onClose={() => setResetModal(false)} userEmail={profile.email} />
       )}
-    </div>
+    </EmployeeLayout>
   );
 }
