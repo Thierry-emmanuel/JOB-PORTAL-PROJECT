@@ -13,11 +13,15 @@
  *   handlePhotoChange, handleCancelInterview
  * ─────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getUserApplications, getJobs } from '../api/jobs';
 import { getInterviewsBySeeker, cancelInterview } from '../api/interviews';
 import { getJobSeekerProfile, updateJobSeekerProfile } from '../api/profiles';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
 
 /* ── Profile completion formula (mirrors JobSeekerProfile) ── */
 export function profileCompletion(p) {
@@ -51,6 +55,7 @@ function fileToBase64(file) {
 
 export default function useEmployeeDashboard() {
   const { user, token } = useAuth();
+  const stompRef = useRef(null);
 
   const [profile,       setProfile]       = useState({ ...EMPTY_PROFILE, ...(user || {}) });
   const [applications,  setApplications]  = useState([]);
@@ -60,6 +65,8 @@ export default function useEmployeeDashboard() {
   const [interLoading,  setInterLoading]  = useState(true);
   const [recJobs,       setRecJobs]       = useState([]);
   const [jobsLoading,   setJobsLoading]   = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount,   setUnreadCount]   = useState(0);
 
   const completion = profileCompletion(profile);
   const firstName  = (
@@ -69,11 +76,48 @@ export default function useEmployeeDashboard() {
     'there'
   );
 
+  // ── Real-time WebSocket notifications ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const client = new Client({
+      webSocketFactory: () => new SockJS(WS_URL),
+      reconnectDelay: 5000,
+    });
+    client.onConnect = () => {
+      client.subscribe(`/topic/notifications/${user.id}`, (message) => {
+        try {
+          const payload = JSON.parse(message.body);
+          const n = {
+            id:   Date.now(),
+            text: payload.message || payload.title || 'New notification',
+            time: 'Just now',
+            read: false,
+            type: payload.type || 'info',
+          };
+          setNotifications(prev => [n, ...prev].slice(0, 20));
+          setUnreadCount(c => c + 1);
+        } catch { /* ignore parse errors */ }
+      });
+    };
+    client.activate();
+    stompRef.current = client;
+    return () => { client.deactivate(); stompRef.current = null; };
+  }, [user?.id]);
+
+  const markNotificationRead = useCallback((id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+  }, []);
+
   /* ── Bootstrap all data ─────────────────────────────────── */
   useEffect(() => {
     if (!token || !user?.id) return;
     const id = user.id;
-
     // Profile
     getJobSeekerProfile(id)
       .then((data) => {
@@ -141,18 +185,17 @@ export default function useEmployeeDashboard() {
       }));
     } catch (err) {
       console.error('[Dashboard] photo upload failed:', err);
-      alert('Failed to upload photo. Please try again.');
+      console.error('[Dashboard] photo upload failed - throw to caller');
     }
   }, [profile, user]);
 
   /* ── Cancel interview ────────────────────────────────────── */
   const handleCancelInterview = useCallback(async (id) => {
-    if (!window.confirm('Cancel this interview?')) return;
     try {
       await cancelInterview(id);
       setInterviews(prev => prev.filter(iv => iv.id !== id));
     } catch {
-      alert('Failed to cancel. Please try again.');
+      throw new Error('Failed to cancel interview');
     }
   }, []);
 
@@ -165,6 +208,8 @@ export default function useEmployeeDashboard() {
     interviews, interLoading,
     /* Jobs */
     recJobs, jobsLoading,
+    /* Notifications */
+    notifications, unreadCount, markNotificationRead, markAllNotificationsRead,
     /* Actions */
     handlePhotoChange, handleCancelInterview,
   };
