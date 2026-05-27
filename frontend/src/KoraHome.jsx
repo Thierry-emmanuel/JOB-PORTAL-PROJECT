@@ -460,18 +460,19 @@ function Hero() {
 
   /* Background image auto-advance */
   const bgSlides    = heroConfig?.slides ?? [];
-  const hasBgSlides = bgSlides.length > 0 &&
-    (heroConfig?.backgroundType === "slideshow" || heroConfig?.backgroundType === "image");
+  const isSlideshow = heroConfig?.backgroundType === "slideshow" && bgSlides.length > 0;
+  const hasMultipleBgSlides = isSlideshow && bgSlides.length > 1;
+  const hasSingleBgImage = heroConfig?.backgroundType === "image" && !!heroConfig?.backgroundImageUrl;
   const intervalMs  = heroConfig?.slideIntervalMs ?? 4500;
 
   useEffect(() => {
-    if (!hasBgSlides || paused) return;
+    if (!hasMultipleBgSlides || paused) return;
     bgTimerRef.current = setInterval(() => {
       setBgDir(1);
       setBgIdx(i => (i + 1) % bgSlides.length);
     }, intervalMs);
     return () => clearInterval(bgTimerRef.current);
-  }, [hasBgSlides, bgSlides.length, intervalMs, paused]);
+  }, [hasMultipleBgSlides, bgSlides.length, intervalMs, paused]);
 
   const transition = heroConfig?.slideTransition ?? "fade";
   const v          = imgVariants[transition] ?? imgVariants.fade;
@@ -486,6 +487,10 @@ function Hero() {
     "linear-gradient(135deg,#0A1628 0%,#071020 50%,#030810 100%)",
     "linear-gradient(135deg,#1A0D28 0%,#100818 50%,#070510 100%)",
   ];
+
+  const customGrad = heroConfig?.backgroundType === "gradient" && heroConfig.gradientFrom && heroConfig.gradientTo
+    ? `linear-gradient(135deg, ${heroConfig.gradientFrom} 0%, ${heroConfig.gradientTo} 100%)`
+    : null;
 
   const getDashboardPath = () => {
     const role = user?.role || user?.type || "";
@@ -504,35 +509,51 @@ function Hero() {
   return (
     <section style={{ position:"relative", minHeight:"min(calc(100vh - 64px), 620px)", height:"calc(100vh - 64px)", overflow:"hidden" }}>
 
-      {/* Layer 0: gradient per slide */}
-      {bgGrads.map((bg, i) => (
-        <div key={i} style={{ position:"absolute", inset:0, background:bg, opacity: i === current ? 1 : 0, transition:"opacity 0.9s ease", zIndex:1 }}/>
-      ))}
+      {/* Layer 0: gradient per slide or custom gradient */}
+      {customGrad ? (
+        <div style={{ position:"absolute", inset:0, background:customGrad, zIndex:1 }}/>
+      ) : (
+        bgGrads.map((bg, i) => (
+          <div key={i} style={{ position:"absolute", inset:0, background:bg, opacity: i === current ? 1 : 0, transition:"opacity 0.9s ease", zIndex:1 }}/>
+        ))
+      )}
 
-      {/* Layer 1: Framer Motion background image slideshow */}
-      {hasBgSlides && (
+      {/* Layer 1: Framer Motion background image slideshow or single image */}
+      {(isSlideshow || hasSingleBgImage) && (
         <div style={{ position:"absolute", inset:0, zIndex:2, overflow:"hidden" }}>
-          <AnimatePresence mode="sync" custom={bgDir} initial={false}>
-            <motion.div
-              key={bgIdx}
-              custom={bgDir}
-              style={{ position:"absolute", inset:0 }}
-              initial={typeof v.initial === "function" ? v.initial(bgDir) : v.initial}
-              animate={v.animate}
-              exit={typeof v.exit === "function" ? v.exit(bgDir) : v.exit}
-            >
-              <motion.img
-                src={bgSlides[bgIdx]?.url}
-                alt={bgSlides[bgIdx]?.alt ?? ""}
-                style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition: bgSlides[bgIdx]?.position ?? "center center", display:"block" }}
-                initial={kenBurns.initial}
-                animate={kenBurns.animate}
-                transition={kenBurns.transition}
+          {isSlideshow ? (
+            <AnimatePresence mode="sync" custom={bgDir} initial={false}>
+              <motion.div
+                key={bgIdx}
+                custom={bgDir}
+                style={{ position:"absolute", inset:0 }}
+                initial={typeof v.initial === "function" ? v.initial(bgDir) : v.initial}
+                animate={v.animate}
+                exit={typeof v.exit === "function" ? v.exit(bgDir) : v.exit}
+              >
+                <motion.img
+                  src={bgSlides[bgIdx]?.url}
+                  alt={bgSlides[bgIdx]?.alt ?? ""}
+                  style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition: bgSlides[bgIdx]?.position ?? "center center", display:"block" }}
+                  initial={kenBurns.initial}
+                  animate={kenBurns.animate}
+                  transition={kenBurns.transition}
+                  draggable={false}
+                  onError={e => { e.currentTarget.style.display = "none"; }}
+                />
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <div style={{ position:"absolute", inset:0 }}>
+              <img
+                src={heroConfig.backgroundImageUrl}
+                alt=""
+                style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition: "center center", display:"block" }}
                 draggable={false}
                 onError={e => { e.currentTarget.style.display = "none"; }}
               />
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          )}
           {/* Image overlay */}
           <div style={{ position:"absolute", inset:0, background:"#000", opacity:overlayOpacity, zIndex:3, pointerEvents:"none" }}/>
         </div>
@@ -629,7 +650,7 @@ function Hero() {
       </div>
 
       {/* Layer 4d: Framer progress bar (bg image timing) */}
-      {hasBgSlides && !paused && (
+      {isSlideshow && bgSlides.length > 1 && !paused && (
         <motion.div
           key={`pb-${bgIdx}`}
           initial={{ scaleX:0 }} animate={{ scaleX:1 }}
@@ -639,12 +660,12 @@ function Hero() {
       )}
 
       {/* Accent line when no bg images */}
-      {!hasBgSlides && (
+      {(!isSlideshow && !hasSingleBgImage) && (
         <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, zIndex:8, background:`linear-gradient(90deg, ${G}, ${O})` }}/>
       )}
 
       {/* Layer 4e: bg-image dot indicators */}
-      {bgSlides.length > 1 && (
+      {isSlideshow && bgSlides.length > 1 && (
         <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", zIndex:8, display:"flex", gap:6 }}>
           {bgSlides.map((_, i) => (
             <button key={i} onClick={() => { setBgDir(i > bgIdx ? 1 : -1); setBgIdx(i); }} style={{ width: i===bgIdx ? 20 : 6, height:6, borderRadius:3, background: i===bgIdx ? "#fff" : "rgba(255,255,255,0.35)", border:"none", cursor:"pointer", padding:0, transition:"all 0.3s cubic-bezier(0.16,1,0.3,1)" }}/>
@@ -653,11 +674,11 @@ function Hero() {
       )}
 
       {/* Photo credit */}
-      {bgSlides[bgIdx]?.credit && (
+      {isSlideshow && bgSlides[bgIdx]?.credit ? (
         <p style={{ position:"absolute", bottom:8, left:12, zIndex:8, fontSize:10, color:"rgba(255,255,255,0.3)", margin:0, pointerEvents:"none" }}>
           © {bgSlides[bgIdx].credit}
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

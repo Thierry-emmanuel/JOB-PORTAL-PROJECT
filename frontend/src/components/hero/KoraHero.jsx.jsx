@@ -102,23 +102,15 @@ function AnimatedCounter({ target, duration = 1800 }) {
         };
         requestAnimationFrame(tick);
       }
-    }, { threshold: 0.5 });
+    });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [target, duration]);
 
-  const display = count >= 1000
-    ? count >= 1000000
-      ? `${(count / 1000000).toFixed(1)}M`
-      : `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}k`
-    : count.toString();
-
-  return <span ref={ref}>{display}+</span>;
+  return <span ref={ref}>{count.toLocaleString()}</span>;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-   ══════════════════════════════════════════════════════════════════ */
+/* ── MAIN COMPONENT ─────────────────────────────────────────────── */
 export default function KoraHero() {
   const [config, setConfig]     = useState(FALLBACK);
   const [loading, setLoading]   = useState(true);
@@ -135,23 +127,23 @@ export default function KoraHero() {
       .catch(() => {/* keep fallback */})
       .finally(() => setLoading(false));
   }, []);
-
   /* Slideshow auto-advance */
   const slides = config.slides ?? [];
-  const hasSlides = slides.length > 1;
+  const isSlideshow = config.backgroundType === 'slideshow' && slides.length > 0;
+  const hasMultipleSlides = isSlideshow && slides.length > 1;
+  const hasSingleBgImage = config.backgroundType === 'image' && !!config.backgroundImageUrl;
 
   const advance = useCallback((dir = 1) => {
+    if (slides.length === 0) return;
     setDirection(dir);
     setSlideIdx(i => (i + dir + slides.length) % slides.length);
   }, [slides.length]);
 
   useEffect(() => {
-    if (!hasSlides || paused) return;
+    if (!hasMultipleSlides || paused) return;
     intervalRef.current = setInterval(() => advance(1), config.slideIntervalMs);
     return () => clearInterval(intervalRef.current);
-  }, [hasSlides, paused, advance, config.slideIntervalMs]);
-
-  /* Background resolver */
+  }, [hasMultipleSlides, paused, advance, config.slideIntervalMs]);  /* Background resolver */
   const bgStyle = (() => {
     const type = config.backgroundType;
     if (type === 'image' && config.backgroundImageUrl) {
@@ -206,47 +198,7 @@ export default function KoraHero() {
       className={`kh-root kh-layout-${config.layout}`}
       aria-label="Hero section"
     >
-      {/* ── Background layer ───────────────────────────────────── */}
-      <div className="kh-bg" style={!hasSlides ? bgStyle : {}}>
-        {/* Slideshow */}
-        {hasSlides && (
-          <AnimatePresence mode="sync" custom={direction}>
-            <motion.div
-              key={slideIdx}
-              className="kh-slide"
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              <motion.img
-                src={slides[slideIdx].url}
-                alt={slides[slideIdx].alt ?? ''}
-                className="kh-slide-img"
-                style={{ objectPosition: slides[slideIdx].position ?? 'center center' }}
-                {...kenBurns}
-                draggable={false}
-              />
-            </motion.div>
-          </AnimatePresence>
-        )}
 
-        {/* Gradient base (always shown, dims behind slides) */}
-        <div
-          className="kh-gradient-base"
-          style={{ background: `linear-gradient(145deg, ${config.gradientFrom ?? '#1a1438'} 0%, ${config.gradientTo ?? '#1e3a5f'} 100%)` }}
-        />
-
-        {/* Overlay */}
-        <div
-          className="kh-overlay"
-          style={{ opacity: config.overlayOpacity ?? 0.58 }}
-        />
-
-        {/* Grain texture */}
-        <div className="kh-grain" aria-hidden="true"/>
-      </div>
 
       {/* ── Content ────────────────────────────────────────────── */}
       <div className={`kh-content${isCenter ? ' center' : isSplit ? ' split' : ''} ${textDark ? 'dark' : 'light'}`}>
@@ -336,7 +288,7 @@ export default function KoraHero() {
       </div>
 
       {/* ── Slideshow controls ─────────────────────────────────── */}
-      {hasSlides && (
+      {hasMultipleSlides && (
         <>
           {/* Prev / Next */}
           <button className="kh-nav kh-nav-prev" onClick={() => advance(-1)} aria-label="Previous slide">
@@ -380,12 +332,12 @@ export default function KoraHero() {
               style={{ transformOrigin: 'left' }}
             />
           )}
-
-          {/* Photo credit */}
-          {slides[slideIdx]?.credit && (
-            <p className="kh-credit">© {slides[slideIdx].credit}</p>
-          )}
         </>
+      )}
+
+      {/* Photo credit */}
+      {isSlideshow && slides[slideIdx]?.credit && (
+        <p className="kh-credit">© {slides[slideIdx].credit}</p>
       )}
     </section>
   );
