@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Kora_Logo from './assets/absolute-size-logo.png'
 import { useAuth } from "./context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { getJobs, getCategories, getCompanies } from "./api/jobs";
+import { fetchLiveHero } from "./api/hero";
 
-
-/* ─── DESIGN TOKENS ─────────────────────────────────────────── */
 const G    = "#1A5C2E";
 const G2   = "#0D3D1F";
 const G_L  = "#E8F5EE";
@@ -357,13 +357,76 @@ function Navbar({ logoSrc, onLogoUpload }) {
   );
 }
 
-/* ─── HERO CAROUSEL ─────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO — dynamic Framer Motion, backend-driven via /api/public/hero
+   Layer stack (bottom → top):
+     0  Per-slide gradient backgrounds     (original behaviour)
+     1  Framer Motion background images    (NEW — heroConfig.slides)
+        • fade / slide / zoom transitions  • Ken-Burns scale
+        • configurable dark overlay
+     2  Vignette + bottom white-fade       (original)
+     3  Job-card content with Framer stagger (enhanced)
+     4  Controls + optional stats strip
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Framer image transition variants ───────────────────────── */
+const imgVariants = {
+  fade: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 1.1, ease: "easeInOut" } },
+    exit:    { opacity: 0, transition: { duration: 0.7, ease: "easeInOut" } },
+  },
+  slide: {
+    initial: (dir) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0.5 }),
+    animate: { x: 0, opacity: 1, transition: { duration: 0.85, ease: [0.32,0.72,0,1] } },
+    exit:    (dir) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0.5, transition: { duration: 0.6 } }),
+  },
+  zoom: {
+    initial: { opacity: 0, scale: 1.07 },
+    animate: { opacity: 1, scale: 1, transition: { duration: 1.2, ease: "easeOut" } },
+    exit:    { opacity: 0, scale: 0.96, transition: { duration: 0.6 } },
+  },
+};
+
+const kenBurns = {
+  initial:   { scale: 1.1 },
+  animate:   { scale: 1.0, x: "-1.5%", y: "-1%" },
+  transition:{ duration: 9, ease: "linear", repeat: Infinity, repeatType: "mirror" },
+};
+
+const contentItem = {
+  hidden: { opacity: 0, y: 20 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.48, ease: [0.22,1,0.36,1] } },
+  exit:   { opacity: 0, y: -12, transition: { duration: 0.25 } },
+};
+const contentParent = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.09 } },
+};
+
 function Hero() {
   const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [slides, setSlides] = useState(SLIDES_MOCK);
-  
+
+  const [heroConfig, setHeroConfig]     = useState(null);
+  const [slides, setSlides]             = useState(SLIDES_MOCK);
+  const [current, setCurrent]           = useState(0);
+  const [paused, setPaused]             = useState(false);
+  const [animating, setAnimating]       = useState(false);
+  const [displaySlide, setDisplaySlide] = useState(0);
+  const timerRef   = useRef(null);
+  const [bgIdx, setBgIdx] = useState(0);
+  const [bgDir, setBgDir] = useState(1);
+  const bgTimerRef = useRef(null);
+
+  /* Fetch hero config */
+  useEffect(() => {
+    fetchLiveHero().then(cfg => setHeroConfig(cfg)).catch(() => {});
+  }, []);
+
+  /* Fetch real job slides */
   useEffect(() => {
     getJobs({ page: 1, limit: 3 }).then(res => {
       if (res.data && res.data.length > 0) {
@@ -374,147 +437,190 @@ function Hero() {
           location: job.location,
           salary: job.salary || "Négociable",
           match: Math.floor(Math.random() * 15) + 80,
-          tag: job.tags[0] || "TECH",
+          tag: (job.tags && job.tags[0]) || "TECH",
           tagColor: i === 0 ? "#3B82F6" : i === 1 ? "#1D4ED8" : "#7C3AED",
-          id: job.id
+          id: job.id,
         })));
       }
     }).catch(console.error);
   }, []);
 
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [animating, setAnimating] = useState(false);
-  const [displaySlide, setDisplaySlide] = useState(0);
-  const timerRef = useRef(null);
+  /* Job carousel */
   const total = slides.length;
-
   const goTo = useCallback((idx) => {
     const next = ((idx % total) + total) % total;
     setAnimating(true);
-    setTimeout(() => {
-      setDisplaySlide(next);
-      setCurrent(next);
-      setAnimating(false);
-    }, 280);
+    setTimeout(() => { setDisplaySlide(next); setCurrent(next); setAnimating(false); }, 280);
   }, [total]);
 
   useEffect(() => {
-    if (!paused) {
-      timerRef.current = setInterval(() => goTo(current + 1), 5000);
-    }
+    if (!paused) { timerRef.current = setInterval(() => goTo(current + 1), 5000); }
     return () => clearInterval(timerRef.current);
   }, [current, paused, goTo]);
 
-  const getDashboardPath = () => {
-    const role = user?.role || user?.type || "";
-    if (role.includes("EMPLOYER")) return "/dashboard/employer";
-    if (role.includes("ADMIN")) return "/profile/admin";
-    return "/employee/dashboard";
-  };
+  /* Background image auto-advance */
+  const bgSlides    = heroConfig?.slides ?? [];
+  const hasBgSlides = bgSlides.length > 0 &&
+    (heroConfig?.backgroundType === "slideshow" || heroConfig?.backgroundType === "image");
+  const intervalMs  = heroConfig?.slideIntervalMs ?? 4500;
 
-  const handleAction = () => {
-    if (s.id) navigate(`/jobs/${s.id}`);
-    else navigate("/jobs");
-  };
+  useEffect(() => {
+    if (!hasBgSlides || paused) return;
+    bgTimerRef.current = setInterval(() => {
+      setBgDir(1);
+      setBgIdx(i => (i + 1) % bgSlides.length);
+    }, intervalMs);
+    return () => clearInterval(bgTimerRef.current);
+  }, [hasBgSlides, bgSlides.length, intervalMs, paused]);
 
-  const s = slides[displaySlide] || slides[0];
+  const transition = heroConfig?.slideTransition ?? "fade";
+  const v          = imgVariants[transition] ?? imgVariants.fade;
+  const overlayOpacity = heroConfig?.overlayOpacity ?? 0.55;
+  const statsVisible   = heroConfig?.statsVisible   ?? false;
+  const liveJobs       = heroConfig?.liveJobCount;
+  const liveCompanies  = heroConfig?.liveCompanyCount;
+  const liveSeekers    = heroConfig?.liveSeekerCount;
+
   const bgGrads = [
     "linear-gradient(135deg,#0D3D1F 0%,#0A2E1A 40%,#061A0F 100%)",
     "linear-gradient(135deg,#0A1628 0%,#071020 50%,#030810 100%)",
     "linear-gradient(135deg,#1A0D28 0%,#100818 50%,#070510 100%)",
   ];
 
+  const getDashboardPath = () => {
+    const role = user?.role || user?.type || "";
+    if (role.includes("EMPLOYER")) return "/dashboard/employer";
+    if (role.includes("ADMIN"))    return "/profile/admin";
+    return "/employee/dashboard";
+  };
+
+  const s = slides[displaySlide] || slides[0];
+  const handleAction = () => { if (s.id) navigate(`/jobs/${s.id}`); else navigate("/jobs"); };
+  const eyebrowLabel =
+    s.eyebrow === "POSTE VEDETTE"       ? t('hero.featured') :
+    s.eyebrow === "OPPORTUNITÉ FINANCE" ? t('hero.finance')  :
+    t('hero.creative');
+
   return (
     <section style={{ position:"relative", minHeight:"min(calc(100vh - 64px), 620px)", height:"calc(100vh - 64px)", overflow:"hidden" }}>
-      {/* BG */}
-      {bgGrads.map((bg, i) => (
-        <div key={i} style={{
-          position:"absolute", inset:0,
-          background: bg,
-          opacity: i === current ? 1 : 0,
-          transition:"opacity 0.9s ease", zIndex:1,
-        }}/>
-      ))}
-      {/* Fades */}
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"32%", zIndex:3, background:"linear-gradient(to top, #fff 0%, transparent 100%)", pointerEvents:"none" }}/>
-      <div style={{ position:"absolute", inset:0, zIndex:3, background:"radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%)", pointerEvents:"none" }}/>
 
-      {/* Content */}
-      <div style={{ position:"absolute", inset:0, zIndex:4, display:"flex", alignItems:"center", padding:"0 clamp(20px, 5vw, 80px)" }}>
-        <div style={{
-          maxWidth:650,
-          opacity: animating ? 0 : 1,
-          transform: animating ? "translateY(16px)" : "none",
-          transition:"opacity 0.45s ease, transform 0.45s ease",
-          width:"100%",
-        }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-            <span style={{ fontSize:"clamp(9px,2.5vw,11px)", fontWeight:700, letterSpacing:3, color:O }}>{s.eyebrow === "POSTE VEDETTE" ? t('hero.featured') : s.eyebrow === "OPPORTUNITÉ FINANCE" ? t('hero.finance') : t('hero.creative')}</span>
-            <span style={{ fontSize:"clamp(9px,2vw,10px)", fontWeight:700, padding:"3px 10px", borderRadius:20, letterSpacing:1, background:`${s.tagColor}22`, color:s.tagColor, border:`1px solid ${s.tagColor}44` }}>{s.tag}</span>
-          </div>
-          <h1 style={{ fontSize:"clamp(32px, 6vw, 76px)", fontWeight:800, color:"#fff", lineHeight:1.05, letterSpacing:"-1.5px", marginBottom:20, whiteSpace:"pre-line" }}>
-            {s.title}
-          </h1>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
-            {[{ icon:"🏢", val:s.company },{ icon:"📍", val:s.location },{ icon:"💰", val:s.salary }].map(chip => (
-              <div key={chip.val} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"5px 12px", fontSize:"clamp(11px,2.5vw,13px)", color:"rgba(255,255,255,0.9)" }}>
-                <span>{chip.icon}</span>{chip.val}
-              </div>
-            ))}
-          </div>
-          <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to={getDashboardPath()}
-                  style={{ background:G, color:"white", textDecoration:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, boxShadow:"0 4px 20px rgba(26,92,46,0.4)" }}
-                >
-                  Mon Tableau de Bord →
-                </Link>
-                <button onClick={handleAction} style={{ background:"rgba(255,255,255,0.15)", color:"white", border:"1px solid rgba(255,255,255,0.3)", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", backdropFilter:"blur(8px)" }}>
-                  {t('hero.view_job')}
-                </button>
-              </>
-            ) : (
-              <>
+      {/* Layer 0: gradient per slide */}
+      {bgGrads.map((bg, i) => (
+        <div key={i} style={{ position:"absolute", inset:0, background:bg, opacity: i === current ? 1 : 0, transition:"opacity 0.9s ease", zIndex:1 }}/>
+      ))}
+
+      {/* Layer 1: Framer Motion background image slideshow */}
+      {hasBgSlides && (
+        <div style={{ position:"absolute", inset:0, zIndex:2, overflow:"hidden" }}>
+          <AnimatePresence mode="sync" custom={bgDir} initial={false}>
+            <motion.div
+              key={bgIdx}
+              custom={bgDir}
+              style={{ position:"absolute", inset:0 }}
+              initial={typeof v.initial === "function" ? v.initial(bgDir) : v.initial}
+              animate={v.animate}
+              exit={typeof v.exit === "function" ? v.exit(bgDir) : v.exit}
+            >
+              <motion.img
+                src={bgSlides[bgIdx]?.url}
+                alt={bgSlides[bgIdx]?.alt ?? ""}
+                style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition: bgSlides[bgIdx]?.position ?? "center center", display:"block" }}
+                initial={kenBurns.initial}
+                animate={kenBurns.animate}
+                transition={kenBurns.transition}
+                draggable={false}
+                onError={e => { e.currentTarget.style.display = "none"; }}
+              />
+            </motion.div>
+          </AnimatePresence>
+          {/* Image overlay */}
+          <div style={{ position:"absolute", inset:0, background:"#000", opacity:overlayOpacity, zIndex:3, pointerEvents:"none" }}/>
+        </div>
+      )}
+
+      {/* Layer 2: vignette + bottom white fade */}
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"32%", zIndex:6, background:"linear-gradient(to top, #fff 0%, transparent 100%)", pointerEvents:"none" }}/>
+      <div style={{ position:"absolute", inset:0, zIndex:6, background:"radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%)", pointerEvents:"none" }}/>
+
+      {/* Layer 3: job-card content with Framer stagger */}
+      <div style={{ position:"absolute", inset:0, zIndex:7, display:"flex", alignItems:"center", padding:"0 clamp(20px, 5vw, 80px)" }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={displaySlide} variants={contentParent} initial="hidden" animate="show" exit="exit" style={{ maxWidth:650, width:"100%" }}>
+
+            <motion.div variants={contentItem} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:"clamp(9px,2.5vw,11px)", fontWeight:700, letterSpacing:3, color:O }}>{eyebrowLabel}</span>
+              <span style={{ fontSize:"clamp(9px,2vw,10px)", fontWeight:700, padding:"3px 10px", borderRadius:20, letterSpacing:1, background:`${s.tagColor}22`, color:s.tagColor, border:`1px solid ${s.tagColor}44` }}>{s.tag}</span>
+            </motion.div>
+
+            <motion.h1 variants={contentItem} style={{ fontSize:"clamp(32px, 6vw, 76px)", fontWeight:800, color:"#fff", lineHeight:1.05, letterSpacing:"-1.5px", marginBottom:20, whiteSpace:"pre-line" }}>
+              {s.title}
+            </motion.h1>
+
+            <motion.div variants={contentItem} style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
+              {[{ icon:"🏢", val:s.company },{ icon:"📍", val:s.location },{ icon:"💰", val:s.salary }].map(chip => (
+                <div key={chip.val} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"5px 12px", fontSize:"clamp(11px,2.5vw,13px)", color:"rgba(255,255,255,0.9)" }}>
+                  <span>{chip.icon}</span>{chip.val}
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={contentItem} style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
+              {isAuthenticated ? (
+                <>
+                  <Link to={getDashboardPath()} style={{ background:G, color:"white", textDecoration:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, boxShadow:"0 4px 20px rgba(26,92,46,0.4)" }}>
+                    Mon Tableau de Bord →
+                  </Link>
+                  <button onClick={handleAction} style={{ background:"rgba(255,255,255,0.15)", color:"white", border:"1px solid rgba(255,255,255,0.3)", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", backdropFilter:"blur(8px)" }}>
+                    {t('hero.view_job')}
+                  </button>
+                </>
+              ) : (
                 <button onClick={handleAction} style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
                   Voir l'offre →
                 </button>
-              </>
-            )}
-            <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
-              <span style={{ width:8, height:8, borderRadius:"50%", background: s.match >= 90 ? "#22C55E" : "#F59E0B", display:"inline-block" }}/>
-              {s.match}% {t('hero.compatibility')}
-            </div>
-          </div>
-        </div>
+              )}
+              <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
+                <span style={{ width:8, height:8, borderRadius:"50%", background: s.match >= 90 ? "#22C55E" : "#F59E0B", display:"inline-block" }}/>
+                {s.match}% {t('hero.compatibility')}
+              </div>
+            </motion.div>
+
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Arrows — hidden on very small screens */}
+      {/* Layer 4a: optional stats strip */}
+      {statsVisible && (liveJobs || liveCompanies || liveSeekers) && (
+        <motion.div
+          initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6, delay:0.9 }}
+          style={{ position:"absolute", bottom:56, left:"clamp(20px,5vw,80px)", zIndex:8, display:"flex", background:"rgba(255,255,255,0.10)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1px solid rgba(255,255,255,0.18)", borderRadius:14, overflow:"hidden" }}
+        >
+          {[
+            { val:liveJobs,      label: heroConfig?.statJobsLabel      ?? "Offres actives" },
+            { val:liveCompanies, label: heroConfig?.statCompaniesLabel ?? "Entreprises"    },
+            { val:liveSeekers,   label: heroConfig?.statSeekersLabel   ?? "Candidats"      },
+          ].filter(x => x.val != null).map((stat, i, arr) => (
+            <div key={i} style={{ padding:"10px 20px", textAlign:"center", borderRight: i < arr.length-1 ? "1px solid rgba(255,255,255,0.15)" : "none" }}>
+              <div style={{ fontSize:18, fontWeight:800, color:"#fff", lineHeight:1 }}>{Number(stat.val).toLocaleString()}+</div>
+              <div style={{ fontSize:10, fontWeight:500, color:"rgba(255,255,255,0.65)", marginTop:3, whiteSpace:"nowrap" }}>{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Layer 4b: arrows */}
       {[{ id:"prev", symbol:"‹", dir:-1 },{ id:"next", symbol:"›", dir:1 }].map(a => (
-        <button key={a.id} onClick={() => goTo(current + a.dir)} className="kora-hero-arrow" style={{
-          position:"absolute", top:"50%", transform:"translateY(-50%)", zIndex:5,
-          width:44, height:44, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)",
-          background:"rgba(0,0,0,0.25)", backdropFilter:"blur(8px)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          cursor:"pointer", color:"white", fontSize:20,
-          ...(a.id==="prev" ? { left:12 } : { right:12 }),
-        }}>
+        <button key={a.id} onClick={() => goTo(current + a.dir)} className="kora-hero-arrow" style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", zIndex:8, width:44, height:44, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)", background:"rgba(0,0,0,0.25)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"white", fontSize:20, ...(a.id==="prev" ? { left:12 } : { right:12 }) }}>
           {a.symbol}
         </button>
       ))}
 
-      {/* Controls */}
-      <div style={{ position:"absolute", right:"clamp(12px,4vw,48px)", bottom:48, zIndex:5, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10 }}>
+      {/* Layer 4c: dots + counter + pause */}
+      <div style={{ position:"absolute", right:"clamp(12px,4vw,48px)", bottom:48, zIndex:8, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10 }}>
         <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.55)" }}>{current+1}/{total}</span>
         <div style={{ display:"flex", gap:6 }}>
           {slides.map((_, i) => (
-            <button key={i} onClick={() => goTo(i)} style={{
-              height:7, width: i===current ? 28 : 7, borderRadius:4, border:"none", cursor:"pointer", padding:0,
-              background: i===current ? O : "rgba(255,255,255,0.35)",
-              transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)",
-            }}/>
+            <button key={i} onClick={() => goTo(i)} style={{ height:7, width: i===current ? 28 : 7, borderRadius:4, border:"none", cursor:"pointer", padding:0, background: i===current ? O : "rgba(255,255,255,0.35)", transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)" }}/>
           ))}
         </div>
         <button onClick={() => setPaused(p => !p)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.4)", fontSize:12, fontFamily:"inherit", padding:0 }}>
@@ -522,8 +628,36 @@ function Hero() {
         </button>
       </div>
 
-      {/* Accent line */}
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, zIndex:5, background:`linear-gradient(90deg, ${G}, ${O})` }}/>
+      {/* Layer 4d: Framer progress bar (bg image timing) */}
+      {hasBgSlides && !paused && (
+        <motion.div
+          key={`pb-${bgIdx}`}
+          initial={{ scaleX:0 }} animate={{ scaleX:1 }}
+          transition={{ duration: intervalMs / 1000, ease:"linear" }}
+          style={{ position:"absolute", bottom:0, left:0, right:0, height:3, zIndex:9, background:`linear-gradient(90deg, ${G}, ${O})`, transformOrigin:"left" }}
+        />
+      )}
+
+      {/* Accent line when no bg images */}
+      {!hasBgSlides && (
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, zIndex:8, background:`linear-gradient(90deg, ${G}, ${O})` }}/>
+      )}
+
+      {/* Layer 4e: bg-image dot indicators */}
+      {bgSlides.length > 1 && (
+        <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", zIndex:8, display:"flex", gap:6 }}>
+          {bgSlides.map((_, i) => (
+            <button key={i} onClick={() => { setBgDir(i > bgIdx ? 1 : -1); setBgIdx(i); }} style={{ width: i===bgIdx ? 20 : 6, height:6, borderRadius:3, background: i===bgIdx ? "#fff" : "rgba(255,255,255,0.35)", border:"none", cursor:"pointer", padding:0, transition:"all 0.3s cubic-bezier(0.16,1,0.3,1)" }}/>
+          ))}
+        </div>
+      )}
+
+      {/* Photo credit */}
+      {bgSlides[bgIdx]?.credit && (
+        <p style={{ position:"absolute", bottom:8, left:12, zIndex:8, fontSize:10, color:"rgba(255,255,255,0.3)", margin:0, pointerEvents:"none" }}>
+          © {bgSlides[bgIdx].credit}
+        </p>
+      )}
     </section>
   );
 }
