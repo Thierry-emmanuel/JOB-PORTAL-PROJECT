@@ -1155,7 +1155,76 @@
   color: var(--adm-muted); font-size: 13.5px; line-height: 1.6;
 }
 
-/* ── 31. Mobile ──────────────────────────────────────────────────────────── */
+/* ── 31. Mobile Toggle & Top Header Bar ──────────────────────────────────── */
+.adm-mob-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  background: var(--adm-white);
+  border-bottom: 1px solid var(--adm-border);
+  padding: 0 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.adm-mob-hamburger {
+  background: none;
+  border: none;
+  color: var(--adm-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.adm-mob-hamburger:hover {
+  background: var(--adm-bg);
+}
+
+.adm-mob-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-mob-logo-img {
+  height: 24px;
+  object-fit: contain;
+}
+
+.adm-mob-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--adm-ink);
+  letter-spacing: -0.2px;
+}
+
+.adm-mob-profile {
+  display: flex;
+  align-items: center;
+}
+
+.adm-mob-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--adm-purple);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+}
+
 .adm-mob-toggle {
   display: none; position: fixed; bottom: 20px; left: 20px;
   z-index: 2000; width: 46px; height: 46px;
@@ -1166,13 +1235,29 @@
 }
 .adm-mob-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.35); z-index: 39;
+  background: rgba(0,0,0,0.35); z-index: 1050;
 }
 .adm-mob-close {
   display: none; position: absolute; top: 14px; right: 14px;
   background: var(--adm-bg); border: 1px solid var(--adm-border);
   border-radius: 6px; padding: 5px; cursor: pointer; color: var(--adm-muted);
   align-items: center; justify-content: center; z-index: 10;
+}
+
+/* ── Premium Scrollbar Customizations ────────────────────────────────────── */
+.adm-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.adm-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.adm-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+.adm-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* ── 32. Overview Layout ─────────────────────────────────────────────────── */
@@ -1194,18 +1279,29 @@
 }
 
 @media (max-width: 768px) {
+  .adm-mob-bar {
+    display: flex;
+  }
+  .adm-root {
+    padding-top: 56px;
+    height: calc(100vh - 56px);
+  }
   .adm-sidebar {
     position: fixed; top: 0; left: 0; bottom: 0;
     transform: translateX(-100%);
     transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
-    z-index: 40;
+    z-index: 1100;
     box-shadow: var(--adm-shadow-lg);
   }
   .adm-sidebar.open { transform: translateX(0); }
-  .adm-mob-toggle { display: flex; }
+  .adm-mob-toggle { display: none !important; }
   .adm-mob-overlay { display: block; }
   .adm-mob-close { display: flex; }
-  .adm-main { width: 100%; }
+  .adm-main {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+  }
   .adm-page-head { padding: 16px 16px 0; flex-direction: column; align-items: flex-start; }
   .adm-content { padding: 16px 16px 40px; }
   .adm-kpi-grid { grid-template-columns: repeat(2,1fr); }
@@ -1218,3 +1314,4 @@
   .adm-filter-tabs { flex-wrap: wrap; }
   .adm-search { min-width: 0; width: 100%; }
 }
+

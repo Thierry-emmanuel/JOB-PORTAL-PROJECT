@@ -6,8 +6,9 @@ import {
   Globe, Image, Type, AlignLeft, ToggleLeft, ToggleRight, Send,
   MessageSquare, Mail, Phone, Calendar, ClipboardList, CalendarClock,
   Award, FileText, ShieldCheck, Upload, Download, Filter, SortDesc,
-  Sliders, Hash, Layers,
+  Sliders, Hash, Layers, Menu,
 } from 'lucide-react';
+import koraLogo from '../../assets/absolute-size-logo.png';
 import { useAuth } from '../../context/AuthContext';
 import {
   fetchEmployers, approveEmployer, suspendEmployer, deleteEmployer,
@@ -312,6 +313,9 @@ export default function AdminDashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
+  const displayName = user?.fullName ?? user?.name ?? user?.email ?? 'Administrator';
+  const initials = displayName.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'AD';
+
   const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
   const showToast = useCallback((msg, type='success') => setToast({ msg, type }), []);
 
@@ -319,7 +323,21 @@ export default function AdminDashboard() {
     <div className="adm-root">
       {mobileOpen && <div className="adm-mob-overlay" onClick={()=>setMobileOpen(false)}/>}
 
-      {/* Mobile toggle */}
+      {/* Mobile Top Header Toggle Bar */}
+      <header className="adm-mob-bar">
+        <button className="adm-mob-hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open sidebar">
+          <Menu size={20}/>
+        </button>
+        <div className="adm-mob-logo-area">
+          <img src={koraLogo} alt="Kora" className="adm-mob-logo-img" />
+          <span className="adm-mob-title">Kora Admin</span>
+        </div>
+        <div className="adm-mob-profile">
+          <div className="adm-mob-avatar">{initials}</div>
+        </div>
+      </header>
+
+      {/* Mobile toggle button (legacy fallback, hidden via CSS in favor of the top toggle bar) */}
       <button className="adm-mob-toggle" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
         <Layers size={18}/>
       </button>

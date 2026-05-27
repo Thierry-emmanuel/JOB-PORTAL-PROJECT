@@ -841,15 +841,35 @@
 }
 
 @media (max-width: 900px) {
-  .he-body { grid-template-columns: 1fr; }
+  .he-body {
+    grid-template-columns: 1fr;
+    overflow-y: auto !important;
+    height: auto;
+  }
+  .he-form-col {
+    overflow-y: visible !important;
+    height: auto;
+    flex-shrink: 0;
+  }
   .he-preview-col {
     border-left: none;
     border-top: 1px solid var(--he-border);
     padding: 20px;
+    overflow-y: visible !important;
+    height: auto;
+    flex-shrink: 0;
   }
   .he-preview-sticky { position: static; }
   .he-stats-labels { grid-template-columns: 1fr 1fr; }
   .he-type-cards { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .he-topbar {
+    position: sticky;
+    top: 56px; /* Offset by the height of the .adm-mob-bar */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
 }
 
 @media (max-width: 600px) {
