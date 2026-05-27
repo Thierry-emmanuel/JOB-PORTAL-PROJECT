@@ -34,6 +34,9 @@ function useChart(ref, configFn, deps) {
     let chart;
     const build = () => {
       if (!window.Chart) return;
+      // Destroy any chart already bound to this canvas (handles async-load race condition)
+      const existing = window.Chart.getChart(ref.current);
+      if (existing) existing.destroy();
       if (chart) chart.destroy();
       chart = new window.Chart(ref.current, configFn());
     };
@@ -44,7 +47,14 @@ function useChart(ref, configFn, deps) {
       s.onload = build;
       document.head.appendChild(s);
     }
-    return () => { if (chart) chart.destroy(); };
+    return () => {
+      if (chart) { chart.destroy(); chart = null; }
+      // Safety net: if build() ran after unmount, clean up via canvas lookup
+      if (ref.current && window.Chart) {
+        const lingering = window.Chart.getChart(ref.current);
+        if (lingering) lingering.destroy();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }

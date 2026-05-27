@@ -67,6 +67,9 @@ function useChart(canvasRef, config, deps) {
     let chart;
     const init = () => {
       if (!window.Chart) return;
+      // Destroy any chart already bound to this canvas (handles async-load race condition)
+      const existing = window.Chart.getChart(canvasRef.current);
+      if (existing) existing.destroy();
       if (chart) chart.destroy();
       chart = new window.Chart(canvasRef.current, config());
     };
@@ -78,7 +81,15 @@ function useChart(canvasRef, config, deps) {
       script.onload = init;
       document.head.appendChild(script);
     }
-    return () => { if (chart) chart.destroy(); };
+    return () => {
+      if (chart) { chart.destroy(); chart = null; }
+      // Safety net: if init() ran after unmount, clean up via canvas lookup
+      if (canvasRef.current && window.Chart) {
+        const lingering = window.Chart.getChart(canvasRef.current);
+        if (lingering) lingering.destroy();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
