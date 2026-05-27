@@ -41,6 +41,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex.authenticationEntryPoint(apiAuthenticationEntryPoint()))
+
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(
                         "/api/auth/**", "/oauth2/**",
@@ -48,6 +49,7 @@ public class SecurityConfig {
                         "/api/v1/jobs/**", "/api/jobs/**",
                         "/api/ai/**", "/api/v1/insights/**",
                         "/api/v1/companies/**", "/api/v1/companies",
+                        "/api/public/hero",
                         "/ws/**"                          // WebSocket SockJS handshake
                     ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")

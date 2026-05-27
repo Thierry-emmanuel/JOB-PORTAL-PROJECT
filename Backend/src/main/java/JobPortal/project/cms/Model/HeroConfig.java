@@ -111,6 +111,22 @@ public class HeroConfig {
     @Builder.Default
     private String textColor = "light";
 
+    /* ── Motion / Animation ──────────────────────────────────────────── */
+    /** Apply subtle Ken Burns zoom to slideshow images */
+    @Column(name = "ken_burns_effect")
+    @Builder.Default
+    private Boolean kenBurnsEffect = true;
+
+    /** Pause slideshow auto-advance when user hovers over hero */
+    @Column(name = "autoplay_pause")
+    @Builder.Default
+    private Boolean autoplayPause = true;
+
+    /** Hero text entry animation: none | fadeUp | slideUp | fadeIn | zoomIn */
+    @Column(name = "text_animation", length = 20)
+    @Builder.Default
+    private String textAnimation = "fadeUp";
+
     /* ── Visibility ───────────────────────────────────────────────── */
     @Column(name = "is_active")
     @Builder.Default

@@ -13,7 +13,8 @@ import {
   Image, Layers, Type, AlignLeft, BarChart3, Palette, Sliders,
   ChevronDown, ChevronUp, AlertCircle, CheckCircle, Upload,
   ArrowLeft, ArrowRight, Monitor, Smartphone, RefreshCw,
-  ToggleLeft, ToggleRight, Link, Clock, Zap, Info,
+  ToggleLeft, ToggleRight, Link, Clock, Zap, Info, Wind,
+  Sparkles, Play, Pause, Camera,
 } from 'lucide-react';
 import { fetchAdminHero, saveHeroConfig, resetHeroConfig } from '../../api/hero';
 import '../../styles/hero-editor.css';
@@ -50,9 +51,17 @@ const INTERVAL_OPTIONS = [
   { value: 8000,  label: '8 s' },
 ];
 
+const TEXT_ANIMATION_OPTIONS = [
+  { value: 'none',    label: 'None',     desc: 'Text appears instantly' },
+  { value: 'fadeIn',  label: 'Fade In',  desc: 'Opacity fade from 0→1' },
+  { value: 'fadeUp',  label: 'Fade Up',  desc: 'Slides up while fading in' },
+  { value: 'slideUp', label: 'Slide Up', desc: 'Dramatic upward entrance' },
+  { value: 'zoomIn',  label: 'Zoom In',  desc: 'Scales up from center' },
+];
+
 /* ── Empty slide template ────────────────────────────────────── */
 const emptySlide = () => ({
-  url: '', alt: '', credit: '', position: 'center center',
+  url: '', alt: '', credit: '', position: 'center center', overlay: 0.0,
   _key: Math.random().toString(36).slice(2),
 });
 
@@ -144,12 +153,21 @@ function Textarea({ value, onChange, rows = 3, placeholder }) {
 /* ── Drag-sortable slide card ────────────────────────────────── */
 function SlideCard({ slide, index, total, onChange, onRemove, onMove }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [urlValid, setUrlValid] = useState(true);
   const upd = (key, val) => onChange({ ...slide, [key]: val });
 
   const POSITION_OPTIONS = [
     'center center', 'center top', 'center bottom',
     'left center', 'right center', 'left top', 'right top',
   ];
+
+  const handleUrlBlur = () => {
+    if (!slide.url) { setUrlValid(true); return; }
+    const img = new window.Image();
+    img.onload  = () => setUrlValid(true);
+    img.onerror = () => setUrlValid(false);
+    img.src = slide.url;
+  };
 
   return (
     <motion.div
@@ -176,13 +194,13 @@ function SlideCard({ slide, index, total, onChange, onRemove, onMove }) {
             className="he-icon-sm"
             onClick={() => onMove(index, -1)}
             disabled={index === 0}
-            title="Move up"
+            title="Move left"
           ><ArrowLeft size={12} /></button>
           <button
             className="he-icon-sm"
             onClick={() => onMove(index, 1)}
             disabled={index === total - 1}
-            title="Move down"
+            title="Move right"
           ><ArrowRight size={12} /></button>
           <button
             className="he-icon-sm"
@@ -211,9 +229,15 @@ function SlideCard({ slide, index, total, onChange, onRemove, onMove }) {
               <Field label="Image URL" hint="Unsplash, Cloudinary, or your CDN">
                 <Input
                   value={slide.url}
-                  onChange={v => upd('url', v)}
+                  onChange={v => { upd('url', v); setUrlValid(true); }}
+                  onBlur={handleUrlBlur}
                   placeholder="https://images.unsplash.com/…?w=1600&q=80"
                 />
+                {!urlValid && (
+                  <div className="he-url-warn">
+                    <AlertCircle size={12} /> Image could not be loaded — double-check the URL.
+                  </div>
+                )}
               </Field>
 
               <div className="he-field-row">
@@ -249,6 +273,22 @@ function SlideCard({ slide, index, total, onChange, onRemove, onMove }) {
                       {pos}
                     </label>
                   ))}
+                </div>
+              </Field>
+
+              <Field
+                label={`Per-slide overlay — ${Math.round((slide.overlay ?? 0) * 100)}%`}
+                hint="Adds extra darkening on top of the global overlay"
+              >
+                <input
+                  type="range"
+                  className="he-range"
+                  min={0} max={0.6} step={0.01}
+                  value={slide.overlay ?? 0}
+                  onChange={e => upd('overlay', parseFloat(e.target.value))}
+                />
+                <div className="he-range-labels">
+                  <span>None</span><span>+60% darker</span>
                 </div>
               </Field>
 
@@ -308,8 +348,12 @@ function MiniPreview({ config, viewMode }) {
   return (
     <div className={`he-preview-frame${viewMode === 'mobile' ? ' mobile' : ''}`}>
       <div className="he-preview-screen" style={bg}>
-        {/* overlay */}
+        {/* global overlay */}
         <div className="he-preview-overlay" style={{ opacity: config.overlayOpacity ?? 0.55 }} />
+        {/* per-slide overlay */}
+        {hasSlides && (slides[idx]?.overlay ?? 0) > 0 && (
+          <div className="he-preview-overlay" style={{ opacity: slides[idx].overlay }} />
+        )}
 
         <div className={`he-preview-content${isCenter ? ' center' : ''} ${dark ? 'dark' : 'light'}`}>
           {config.badgeText && (
@@ -360,6 +404,19 @@ function MiniPreview({ config, viewMode }) {
             />
           </div>
         )}
+
+        {/* Motion badges */}
+        <div className="he-preview-motion-tags">
+          {config.kenBurnsEffect && hasSlides && (
+            <span className="he-motion-tag"><Sparkles size={8} /> Ken Burns</span>
+          )}
+          {config.autoplayPause && (
+            <span className="he-motion-tag"><Pause size={8} /> Pause on hover</span>
+          )}
+          {config.textAnimation && config.textAnimation !== 'none' && (
+            <span className="he-motion-tag"><Wind size={8} /> {config.textAnimation}</span>
+          )}
+        </div>
       </div>
 
       {/* Browser chrome decoration */}
@@ -380,8 +437,33 @@ const normalise = (data) => {
     ...data,
     slides: (data.slides ?? []).map((s, i) => ({
       ...s,
+      overlay: s.overlay ?? 0,
       _key: s._key ?? `${i}-${Math.random().toString(36).slice(2)}`,
     })),
+  };
+};
+
+/* ── Build a clean PUT payload (only Request DTO fields) ──── */
+const buildPayload = (config) => {
+  const {
+    headline, subheadline, ctaPrimary, ctaPrimaryUrl,
+    ctaSecondary, ctaSecondaryUrl, badgeText,
+    backgroundType, gradientFrom, gradientTo, backgroundImageUrl,
+    slides: rawSlides, slideIntervalMs, slideTransition,
+    statsVisible, statsDynamic, statJobsLabel, statCompaniesLabel, statSeekersLabel,
+    layout, overlayOpacity, textColor, isActive,
+    kenBurnsEffect, autoplayPause, textAnimation,
+  } = config;
+
+  return {
+    headline, subheadline, ctaPrimary, ctaPrimaryUrl,
+    ctaSecondary, ctaSecondaryUrl, badgeText,
+    backgroundType, gradientFrom, gradientTo, backgroundImageUrl,
+    slides: (rawSlides ?? []).map(({ _key, ...s }) => s),
+    slideIntervalMs, slideTransition,
+    statsVisible, statsDynamic, statJobsLabel, statCompaniesLabel, statSeekersLabel,
+    layout, overlayOpacity, textColor, isActive,
+    kenBurnsEffect, autoplayPause, textAnimation,
   };
 };
 
@@ -434,19 +516,28 @@ export default function HeroEditor({ showToast }) {
     upd('slides', arr);
   };
 
-  /* ── Save ─────────────────────────────────────────────────── */
+  /* ── Save — uses explicit payload to avoid sending response-only fields ── */
   const save = async () => {
     setSaving(true);
     try {
-      const payload = { ...config };
-      // strip _key (frontend-only)
-      payload.slides = (payload.slides ?? []).map(({ _key, ...s }) => s);
+      const payload = buildPayload(config);
       const saved = await saveHeroConfig(payload);
       setConfig(normalise(saved));
       setDirty(false);
       showToast('Hero section saved and live!');
-    } catch {
-      showToast('Failed to save. Check your connection.', 'error');
+    } catch (err) {
+      const status = err?.response?.status;
+      const serverMsg = typeof err?.response?.data === 'object'
+        ? err?.response?.data?.message
+        : err?.response?.data;
+      const userMsg =
+        status === 403 ? 'Access denied — admin role required.' :
+        status === 401 ? 'Session expired — please log in again.' :
+        status === 400 ? `Validation error: ${serverMsg ?? 'check your inputs.'}` :
+        serverMsg && !serverMsg.includes('unexpected') ? serverMsg :
+        'Save failed. Check your connection and try again.';
+      showToast(userMsg, 'error');
+      console.error('[HeroEditor] save error:', err?.response?.status, err?.response?.data ?? err?.message);
     } finally {
       setSaving(false);
     }
@@ -461,8 +552,9 @@ export default function HeroEditor({ showToast }) {
       setConfig(normalise(data));
       setDirty(false);
       showToast('Hero reset to defaults.');
-    } catch {
-      showToast('Reset failed.', 'error');
+    } catch (err) {
+      console.error('[HeroEditor] reset error:', err);
+      showToast('Reset failed. Please try again.', 'error');
     } finally {
       setSaving(false);
     }
@@ -535,7 +627,7 @@ export default function HeroEditor({ showToast }) {
           <button className="he-btn primary" onClick={save} disabled={saving} ref={savedRef}>
             {saving
               ? <><RefreshCw size={14} className="he-spin-icon" /> Saving…</>
-              : <><Save size={14} /> Save & Publish</>}
+              : <><Save size={14} /> Save &amp; Publish</>}
           </button>
         </div>
       </div>
@@ -636,9 +728,9 @@ export default function HeroEditor({ showToast }) {
             <Field label="Background type">
               <div className="he-type-cards">
                 {[
-                  { value: 'gradient',  label: 'Gradient',  icon: <Palette size={18} />, desc: 'Colour gradient' },
-                  { value: 'image',     label: 'Single image', icon: <Image size={18} />,   desc: 'One static photo' },
-                  { value: 'slideshow', label: 'Slideshow',  icon: <Layers size={18} />,   desc: 'Auto-rotating slides' },
+                  { value: 'gradient',  label: 'Gradient',      icon: <Palette size={18} />, desc: 'Colour gradient' },
+                  { value: 'image',     label: 'Single image',  icon: <Camera  size={18} />, desc: 'One static photo' },
+                  { value: 'slideshow', label: 'Slideshow',     icon: <Layers  size={18} />, desc: 'Auto-rotating slides' },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -709,6 +801,16 @@ export default function HeroEditor({ showToast }) {
                       />
                     </div>
                   )}
+                  <Field label="Image focus point">
+                    <div className="he-radio-row">
+                      {['center center','center top','center bottom','left center','right center'].map(pos => (
+                        <label key={pos} className={`he-radio-chip${(config.backgroundPosition ?? 'center center') === pos ? ' active' : ''}`}>
+                          <input type="radio" checked={(config.backgroundPosition ?? 'center center') === pos} onChange={() => upd('backgroundPosition', pos)} />
+                          {pos}
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -790,7 +892,48 @@ export default function HeroEditor({ showToast }) {
             )}
           </Section>
 
-          {/* 4. Stats bar */}
+          {/* 4. Motion & Animations */}
+          <Section icon={<Wind size={15} />} title="Motion &amp; Animations" defaultOpen={false}>
+
+            <Field label="Text entry animation" hint="How the hero headline and sub-text animate in on page load">
+              <div className="he-anim-cards">
+                {TEXT_ANIMATION_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    className={`he-anim-card${config.textAnimation === opt.value ? ' active' : ''}`}
+                    onClick={() => upd('textAnimation', opt.value)}
+                    type="button"
+                  >
+                    <strong>{opt.label}</strong>
+                    <span>{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            <div className="he-motion-toggles">
+              <Toggle
+                value={config.kenBurnsEffect ?? true}
+                onChange={v => upd('kenBurnsEffect', v)}
+                label="Ken Burns effect — subtle zoom on slideshow images"
+              />
+              <Toggle
+                value={config.autoplayPause ?? true}
+                onChange={v => upd('autoplayPause', v)}
+                label="Pause slideshow when user hovers over hero"
+              />
+            </div>
+
+            {config.backgroundType !== 'slideshow' && (config.kenBurnsEffect) && (
+              <div className="he-dynamic-note">
+                <Info size={13} />
+                Ken Burns effect applies to <strong>Slideshow</strong> mode only.
+                Switch the background type to see it in action.
+              </div>
+            )}
+          </Section>
+
+          {/* 5. Stats bar */}
           <Section icon={<BarChart3 size={15} />} title="Stats Bar" defaultOpen>
             <Toggle
               value={config.statsVisible}
@@ -832,8 +975,8 @@ export default function HeroEditor({ showToast }) {
             )}
           </Section>
 
-          {/* 5. Layout & appearance */}
-          <Section icon={<Sliders size={15} />} title="Layout & Appearance" defaultOpen={false}>
+          {/* 6. Layout & appearance */}
+          <Section icon={<Sliders size={15} />} title="Layout &amp; Appearance" defaultOpen={false}>
 
             <Field label="Content layout">
               <div className="he-type-cards compact">

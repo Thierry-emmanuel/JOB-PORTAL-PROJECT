@@ -48,6 +48,11 @@ public class HeroConfigDTO {
         private Double  overlayOpacity;
         private String  textColor;        // light | dark
         private Boolean isActive;
+
+        /* ── Motion ────────────────────────────────────────────── */
+        private Boolean kenBurnsEffect;   // subtle zoom on slides
+        private Boolean autoplayPause;    // pause on hover
+        private String  textAnimation;    // none | fadeUp | slideUp | fadeIn | zoomIn
     }
 
     /* ── Response (backend → frontend) ─────────────────── */
@@ -86,6 +91,11 @@ public class HeroConfigDTO {
         private Double  overlayOpacity;
         private String  textColor;
         private Boolean isActive;
+
+        /* ── Motion ────────────────────────────────────────────── */
+        private Boolean kenBurnsEffect;
+        private Boolean autoplayPause;
+        private String  textAnimation;
 
         private LocalDateTime updatedAt;
         private String        updatedBy;

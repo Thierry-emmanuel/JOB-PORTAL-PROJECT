@@ -91,6 +91,9 @@ public class HeroConfigService {
         if (r.getOverlayOpacity()    != null) cfg.setOverlayOpacity(r.getOverlayOpacity());
         if (r.getTextColor()         != null) cfg.setTextColor(r.getTextColor());
         if (r.getIsActive()          != null) cfg.setIsActive(r.getIsActive());
+        if (r.getKenBurnsEffect()    != null) cfg.setKenBurnsEffect(r.getKenBurnsEffect());
+        if (r.getAutoplayPause()     != null) cfg.setAutoplayPause(r.getAutoplayPause());
+        if (r.getTextAnimation()     != null) cfg.setTextAnimation(r.getTextAnimation());
     }
 
     private HeroConfigDTO.Response toResponse(HeroConfig cfg) {
@@ -133,6 +136,9 @@ public class HeroConfigService {
                 .overlayOpacity(cfg.getOverlayOpacity())
                 .textColor(cfg.getTextColor())
                 .isActive(cfg.getIsActive())
+                .kenBurnsEffect(cfg.getKenBurnsEffect())
+                .autoplayPause(cfg.getAutoplayPause())
+                .textAnimation(cfg.getTextAnimation())
                 .updatedAt(cfg.getUpdatedAt())
                 .updatedBy(cfg.getUpdatedBy())
                 .build();
@@ -188,6 +194,9 @@ public class HeroConfigService {
                 .overlayOpacity(0.58)
                 .textColor("light")
                 .isActive(true)
+                .kenBurnsEffect(true)
+                .autoplayPause(true)
+                .textAnimation("fadeUp")
                 .build();
     }
 }
