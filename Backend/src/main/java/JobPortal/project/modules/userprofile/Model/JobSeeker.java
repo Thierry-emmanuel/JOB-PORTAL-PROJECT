@@ -41,6 +41,12 @@ public class JobSeeker extends User {
     @Column
     private Integer profileScore = 0;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String cvUrl;
+
+    @Column
+    private String cvFileName;
+
     @Column
     private Boolean isOpenToWork = true;
 

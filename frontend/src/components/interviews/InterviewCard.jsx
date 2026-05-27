@@ -1,20 +1,19 @@
 import React from 'react';
-import { Calendar, Clock, Video, Phone, MapPin, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import {
+  Calendar, Clock, Video, Phone, MapPin,
+  CheckCircle2, XCircle, AlertCircle, ExternalLink, Navigation
+} from 'lucide-react';
 
 /**
  * InterviewCard
  *
- * Renders a single interview. Accepts InterviewResponse objects as returned
- * by the backend (GET /api/v1/interviews/...).
- *
+ * Renders a single interview for both job seekers and employers.
  * Backend InterviewType enum: VIDEO | PHONE | IN_PERSON
  * Backend InterviewResult enum: PASSED | FAILED | NO_SHOW
  *
- * Fix: type check was comparing against stale 'VIRTUAL'/'IN_PERSON' values.
- *      Now uses the real enum: VIDEO / PHONE / IN_PERSON.
- *      Removed references to interview.jobTitle and interview.companyName
- *      which do not exist in InterviewResponse — the card now shows the
- *      job posting ID link and platform/meeting details that ARE present.
+ * - VIDEO   → shows Google Meet "Join" button with real/generated link
+ * - PHONE   → shows phone details card
+ * - IN_PERSON → shows physical location card with Google Maps directions link
  */
 export default function InterviewCard({ interview, onCancel, onRecordResult, isEmployer = false }) {
   const date = new Date(interview.scheduledAt);
@@ -25,21 +24,22 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
     hour: '2-digit', minute: '2-digit'
   });
 
+  const isPast = date < new Date();
+
   const getStatusStyle = () => {
-    if (interview.result === 'PASSED') return { bg: '#F0FDF4', text: '#166534', icon: <CheckCircle2 size={14} /> };
-    if (interview.result === 'FAILED') return { bg: '#FEF2F2', text: '#991B1B', icon: <XCircle size={14} /> };
-    if (interview.result === 'NO_SHOW') return { bg: '#FFF7ED', text: '#C2410C', icon: <AlertCircle size={14} /> };
-    if (interview.pending) return { bg: '#EFF6FF', text: '#1E40AF', icon: <Clock size={14} /> };
-    return { bg: '#F9FAFB', text: '#374151', icon: <AlertCircle size={14} /> };
+    if (interview.result === 'PASSED')  return { bg: '#F0FDF4', text: '#166534', border: '#86EFAC', icon: <CheckCircle2 size={13} /> };
+    if (interview.result === 'FAILED')  return { bg: '#FEF2F2', text: '#991B1B', border: '#FCA5A5', icon: <XCircle size={13} /> };
+    if (interview.result === 'NO_SHOW') return { bg: '#FFF7ED', text: '#C2410C', border: '#FED7AA', icon: <AlertCircle size={13} /> };
+    if (interview.pending || !isPast)   return { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', icon: <Clock size={13} /> };
+    return { bg: '#F9FAFB', text: '#374151', border: '#E5E7EB', icon: <AlertCircle size={13} /> };
   };
 
-  // Map InterviewType enum → icon + label
   const getTypeDisplay = () => {
     switch (interview.type) {
-      case 'VIDEO':     return { icon: <Video size={14} />,  label: 'Video Call' };
-      case 'PHONE':     return { icon: <Phone size={14} />,  label: 'Phone Call' };
-      case 'IN_PERSON': return { icon: <MapPin size={14} />, label: 'On-site'   };
-      default:          return { icon: <Video size={14} />,  label: interview.type || 'Interview' };
+      case 'VIDEO':     return { icon: <Video size={13} />,  label: 'Video Call',  color: '#1565c0' };
+      case 'PHONE':     return { icon: <Phone size={13} />,  label: 'Phone Call',  color: '#2e7d32' };
+      case 'IN_PERSON': return { icon: <MapPin size={13} />, label: 'On-site',     color: '#b45309' };
+      default:          return { icon: <Video size={13} />,  label: interview.type || 'Interview', color: '#6B7280' };
     }
   };
 
@@ -48,23 +48,28 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
 
   const statusLabel = interview.result
     ? interview.result
-    : interview.pending
-    ? 'UPCOMING'
-    : 'COMPLETED';
+    : (interview.pending || !isPast) ? 'UPCOMING' : 'COMPLETED';
+
+  // Build Google Maps directions URL from a physical address
+  const mapsUrl = interview.type === 'IN_PERSON' && interview.meetingLink
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(interview.meetingLink)}`
+    : null;
 
   return (
     <div className="kora-interview-card">
+      {/* ── Header ── */}
       <div className="kora-ic-header">
-        <div className="kora-ic-badge" style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}>
+        <div className="kora-ic-badge" style={{ backgroundColor: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
           {statusStyle.icon}
           <span>{statusLabel}</span>
         </div>
-        <div className="kora-ic-type">
+        <div className="kora-ic-type" style={{ color: typeDisplay.color }}>
           {typeDisplay.icon}
           <span>{typeDisplay.label}</span>
         </div>
       </div>
 
+      {/* ── Body ── */}
       <div className="kora-ic-body">
         <h3 className="kora-ic-job">
           {interview.jobPostingId ? `Job #${interview.jobPostingId}` : 'Interview Session'}
@@ -75,35 +80,77 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
 
         <div className="kora-ic-meta">
           <div className="kora-ic-meta-item">
-            <Calendar size={14} />
+            <Calendar size={13} />
             <span>{formattedDate}</span>
           </div>
           <div className="kora-ic-meta-item">
-            <Clock size={14} />
+            <Clock size={13} />
             <span>{formattedTime}</span>
           </div>
         </div>
 
-        {interview.meetingLink && (
+        {/* ── VIDEO: Google Meet join button ── */}
+        {interview.type === 'VIDEO' && interview.meetingLink && (
           <a
             href={interview.meetingLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="kora-ic-link"
+            className="kora-ic-action-link kora-ic-link-video"
           >
-            <Video size={14} />
-            Join via {interview.platform || 'Meeting Link'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+              <rect width="24" height="24" rx="4" fill="#1a73e8" />
+              <path d="M5 8h8a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" fill="white"/>
+              <path d="M14 10.5l4-2.5v8l-4-2.5v-3z" fill="white"/>
+            </svg>
+            Join Google Meet
+            <ExternalLink size={12} style={{ opacity: 0.7 }} />
           </a>
+        )}
+
+        {/* ── PHONE: call details ── */}
+        {interview.type === 'PHONE' && (
+          <div className="kora-ic-info-card kora-ic-info-phone">
+            <Phone size={14} style={{ color: '#2e7d32', flexShrink: 0 }} />
+            <div>
+              <div className="kora-ic-info-label">Phone Interview</div>
+              <div className="kora-ic-info-sub">
+                {interview.meetingLink || 'The employer will call you at your registered number.'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── IN_PERSON: physical location + Google Maps link ── */}
+        {interview.type === 'IN_PERSON' && interview.meetingLink && (
+          <div className="kora-ic-info-card kora-ic-info-location">
+            <MapPin size={14} style={{ color: '#b45309', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div className="kora-ic-info-label">Interview Location</div>
+              <div className="kora-ic-info-address">{interview.meetingLink}</div>
+              {mapsUrl && (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="kora-ic-maps-link"
+                >
+                  <Navigation size={11} />
+                  Get directions on Google Maps
+                </a>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
+      {/* ── Footer ── */}
       <div className="kora-ic-footer">
-        {isEmployer && interview.pending && onRecordResult && (
+        {isEmployer && (interview.pending || !isPast) && onRecordResult && (
           <button className="kora-ic-btn primary" onClick={() => onRecordResult(interview)}>
             Record Result
           </button>
         )}
-        {!interview.completed && onCancel && (
+        {!interview.result && !isPast && onCancel && (
           <button className="kora-ic-btn danger" onClick={() => onCancel(interview.id)}>
             Cancel
           </button>
@@ -112,21 +159,20 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
 
       <style>{`
         .kora-interview-card {
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(229, 231, 235, 0.5);
+          background: #fff;
+          border: 1.5px solid #E5E7EB;
           border-radius: 16px;
           padding: 20px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.25s ease;
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          gap: 14px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
         .kora-interview-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-          border-color: rgba(26, 92, 46, 0.2);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+          border-color: #d1d5db;
         }
         .kora-ic-header {
           display: flex;
@@ -136,64 +182,104 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
         .kora-ic-badge {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
+          gap: 5px;
+          padding: 3px 10px;
           border-radius: 20px;
-          font-size: 11px;
+          font-size: 10.5px;
           font-weight: 700;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.04em;
         }
         .kora-ic-type {
           display: flex;
           align-items: center;
           gap: 5px;
-          color: #6B7280;
           font-size: 11px;
-          font-weight: 500;
+          font-weight: 600;
         }
-        .kora-ic-body {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
+        .kora-ic-body { display: flex; flex-direction: column; gap: 8px; }
         .kora-ic-job {
-          font-size: 16px;
+          font-size: 15px;
           font-weight: 700;
           color: #111827;
           margin: 0;
         }
-        .kora-ic-company {
-          font-size: 13px;
-          color: #6B7280;
-          margin: 0 0 8px 0;
-        }
-        .kora-ic-meta {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 12px;
-        }
+        .kora-ic-company { font-size: 12px; color: #6B7280; margin: 0; }
+        .kora-ic-meta { display: flex; gap: 14px; }
         .kora-ic-meta-item {
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: 12px;
+          gap: 5px;
+          font-size: 11.5px;
           color: #4B5563;
         }
-        .kora-ic-link {
+
+        /* Action links */
+        .kora-ic-action-link {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: #1A5C2E;
-          color: white;
-          padding: 10px;
+          padding: 10px 14px;
           border-radius: 10px;
           text-decoration: none;
           font-size: 13px;
           font-weight: 600;
-          justify-content: center;
-          transition: background 0.2s;
+          transition: all 0.2s;
         }
-        .kora-ic-link:hover { background: #0D3D1F; }
+        .kora-ic-link-video {
+          background: #1a73e8;
+          color: #fff;
+          justify-content: center;
+        }
+        .kora-ic-link-video:hover { background: #1557b0; }
+
+        /* Info cards for PHONE and IN_PERSON */
+        .kora-ic-info-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 11px 14px;
+          border-radius: 10px;
+          border: 1.5px solid;
+        }
+        .kora-ic-info-phone {
+          background: #f0fdf4;
+          border-color: #86efac;
+        }
+        .kora-ic-info-location {
+          background: #fffbeb;
+          border-color: #fcd34d;
+        }
+        .kora-ic-info-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: #374151;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          margin-bottom: 3px;
+        }
+        .kora-ic-info-sub {
+          font-size: 12.5px;
+          color: #4B5563;
+          line-height: 1.5;
+        }
+        .kora-ic-info-address {
+          font-size: 12.5px;
+          color: #78350f;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+        .kora-ic-maps-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          color: #1a73e8;
+          font-size: 11.5px;
+          font-weight: 600;
+          text-decoration: none;
+          margin-top: 6px;
+        }
+        .kora-ic-maps-link:hover { text-decoration: underline; }
+
         .kora-ic-footer {
           display: flex;
           gap: 8px;
@@ -201,8 +287,8 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
         }
         .kora-ic-btn {
           flex: 1;
-          padding: 8px;
-          border-radius: 8px;
+          padding: 9px;
+          border-radius: 9px;
           font-size: 12px;
           font-weight: 600;
           cursor: pointer;
@@ -211,7 +297,7 @@ export default function InterviewCard({ interview, onCancel, onRecordResult, isE
         }
         .kora-ic-btn.primary { background: #F97316; color: white; }
         .kora-ic-btn.primary:hover { background: #EA580C; }
-        .kora-ic-btn.danger { background: #FEF2F2; color: #991B1B; }
+        .kora-ic-btn.danger { background: #FEF2F2; color: #991B1B; border: 1px solid #fca5a5; }
         .kora-ic-btn.danger:hover { background: #FEE2E2; }
       `}</style>
     </div>

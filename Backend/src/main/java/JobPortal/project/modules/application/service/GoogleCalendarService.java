@@ -6,6 +6,9 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.ConferenceData;
+import com.google.api.services.calendar.model.ConferenceSolutionKey;
+import com.google.api.services.calendar.model.CreateConferenceRequest;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -27,6 +30,7 @@ import java.security.GeneralSecurityException;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +54,14 @@ public class GoogleCalendarService {
 
     /**
      * Creates a Google Calendar event for the given interview.
+     * For VIDEO interviews the event will include a ConferenceData request so
+     * Google automatically provisions a real Google Meet room and returns its URL.
      *
-     * @return the Calendar event ID, or {@code null} if the user is not authenticated via OAuth2.
+     * Side-effect: if the event comes back with a Meet URI, that URI is written
+     * directly onto {@code interview.meetingLink} so the caller can persist it.
+     *
+     * @return the Calendar event ID, or {@code null} if the user is not
+     *         authenticated via OAuth2 or an error occurs.
      */
     public String createInterviewEvent(Interview interview) {
         Calendar service = getCalendarService();
@@ -66,9 +76,37 @@ public class GoogleCalendarService {
                     .orElse(null);
 
             Event event = buildEvent(interview, seekerEmail);
-            event = service.events().insert("primary", event).execute();
-            log.info("Google Calendar event created: id={}, link={}", event.getId(), event.getHtmlLink());
-            return event.getId();
+
+            // Request a real Google Meet conference for VIDEO interviews.
+            boolean isVideo = interview.getType() != null &&
+                    interview.getType().name().equals("VIDEO");
+            Calendar.Events.Insert insertRequest = service.events().insert("primary", event);
+            if (isVideo) {
+                // conferenceDataVersion=1 tells the API to honour the ConferenceData block.
+                insertRequest.setConferenceDataVersion(1);
+            }
+
+            Event created = insertRequest.execute();
+            log.info("Google Calendar event created: id={}, link={}", created.getId(), created.getHtmlLink());
+
+            // Extract the Google Meet URL from the conference entry points
+            // and store it on the interview so candidates can join directly.
+            if (isVideo && created.getConferenceData() != null
+                    && created.getConferenceData().getEntryPoints() != null) {
+                created.getConferenceData().getEntryPoints().stream()
+                        .filter(ep -> "video".equals(ep.getEntryPointType()))
+                        .map(ep -> ep.getUri())
+                        .filter(uri -> uri != null && !uri.isBlank())
+                        .findFirst()
+                        .ifPresent(meetUri -> {
+                            interview.setMeetingLink(meetUri);
+                            interview.setPlatform("Google Meet");
+                            log.info("Real Google Meet link assigned to interview {}: {}",
+                                    interview.getId(), meetUri);
+                        });
+            }
+
+            return created.getId();
         } catch (IOException e) {
             log.error("Failed to create Google Calendar event for interview {}", interview.getId(), e);
             return null;
@@ -96,12 +134,44 @@ public class GoogleCalendarService {
         var start = new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(Date.from(startInstant)));
         var end   = new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(Date.from(endInstant)));
 
+        boolean isVideo = interview.getType() != null &&
+                interview.getType().name().equals("VIDEO");
+        boolean isInPerson = interview.getType() != null &&
+                interview.getType().name().equals("IN_PERSON");
+
+        String locationStr;
+        if (isInPerson && interview.getMeetingLink() != null) {
+            locationStr = interview.getMeetingLink(); // physical address stored in meetingLink
+        } else if (!isInPerson && interview.getMeetingLink() != null) {
+            locationStr = interview.getMeetingLink();
+        } else {
+            locationStr = "Kora Platform";
+        }
+
+        String description = "Interview via Kora Job Portal.";
+        if (interview.getPlatform() != null) {
+            description += " Platform: " + interview.getPlatform();
+        }
+        if (isInPerson && interview.getMeetingLink() != null) {
+            description += "\nLocation: " + interview.getMeetingLink();
+        }
+
         Event event = new Event()
                 .setSummary("Kora Interview: Job Opportunity")
-                .setLocation(interview.getMeetingLink() != null ? interview.getMeetingLink() : "Kora Platform")
-                .setDescription("Interview via Kora Job Portal. Platform: " + interview.getPlatform())
+                .setLocation(locationStr)
+                .setDescription(description)
                 .setStart(start)
                 .setEnd(end);
+
+        // Attach a ConferenceData request for VIDEO interviews so Google
+        // provisions a real Google Meet room on event creation.
+        if (isVideo) {
+            ConferenceSolutionKey key = new ConferenceSolutionKey().setType("hangoutsMeet");
+            CreateConferenceRequest confReq = new CreateConferenceRequest()
+                    .setRequestId(UUID.randomUUID().toString())
+                    .setConferenceSolutionKey(key);
+            event.setConferenceData(new ConferenceData().setCreateRequest(confReq));
+        }
 
         if (seekerEmail != null) {
             event.setAttendees(Collections.singletonList(new EventAttendee().setEmail(seekerEmail)));

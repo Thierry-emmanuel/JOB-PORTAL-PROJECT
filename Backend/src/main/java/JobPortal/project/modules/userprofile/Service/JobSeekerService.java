@@ -67,6 +67,8 @@ public class JobSeekerService {
         existing.setLinkedInUrl(updatedData.getLinkedInUrl());
         existing.setPortfolioUrl(updatedData.getPortfolioUrl());
         existing.setIsOpenToWork(updatedData.getIsOpenToWork());
+        existing.setCvUrl(updatedData.getCvUrl());
+        existing.setCvFileName(updatedData.getCvFileName());
 
         // Recompute score after update
         existing.computeProfileScore();

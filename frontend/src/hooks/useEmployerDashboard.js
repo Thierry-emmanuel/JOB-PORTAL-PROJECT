@@ -106,11 +106,12 @@ export function useEmployerDashboard() {
       const appPromises = rawApps.map(async (app) => {
         let applicantName = `Job Seeker #${app.seekerId}`;
         let avatar = null;
+        let seekerFull = null;
         try {
-          const seekerProfile = await getJobSeekerProfile(app.seekerId);
-          if (seekerProfile) {
-            applicantName = seekerProfile.fullName || seekerProfile.email?.split('@')[0] || applicantName;
-            avatar = seekerProfile.avatarUrl || null;
+          seekerFull = await getJobSeekerProfile(app.seekerId);
+          if (seekerFull) {
+            applicantName = seekerFull.fullName || seekerFull.email?.split('@')[0] || applicantName;
+            avatar = seekerFull.avatarUrl || null;
           }
         } catch (e) {
           console.warn(`Failed to fetch seeker profile for seekerId ${app.seekerId}:`, e);
@@ -136,6 +137,15 @@ export function useEmployerDashboard() {
           avatar:         avatar,
           expectedSalary: app.expectedSalary,
           coverLetter:    app.coverLetter,
+          // Enriched candidate profile fields for the employer review drawer
+          phone:          seekerFull?.phone || null,
+          email:          seekerFull?.email || null,
+          city:           seekerFull?.city || null,
+          profileSummary: seekerFull?.profileSummary || null,
+          cvUrl:          seekerFull?.cvUrl || null,
+          cvFileName:     seekerFull?.cvFileName || null,
+          skills:         seekerFull?.skills || [],
+          experiences:    seekerFull?.experiences || [],
         };
       });
 

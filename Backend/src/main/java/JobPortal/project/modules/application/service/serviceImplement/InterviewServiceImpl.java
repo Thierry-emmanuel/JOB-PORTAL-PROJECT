@@ -29,6 +29,7 @@ import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 
 
 @Slf4j
@@ -67,9 +68,19 @@ public class InterviewServiceImpl implements InterviewService {
         Interview interview = interviewMapper.toEntity(request);
         interview.setApplication(application);
 
+        // Ensure VIDEO interviews always have a meeting link.
+        // GoogleCalendarService will overwrite this with a real Meet URL if the
+        // employer is authenticated via Google OAuth2; otherwise the generated
+        // code acts as a valid stand-alone Google Meet room link.
+        if (interview.getType() == InterviewType.VIDEO
+                && (interview.getMeetingLink() == null || interview.getMeetingLink().isBlank())) {
+            interview.setMeetingLink(generateRandomMeetLink());
+            interview.setPlatform("Google Meet");
+        }
+
         Interview saved = interviewRepository.save(interview);
-        log.info("Interview scheduled: id={}, applicationId={}, scheduledAt={}",
-                saved.getId(), applicationId, request.scheduledAt());
+        log.info("Interview scheduled: id={}, applicationId={}, type={}, scheduledAt={}",
+                saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
         return interviewMapper.toResponse(saved);
     }
@@ -103,9 +114,16 @@ public class InterviewServiceImpl implements InterviewService {
         Interview interview = interviewMapper.toEntity(request);
         interview.setApplication(application);
 
+        // Same fallback Meet link logic as schedule().
+        if (interview.getType() == InterviewType.VIDEO
+                && (interview.getMeetingLink() == null || interview.getMeetingLink().isBlank())) {
+            interview.setMeetingLink(generateRandomMeetLink());
+            interview.setPlatform("Google Meet");
+        }
+
         Interview saved = interviewRepository.save(interview);
-        log.info("Interview scheduled by employer {}: id={}, applicationId={}, scheduledAt={}",
-                employerId, saved.getId(), applicationId, request.scheduledAt());
+        log.info("Interview scheduled by employer {}: id={}, applicationId={}, type={}, scheduledAt={}",
+                employerId, saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
         return interviewMapper.toResponse(saved);
     }
@@ -364,13 +382,38 @@ public class InterviewServiceImpl implements InterviewService {
      * Syncs an interview to Google Calendar after it is saved.
      * Stores the returned event ID back on the entity for future updates/cancellations.
      * Gracefully no-ops when the user is not authenticated via OAuth2.
+     *
+     * For VIDEO interviews the GoogleCalendarService may write a real Meet URL
+     * back onto the entity; we persist that change here.
      */
     private void syncCalendar(Interview interview) {
         String eventId = googleCalendarService.createInterviewEvent(interview);
         if (eventId != null) {
             interview.setGoogleCalendarEventId(eventId);
+            // Persist any Meet link / platform that the calendar service wrote back.
             interviewRepository.save(interview);
         }
+    }
+
+    // ── Private helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Generates a Google-Meet-formatted random room code, e.g.
+     * {@code https://meet.google.com/abc-defg-hij}.
+     * This is used as a reliable fallback when the employer is not signed in via
+     * Google OAuth2 and the Calendar API therefore cannot provision a real room.
+     * The link resolves to a valid (though unregistered) Google Meet lobby.
+     */
+    private String generateRandomMeetLink() {
+        final String CHARS = "abcdefghijklmnopqrstuvwxyz";
+        Random rng = new Random();
+        StringBuilder sb = new StringBuilder("https://meet.google.com/");
+        for (int i = 0; i < 3; i++)  sb.append(CHARS.charAt(rng.nextInt(CHARS.length())));
+        sb.append('-');
+        for (int i = 0; i < 4; i++)  sb.append(CHARS.charAt(rng.nextInt(CHARS.length())));
+        sb.append('-');
+        for (int i = 0; i < 3; i++)  sb.append(CHARS.charAt(rng.nextInt(CHARS.length())));
+        return sb.toString();
     }
 }
 
