@@ -8,7 +8,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto !important;
 }
 
 /* ── Root ──────────────────────────────────────────────────────── */
@@ -165,16 +167,44 @@
   flex-direction: column;
   gap: 12px;
   scrollbar-width: thin;
-  scrollbar-color: var(--he-border) transparent;
+  scrollbar-color: #cbd5e1 transparent;
 }
-.he-form-col::-webkit-scrollbar { width: 5px; }
-.he-form-col::-webkit-scrollbar-thumb { background: var(--he-border); border-radius: 99px; }
+.he-form-col::-webkit-scrollbar {
+  width: 6px;
+}
+.he-form-col::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 99px;
+}
+.he-form-col::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+  transition: background 0.15s;
+}
+.he-form-col::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 
 .he-preview-col {
   border-left: 1px solid var(--he-border);
   background: var(--he-bg);
   overflow-y: auto;
   padding: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.he-preview-col::-webkit-scrollbar {
+  width: 6px;
+}
+.he-preview-col::-webkit-scrollbar-track {
+  background: transparent;
+}
+.he-preview-col::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+.he-preview-col::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .he-preview-sticky {
@@ -841,14 +871,21 @@
 }
 
 @media (max-width: 900px) {
+  .adm-content.hero-tab {
+    overflow-y: auto !important;
+    height: 100% !important;
+  }
+  .he-root {
+    height: auto !important;
+  }
   .he-body {
     grid-template-columns: 1fr;
-    overflow-y: auto !important;
-    height: auto;
+    overflow: visible !important;
+    height: auto !important;
   }
   .he-form-col {
     overflow-y: visible !important;
-    height: auto;
+    height: auto !important;
     flex-shrink: 0;
   }
   .he-preview-col {
@@ -856,7 +893,7 @@
     border-top: 1px solid var(--he-border);
     padding: 20px;
     overflow-y: visible !important;
-    height: auto;
+    height: auto !important;
     flex-shrink: 0;
   }
   .he-preview-sticky { position: static; }
