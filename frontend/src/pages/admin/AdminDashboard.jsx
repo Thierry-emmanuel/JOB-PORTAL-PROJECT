@@ -22,6 +22,7 @@ import {
   broadcastNotification,
 } from '../../api/admin';
 import AdminSidebar from '../../components/admin/AdminSidebar';
+import HeroEditor from './HeroEditor';
 import '../../styles/admin-dashboard.css';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -334,7 +335,7 @@ export default function AdminDashboard() {
           {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
           {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
           {tab === 'interviews'   && <InterviewsTab />}
-          {tab === 'hero'         && <HeroTab showToast={showToast}/>}
+          {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
           {tab === 'cms'          && <CMSTab showToast={showToast}/>}
           {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
           {tab === 'compliance'   && <ComplianceTab />}
@@ -997,116 +998,7 @@ function InterviewsTab() {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 9 — Hero Section CMS
    ═══════════════════════════════════════════════════════════════════ */
-function HeroTab({ showToast }) {
-  const [hero, setHero] = useState({
-    headline: 'Find Your Dream Job in Cameroon',
-    subheadline: 'Connecting top talent with leading employers across Africa.',
-    ctaPrimary: 'Browse Jobs',
-    ctaSecondary: 'Post a Job',
-    backgroundType: 'gradient', // 'gradient' | 'image'
-    backgroundImage: '',
-    badgeText: '1,200+ jobs available',
-    statsVisible: true,
-  });
-  const [saved, setSaved] = useState(false);
 
-  const update = (key, val) => setHero(h=>({...h,[key]:val}));
-
-  const save = () => {
-    // In production: persist to backend / local config API
-    setSaved(true);
-    showToast('Hero section updated successfully.');
-    setTimeout(()=>setSaved(false), 2000);
-  };
-
-  return (
-    <div className="adm-hero-editor">
-      <div className="adm-two-col">
-        {/* Form */}
-        <div className="adm-form-panel">
-          <SCard title="Hero Content" icon={<Type size={15}/>}>
-            <div className="adm-form-grid">
-              <div className="adm-field">
-                <label>Main Headline</label>
-                <input className="adm-input" value={hero.headline} onChange={e=>update('headline',e.target.value)} placeholder="Headline text…"/>
-              </div>
-              <div className="adm-field">
-                <label>Sub-headline</label>
-                <textarea className="adm-textarea" value={hero.subheadline} onChange={e=>update('subheadline',e.target.value)} rows={2}/>
-              </div>
-              <div className="adm-field-row">
-                <div className="adm-field">
-                  <label>Primary CTA</label>
-                  <input className="adm-input" value={hero.ctaPrimary} onChange={e=>update('ctaPrimary',e.target.value)}/>
-                </div>
-                <div className="adm-field">
-                  <label>Secondary CTA</label>
-                  <input className="adm-input" value={hero.ctaSecondary} onChange={e=>update('ctaSecondary',e.target.value)}/>
-                </div>
-              </div>
-              <div className="adm-field">
-                <label>Badge Text</label>
-                <input className="adm-input" value={hero.badgeText} onChange={e=>update('badgeText',e.target.value)} placeholder="e.g. 1,200+ jobs available"/>
-              </div>
-              <div className="adm-field">
-                <label>Background Type</label>
-                <div className="adm-radio-group">
-                  {['gradient','image'].map(t=>(
-                    <label key={t} className={`adm-radio-option${hero.backgroundType===t?' active':''}`}>
-                      <input type="radio" name="bg" value={t} checked={hero.backgroundType===t} onChange={()=>update('backgroundType',t)}/>
-                      {t==='gradient'?<><Layers size={13}/> Gradient</>:<><Image size={13}/> Image URL</>}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              {hero.backgroundType==='image' && (
-                <div className="adm-field">
-                  <label>Background Image URL</label>
-                  <input className="adm-input" value={hero.backgroundImage} onChange={e=>update('backgroundImage',e.target.value)} placeholder="https://…"/>
-                </div>
-              )}
-              <div className="adm-field-toggle">
-                <span>Show stats bar</span>
-                <button className="adm-toggle" onClick={()=>update('statsVisible',!hero.statsVisible)}>
-                  {hero.statsVisible ? <ToggleRight size={28} color={C.purple}/> : <ToggleLeft size={28} color={C.slate}/>}
-                </button>
-              </div>
-            </div>
-            <button className="adm-btn primary" onClick={save} style={{marginTop:8}}>
-              <Save size={14}/> {saved?'Saved!':'Save Changes'}
-            </button>
-          </SCard>
-        </div>
-
-        {/* Preview */}
-        <div className="adm-form-panel">
-          <SCard title="Live Preview" icon={<Eye size={15}/>}>
-            <div className="adm-hero-preview" style={{
-              background: hero.backgroundType==='image' && hero.backgroundImage
-                ? `url(${hero.backgroundImage}) center/cover`
-                : 'linear-gradient(135deg, #1a1438 0%, #2d1b6e 50%, #1e3a5f 100%)',
-            }}>
-              <div className="adm-hero-preview-badge">{hero.badgeText}</div>
-              <h2>{hero.headline}</h2>
-              <p>{hero.subheadline}</p>
-              <div className="adm-hero-preview-ctas">
-                <span className="adm-hero-cta-primary">{hero.ctaPrimary}</span>
-                <span className="adm-hero-cta-secondary">{hero.ctaSecondary}</span>
-              </div>
-              {hero.statsVisible && (
-                <div className="adm-hero-preview-stats">
-                  <span>1,200+ Jobs</span>
-                  <span>500+ Companies</span>
-                  <span>10,000+ Seekers</span>
-                </div>
-              )}
-            </div>
-          </SCard>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    TAB 10 — CMS (FAQs, Categories, Skills)
