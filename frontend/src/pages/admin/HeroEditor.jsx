@@ -373,6 +373,18 @@ function MiniPreview({ config, viewMode }) {
   );
 }
 
+/* ── Normalise API response ───────────────────────────────── */
+const normalise = (data) => {
+  if (!data) return null;
+  return {
+    ...data,
+    slides: (data.slides ?? []).map((s, i) => ({
+      ...s,
+      _key: s._key ?? `${i}-${Math.random().toString(36).slice(2)}`,
+    })),
+  };
+};
+
 /* ══════════════════════════════════════════════════════════════════
    MAIN EDITOR
    ══════════════════════════════════════════════════════════════════ */
@@ -391,16 +403,7 @@ export default function HeroEditor({ showToast }) {
       .then(data => { setConfig(normalise(data)); })
       .catch(() => showToast('Could not load hero config.', 'error'))
       .finally(() => setLoading(false));
-  }, []);
-
-  /* ── Normalise API response ───────────────────────────────── */
-  const normalise = (data) => ({
-    ...data,
-    slides: (data.slides ?? []).map((s, i) => ({
-      ...s,
-      _key: s._key ?? `${i}-${Math.random().toString(36).slice(2)}`,
-    })),
-  });
+  }, [showToast]);
 
   /* ── Generic field updater ────────────────────────────────── */
   const upd = useCallback((key, val) => {
