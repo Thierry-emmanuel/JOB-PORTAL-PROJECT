@@ -326,7 +326,7 @@ export default function AdminDashboard() {
           badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
         />
 
-        <div className="adm-content">
+        <div className={`adm-content ${tab === 'hero' ? 'hero-tab' : ''}`}>
           {tab === 'overview'     && <OverviewTab />}
           {tab === 'reports'      && <ReportsTab />}
           {tab === 'employers'    && <EmployerTab showToast={showToast}/>}

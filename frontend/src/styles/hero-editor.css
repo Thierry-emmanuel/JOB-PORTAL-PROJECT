@@ -2,6 +2,15 @@
    hero-editor.css  — Admin Hero Section Editor
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Dashboard container layout override specifically for Hero Editor */
+.adm-content.hero-tab {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 /* ── Root ──────────────────────────────────────────────────────── */
 .he-root {
   display: flex;
