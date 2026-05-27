@@ -128,7 +128,7 @@ export default function JobDetails() {
               ]
                 .filter(Boolean)
                 .map((f) => (
-                  <span key={f.val} className="jc-detail-item">
+                  <span key={f.val} className="ujc-detail-item">
                     <span aria-hidden="true">{f.icon}</span> {f.val}
                   </span>
                 ))}

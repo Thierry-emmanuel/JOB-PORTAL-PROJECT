@@ -17,14 +17,16 @@ import { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
-  Briefcase, Bookmark, CalendarCheck, Star, TrendingUp,
-  ArrowRight, MapPin, Zap, FileText, AlertCircle,
-  RefreshCw, CheckCircle2, XCircle, Eye, Clock,
+  Briefcase, Bookmark, CalendarCheck, Star,
+  ArrowRight, Zap, FileText, AlertCircle,
+  RefreshCw, CheckCircle2, XCircle, Clock,
 } from 'lucide-react';
 import EmployeeLayout from '../../layouts/EmployeeLayout';
 import InterviewCard from '../../components/interviews/InterviewCard';
+import JobCard from '../../components/jobs/JobCard';
 import useEmployeeDashboard from '../../hooks/useEmployeeDashboard';
 import '../../styles/dashboard-shell.css';
+import '../../styles/job-list.css';
 
 /* ─────────────────────────────────────────────────────────
    Helpers
@@ -156,32 +158,7 @@ Section.propTypes = {
   children:   PropTypes.node.isRequired,
 };
 
-/* Mini job card */
-const MiniJobCard = memo(({ job }) => (
-  <Link to={`/jobs/${job.id}`} className="ds-mini-job-card" aria-label={`${job.title} at ${job.company}`}>
-    <div className="ds-mini-job-header">
-      <div className="ds-mini-job-logo" aria-hidden="true">
-        {job.logo
-          ? <img src={job.logo} alt="" loading="lazy" />
-          : <span>{job.company?.charAt(0)?.toUpperCase()}</span>}
-      </div>
-      {job.type && <span className="ds-job-type">{job.type}</span>}
-    </div>
-    <h3 className="ds-job-title">{job.title}</h3>
-    <p className="ds-app-job">{job.company}</p>
-    <div className="ds-job-meta">
-      {job.location && <span><MapPin size={11} /> {job.location}</span>}
-      {job.salary   && <span><span aria-hidden="true">💰</span> {job.salary}</span>}
-    </div>
-    <div className="ds-mini-job-footer">
-      <div className="ds-mini-job-tags">
-        {job.tags?.slice(0, 2).map(t => <span key={t} className="ds-job-type">{t}</span>)}
-      </div>
-      <span className="ds-mini-job-cta">Apply <ArrowRight size={11} /></span>
-    </div>
-  </Link>
-));
-MiniJobCard.propTypes = { job: PropTypes.object.isRequired };
+/* Mini job card — now delegated to the unified JobCard (compact variant) */
 
 /* Profile completion nudge items */
 const NUDGE_ITEMS = [
@@ -433,7 +410,9 @@ export default function EmployeeDashboard() {
             />
           : (
             <div className="ds-mini-jobs-grid">
-              {recJobs.slice(0, 3).map(job => <MiniJobCard key={job.id} job={job} />)}
+              {recJobs.slice(0, 3).map(job => (
+                <JobCard key={job.id} job={job} variant="compact" />
+              ))}
             </div>
           )
         }
