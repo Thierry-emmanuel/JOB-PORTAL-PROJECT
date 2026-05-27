@@ -18,6 +18,7 @@ const NAV_SECTIONS = [
   {
     label: 'Users',
     items: [
+      { key: 'users',         label: 'All Users',        icon: Users           },
       { key: 'employers',     label: 'Employers',        icon: Building2       },
       { key: 'seekers',       label: 'Job Seekers',      icon: Users           },
       { key: 'verification',  label: 'Verification',     icon: ShieldCheck     },

@@ -17,6 +17,25 @@ export const toggleUserStatus = async (id) => {
   return data;
 };
 
+export const fetchUserById = async (id) => {
+  const { data } = await apiClient.get(`/api/admin/users/${id}`);
+  return data;
+};
+
+export const createAdminUser = async (dto) => {
+  const { data } = await apiClient.post('/api/admin/users', dto);
+  return data;
+};
+
+export const updateAdminUser = async (id, dto) => {
+  const { data } = await apiClient.put(`/api/admin/users/${id}`, dto);
+  return data;
+};
+
+export const hardDeleteUser = async (id) => {
+  await apiClient.delete(`/api/admin/users/${id}`);
+};
+
 // ─── Employers ───────────────────────────────────────────────────────────────
 export const fetchEmployers = async (filter = 'all') => {
   const endpoint =

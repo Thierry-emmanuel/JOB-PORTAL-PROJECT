@@ -4,6 +4,9 @@ import JobPortal.project.admin.DTO.CategoryDTO;
 import JobPortal.project.admin.DTO.DashboardStatsDTO;
 import JobPortal.project.admin.DTO.FAQDTO;
 import JobPortal.project.admin.DTO.UserManagementDTO;
+import JobPortal.project.admin.DTO.UserCreationDTO;
+import JobPortal.project.admin.DTO.UserUpdateDTO;
+import JobPortal.project.modules.auth.Model.User;
 import JobPortal.project.admin.Service.AdminService;
 import JobPortal.project.cms.Model.FAQ;
 import JobPortal.project.cms.Service.FAQService;
@@ -50,8 +53,26 @@ public class AdminController {
         return ResponseEntity.ok(adminService.toggleUserStatus(id));
     }
 
+    @GetMapping("/users/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getUserById(id));
+    }
 
+    @PostMapping("/users")
+    public ResponseEntity<User> createUser(@RequestBody UserCreationDTO dto) {
+        return ResponseEntity.ok(adminService.createUser(dto));
+    }
 
+    @PutMapping("/users/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserUpdateDTO dto) {
+        return ResponseEntity.ok(adminService.updateUser(id, dto));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        adminService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
     // ==========================================
     // 3. MASTER DATA: CATEGORIES
     // ==========================================

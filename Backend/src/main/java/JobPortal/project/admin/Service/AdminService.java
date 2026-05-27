@@ -2,16 +2,26 @@ package JobPortal.project.admin.Service;
 
 import JobPortal.project.admin.DTO.DashboardStatsDTO;
 import JobPortal.project.admin.DTO.UserManagementDTO;
+import JobPortal.project.admin.DTO.UserCreationDTO;
+import JobPortal.project.admin.DTO.UserUpdateDTO;
 import JobPortal.project.enums.Role;
 import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.Model.RoleEntity;
 import JobPortal.project.modules.auth.repository.UserRepository;
+import JobPortal.project.modules.auth.repository.RoleRepository;
 import JobPortal.project.JobListing.repository.JobListingRepository;
 import JobPortal.project.modules.application.repository.ApplicationRepository;
+import JobPortal.project.modules.userprofile.Model.JobSeeker;
+import JobPortal.project.modules.userprofile.Model.Employer;
+import JobPortal.project.modules.userprofile.Model.Admin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service("adminDashboardService")
@@ -21,6 +31,8 @@ public class AdminService {
     private final UserRepository userRepository;
     private final JobListingRepository jobListingRepository;
     private final ApplicationRepository applicationRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
     public DashboardStatsDTO getDashboardStats() {
@@ -160,6 +172,127 @@ public class AdminService {
                 user.getIsActive(),
                 user.getCreatedAt()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Transactional
+    public User createUser(UserCreationDTO dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Error: Email is already in use!");
+        }
+
+        User user;
+        switch (dto.getRole()) {
+            case JOB_SEEKER:
+                JobSeeker seeker = new JobSeeker();
+                seeker.setPhone(dto.getPhone());
+                seeker.setCity(dto.getCity());
+                seeker.setRegion(dto.getRegion());
+                seeker.setProfileSummary(dto.getProfileSummary());
+                seeker.setLinkedInUrl(dto.getLinkedInUrl());
+                seeker.setPortfolioUrl(dto.getPortfolioUrl());
+                seeker.setIsOpenToWork(dto.getIsOpenToWork() != null ? dto.getIsOpenToWork() : true);
+                seeker.computeProfileScore();
+                user = seeker;
+                break;
+            case EMPLOYER:
+                Employer emp = new Employer();
+                emp.setPhone(dto.getPhone());
+                emp.setCity(dto.getCity());
+                emp.setRegion(dto.getRegion());
+                emp.setJobTitle(dto.getJobTitle());
+                emp.setBio(dto.getBio());
+                emp.setIsApproved(dto.getIsApproved() != null ? dto.getIsApproved() : false);
+                emp.computeProfileScore();
+                user = emp;
+                break;
+            case ADMIN:
+                Admin adm = new Admin();
+                adm.setPhone(dto.getPhone());
+                adm.setDepartment(dto.getDepartment());
+                adm.setAdminLevel(dto.getAdminLevel() != null ? dto.getAdminLevel() : "STANDARD");
+                user = adm;
+                break;
+            default:
+                throw new RuntimeException("Error: Invalid role!");
+        }
+
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(dto.getRole());
+        user.setIsActive(true);
+
+        String roleName = "ROLE_" + dto.getRole().name();
+        RoleEntity roleEntity = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException("Error: Role " + roleName + " not found."));
+        
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(roleEntity);
+        user.setRoles(roles);
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public User updateUser(Long id, UserUpdateDTO dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        if (dto.getIsActive() != null) {
+            user.setIsActive(dto.getIsActive());
+        }
+
+        if (user instanceof JobSeeker) {
+            JobSeeker seeker = (JobSeeker) user;
+            seeker.setPhone(dto.getPhone());
+            seeker.setCity(dto.getCity());
+            seeker.setRegion(dto.getRegion());
+            seeker.setProfileSummary(dto.getProfileSummary());
+            seeker.setLinkedInUrl(dto.getLinkedInUrl());
+            seeker.setPortfolioUrl(dto.getPortfolioUrl());
+            if (dto.getIsOpenToWork() != null) {
+                seeker.setIsOpenToWork(dto.getIsOpenToWork());
+            }
+            seeker.computeProfileScore();
+        } else if (user instanceof Employer) {
+            Employer emp = (Employer) user;
+            emp.setPhone(dto.getPhone());
+            emp.setCity(dto.getCity());
+            emp.setRegion(dto.getRegion());
+            emp.setJobTitle(dto.getJobTitle());
+            emp.setBio(dto.getBio());
+            if (dto.getIsApproved() != null) {
+                emp.setIsApproved(dto.getIsApproved());
+            }
+            emp.computeProfileScore();
+        } else if (user instanceof Admin) {
+            Admin adm = (Admin) user;
+            adm.setPhone(dto.getPhone());
+            adm.setDepartment(dto.getDepartment());
+            if (dto.getAdminLevel() != null) {
+                adm.setAdminLevel(dto.getAdminLevel());
+            }
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        userRepository.delete(user);
     }
 }
 

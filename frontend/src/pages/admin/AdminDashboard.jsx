@@ -17,6 +17,7 @@ import {
   fetchOverviewStats, fetchMarketInsights,
   fetchAllApplications, updateApplicationStatus,
   fetchAdminUsers, toggleUserStatus,
+  fetchUserById, createAdminUser, updateAdminUser, hardDeleteUser,
   fetchCategories, createCategory, deleteCategory,
   fetchSkills, createSkill, deleteSkill,
   fetchFAQs, createFAQ, updateFAQ, deleteFAQ,
@@ -290,6 +291,7 @@ function PageHead({ title, sub, badge, actions }) {
    ═══════════════════════════════════════════════════════════════════ */
 const TAB_META = {
   overview:     { title: 'Overview',          sub: 'Platform analytics at a glance' },
+  users:        { title: 'User Management',   sub: 'Manage job seekers, employers, and administrator accounts' },
   reports:      { title: 'Reports & Analytics',sub: 'Deep-dive platform performance metrics' },
   employers:    { title: 'Employer Management',sub: 'Approve, suspend and manage employer accounts' },
   seekers:      { title: 'Job Seekers',        sub: 'Manage candidate profiles and access' },
@@ -356,6 +358,7 @@ export default function AdminDashboard() {
 
         <div className={`adm-content ${tab === 'hero' ? 'hero-tab' : ''}`}>
           {tab === 'overview'     && <OverviewTab />}
+          {tab === 'users'        && <UsersTab showToast={showToast}/>}
           {tab === 'reports'      && <ReportsTab />}
           {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
           {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
@@ -373,6 +376,445 @@ export default function AdminDashboard() {
 
       {toast && <Toast message={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
     </div>
+  );
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 1b — User Management (All Users CRUD)
+   ═══════════════════════════════════════════════════════════════════ */
+function UsersTab({ showToast }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Overlays / Modals
+  const [detailUser, setDetailUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [deleteUserObj, setDeleteUserObj] = useState(null);
+
+  // Form state
+  const defaultForm = {
+    fullName: '', email: '', password: '', role: 'JOB_SEEKER', isActive: true,
+    phone: '', city: '', region: '',
+    profileSummary: '', portfolioUrl: '', linkedInUrl: '', isOpenToWork: true,
+    jobTitle: '', bio: '', isApproved: false,
+    department: '', adminLevel: 'STANDARD'
+  };
+  const [form, setForm] = useState(defaultForm);
+
+  const load = useCallback(() => {
+    setLoading(true); setError('');
+    fetchAdminUsers()
+      .then(setUsers)
+      .catch(() => setError('Failed to load user accounts.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleOpenDetail = async (user) => {
+    try {
+      const fullData = await fetchUserById(user.id);
+      setDetailUser(fullData);
+      setForm({
+        ...defaultForm,
+        ...fullData,
+        password: '' // Don't expose password
+      });
+      setIsEditing(false);
+    } catch (e) {
+      showToast('Failed to fetch detailed profile.', 'error');
+    }
+  };
+
+  const handleToggleStatus = async (user) => {
+    try {
+      await toggleUserStatus(user.id);
+      showToast(`User status toggled.`);
+      load();
+      if (detailUser && detailUser.id === user.id) {
+        setDetailUser(prev => ({ ...prev, isActive: !prev.isActive }));
+      }
+    } catch {
+      showToast('Failed to toggle status.', 'error');
+    }
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.fullName || !form.password) {
+      showToast('Name, email, and password are required.', 'error');
+      return;
+    }
+    try {
+      await createAdminUser(form);
+      showToast('User created successfully!');
+      setIsCreating(false);
+      setForm(defaultForm);
+      load();
+    } catch (err) {
+      showToast(err.response?.data || 'Failed to create user.', 'error');
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.fullName) {
+      showToast('Name and email are required.', 'error');
+      return;
+    }
+    try {
+      await updateAdminUser(detailUser.id, form);
+      showToast('User updated successfully!');
+      setIsEditing(false);
+      setDetailUser(null);
+      load();
+    } catch (err) {
+      showToast(err.response?.data || 'Failed to update user.', 'error');
+    }
+  };
+
+  const handleDelete = async () => {
+    const userToDelete = deleteUserObj;
+    setDeleteUserObj(null);
+    try {
+      await hardDeleteUser(userToDelete.id);
+      showToast('User deleted permanently.');
+      load();
+      if (detailUser && detailUser.id === userToDelete.id) {
+        setDetailUser(null);
+      }
+    } catch (err) {
+      showToast('Could not delete user. They may have active applications or job posts.', 'error');
+    }
+  };
+
+  const filtered = users.filter(u => {
+    const q = search.toLowerCase();
+    const matchesSearch = !q || (u.fullName ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q);
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && u.isActive) || 
+      (statusFilter === 'suspended' && !u.isActive);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const changeForm = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const renderFormFields = () => {
+    return (
+      <>
+        <div className="adm-field">
+          <label>Full Name *</label>
+          <input className="adm-input" value={form.fullName} onChange={e => changeForm('fullName', e.target.value)} required />
+        </div>
+        <div className="adm-field">
+          <label>Email Address *</label>
+          <input className="adm-input" type="email" value={form.email} onChange={e => changeForm('email', e.target.value)} required />
+        </div>
+        <div className="adm-field">
+          <label>{isCreating ? 'Password *' : 'Change Password (optional)'}</label>
+          <input className="adm-input" type="password" value={form.password} onChange={e => changeForm('password', e.target.value)} placeholder={isCreating ? "Password" : "Leave blank to keep current"} required={isCreating} />
+        </div>
+        
+        {isCreating && (
+          <div className="adm-field">
+            <label>Role</label>
+            <select className="adm-select" value={form.role} onChange={e => changeForm('role', e.target.value)}>
+              <option value="JOB_SEEKER">Job Seeker</option>
+              <option value="EMPLOYER">Employer</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+        )}
+
+        <div className="adm-field-row">
+          <div className="adm-field">
+            <label>Phone Number</label>
+            <input className="adm-input" value={form.phone || ''} onChange={e => changeForm('phone', e.target.value)} />
+          </div>
+          <div className="adm-field">
+            <label>City</label>
+            <input className="adm-input" value={form.city || ''} onChange={e => changeForm('city', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="adm-field">
+          <label>Region</label>
+          <input className="adm-input" value={form.region || ''} onChange={e => changeForm('region', e.target.value)} />
+        </div>
+
+        {/* Job Seeker fields */}
+        {form.role === 'JOB_SEEKER' && (
+          <>
+            <div className="adm-field">
+              <label>Profile Summary</label>
+              <textarea className="adm-input" value={form.profileSummary || ''} onChange={e => changeForm('profileSummary', e.target.value)} rows={3} />
+            </div>
+            <div className="adm-field">
+              <label>LinkedIn URL</label>
+              <input className="adm-input" value={form.linkedInUrl || ''} onChange={e => changeForm('linkedInUrl', e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>Portfolio URL</label>
+              <input className="adm-input" value={form.portfolioUrl || ''} onChange={e => changeForm('portfolioUrl', e.target.value)} />
+            </div>
+            <div className="adm-toggle-row" style={{ marginTop: '10px' }}>
+              <div>
+                <strong>Open To Work</strong>
+                <p>Is this job seeker actively open to work?</p>
+              </div>
+              <button type="button" className="adm-toggle" onClick={() => changeForm('isOpenToWork', !form.isOpenToWork)}>
+                {form.isOpenToWork ? <ToggleRight size={28} color={C.purple} /> : <ToggleLeft size={28} color={C.slate} />}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Employer fields */}
+        {form.role === 'EMPLOYER' && (
+          <>
+            <div className="adm-field">
+              <label>Job Title / Occupation</label>
+              <input className="adm-input" value={form.jobTitle || ''} onChange={e => changeForm('jobTitle', e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>Bio / Company Info</label>
+              <textarea className="adm-input" value={form.bio || ''} onChange={e => changeForm('bio', e.target.value)} rows={3} />
+            </div>
+            <div className="adm-toggle-row" style={{ marginTop: '10px' }}>
+              <div>
+                <strong>Approved Employer</strong>
+                <p>Is this employer profile approved?</p>
+              </div>
+              <button type="button" className="adm-toggle" onClick={() => changeForm('isApproved', !form.isApproved)}>
+                {form.isApproved ? <ToggleRight size={28} color={C.purple} /> : <ToggleLeft size={28} color={C.slate} />}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Admin fields */}
+        {form.role === 'ADMIN' && (
+          <>
+            <div className="adm-field">
+              <label>Department</label>
+              <input className="adm-input" value={form.department || ''} onChange={e => changeForm('department', e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>Admin Level</label>
+              <select className="adm-select" value={form.adminLevel} onChange={e => changeForm('adminLevel', e.target.value)}>
+                <option value="STANDARD">STANDARD</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              </select>
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const renderProfileDetails = () => {
+    if (!detailUser) return null;
+    const fields = [
+      ['Email', detailUser.email],
+      ['Phone', detailUser.phone],
+      ['City', detailUser.city],
+      ['Region', detailUser.region],
+      ['Status', detailUser.isActive ? 'ACTIVE' : 'SUSPENDED'],
+      ['Joined', fmtDate(detailUser.createdAt)],
+    ];
+    if (detailUser.role === 'JOB_SEEKER') {
+      fields.push(['Open To Work', detailUser.isOpenToWork ? 'Yes' : 'No']);
+      fields.push(['LinkedIn', detailUser.linkedInUrl]);
+      fields.push(['Portfolio', detailUser.portfolioUrl]);
+      fields.push(['Profile Score', `${detailUser.profileScore ?? 0}%`]);
+    } else if (detailUser.role === 'EMPLOYER') {
+      fields.push(['Job Title', detailUser.jobTitle]);
+      fields.push(['Approved', detailUser.isApproved ? 'Yes' : 'No']);
+      fields.push(['Profile Score', `${detailUser.profileScore ?? 0}%`]);
+    } else if (detailUser.role === 'ADMIN') {
+      fields.push(['Department', detailUser.department]);
+      fields.push(['Admin Level', detailUser.adminLevel]);
+      fields.push(['Actions Performed', detailUser.actionsPerformed]);
+    }
+    return (
+      <div className="adm-detail-section">
+        <div className="adm-detail-avatar-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <Avatar name={detailUser.fullName ?? '?'} size={52} color={detailUser.role === 'ADMIN' ? C.purple : detailUser.role === 'EMPLOYER' ? C.orange : C.blue} />
+          <div>
+            <strong style={{ fontSize: '18px' }}>{detailUser.fullName}</strong>
+            <div style={{ marginTop: '4px' }}>
+              <span className="adm-badge active">{detailUser.role}</span>
+            </div>
+          </div>
+        </div>
+        {fields.map(([k, v]) => (
+          <div key={k} className="adm-detail-row">
+            <span className="key">{k}</span>
+            <span className="val">{fmt(v)}</span>
+          </div>
+        ))}
+        {detailUser.role === 'JOB_SEEKER' && detailUser.profileSummary && (
+          <div className="adm-detail-row" style={{ display: 'block', marginTop: '12px' }}>
+            <span className="key" style={{ display: 'block', marginBottom: '4px' }}>Profile Summary</span>
+            <p className="val" style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5' }}>{detailUser.profileSummary}</p>
+          </div>
+        )}
+        {detailUser.role === 'EMPLOYER' && detailUser.bio && (
+          <div className="adm-detail-row" style={{ display: 'block', marginTop: '12px' }}>
+            <span className="key" style={{ display: 'block', marginBottom: '4px' }}>Bio</span>
+            <p className="val" style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5' }}>{detailUser.bio}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {error && <Err msg={error} />}
+      
+      <FilterBar
+        tabs={[
+          { key: 'all', label: 'All Roles' },
+          { key: 'JOB_SEEKER', label: 'Job Seekers' },
+          { key: 'EMPLOYER', label: 'Employers' },
+          { key: 'ADMIN', label: 'Admins' }
+        ]}
+        active={roleFilter}
+        onChange={setRoleFilter}
+        right={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <select
+              className="adm-select"
+              style={{ padding: '6px 12px', fontSize: '12px', height: '34px', minWidth: '120px' }}
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search users…" />
+            <button className="adm-btn primary" onClick={() => { setForm(defaultForm); setIsCreating(true); }} style={{ height: '34px' }}>
+              <Plus size={14} /> Add User
+            </button>
+          </div>
+        }
+      />
+
+      <SCard title={`User Accounts (${filtered.length})`} icon={<Users size={15} />}>
+        {loading ? <Spin /> : (
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead>
+                <tr>
+                  <th>User / Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={5}><Empty /></td></tr>
+                ) : (
+                  filtered.map(u => {
+                    const status = u.isActive ? 'ACTIVE' : 'SUSPENDED';
+                    const avatarColor = u.role === 'ADMIN' ? C.purple : u.role === 'EMPLOYER' ? C.orange : C.blue;
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <div className="adm-cell-person">
+                            <Avatar name={u.fullName ?? '?'} color={avatarColor} />
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span className="adm-td-strong">{fmt(u.fullName)}</span>
+                              <span style={{ fontSize: '11px', color: '#888' }}>{fmt(u.email)}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`adm-badge ${u.role === 'ADMIN' ? 'active' : u.role === 'EMPLOYER' ? 'pending' : 'draft'}`}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td><Badge status={status} /></td>
+                        <td className="adm-td-muted">{fmtDate(u.createdAt)}</td>
+                        <td>
+                          <div className="adm-actions">
+                            <button className="adm-icon-btn info" onClick={() => handleOpenDetail(u)} title="View & Edit Details"><Eye size={13} /></button>
+                            <button className={`adm-icon-btn ${u.isActive ? 'warn' : 'approve'}`} onClick={() => handleToggleStatus(u)} title={u.isActive ? 'Suspend' : 'Activate'}>
+                              {u.isActive ? <Ban size={13} /> : <Check size={13} />}
+                            </button>
+                            <button className="adm-icon-btn danger" onClick={() => setDeleteUserObj(u)} title="Permanently Delete"><Trash2 size={13} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SCard>
+
+      {/* View/Edit User SlideOver */}
+      {detailUser && (
+        <SlideOver title={isEditing ? "Edit User Account" : "User Account Profile"} onClose={() => { setDetailUser(null); setIsEditing(false); }}>
+          {isEditing ? (
+            <form onSubmit={handleUpdate} className="adm-form-grid" style={{ padding: '16px' }}>
+              {renderFormFields()}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+                <button type="submit" className="adm-btn primary" style={{ flex: 1 }}><Save size={14} /> Save Changes</button>
+                <button type="button" className="adm-btn ghost" onClick={() => setIsEditing(false)}>Cancel</button>
+              </div>
+            </form>
+          ) : (
+            <div style={{ padding: '16px' }}>
+              {renderProfileDetails()}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
+                <button className="adm-btn primary" style={{ flex: 1 }} onClick={() => setIsEditing(true)}><Edit2 size={14} /> Edit Profile</button>
+                <button className={`adm-btn ${detailUser.isActive ? 'danger' : 'approve'}`} style={{ flex: 1 }} onClick={() => handleToggleStatus(detailUser)}>
+                  {detailUser.isActive ? <Ban size={14} /> : <Check size={14} />} {detailUser.isActive ? 'Suspend' : 'Activate'}
+                </button>
+              </div>
+            </div>
+          )}
+        </SlideOver>
+      )}
+
+      {/* Create User SlideOver */}
+      {isCreating && (
+        <SlideOver title="Create New User Account" onClose={() => setIsCreating(false)}>
+          <form onSubmit={handleCreate} className="adm-form-grid" style={{ padding: '16px' }}>
+            {renderFormFields()}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
+              <button type="submit" className="adm-btn primary" style={{ flex: 1 }}><Plus size={14} /> Create User</button>
+              <button type="button" className="adm-btn ghost" onClick={() => setIsCreating(false)}>Cancel</button>
+            </div>
+          </form>
+        </SlideOver>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteUserObj && (
+        <Confirm
+          title="Permanently Delete User"
+          body={`Are you sure you want to permanently delete the user account for ${deleteUserObj.fullName} (${deleteUserObj.email})? This action CANNOT be undone.`}
+          danger={true}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteUserObj(null)}
+        />
+      )}
+    </>
   );
 }
 
