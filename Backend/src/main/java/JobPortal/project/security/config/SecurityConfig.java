@@ -39,18 +39,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // OAuth2 login requires a session for the state param; we keep JWT stateless for the API
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .exceptionHandling(ex -> ex.authenticationEntryPoint(apiAuthenticationEntryPoint()))
 
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(
-                        "/api/auth/**", "/oauth2/**",
+                        "/api/auth/**",
+                        "/oauth2/**",               // initiate OAuth2 login
+                        "/login/oauth2/**",         // Spring OAuth2 callback
                         "/swagger-ui/**", "/v3/api-docs/**",
                         "/api/v1/jobs/**", "/api/jobs/**",
                         "/api/ai/**", "/api/v1/insights/**",
                         "/api/v1/companies/**", "/api/v1/companies",
                         "/api/public/hero",
-                        "/ws/**"                          // WebSocket SockJS handshake
+                        "/ws/**"
                     ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
