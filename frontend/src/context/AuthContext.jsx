@@ -18,11 +18,9 @@ export const AuthProvider = ({ children }) => {
     }
   });
   const [token, setToken] = useState(localStorage.getItem('token') || null);
-  // ✅ FIX 1: loading starts false — there is no async init to wait for.
-  // Previously it was never set to false, blocking the entire app forever
-  // after a hard refresh when the user was already logged in.
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Set auth header when token changes
   useEffect(() => {
     if (token) {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -31,14 +29,35 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // Restore session on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        try {
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          const res = await apiClient.get('/api/auth/me');
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        } catch (err) {
+          console.error('Session restoration failed:', err);
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          delete apiClient.defaults.headers.common['Authorization'];
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
   const login = async (credentials) => {
     setLoading(true);
     try {
       const data = await loginUser(credentials);
-
-      // ✅ FIX 2: The backend returns { token, email, role, id, fullName }.
-      // AuthResponse.role comes back as "ROLE_ADMIN" (from RoleEntity.getName()).
-      // We store the full object so Login.jsx and ProtectedRoute can read data.role.
       const extractedToken = data.token;
 
       if (!extractedToken) {
@@ -51,6 +70,24 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(data));
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${extractedToken}`;
       return data;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithToken = async (newToken) => {
+    setLoading(true);
+    try {
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      const res = await apiClient.get('/api/auth/me');
+      setUser(res.data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      return res.data;
+    } catch (err) {
+      logout();
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -75,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    loginWithToken,
     isAuthenticated: !!token,
   };
 

@@ -95,6 +95,18 @@ public class AuthService {
 
         return new AuthResponse(jwt, userDetails.getUsername(), role, user.getId(), user.getFullName());
     }
+
+    public AuthResponse getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Error: User not found."));
+
+        String role = "ROLE_" + user.getRole().name();
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            role = user.getRoles().iterator().next().getName();
+        }
+
+        return new AuthResponse(null, user.getEmail(), role, user.getId(), user.getFullName());
+    }
 }
 
 

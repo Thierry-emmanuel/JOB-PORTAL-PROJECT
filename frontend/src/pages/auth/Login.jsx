@@ -130,7 +130,7 @@ export default function Login() {
             <div className="kora-auth-divider">Or continue with</div>
 
             <a
-              href="http://localhost:8083/oauth2/authorization/google"
+              href="/oauth2/authorization/google"
               className="kora-auth-social-btn"
               style={{ textDecoration: 'none' }}
             >

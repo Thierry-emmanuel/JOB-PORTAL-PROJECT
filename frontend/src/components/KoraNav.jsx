@@ -8,6 +8,7 @@ export default function KoraNav() {
   const { user, logout, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -16,6 +17,17 @@ export default function KoraNav() {
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const closeMenu = (e) => {
+      if (!e.target.closest('.kn-user-menu')) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', closeMenu);
+    return () => document.removeEventListener('click', closeMenu);
+  }, [dropdownOpen]);
 
   const getRole = () => user?.role || user?.type || "";
   const isEmployer = getRole().includes("EMPLOYER");
@@ -98,12 +110,74 @@ export default function KoraNav() {
           </button>
           
           {isAuthenticated ? (
-            <button
-              className="kn-btn-primary"
-              onClick={handleLogout}
-            >
-              {t('nav.sign_out')}
-            </button>
+            <div className="kn-user-menu">
+              <button 
+                className="kn-user-trigger" 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-expanded={dropdownOpen}
+                aria-haspopup="true"
+              >
+                <div className="kn-user-avatar">
+                  {user?.fullName ? user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                </div>
+                <span className="kn-user-name">{user?.fullName || 'User'}</span>
+                <span style={{ fontSize: '9px', color: 'var(--kora-muted)' }}>▼</span>
+              </button>
+              
+              {dropdownOpen && (
+                <div className="kn-user-dropdown">
+                  <div className="kn-dropdown-header">
+                    <div className="kn-dropdown-header-name">{user?.fullName || 'User'}</div>
+                    <div className="kn-dropdown-header-email">{user?.email || ''}</div>
+                    <div className="kn-dropdown-header-role">
+                      {(getRole() || '').replace('ROLE_', '').replace('_', ' ')}
+                    </div>
+                  </div>
+                  
+                  {isAdmin && (
+                    <Link to="/admin/dashboard" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      Dashboard
+                    </Link>
+                  )}
+                  {isEmployer && (
+                    <Link to="/dashboard/employer" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      Dashboard
+                    </Link>
+                  )}
+                  {!isAdmin && !isEmployer && (
+                    <Link to="/employee/dashboard" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      Dashboard
+                    </Link>
+                  )}
+
+                  {isEmployer ? (
+                    <Link to="/profile/employer" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      My Profile
+                    </Link>
+                  ) : isAdmin ? (
+                    <Link to="/profile/admin" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      My Profile
+                    </Link>
+                  ) : (
+                    <Link to="/profile/job-seeker" className="kn-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      My Profile
+                    </Link>
+                  )}
+
+                  <div className="kn-dropdown-divider" />
+                  
+                  <button 
+                    className="kn-dropdown-item kn-dropdown-item--logout"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <Link to="/login" className="kn-btn-primary">
               {t('nav.sign_in')}

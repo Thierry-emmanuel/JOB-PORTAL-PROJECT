@@ -37,6 +37,30 @@ public class AuthController {
             return ResponseEntity.status(401).body("Error: Invalid email or password");
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            org.springframework.security.core.context.SecurityContext context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+            org.springframework.security.core.Authentication authentication = context.getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401).body("Error: Not authenticated");
+            }
+
+            Object principal = authentication.getPrincipal();
+            String email;
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            } else {
+                email = principal.toString();
+            }
+
+            AuthResponse response = authService.getCurrentUser(email);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
 }
 
 
