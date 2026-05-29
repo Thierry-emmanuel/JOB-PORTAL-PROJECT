@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/admins")
-@CrossOrigin(origins = "*")
 public class AdminProfileController {
 
     @Autowired

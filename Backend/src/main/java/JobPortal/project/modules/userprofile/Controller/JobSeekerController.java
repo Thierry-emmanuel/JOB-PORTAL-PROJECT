@@ -12,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/jobseekers")
-@CrossOrigin(origins = "*")
 public class JobSeekerController {
 
     @Autowired
