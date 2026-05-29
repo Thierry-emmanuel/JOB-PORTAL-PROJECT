@@ -6,6 +6,7 @@ import JobPortal.project.modules.auth.Model.RoleEntity;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import JobPortal.project.modules.auth.repository.RoleRepository;
 import JobPortal.project.modules.userprofile.Model.JobSeeker;
+import JobPortal.project.modules.userprofile.Model.Employer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -51,21 +52,51 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setProvider(User.Provider.valueOf(registrationId.toUpperCase()));
             user.setProviderId(providerId);
         } else {
-            // Register as new JobSeeker by default
-            user = new JobSeeker();
-            user.setEmail(email);
-            user.setFullName(name);
-            user.setProvider(User.Provider.valueOf(registrationId.toUpperCase()));
-            user.setProviderId(providerId);
-            user.setRole(Role.JOB_SEEKER);
-            user.setIsActive(true);
+            String selectedRole = null;
+            org.springframework.web.context.request.RequestAttributes attributesRef = 
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            if (attributesRef instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+                jakarta.servlet.http.HttpServletRequest req = 
+                        ((org.springframework.web.context.request.ServletRequestAttributes) attributesRef).getRequest();
+                jakarta.servlet.http.HttpSession sess = req.getSession(false);
+                if (sess != null) {
+                    selectedRole = (String) sess.getAttribute("oauth2_role");
+                }
+            }
 
-            RoleEntity roleEntity = roleRepository.findByName("ROLE_JOB_SEEKER")
-                    .orElseThrow(() -> new RuntimeException("Default Role ROLE_JOB_SEEKER not found"));
-            
-            Set<RoleEntity> roles = new HashSet<>();
-            roles.add(roleEntity);
-            user.setRoles(roles);
+            if (selectedRole != null && selectedRole.equalsIgnoreCase("EMPLOYER")) {
+                Employer employer = new Employer();
+                employer.setEmail(email);
+                employer.setFullName(name);
+                employer.setProvider(User.Provider.valueOf(registrationId.toUpperCase()));
+                employer.setProviderId(providerId);
+                employer.setRole(Role.EMPLOYER);
+                employer.setIsActive(true);
+                employer.setIsApproved(false);
+
+                RoleEntity roleEntity = roleRepository.findByName("ROLE_EMPLOYER")
+                        .orElseThrow(() -> new RuntimeException("Default Role ROLE_EMPLOYER not found"));
+
+                Set<RoleEntity> roles = new HashSet<>();
+                roles.add(roleEntity);
+                employer.setRoles(roles);
+                user = employer;
+            } else {
+                user = new JobSeeker();
+                user.setEmail(email);
+                user.setFullName(name);
+                user.setProvider(User.Provider.valueOf(registrationId.toUpperCase()));
+                user.setProviderId(providerId);
+                user.setRole(Role.JOB_SEEKER);
+                user.setIsActive(true);
+
+                RoleEntity roleEntity = roleRepository.findByName("ROLE_JOB_SEEKER")
+                        .orElseThrow(() -> new RuntimeException("Default Role ROLE_JOB_SEEKER not found"));
+
+                Set<RoleEntity> roles = new HashSet<>();
+                roles.add(roleEntity);
+                user.setRoles(roles);
+            }
         }
 
         userRepository.save(user);

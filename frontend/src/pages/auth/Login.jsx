@@ -11,6 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('JOB_SEEKER');
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -129,10 +130,54 @@ export default function Login() {
 
             <div className="kora-auth-divider">Or continue with</div>
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Select your role for Google sign-in:</label>
+              <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('JOB_SEEKER')}
+                  style={{
+                    flex: 1,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    border: 'none',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    background: selectedRole === 'JOB_SEEKER' ? '#ffffff' : 'transparent',
+                    color: selectedRole === 'JOB_SEEKER' ? '#1A5C2E' : '#64748b',
+                    boxShadow: selectedRole === 'JOB_SEEKER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Job Seeker
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('EMPLOYER')}
+                  style={{
+                    flex: 1,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    border: 'none',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    background: selectedRole === 'EMPLOYER' ? '#ffffff' : 'transparent',
+                    color: selectedRole === 'EMPLOYER' ? '#1A5C2E' : '#64748b',
+                    boxShadow: selectedRole === 'EMPLOYER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Employer
+                </button>
+              </div>
+            </div>
+
             <a
-              href="/oauth2/authorization/google"
+              href={`/oauth2/authorization/google?role=${selectedRole}`}
               className="kora-auth-social-btn"
-              style={{ textDecoration: 'none' }}
+              style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -140,7 +185,7 @@ export default function Login() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continue with Google
+              Continue as {selectedRole === 'EMPLOYER' ? 'Employer' : 'Job Seeker'} with Google
             </a>
           </form>
 

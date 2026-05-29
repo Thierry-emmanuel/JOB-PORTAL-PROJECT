@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2AuthenticationSuccessHandler)
             )
+            .addFilterBefore(new JobPortal.project.security.oauth2.OAuth2RoleRequestFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(authTokenFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
