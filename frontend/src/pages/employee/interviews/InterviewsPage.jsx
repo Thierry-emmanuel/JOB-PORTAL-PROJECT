@@ -1,9 +1,47 @@
-import { useEffect, useState } from "react";
-import { CalendarCheck, Video, Phone, MapPin, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { CalendarCheck, Video, Phone, MapPin, Clock, CheckCircle2, XCircle, AlertCircle, AlertTriangle, X, CheckCircle, RefreshCw } from "lucide-react";
 import EmployeeLayout from "../../../layouts/EmployeeLayout";
 import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
 import { useAuth } from "../../../context/AuthContext";
 import { getInterviewsBySeeker, cancelInterview } from "../../../api/interviews";
+
+/* ─── Toast ─────────────────────────────────────────────── */
+function Toast({ msg, type, onClose }) {
+  if (!msg) return null;
+  return (
+    <div style={{ position:"fixed", top:20, right:20, zIndex:9999, display:"flex", alignItems:"center", gap:10,
+      background: type==="error" ? "#FEF2F2" : "#ECFDF5",
+      border:`1.5px solid ${type==="error" ? "#FCA5A5" : "#6EE7B7"}`,
+      borderRadius:12, padding:"12px 16px", boxShadow:"0 4px 20px rgba(0,0,0,0.12)", minWidth:260, maxWidth:360 }}>
+      {type==="error" ? <AlertCircle size={16} color="#DC2626"/> : <CheckCircle size={16} color="#10B981"/>}
+      <span style={{ fontSize:13, fontWeight:600, color:type==="error"?"#991B1B":"#065F46", flex:1 }}>{msg}</span>
+      <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:0 }}><X size={14}/></button>
+    </div>
+  );
+}
+
+/* ─── Confirm modal ─────────────────────────────────────── */
+function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <>
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:2000 }} onClick={onCancel}/>
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"#fff", borderRadius:16, padding:24, width:"min(360px,90vw)", zIndex:2001, boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:"#FEF2F2", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <AlertTriangle size={20} color="#DC2626"/>
+          </div>
+          <h3 style={{ fontSize:15, fontWeight:700, margin:0, color:"#111827" }}>{title}</h3>
+        </div>
+        <p style={{ fontSize:13, color:"#6B7280", marginBottom:20, lineHeight:1.6 }}>{body}</p>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onCancel}  style={{ background:"#F3F4F6", border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:600, cursor:"pointer", color:"#374151" }}>Keep it</button>
+          <button onClick={onConfirm} style={{ background:"#DC2626",  border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>Cancel Interview</button>
+        </div>
+      </div>
+    </>
+  );
+}
 
 function typeDisplay(type) {
   switch (type) {
@@ -25,29 +63,41 @@ function statusStyle(iv) {
 export default function InterviewsPage() {
   const { user } = useAuth();
   const { profile, completion, handlePhotoChange } = useEmployeeDashboard();
-  const [interviews, setInterviews] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
+  const [interviews,   setInterviews]   = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [toast,        setToast]        = useState(null);
 
-  const load = () => {
+  const showToast = (msg, type="success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const load = useCallback(() => {
     if (!user?.id) return;
     setLoading(true); setError(null);
     getInterviewsBySeeker(user.id)
       .then(res => setInterviews(Array.isArray(res) ? res : []))
       .catch(() => setError("Could not load your interviews."))
       .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    try {
+      await cancelInterview(cancelTarget);
+      setInterviews(p => p.filter(iv => iv.id !== cancelTarget));
+      showToast("Interview cancelled successfully.");
+    } catch {
+      showToast("Failed to cancel. Please try again.", "error");
+    } finally { setCancelTarget(null); }
   };
 
-  useEffect(load, [user?.id]);
-
-  const handleCancel = async (id) => {
-    if (!window.confirm("Cancel this interview?")) return;
-    try { await cancelInterview(id); setInterviews(p => p.filter(iv => iv.id !== id)); }
-    catch { alert("Failed to cancel. Please try again."); }
-  };
-
-  const upcoming   = interviews.filter(iv => iv.pending && !iv.result);
-  const past       = interviews.filter(iv => !iv.pending || iv.result);
+  const upcoming = interviews.filter(iv => iv.pending && !iv.result);
+  const past     = interviews.filter(iv => !iv.pending || iv.result);
 
   const Group = ({ title, items }) => items.length === 0 ? null : (
     <div>
@@ -78,7 +128,7 @@ export default function InterviewsPage() {
                 </a>
               )}
               {iv.pending && !iv.result && (
-                <button onClick={() => handleCancel(iv.id)}
+                <button onClick={() => setCancelTarget(iv.id)}
                   style={{ width:"100%", padding:"7px", border:"1.5px solid #FECACA", borderRadius:8, background:"#FEF2F2", color:"#DC2626", fontSize:12, fontWeight:600, cursor:"pointer" }}>
                   Cancel Interview
                 </button>
@@ -92,6 +142,14 @@ export default function InterviewsPage() {
 
   return (
     <EmployeeLayout profile={profile} completion={completion} onPhotoChange={handlePhotoChange}>
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      <ConfirmModal
+        open={!!cancelTarget}
+        title="Cancel Interview"
+        body="Are you sure you want to cancel this interview? You may not be able to reschedule easily."
+        onConfirm={handleCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
       <div className="ds-page-header">
         <div>
           <h1 className="ds-page-title">My Interviews</h1>

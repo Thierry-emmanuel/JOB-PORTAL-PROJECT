@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 import { getJob, saveJob } from '../../api/jobs';
-import KoraNav from '../../components/KoraNav';          // ← added
+import KoraNav from '../../components/KoraNav';
 import '../../styles/job-list.css';
+
+function DetailRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div style={{ display:'flex', gap:12, padding:'10px 0', borderBottom:'1px solid #F3F4F6' }}>
+      <span style={{ fontSize:12, fontWeight:600, color:'#6B7280', minWidth:100, flexShrink:0 }}>{label}</span>
+      <span style={{ fontSize:13, color:'#111827' }}>{value}</span>
+    </div>
+  );
+}
 
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isAuthenticated, user } = useAuth();
 
   const [job,     setJob]     = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,18 +28,17 @@ export default function JobDetails() {
   const [saved,   setSaved]   = useState(false);
   const [saving,  setSaving]  = useState(false);
 
-  /* ── Load job ─────────────────────────────────────────── */
+  // Determine if opened from employee dashboard context
+  const isEmployee = isAuthenticated && (user?.role || '').toUpperCase().includes('JOB_SEEKER');
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         const data = await getJob(id);
-        if (!cancelled) {
-          setJob(data);
-          setSaved(data.saved ?? false);
-        }
+        if (!cancelled) { setJob(data); setSaved(data.saved ?? false); }
       } catch {
-        if (!cancelled) setError(t('jobs.error_load_job'));
+        if (!cancelled) setError(t('jobs.error_load_job') || 'Failed to load job details.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -36,27 +47,21 @@ export default function JobDetails() {
     return () => { cancelled = true; };
   }, [id, t]);
 
-  /* ── Save toggle ──────────────────────────────────────── */
   const handleSave = async () => {
     setSaving(true);
-    try {
-      await saveJob(id, !saved);
-      setSaved((v) => !v);
-    } catch {
-      // silently fail — the button re-enables
-    } finally {
-      setSaving(false);
-    }
+    try { await saveJob(id, !saved); setSaved(v => !v); }
+    catch { /* silently fail */ }
+    finally { setSaving(false); }
   };
 
-  /* ── States ───────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="jd-page">
-        <KoraNav />
-        <div className="jd-loading" aria-busy="true">
-          <div className="ed-spinner" />
-          <p>{t('jobs.loading_job_details')}</p>
+        {!isEmployee && <KoraNav />}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16 }}>
+          <div style={{ width:36, height:36, border:'3px solid #E5E7EB', borderTopColor:'#1A5C2E', borderRadius:'50%', animation:'jd-spin 0.8s linear infinite' }} />
+          <p style={{ fontSize:14, color:'#6B7280' }}>Loading job details…</p>
+          <style>{`@keyframes jd-spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
@@ -65,57 +70,52 @@ export default function JobDetails() {
   if (error || !job) {
     return (
       <div className="jd-page">
-        <KoraNav />
-        <div className="jd-error" role="alert">
-          <p>{error || t('jobs.job_not_found')}</p>
-          <Link to="/jobs" className="jl-btn jl-btn--primary">
-            {t('jobs.back_to_jobs')}
-          </Link>
+        {!isEmployee && <KoraNav />}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16, padding:24 }}>
+          <div style={{ fontSize:48 }}>😕</div>
+          <h2 style={{ fontSize:20, fontWeight:700, color:'#111827', margin:0 }}>Job Not Found</h2>
+          <p style={{ fontSize:14, color:'#6B7280', textAlign:'center' }}>{error || 'This job posting may have been removed or is no longer available.'}</p>
+          <button onClick={() => navigate(-1)} style={{ background:'#1A5C2E', color:'#fff', border:'none', padding:'10px 22px', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            ← Go Back
+          </button>
         </div>
       </div>
     );
   }
 
-  /* ── Main render ──────────────────────────────────────── */
   return (
     <div className="jd-page">
-      {/* ── Top nav ── */}
-      <KoraNav />
+      {!isEmployee && <KoraNav />}
 
-      <div className="jd-container">
-        {/* Back */}
-        <button
-          className="jl-back-btn"
-          onClick={() => navigate(-1)}
-          aria-label={t('jobs.back_to_listings_aria')}
-        >
-          {t('jobs.back_to_jobs')}
+      <div style={{ maxWidth:1100, margin:'0 auto', padding:'24px 16px' }}>
+        {/* Back button */}
+        <button onClick={() => navigate(-1)} style={{ display:'flex', alignItems:'center', gap:6, background:'#F3F4F6', border:'none', borderRadius:10, padding:'8px 16px', fontSize:13, fontWeight:600, cursor:'pointer', color:'#374151', marginBottom:24 }}>
+          ← Back
         </button>
 
-        <div className="jd-layout">
-          {/* ── Left: job content ───────────────────── */}
-          <div className="jd-main">
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:24, alignItems:'start' }}>
+          {/* ─── Main content ─── */}
+          <div>
             {/* Header card */}
-            <div className="jd-header">
-              <div className="jd-logo" aria-hidden="true">
-                {job.logo
-                  ? <img src={job.logo} alt={t('jobs.company_logo_alt', { company: job.company })} />
-                  : <span>{job.company.charAt(0)}</span>
-                }
+            <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:24, marginBottom:20 }}>
+              <div style={{ display:'flex', gap:16, alignItems:'flex-start', marginBottom:16 }}>
+                <div style={{ width:60, height:60, borderRadius:14, background:'#E8F5EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:800, color:'#1A5C2E', flexShrink:0, border:'1.5px solid rgba(26,92,46,0.13)', overflow:'hidden' }}>
+                  {job.logo
+                    ? <img src={job.logo} alt={job.company} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    : job.company?.charAt(0)}
+                </div>
+                <div style={{ flex:1 }}>
+                  <h1 style={{ fontSize:22, fontWeight:800, color:'#111827', margin:'0 0 4px', lineHeight:1.2 }}>{job.title}</h1>
+                  <p style={{ fontSize:15, color:'#1A5C2E', fontWeight:600, margin:0 }}>{job.company}</p>
+                </div>
+                <button onClick={handleSave} disabled={saving} style={{
+                  background: saved ? '#E8F5EE' : '#F3F4F6', color: saved ? '#1A5C2E' : '#6B7280',
+                  border: `1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`, borderRadius:10, padding:'8px 16px',
+                  fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0,
+                }}>
+                  {saving ? '…' : saved ? '✓ Saved' : '🔖 Save'}
+                </button>
               </div>
-              <div className="jd-header-info">
-                <h1 className="jd-title">{job.title}</h1>
-                <p className="jd-company">{job.company}</p>
-              </div>
-              <button
-                className={`jd-save-btn${saved ? ' saved' : ''}`}
-                onClick={handleSave}
-                disabled={saving}
-                aria-label={saved ? t('jobs.remove_from_saved') : t('jobs.save_this_job')}
-              >
-                {saved ? t('jobs.saved_label') : t('jobs.save_label')}
-              </button>
-            </div>
 
             {/* Quick facts */}
             <div className="jd-facts" aria-label={t('jobs.job_details_aria')}>
@@ -132,103 +132,91 @@ export default function JobDetails() {
                     <span aria-hidden="true">{f.icon}</span> {f.val}
                   </span>
                 ))}
-            </div>
-
-            {/* Tags */}
-            {job.tags?.length > 0 && (
-              <div className="jd-tags" aria-label={t('jobs.required_skills_aria')}>
-                {job.tags.map((tag) => (
-                  <span key={tag} className="jd-tag">{tag}</span>
-                ))}
               </div>
-            )}
+
+              {/* Skills */}
+              {job.tags?.length > 0 && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  {job.tags.map(tag => (
+                    <span key={tag} style={{ background:'#E8F5EE', color:'#1A5C2E', border:'1px solid rgba(26,92,46,0.2)', borderRadius:6, padding:'4px 10px', fontSize:12, fontWeight:600 }}>{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Description */}
             {job.description && (
-              <>
-                <h2 className="jd-section-heading">{t('jobs.job_description')}</h2>
-                <div className="jd-description">{job.description}</div>
-              </>
+              <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:24, marginBottom:20 }}>
+                <h2 style={{ fontSize:16, fontWeight:700, color:'#111827', marginBottom:16 }}>Job Description</h2>
+                <div style={{ fontSize:14, color:'#374151', lineHeight:1.8, whiteSpace:'pre-wrap' }}>{job.description}</div>
+              </div>
             )}
 
             {/* Company info */}
-            <h2 className="jd-section-heading">{t('jobs.about_company', { company: job.company })}</h2>
-            <dl className="jd-company-dl">
-              {job.location && (
-                <div>
-                  <dt>{t('common.location')}</dt>
-                  <dd>{job.location}</dd>
-                </div>
-              )}
-              {job.type && (
-                <div>
-                  <dt>{t('common.type')}</dt>
-                  <dd>{job.type}</dd>
-                </div>
-              )}
-              {job.salary && (
-                <div>
-                  <dt>{t('common.salary')}</dt>
-                  <dd>{job.salary}</dd>
-                </div>
-              )}
+            <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:24 }}>
+              <h2 style={{ fontSize:16, fontWeight:700, color:'#111827', marginBottom:12 }}>About {job.company}</h2>
+              <DetailRow label="Location" value={job.location} />
+              <DetailRow label="Job Type" value={job.type?.replace('_',' ')} />
+              <DetailRow label="Salary"   value={job.salary} />
               {job.website && (
-                <div>
-                  <dt>{t('common.website')}</dt>
-                  <dd>
-                    <a
-                      href={job.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {job.website}
-                    </a>
-                  </dd>
+                <div style={{ display:'flex', gap:12, padding:'10px 0' }}>
+                  <span style={{ fontSize:12, fontWeight:600, color:'#6B7280', minWidth:100 }}>Website</span>
+                  <a href={job.website} target="_blank" rel="noreferrer" style={{ fontSize:13, color:'#1A5C2E' }}>{job.website}</a>
                 </div>
               )}
-            </dl>
+            </div>
           </div>
 
-          {/* ── Right: apply card (sticky) ───────────── */}
-          <aside className="jd-sidebar" aria-label={t('jobs.apply_for_job_aria')}>
-            <div className="jd-apply-card">
-              <h2 className="jd-apply-title">{t('jobs.ready_to_apply')}</h2>
-              <p className="jd-apply-sub">
-                {job.applicants != null
-                  ? t('jobs.people_applied', { count: job.applicants })
-                  : t('jobs.be_first_to_apply')}
+          {/* ─── Sticky apply card ─── */}
+          <div style={{ position:'sticky', top:80 }}>
+            <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:24, boxShadow:'0 4px 20px rgba(0,0,0,0.07)' }}>
+              <h2 style={{ fontSize:17, fontWeight:700, color:'#111827', marginBottom:8 }}>Ready to Apply?</h2>
+              <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
+                {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
               </p>
 
               {job.applied ? (
-                <div className="jd-applied-badge" role="status">
-                  {t('jobs.application_submitted')}
+                <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46' }}>
+                  ✓ Application submitted
                 </div>
               ) : (
-                <Link
-                  to={`/jobs/${id}/apply`}
-                  className="jd-apply-btn"
-                  aria-label={t('jobs.apply_for_title_aria', { title: job.title })}
+                <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
+                  onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform=''}
                 >
-                  {t('jobs.apply_now')}
+                  Apply Now →
                 </Link>
               )}
 
-              <button
-                className={`jd-save-sidebar-btn${saved ? ' saved' : ''}`}
-                onClick={handleSave}
-                disabled={saving}
-                aria-label={saved ? t('jobs.remove_from_saved') : t('jobs.save_for_later_aria')}
-              >
-                {saving
-                  ? t('jobs.saving')
-                  : saved
-                    ? t('jobs.saved_label')
-                    : t('jobs.save_for_later')}
+              <button onClick={handleSave} disabled={saving} style={{
+                width:'100%', background: saved ? '#E8F5EE' : '#F9FAFB',
+                color: saved ? '#1A5C2E' : '#6B7280',
+                border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
+                borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
+              }}>
+                {saving ? 'Saving…' : saved ? '✓ Saved for Later' : '🔖 Save for Later'}
               </button>
+
+              <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
+                <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6 }}>
+                  💡 Tip: Complete your profile to increase your chances of being shortlisted.
+                </p>
+              </div>
             </div>
-          </aside>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 760px) {
+          div[style*="grid-template-columns: 1fr 300px"] {
+            grid-template-columns: 1fr !important;
+          }
+          div[style*="position: sticky"] {
+            position: static !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

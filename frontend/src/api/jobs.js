@@ -89,9 +89,14 @@ export const getUserInterviews = async (seekerId) => {
   return data.content || data;
 };
 
-export const saveJob = async (id) => {
-  const { data } = await apiClient.post(`/api/jobs/${id}/save`);
-  return data;
+export const saveJob = async (id, shouldSave = true) => {
+  if (shouldSave) {
+    const { data } = await apiClient.post(`/api/jobs/${id}/save`);
+    return data;
+  } else {
+    const { data } = await apiClient.delete(`/api/jobs/${id}/save`).catch(() => apiClient.post(`/api/jobs/${id}/unsave`));
+    return data;
+  }
 };
 
 export const getCategories = async () => {

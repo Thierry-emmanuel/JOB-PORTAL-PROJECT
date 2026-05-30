@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getEmployerProfile } from "../api/profiles";
 import { getJobSeekerProfile } from "../api/profiles";
@@ -10,13 +10,10 @@ import {
   changeJobStatus as apiChangeJobStatus,
   deleteJob as apiDeleteJob
 } from "../api/jobs";
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, text: "New application received for Senior Java Developer",    time: "2 hours ago", read: false, type: "application" },
-  { id: 2, text: "Your company job post 'DevOps Engineer' was approved", time: "1 day ago",   read: false, type: "approval"     },
-  { id: 3, text: "Candidate updated their expected interview date",      time: "2 days ago",  read: true,  type: "update"       },
-  { id: 4, text: "New application received for React.js Engineer",        time: "3 days ago", read: true, type: "application"  },
-];
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
 
 export function useEmployerDashboard() {
   const { user, token } = useAuth();
@@ -34,10 +31,38 @@ export function useEmployerDashboard() {
   });
   const [applications,   setApplications]   = useState([]);
   const [jobPostings,    setJobPostings]    = useState([]);
-  const [notifications,  setNotifications]  = useState(MOCK_NOTIFICATIONS);
+  const [notifications,  setNotifications]  = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
   const [refreshing,     setRefreshing]     = useState(false);
+  const stompRef = useRef(null);
+
+  // ── Real-time WebSocket notifications ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const client = new Client({
+      webSocketFactory: () => new SockJS(WS_URL),
+      reconnectDelay: 5000,
+    });
+    client.onConnect = () => {
+      client.subscribe(`/topic/notifications/${user.id}`, (message) => {
+        try {
+          const payload = JSON.parse(message.body);
+          const n = {
+            id: Date.now(),
+            text: payload.message || payload.title || 'New notification',
+            time: 'Just now',
+            read: false,
+            type: payload.type || 'info',
+          };
+          setNotifications(prev => [n, ...prev].slice(0, 20));
+        } catch { /* ignore parse errors */ }
+      });
+    };
+    client.activate();
+    stompRef.current = client;
+    return () => { client.deactivate(); stompRef.current = null; };
+  }, [user?.id]);
 
   // ── Fetch all dashboard data from backend ──
   const fetchDashboard = useCallback(async (isRefresh = false) => {
@@ -256,7 +281,7 @@ export function useEmployerDashboard() {
         return { ...prev, hired: newHiredCount };
       });
     } catch (err) {
-      alert("Failed to update application status: " + (err.response?.data?.message || err.message));
+      throw err;
     }
   }, [applications]);
 
@@ -279,7 +304,7 @@ export function useEmployerDashboard() {
         return { ...prev, activeJobs: newActiveJobs };
       });
     } catch (err) {
-      alert("Failed to update job status: " + (err.response?.data?.message || err.message));
+      throw err;
     }
   }, [jobPostings]);
 
@@ -300,7 +325,7 @@ export function useEmployerDashboard() {
         return { ...prev, activeJobs: newActiveJobs };
       });
     } catch (err) {
-      alert("Failed to delete job listing: " + (err.response?.data?.message || err.message));
+      throw err;
     }
   }, [jobPostings]);
 
