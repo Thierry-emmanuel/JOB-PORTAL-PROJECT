@@ -1,184 +1,301 @@
-import { useEffect, useState, useCallback } from "react";
-import { CalendarCheck, Video, Phone, MapPin, Clock, CheckCircle2, XCircle, AlertCircle, AlertTriangle, X, CheckCircle, RefreshCw } from "lucide-react";
-import EmployeeLayout from "../../../layouts/EmployeeLayout";
-import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
-import { useAuth } from "../../../context/AuthContext";
-import { getInterviewsBySeeker, cancelInterview } from "../../../api/interviews";
+/**
+ * InterviewsPage.jsx — Employee interview tracker
+ * Full redesign: upcoming/past split, join meeting, cancel, countdown timer
+ */
+import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  CalendarCheck, Video, Phone, MapPin, Clock,
+  CheckCircle2, XCircle, AlertCircle, RefreshCw,
+  ExternalLink, Navigation, CalendarX, Inbox,
+  ChevronRight, Bell, Copy, Check,
+} from 'lucide-react';
+import EmployeeLayout from '../../../layouts/EmployeeLayout';
+import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
+import { useAuth } from '../../../context/AuthContext';
+import { getInterviewsBySeeker, cancelInterview } from '../../../api/interviews';
+import '../../../styles/employee-dashboard.css';
 
-/* ─── Toast ─────────────────────────────────────────────── */
-function Toast({ msg, type, onClose }) {
-  if (!msg) return null;
+/* ─── Helpers ────────────────────────────────────────────── */
+const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+const fmtTime = d => !d ? '' : new Date(d).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+function countdown(scheduledAt) {
+  const diff = new Date(scheduledAt) - new Date();
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h > 48) return `In ${Math.floor(h/24)} days`;
+  if (h >= 1)  return `In ${h}h ${m}m`;
+  return `In ${m} minutes`;
+}
+
+/* ─── Type display config ────────────────────────────────── */
+function typeConfig(type) {
+  switch (type) {
+    case 'VIDEO':     return { icon:<Video size={15}/>,  label:'Video Call', color:'#1d4ed8', bg:'#eff6ff' };
+    case 'PHONE':     return { icon:<Phone size={15}/>,  label:'Phone Call', color:'#065f46', bg:'#ecfdf5' };
+    case 'IN_PERSON': return { icon:<MapPin size={15}/>, label:'On-site',    color:'#92400e', bg:'#fffbeb' };
+    default:          return { icon:<Video size={15}/>,  label:'Interview',  color:'#374151', bg:'#f3f4f6' };
+  }
+}
+
+function statusConfig(iv) {
+  const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
+  if (iv.result === 'PASSED')  return { bg:'#ecfdf5', color:'#065f46', label:'Passed ✓',   ring:'#86efac' };
+  if (iv.result === 'FAILED')  return { bg:'#fef2f2', color:'#991b1b', label:'Not Passed', ring:'#fca5a5' };
+  if (iv.result === 'NO_SHOW') return { bg:'#fff7ed', color:'#c2410c', label:'No Show',    ring:'#fed7aa' };
+  if (!isPast)                 return { bg:'#eff6ff', color:'#1e40af', label:'Upcoming',   ring:'#bfdbfe' };
+  return                              { bg:'#f9fafb', color:'#374151', label:'Completed',  ring:'#e5e7eb' };
+}
+
+/* ─── Single interview card ──────────────────────────────── */
+function InterviewCard({ iv, onCancel }) {
+  const [copied, setCopied] = useState(false);
+  const tc = typeConfig(iv.type);
+  const sc = statusConfig(iv);
+  const isPast     = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
+  const isUpcoming = !isPast && !iv.result;
+  const cd         = isUpcoming ? countdown(iv.scheduledAt) : null;
+
+  // For IN_PERSON: build Google Maps URL
+  const mapsUrl = iv.type === 'IN_PERSON' && iv.meetingLink
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(iv.meetingLink)}`
+    : null;
+
+  const copyLink = async () => {
+    if (!iv.meetingLink) return;
+    await navigator.clipboard.writeText(iv.meetingLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div style={{ position:"fixed", top:20, right:20, zIndex:9999, display:"flex", alignItems:"center", gap:10,
-      background: type==="error" ? "#FEF2F2" : "#ECFDF5",
-      border:`1.5px solid ${type==="error" ? "#FCA5A5" : "#6EE7B7"}`,
-      borderRadius:12, padding:"12px 16px", boxShadow:"0 4px 20px rgba(0,0,0,0.12)", minWidth:260, maxWidth:360 }}>
-      {type==="error" ? <AlertCircle size={16} color="#DC2626"/> : <CheckCircle size={16} color="#10B981"/>}
-      <span style={{ fontSize:13, fontWeight:600, color:type==="error"?"#991B1B":"#065F46", flex:1 }}>{msg}</span>
-      <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:0 }}><X size={14}/></button>
+    <div className={`iv-card${isUpcoming ? ' iv-card--upcoming' : ''}`}
+         style={{ borderColor: isUpcoming ? tc.color + '44' : undefined }}>
+
+      {/* Top row */}
+      <div className="iv-card-top">
+        <div className="iv-card-type-badge" style={{ background: tc.bg, color: tc.color }}>
+          {tc.icon} {tc.label}
+        </div>
+        <div className="iv-status-badge" style={{ background: sc.bg, color: sc.color, border:`1px solid ${sc.ring}` }}>
+          {sc.label}
+        </div>
+      </div>
+
+      {/* Job title */}
+      <div className="iv-card-job">
+        <h3>
+          {iv.jobTitle || (iv.jobPostingId ? `Job #${iv.jobPostingId}` : 'Interview Session')}
+        </h3>
+        {iv.companyName && <p className="iv-card-company">{iv.companyName}</p>}
+        {iv.platform    && <p className="iv-card-platform">{iv.platform}</p>}
+      </div>
+
+      {/* Date/time */}
+      {iv.scheduledAt && (
+        <div className="iv-card-datetime">
+          <div className="iv-datetime-item">
+            <CalendarCheck size={12}/>
+            <span>{fmtDate(iv.scheduledAt)}</span>
+          </div>
+          <div className="iv-datetime-item">
+            <Clock size={12}/>
+            <span>{fmtTime(iv.scheduledAt)}</span>
+          </div>
+          {cd && (
+            <div className="iv-countdown">
+              <Bell size={11}/> {cd}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Type-specific action area */}
+      {iv.type === 'VIDEO' && iv.meetingLink && (
+        <div className="iv-action-section">
+          <a
+            href={iv.meetingLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="iv-join-btn"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}>
+              <rect width="24" height="24" rx="4" fill="#1a73e8"/>
+              <path d="M5 8h8a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" fill="white"/>
+              <path d="M14 10.5l4-2.5v8l-4-2.5v-3z" fill="white"/>
+            </svg>
+            Join Google Meet
+            <ExternalLink size={11}/>
+          </a>
+          <button className={`iv-copy-btn${copied?' copied':''}`} onClick={copyLink} title="Copy link">
+            {copied ? <Check size={12}/> : <Copy size={12}/>}
+            {copied ? 'Copied!' : 'Copy link'}
+          </button>
+        </div>
+      )}
+
+      {iv.type === 'PHONE' && (
+        <div className="iv-info-card iv-info-card--phone">
+          <Phone size={14} style={{color:'#065f46', flexShrink:0}}/>
+          <div>
+            <p className="iv-info-label">Phone Interview</p>
+            <p className="iv-info-sub">
+              {iv.meetingLink || 'The employer will call you at your registered number.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {iv.type === 'IN_PERSON' && iv.meetingLink && (
+        <div className="iv-info-card iv-info-card--location">
+          <MapPin size={14} style={{color:'#92400e', flexShrink:0}}/>
+          <div style={{flex:1}}>
+            <p className="iv-info-label">Interview Location</p>
+            <p className="iv-info-address">{iv.meetingLink}</p>
+            {mapsUrl && (
+              <a href={mapsUrl} target="_blank" rel="noreferrer" className="iv-maps-link">
+                <Navigation size={10}/> Get directions
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Feedback / notes */}
+      {iv.feedback && (
+        <div className="iv-feedback">
+          <p className="iv-info-label">Interviewer Feedback</p>
+          <p className="iv-feedback-text">"{iv.feedback}"</p>
+        </div>
+      )}
+
+      {/* Cancel button (upcoming only) */}
+      {isUpcoming && onCancel && (
+        <button className="iv-cancel-btn" onClick={() => onCancel(iv.id)}>
+          <CalendarX size={12}/> Cancel Interview
+        </button>
+      )}
     </div>
   );
 }
 
-/* ─── Confirm modal ─────────────────────────────────────── */
-function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
-  if (!open) return null;
-  return (
-    <>
-      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:2000 }} onClick={onCancel}/>
-      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"#fff", borderRadius:16, padding:24, width:"min(360px,90vw)", zIndex:2001, boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
-          <div style={{ width:40, height:40, borderRadius:10, background:"#FEF2F2", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <AlertTriangle size={20} color="#DC2626"/>
-          </div>
-          <h3 style={{ fontSize:15, fontWeight:700, margin:0, color:"#111827" }}>{title}</h3>
-        </div>
-        <p style={{ fontSize:13, color:"#6B7280", marginBottom:20, lineHeight:1.6 }}>{body}</p>
-        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
-          <button onClick={onCancel}  style={{ background:"#F3F4F6", border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:600, cursor:"pointer", color:"#374151" }}>Keep it</button>
-          <button onClick={onConfirm} style={{ background:"#DC2626",  border:"none", borderRadius:10, padding:"9px 20px", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>Cancel Interview</button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function typeDisplay(type) {
-  switch (type) {
-    case "VIDEO":     return { icon: <Video size={14} />,   label: "Video Call" };
-    case "PHONE":     return { icon: <Phone size={14} />,   label: "Phone Call" };
-    case "IN_PERSON": return { icon: <MapPin size={14} />,  label: "On-site"    };
-    default:          return { icon: <Video size={14} />,   label: type || "Interview" };
-  }
-}
-
-function statusStyle(iv) {
-  if (iv.result === "PASSED")  return { bg:"#ECFDF5", color:"#065F46", icon:<CheckCircle2 size={13} />, label:"Passed"    };
-  if (iv.result === "FAILED")  return { bg:"#FEF2F2", color:"#991B1B", icon:<XCircle size={13} />,     label:"Failed"    };
-  if (iv.result === "NO_SHOW") return { bg:"#FFF7ED", color:"#C2410C", icon:<AlertCircle size={13} />, label:"No Show"   };
-  if (iv.pending)              return { bg:"#EFF6FF", color:"#1E40AF", icon:<Clock size={13} />,       label:"Upcoming"  };
-  return                              { bg:"#F9FAFB", color:"#374151", icon:<CalendarCheck size={13} />,label:"Completed" };
-}
-
+/* ═══════════════════════════════════════════════════════════
+   MAIN PAGE
+   ═══════════════════════════════════════════════════════════ */
 export default function InterviewsPage() {
   const { user } = useAuth();
   const { profile, completion, handlePhotoChange } = useEmployeeDashboard();
-  const [interviews,   setInterviews]   = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState(null);
-  const [cancelTarget, setCancelTarget] = useState(null);
-  const [toast,        setToast]        = useState(null);
 
-  const showToast = (msg, type="success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const [interviews, setInterviews] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
 
   const load = useCallback(() => {
     if (!user?.id) return;
     setLoading(true); setError(null);
     getInterviewsBySeeker(user.id)
       .then(res => setInterviews(Array.isArray(res) ? res : []))
-      .catch(() => setError("Could not load your interviews."))
+      .catch(() => setError('Could not load your interviews.'))
       .finally(() => setLoading(false));
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleCancel = async () => {
-    if (!cancelTarget) return;
+  const handleCancel = useCallback(async (id) => {
+    if (!window.confirm('Cancel this interview? The employer will be notified.')) return;
     try {
-      await cancelInterview(cancelTarget);
-      setInterviews(p => p.filter(iv => iv.id !== cancelTarget));
-      showToast("Interview cancelled successfully.");
+      await cancelInterview(id);
+      setInterviews(prev => prev.filter(iv => iv.id !== id));
     } catch {
-      showToast("Failed to cancel. Please try again.", "error");
-    } finally { setCancelTarget(null); }
-  };
+      alert('Failed to cancel. Please try again.');
+    }
+  }, []);
 
-  const upcoming = interviews.filter(iv => iv.pending && !iv.result);
-  const past     = interviews.filter(iv => !iv.pending || iv.result);
-
-  const Group = ({ title, items }) => items.length === 0 ? null : (
-    <div>
-      <h3 style={{ fontSize:13, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:"0.6px", margin:"0 0 12px" }}>{title}</h3>
-      <div className="ds-interview-grid">
-        {items.map(iv => {
-          const ss = statusStyle(iv);
-          const td = typeDisplay(iv.type);
-          const date = iv.scheduledAt ? new Date(iv.scheduledAt) : null;
-          return (
-            <div key={iv.id} className="ds-card" style={{ padding:20 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                <span className="ds-badge" style={{ background:ss.bg, color:ss.color }}>{ss.icon} {ss.label}</span>
-                <span style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:"#6B7280" }}>{td.icon} {td.label}</span>
-              </div>
-              <h4 style={{ fontSize:15, fontWeight:700, margin:"0 0 3px" }}>Job #{iv.jobPostingId || "—"}</h4>
-              {iv.platform && <p style={{ fontSize:12, color:"#6B7280", margin:"0 0 10px" }}>{iv.platform}</p>}
-              {date && (
-                <div style={{ display:"flex", gap:14, fontSize:12, color:"#4B5563", marginBottom:12 }}>
-                  <span style={{ display:"flex", alignItems:"center", gap:5 }}><CalendarCheck size={12} />{date.toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"})}</span>
-                  <span style={{ display:"flex", alignItems:"center", gap:5 }}><Clock size={12} />{date.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</span>
-                </div>
-              )}
-              {iv.meetingLink && (
-                <a href={iv.meetingLink} target="_blank" rel="noreferrer"
-                  style={{ display:"flex", alignItems:"center", gap:6, background:"var(--ds-accent)", color:"#fff", padding:"9px 12px", borderRadius:10, textDecoration:"none", fontSize:13, fontWeight:600, justifyContent:"center", marginBottom:10 }}>
-                  <Video size={13} /> Join Meeting
-                </a>
-              )}
-              {iv.pending && !iv.result && (
-                <button onClick={() => setCancelTarget(iv.id)}
-                  style={{ width:"100%", padding:"7px", border:"1.5px solid #FECACA", borderRadius:8, background:"#FEF2F2", color:"#DC2626", fontSize:12, fontWeight:600, cursor:"pointer" }}>
-                  Cancel Interview
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  /* Split upcoming vs past */
+  const upcoming = interviews.filter(iv => {
+    const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
+    return !isPast && !iv.result;
+  });
+  const past = interviews.filter(iv => {
+    const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
+    return isPast || iv.result;
+  });
 
   return (
     <EmployeeLayout profile={profile} completion={completion} onPhotoChange={handlePhotoChange}>
-      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
-      <ConfirmModal
-        open={!!cancelTarget}
-        title="Cancel Interview"
-        body="Are you sure you want to cancel this interview? You may not be able to reschedule easily."
-        onConfirm={handleCancel}
-        onCancel={() => setCancelTarget(null)}
-      />
+
+      {/* Page header */}
       <div className="ds-page-header">
         <div>
           <h1 className="ds-page-title">My Interviews</h1>
-          <p className="ds-page-sub">{upcoming.length} upcoming · {past.length} past</p>
+          <p className="ds-page-sub">
+            {upcoming.length} upcoming · {past.length} completed
+          </p>
         </div>
+        <button className="ds-btn ds-btn-ghost" onClick={load}>
+          <RefreshCw size={13}/> Refresh
+        </button>
       </div>
 
+      {/* Loading */}
       {loading && (
-        <div style={{ display:"flex", justifyContent:"center", padding:"80px 0" }}>
-          <div style={{ width:28, height:28, border:"3px solid #E5E7EB", borderTopColor:"var(--ds-accent)", borderRadius:"50%", animation:"ds-spin 0.8s linear infinite" }} />
+        <div className="apps-loading"><div className="apps-spinner"/><span>Loading interviews…</span></div>
+      )}
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="apps-error">
+          <AlertCircle size={18}/><p>{error}</p>
+          <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={load}>
+            <RefreshCw size={12}/> Retry
+          </button>
         </div>
       )}
-      {error && (
-        <div className="ds-error"><div className="ds-error-icon"><AlertCircle size={24} /></div><p style={{ fontWeight:700 }}>{error}</p></div>
-      )}
+
+      {/* Empty */}
       {!loading && !error && interviews.length === 0 && (
-        <div className="ds-card">
-          <div className="ds-empty">
-            <div className="ds-empty-icon"><CalendarCheck size={24} /></div>
-            <p className="ds-empty-title">No interviews scheduled yet</p>
-            <p className="ds-empty-sub">Interview invitations from employers will appear here.</p>
-          </div>
+        <div className="apps-empty">
+          <div className="apps-empty-icon"><CalendarCheck size={36}/></div>
+          <h3>No interviews scheduled yet</h3>
+          <p>When an employer invites you to an interview, it will appear here.</p>
+          <Link to="/employee/applications" className="ds-btn ds-btn-primary" style={{marginTop:4}}>
+            View Applications <ChevronRight size={13}/>
+          </Link>
         </div>
       )}
-      {!loading && !error && interviews.length > 0 && (
-        <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
-          <Group title="Upcoming" items={upcoming} />
-          <Group title="Past Interviews" items={past} />
-        </div>
+
+      {/* Upcoming */}
+      {!loading && !error && upcoming.length > 0 && (
+        <section className="iv-section">
+          <div className="iv-section-head">
+            <Bell size={14} className="iv-section-icon"/>
+            <h2>Upcoming Interviews</h2>
+            <span className="iv-section-count">{upcoming.length}</span>
+          </div>
+          <div className="iv-grid">
+            {upcoming.map(iv => (
+              <InterviewCard key={iv.id} iv={iv} onCancel={handleCancel}/>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Past */}
+      {!loading && !error && past.length > 0 && (
+        <section className="iv-section">
+          <div className="iv-section-head">
+            <Clock size={14} className="iv-section-icon iv-section-icon--muted"/>
+            <h2 className="iv-section-head-muted">Past Interviews</h2>
+            <span className="iv-section-count">{past.length}</span>
+          </div>
+          <div className="iv-grid">
+            {past.map(iv => (
+              <InterviewCard key={iv.id} iv={iv} onCancel={null}/>
+            ))}
+          </div>
+        </section>
       )}
     </EmployeeLayout>
   );

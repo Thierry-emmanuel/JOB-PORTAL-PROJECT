@@ -1,510 +1,642 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
+/**
+ * ManageJobs.jsx — Employer job & applicant management
+ *
+ * Features:
+ * • Job listings with stats (views, applications, days left)
+ * • Per-job applicant drawer with full candidate profile
+ * • Accept (→ SHORTLISTED), Reject, Hire immediately
+ * • Schedule interview (opens InterviewScheduler modal)
+ * • Status tabs, search, sort
+ */
+import { useState, useMemo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, Plus, Filter, MoreVertical,
-  CheckCircle, Clock, Users, Eye, XCircle, Trash2, Edit2, Play, Calendar as CalendarIcon, Briefcase,
-  X, Mail, Phone, MapPin, ExternalLink, FileText, Check
-} from "lucide-react";
-import EmployerSidebar from "../../components/employer/EmployerSidebar";
-import InterviewScheduler from "../../components/employer/InterviewScheduler";
+  Briefcase, Users, Eye, Clock, Plus, Search,
+  ChevronDown, MoreVertical, CheckCircle2, XCircle,
+  CalendarClock, Award, Trash2, Pause, Play,
+  ArrowRight, FileText, Phone, MapPin, Mail,
+  Banknote, ExternalLink, X, AlertCircle,
+  RefreshCw, Filter, SortDesc, TrendingUp,
+  UserCheck, UserX, Star,
+} from 'lucide-react';
+import EmployerSidebar from '../../components/employer/EmployerSidebar';
+import InterviewScheduler from '../../components/employer/InterviewScheduler';
+import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
+import { useAuth } from '../../context/AuthContext';
+import { scheduleInterview } from '../../api/interviews';
+import '../../styles/dashboard-shell.css';
+import '../../styles/ManageJobs.css';
 
-import "../../styles/dashboard-shell.css";
-import "../../styles/profile.css";
-import "../../styles/ManageJobs.css";
+/* ─── Constants ─────────────────────────────────────────── */
+const JOB_STATUS_TABS = [
+  { key: 'ALL',     label: 'All Jobs'  },
+  { key: 'ACTIVE',  label: 'Active'    },
+  { key: 'DRAFT',   label: 'Draft'     },
+  { key: 'EXPIRED', label: 'Expired'   },
+];
 
-// ── Status Badge ──
-function StatusBadge({ status }) {
-  const statusClass = status.toLowerCase();
+const APP_STATUS_TABS = [
+  { key: 'ALL',          label: 'All'          },
+  { key: 'APPLIED',      label: 'Applied'      },
+  { key: 'SHORTLISTED',  label: 'Shortlisted'  },
+  { key: 'HIRED',        label: 'Hired'        },
+  { key: 'REJECTED',     label: 'Rejected'     },
+];
+
+const STATUS_STYLE = {
+  APPLIED:              { bg: '#EFF6FF', color: '#1E40AF', dot: '#3B82F6' },
+  SHORTLISTED:          { bg: '#FAF5FF', color: '#6B21A8', dot: '#A855F7' },
+  INTERVIEW_SCHEDULED:  { bg: '#FFF7ED', color: '#C2410C', dot: '#F97316' },
+  HIRED:                { bg: '#ECFDF5', color: '#065F46', dot: '#10B981' },
+  REJECTED:             { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444' },
+};
+
+const JOB_STATUS_STYLE = {
+  ACTIVE:  { bg: '#ECFDF5', color: '#065F46', dot: '#10B981' },
+  DRAFT:   { bg: '#F9FAFB', color: '#374151', dot: '#9CA3AF' },
+  EXPIRED: { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444' },
+};
+
+/* ─── Helpers ────────────────────────────────────────────── */
+const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { day:'2-digit', month:'short', year:'numeric' });
+const fmtSalary = v => v ? `${Number(v).toLocaleString()} XAF` : '—';
+
+function StatusBadge({ status, map = STATUS_STYLE }) {
+  const s = map[status] || { bg:'#F3F4F6', color:'#374151', dot:'#9CA3AF' };
   return (
-    <span className={`mj-status mj-status-${statusClass}`}>
-      <span className="mj-status-dot" />
-      <span>{status}</span>
+    <span className="mj-badge" style={{ background: s.bg, color: s.color }}>
+      <span className="mj-badge-dot" style={{ background: s.dot }}/>
+      {status?.replace(/_/g,' ')}
     </span>
   );
 }
 
-export default function ManageJobs() {
-  const navigate = useNavigate();
-  const {
-    employer, stats, jobPostings, applications,
-    loading, error,
-    updateJobPostingStatus, deleteJobPosting, updateApplicationStatus
-  } = useEmployerDashboard();
+function Avatar({ name, size = 36, color = '#1A5C2E' }) {
+  const initials = (name||'?').split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');
+  return (
+    <div className="mj-avatar" style={{ width:size, height:size, fontSize:size*0.36, background:`${color}18`, color }}>
+      {initials}
+    </div>
+  );
+}
 
-  const [activeTab, setActiveTab]     = useState("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType]   = useState("ALL");
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  
-  // Applications Drawer state
-  const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
-  // Scheduler state
-  const [schedulingApplication, setSchedulingApplication] = useState(null);
+/* ─── Applicant drawer ───────────────────────────────────── */
+function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule }) {
+  const [scheduling, setScheduling] = useState(false);
+  const [acting, setActing]         = useState(null);
 
-  const filteredApplicants = useMemo(() => {
-    if (!selectedJobForApplicants) return [];
-    return (applications || []).filter(
-      (app) => app.jobPostingId === selectedJobForApplicants.id
-    );
-  }, [applications, selectedJobForApplicants]);
+  if (!app) return null;
 
-  // ── Derived Stats ──
-  const localStats = useMemo(() => {
-    const jobs = jobPostings || [];
-    return {
-      total:   jobs.length,
-      active:  jobs.filter((j) => j.status === "ACTIVE").length,
-      draft:   jobs.filter((j) => j.status === "DRAFT").length,
-      expired: jobs.filter((j) => j.status === "EXPIRED" || j.status === "DELETED").length,
-    };
-  }, [jobPostings]);
-
-  // ── Filtered Jobs ──
-  const filtered = useMemo(() => {
-    const jobsToFilter = jobPostings || [];
-    return jobsToFilter.filter((j) => {
-      const matchTab    = activeTab === "ALL" || j.status === activeTab;
-      const matchType   = filterType === "ALL" || j.type === filterType;
-      const matchSearch =
-        j.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        j.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        j.category.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchTab && matchType && matchSearch;
-    });
-  }, [jobPostings, activeTab, filterType, searchQuery]);
-
-  // ── Actions ──
-  const handleDelete  = (job) => setDeleteTarget(job);
-  const confirmDelete = () => {
-    deleteJobPosting(deleteTarget.id);
-    setDeleteTarget(null);
+  const handleAction = async (newStatus) => {
+    setActing(newStatus);
+    try { await onUpdateStatus(app.id, newStatus); }
+    finally { setActing(null); }
   };
-  const handlePublish = (id) => updateJobPostingStatus(id, "ACTIVE");
-  const handleClose   = (id) => updateJobPostingStatus(id, "EXPIRED");
-
-  if (error) {
-    return (
-      <div className="ds-root employer">
-        <div className="ds-body">
-          <aside className="ds-sidebar">
-             <EmployerSidebar employer={employer} loading={loading} stats={stats} />
-          </aside>
-          <main className="ds-main">
-            <div className="kora-empty-state">
-              <p>Failed to load jobs: {error}</p>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="ds-root employer">
-
-      {deleteTarget && (
-        <>
-          <div className="mj-confirm-overlay" onClick={() => setDeleteTarget(null)} />
-          <div className="mj-confirm-box">
-            <div className="mj-confirm-icon"><Trash2 size={24} /></div>
-            <h3>Delete Job Posting</h3>
-            <p>
-              Are you sure you want to delete <strong>{deleteTarget.title}</strong>?
-              This action cannot be undone and will remove all associated applications.
-            </p>
-            <div className="mj-confirm-actions">
-              <button className="mj-btn-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className="mj-btn-danger" onClick={confirmDelete}>Delete Job</button>
+    <>
+      <div className="mj-drawer-overlay" onClick={onClose} />
+      <div className="mj-drawer" role="dialog" aria-label="Applicant Profile">
+        {/* Header */}
+        <div className="mj-drawer-head">
+          <div className="mj-drawer-head-left">
+            <Avatar name={app.applicant} size={44} />
+            <div>
+              <h3 className="mj-drawer-name">{app.applicant}</h3>
+              <p className="mj-drawer-job">{app.job}</p>
             </div>
           </div>
-        </>
-      )}
+          <button className="mj-drawer-close" onClick={onClose}><X size={16}/></button>
+        </div>
 
+        {/* Status bar */}
+        <div className="mj-drawer-status-bar">
+          <StatusBadge status={app.status} />
+          <span className="mj-drawer-date">Applied {fmtDate(app.date)}</span>
+        </div>
+
+        {/* Body */}
+        <div className="mj-drawer-body">
+
+          {/* Contact info */}
+          <section className="mj-drawer-section">
+            <h4 className="mj-drawer-section-title">Contact</h4>
+            <div className="mj-drawer-info-grid">
+              {app.email && (
+                <div className="mj-drawer-info-row">
+                  <Mail size={13} className="mj-drawer-info-icon"/>
+                  <a href={`mailto:${app.email}`} className="mj-drawer-link">{app.email}</a>
+                </div>
+              )}
+              {app.phone && (
+                <div className="mj-drawer-info-row">
+                  <Phone size={13} className="mj-drawer-info-icon"/>
+                  <span>{app.phone}</span>
+                </div>
+              )}
+              {app.city && (
+                <div className="mj-drawer-info-row">
+                  <MapPin size={13} className="mj-drawer-info-icon"/>
+                  <span>{app.city}</span>
+                </div>
+              )}
+              {app.expectedSalary && (
+                <div className="mj-drawer-info-row">
+                  <Banknote size={13} className="mj-drawer-info-icon"/>
+                  <span>Expects: <strong>{fmtSalary(app.expectedSalary)}</strong></span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Professional summary */}
+          {app.profileSummary && (
+            <section className="mj-drawer-section">
+              <h4 className="mj-drawer-section-title">Summary</h4>
+              <p className="mj-drawer-summary">{app.profileSummary}</p>
+            </section>
+          )}
+
+          {/* Skills */}
+          {app.skills?.length > 0 && (
+            <section className="mj-drawer-section">
+              <h4 className="mj-drawer-section-title">Skills</h4>
+              <div className="mj-drawer-chips">
+                {app.skills.map((s,i) => (
+                  <span key={i} className="mj-chip">{typeof s === 'object' ? s.name : s}</span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Experience */}
+          {app.experiences?.length > 0 && (
+            <section className="mj-drawer-section">
+              <h4 className="mj-drawer-section-title">Experience</h4>
+              {app.experiences.map((exp, i) => (
+                <div key={i} className="mj-drawer-exp-item">
+                  <div className="mj-drawer-exp-title">{exp.jobTitle || exp.position}</div>
+                  <div className="mj-drawer-exp-company">{exp.companyName || exp.company}</div>
+                  {(exp.startDate || exp.endDate) && (
+                    <div className="mj-drawer-exp-date">
+                      {exp.startDate} — {exp.endDate || 'Present'}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
+
+          {/* Cover letter */}
+          {app.coverLetter && (
+            <section className="mj-drawer-section">
+              <h4 className="mj-drawer-section-title">Cover Letter</h4>
+              <div className="mj-drawer-cover">{app.coverLetter}</div>
+            </section>
+          )}
+
+          {/* CV link */}
+          {app.cvUrl && (
+            <a href={app.cvUrl} target="_blank" rel="noreferrer" className="mj-cv-link">
+              <FileText size={14}/> View Resume / CV <ExternalLink size={12}/>
+            </a>
+          )}
+        </div>
+
+        {/* Actions footer */}
+        <div className="mj-drawer-footer">
+          {app.status === 'APPLIED' && (
+            <>
+              <button
+                className="mj-action-btn mj-action-btn--accept"
+                onClick={() => handleAction('SHORTLISTED')}
+                disabled={!!acting}
+              >
+                {acting === 'SHORTLISTED'
+                  ? <><span className="mj-btn-spin"/> Accepting…</>
+                  : <><UserCheck size={14}/> Accept & Shortlist</>}
+              </button>
+              <button
+                className="mj-action-btn mj-action-btn--reject"
+                onClick={() => handleAction('REJECTED')}
+                disabled={!!acting}
+              >
+                {acting === 'REJECTED'
+                  ? <><span className="mj-btn-spin"/> Rejecting…</>
+                  : <><UserX size={14}/> Reject</>}
+              </button>
+            </>
+          )}
+
+          {app.status === 'SHORTLISTED' && (
+            <>
+              <button
+                className="mj-action-btn mj-action-btn--hire"
+                onClick={() => handleAction('HIRED')}
+                disabled={!!acting}
+              >
+                {acting === 'HIRED'
+                  ? <><span className="mj-btn-spin"/> Hiring…</>
+                  : <><Award size={14}/> Hire Immediately</>}
+              </button>
+              <button
+                className="mj-action-btn mj-action-btn--schedule"
+                onClick={() => setScheduling(true)}
+                disabled={!!acting}
+              >
+                <CalendarClock size={14}/> Schedule Interview
+              </button>
+              <button
+                className="mj-action-btn mj-action-btn--reject"
+                onClick={() => handleAction('REJECTED')}
+                disabled={!!acting}
+              >
+                <UserX size={14}/> Reject
+              </button>
+            </>
+          )}
+
+          {(app.status === 'HIRED' || app.status === 'REJECTED') && (
+            <div className="mj-drawer-terminal">
+              <CheckCircle2 size={14} style={{ color: app.status === 'HIRED' ? '#16a34a' : '#dc2626' }}/>
+              Application {app.status === 'HIRED' ? 'marked as Hired' : 'Rejected'}
+            </div>
+          )}
+        </div>
+
+        {/* Interview scheduler modal */}
+        {scheduling && (
+          <InterviewScheduler
+            application={app}
+            onClose={() => setScheduling(false)}
+            onScheduled={(iv) => {
+              setScheduling(false);
+              onSchedule?.(iv);
+            }}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════ */
+export default function ManageJobs() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const {
+    employer, stats, loading, error, refreshing, refresh,
+    jobPostings, applications,
+    updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
+  } = useEmployerDashboard();
+
+  /* ── UI state ─────────────────────────────────────────── */
+  const [jobTab,    setJobTab]    = useState('ALL');
+  const [jobSearch, setJobSearch] = useState('');
+  const [appTab,    setAppTab]    = useState('ALL');
+  const [appSearch, setAppSearch] = useState('');
+  const [selectedJob,  setSelectedJob]  = useState(null); // job whose applications we're viewing
+  const [selectedApp,  setSelectedApp]  = useState(null); // applicant drawer
+  const [expandedJob,  setExpandedJob]  = useState(null); // accordion on mobile
+  const [toast, setToast]               = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  /* ── Derived data ─────────────────────────────────────── */
+  const filteredJobs = useMemo(() => {
+    let list = jobTab === 'ALL'
+      ? jobPostings
+      : jobPostings.filter(j => j.status === jobTab);
+    if (jobSearch.trim()) {
+      const q = jobSearch.toLowerCase();
+      list = list.filter(j =>
+        j.title.toLowerCase().includes(q) || j.location?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [jobPostings, jobTab, jobSearch]);
+
+  const jobApps = useMemo(() => {
+    if (!selectedJob) return [];
+    return applications.filter(a => String(a.jobPostingId) === String(selectedJob.id));
+  }, [applications, selectedJob]);
+
+  const filteredApps = useMemo(() => {
+    let list = appTab === 'ALL' ? jobApps : jobApps.filter(a => a.status === appTab);
+    if (appSearch.trim()) {
+      const q = appSearch.toLowerCase();
+      list = list.filter(a => a.applicant?.toLowerCase().includes(q));
+    }
+    return list;
+  }, [jobApps, appTab, appSearch]);
+
+  /* KPI counts */
+  const kpi = useMemo(() => ({
+    total:        jobPostings.length,
+    active:       jobPostings.filter(j=>j.status==='ACTIVE').length,
+    apps:         applications.length,
+    shortlisted:  applications.filter(a=>a.status==='SHORTLISTED').length,
+    hired:        applications.filter(a=>a.status==='HIRED').length,
+  }), [jobPostings, applications]);
+
+  /* ── Handlers ─────────────────────────────────────────── */
+  const handleStatusChange = useCallback(async (appId, newStatus) => {
+    await updateApplicationStatus(appId, newStatus);
+    showToast(`Applicant ${newStatus.toLowerCase()}.`);
+    // Refresh drawer data
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, status: newStatus } : prev);
+  }, [updateApplicationStatus]);
+
+  const handleScheduled = useCallback((iv) => {
+    showToast('Interview scheduled successfully!');
+    setSelectedApp(null);
+  }, []);
+
+  const handleJobStatusToggle = useCallback(async (job) => {
+    const next = job.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+    await updateJobPostingStatus(job.id, next);
+    showToast(`Job ${next === 'ACTIVE' ? 'activated' : 'paused'}.`);
+  }, [updateJobPostingStatus]);
+
+  const handleDeleteJob = useCallback(async (jobId) => {
+    if (!window.confirm('Delete this job listing? This cannot be undone.')) return;
+    await deleteJobPosting(jobId);
+    if (selectedJob?.id === jobId) setSelectedJob(null);
+    showToast('Job deleted.');
+  }, [deleteJobPosting, selectedJob]);
+
+  /* ── Loading / error ──────────────────────────────────── */
+  if (loading) return (
+    <div className="ds-root employer">
       <div className="ds-body">
-        {/* ════════ SIDEBAR ════════ */}
+        <aside className="ds-sidebar"><EmployerSidebar employer={employer} loading stats={stats}/></aside>
+        <main className="ds-main">
+          <div className="mj-loading"><div className="mj-spinner"/><span>Loading jobs…</span></div>
+        </main>
+      </div>
+    </div>
+  );
+
+  /* ── Render ───────────────────────────────────────────── */
+  return (
+    <div className="ds-root employer">
+      <div className="ds-body">
         <aside className="ds-sidebar">
-          <EmployerSidebar employer={employer} loading={loading} stats={stats} />
+          <EmployerSidebar employer={employer} loading={false} stats={stats}/>
         </aside>
 
-        {/* ════════ MAIN CONTENT ════════ */}
         <main className="ds-main">
+          {/* Toast */}
+          {toast && (
+            <div className={`mj-toast${toast.type === 'error' ? ' error' : ''}`}>
+              {toast.type === 'success' ? <CheckCircle2 size={14}/> : <AlertCircle size={14}/>}
+              {toast.msg}
+            </div>
+          )}
 
-          <div className="ed-welcome">
-            <div>
-              <h1 className="ed-welcome-title">Manage Job Postings</h1>
-              <p className="ed-welcome-sub">
-                {localStats.total} total · {localStats.active} active · {localStats.draft} draft
-              </p>
+          {/* Top bar */}
+          <div className="mj-topbar">
+            <div className="mj-topbar-left">
+              <h1>Manage Jobs</h1>
+              <p>{kpi.total} listings · {kpi.apps} applications</p>
             </div>
-            <button className="ed-find-jobs-btn" onClick={() => navigate("/employer/post-job")}>
-              <Plus size={15} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-              Post New Job
-            </button>
-          </div>
-
-          {/* Stats Row */}
-          <div className="mj-stats-row">
-            <div className="mj-stat-chip">
-              <div className="mj-stat-chip-icon" style={{ background: "rgba(22, 163, 74, 0.1)", color: "#16A34A" }}>
-                <CheckCircle size={20} />
-              </div>
-              <div>
-                <div className="mj-stat-chip-val">{localStats.active}</div>
-                <div className="mj-stat-chip-lbl">Active Jobs</div>
-              </div>
-            </div>
-            <div className="mj-stat-chip">
-              <div className="mj-stat-chip-icon" style={{ background: "rgba(75, 85, 99, 0.1)", color: "#4B5563" }}>
-                <Edit2 size={20} />
-              </div>
-              <div>
-                <div className="mj-stat-chip-val">{localStats.draft}</div>
-                <div className="mj-stat-chip-lbl">Drafts</div>
-              </div>
-            </div>
-            <div className="mj-stat-chip">
-              <div className="mj-stat-chip-icon" style={{ background: "rgba(217, 119, 6, 0.1)", color: "#D97706" }}>
-                <Clock size={20} />
-              </div>
-              <div>
-                <div className="mj-stat-chip-val">{localStats.expired}</div>
-                <div className="mj-stat-chip-lbl">Expired</div>
-              </div>
-            </div>
-            <div className="mj-stat-chip">
-              <div className="mj-stat-chip-icon" style={{ background: "rgba(20, 83, 116, 0.1)", color: "var(--kora-primary)" }}>
-                <Briefcase size={20} />
-              </div>
-              <div>
-                <div className="mj-stat-chip-val">{localStats.total}</div>
-                <div className="mj-stat-chip-lbl">Total Posted</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mj-tab-filters">
-            {["ALL", "ACTIVE", "DRAFT", "EXPIRED", "DELETED"].map((tab) => (
-              <button
-                key={tab}
-                className={`mj-tab-filter ${activeTab === tab ? "active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "ALL" ? "All Jobs" : tab.charAt(0) + tab.slice(1).toLowerCase()}
-                <span className="mj-tab-count">
-                  {tab === "ALL" ? localStats.total : localStats[tab.toLowerCase()] || 0}
-                </span>
+            <div className="mj-topbar-actions">
+              <button className="mj-btn-ghost" onClick={refresh} disabled={refreshing}>
+                <RefreshCw size={13} className={refreshing ? 'mj-spin' : ''}/>
+                Refresh
               </button>
+              <button className="mj-btn-primary" onClick={() => navigate('/employer/post-job')}>
+                <Plus size={14}/> Post Job
+              </button>
+            </div>
+          </div>
+
+          {/* KPI strip */}
+          <div className="mj-stats-row">
+            {[
+              { label:'Active Jobs',    val: kpi.active,       icon: <Briefcase size={16}/>, color:'#1A5C2E', bg:'#ecfdf5' },
+              { label:'Total Apps',     val: kpi.apps,         icon: <Users size={16}/>,     color:'#1d4ed8', bg:'#eff6ff' },
+              { label:'Shortlisted',    val: kpi.shortlisted,  icon: <Star size={16}/>,      color:'#7c3aed', bg:'#faf5ff' },
+              { label:'Hired',          val: kpi.hired,        icon: <Award size={16}/>,     color:'#065f46', bg:'#d1fae5' },
+            ].map(s => (
+              <div key={s.label} className="mj-stat-chip">
+                <div className="mj-stat-chip-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+                <div>
+                  <div className="mj-stat-chip-val">{s.val}</div>
+                  <div className="mj-stat-chip-lbl">{s.label}</div>
+                </div>
+              </div>
             ))}
           </div>
 
-          <div className="mj-filters">
-            <div className="mj-search">
-              <Search size={16} className="mj-search-icon" />
-              <input
-                type="text"
-                placeholder="Search by title, location, or category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          {/* Main two-col layout */}
+          <div className="mj-main-layout">
 
-            <div className="mj-filter-select-wrapper">
-              <Filter size={14} className="mj-filter-icon" />
-              <select
-                className="mj-filter-select"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="ALL">All Types</option>
-                <option value="CDI">Full-time (CDI)</option>
-                <option value="CDD">Contract (CDD)</option>
-                <option value="STAGE">Internship (Stage)</option>
-                <option value="FREELANCE">Freelance</option>
-              </select>
-            </div>
-          </div>
+            {/* ── LEFT: job listings ── */}
+            <div className="mj-jobs-col">
+              <div className="mj-col-head">
+                <h2>Job Listings</h2>
+                <div className="mj-search-box">
+                  <Search size={13}/>
+                  <input
+                    value={jobSearch}
+                    onChange={e => setJobSearch(e.target.value)}
+                    placeholder="Search jobs…"
+                  />
+                </div>
+              </div>
 
-          <div className="mj-list-container">
-            {loading ? (
-              <div style={{ padding: "40px", textAlign: "center", color: "var(--kora-muted)" }}>
-                Loading jobs...
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="mj-empty-state">
-                <div className="mj-empty-icon"><Briefcase size={32} /></div>
-                <h3>No jobs found</h3>
-                <p>We couldn't find any job postings matching your current filters.</p>
-                {activeTab !== "ALL" || searchQuery !== "" ? (
+              {/* Status tabs */}
+              <div className="mj-tab-filters">
+                {JOB_STATUS_TABS.map(t => (
                   <button
-                    className="mj-btn-outline"
-                    onClick={() => { setActiveTab("ALL"); setSearchQuery(""); setFilterType("ALL"); }}
-                    style={{ marginTop: "16px" }}
+                    key={t.key}
+                    className={`mj-tab${jobTab === t.key ? ' active' : ''}`}
+                    onClick={() => setJobTab(t.key)}
                   >
-                    Clear Filters
+                    {t.label}
+                    <span className="mj-tab-count">
+                      {t.key === 'ALL' ? jobPostings.length : jobPostings.filter(j=>j.status===t.key).length}
+                    </span>
                   </button>
-                ) : (
-                  <button
-                    className="kora-btn-primary"
-                    onClick={() => navigate("/employer/post-job")}
-                    style={{ marginTop: "16px" }}
-                  >
-                    Create First Job
-                  </button>
-                )}
+                ))}
               </div>
-            ) : (
-              <div className="mj-table-wrap">
-                <table className="mj-table">
-                  <thead>
-                    <tr>
-                      <th>Job Role</th>
-                      <th>Status</th>
-                      <th>Metrics</th>
-                      <th>Dates</th>
-                      <th className="mj-th-actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((job) => (
-                      <tr key={job.id}>
-                        <td>
-                          <div className="mj-job-title-cell">{job.title}</div>
-                          <div className="mj-job-sub">
-                            <span>{job.type}</span>
-                            <span style={{ margin: "0 6px" }}>•</span>
-                            <span>{job.location}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <StatusBadge status={job.status} />
-                        </td>
-                        <td>
-                          <div className="mj-td-metrics">
-                            <div
-                              className="mj-metric"
-                              title="View Applicants"
-                              style={{ cursor: "pointer", color: "var(--kora-primary)", hover: { color: "#0d3d1f" } }}
-                              onClick={() => setSelectedJobForApplicants(job)}
-                            >
-                              <Users size={14} /> <strong>{job.applications}</strong>
+
+              {/* Job cards */}
+              {filteredJobs.length === 0 ? (
+                <div className="mj-empty">
+                  <Briefcase size={28}/>
+                  <p>No jobs found</p>
+                  <button className="mj-btn-primary" onClick={() => navigate('/employer/post-job')}>
+                    <Plus size={13}/> Post your first job
+                  </button>
+                </div>
+              ) : (
+                <div className="mj-job-list">
+                  {filteredJobs.map(job => {
+                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.id)).length;
+                    const isSelected = selectedJob?.id === job.id;
+                    return (
+                      <div
+                        key={job.id}
+                        className={`mj-job-card${isSelected ? ' selected' : ''}`}
+                        onClick={() => { setSelectedJob(job); setAppTab('ALL'); setAppSearch(''); }}
+                      >
+                        <div className="mj-job-card-top">
+                          <div className="mj-job-card-info">
+                            <div className="mj-job-card-title-row">
+                              <h3 className="mj-job-card-title">{job.title}</h3>
+                              <StatusBadge status={job.status} map={JOB_STATUS_STYLE}/>
                             </div>
-                            <div className="mj-metric" title="Total Views">
-                              <Eye size={14} /> <span>{job.views}</span>
+                            <div className="mj-job-card-meta">
+                              <span><MapPin size={11}/>{job.location}</span>
+                              <span><Briefcase size={11}/>{job.type}</span>
+                              {job.deadline && <span><Clock size={11}/>Closes {fmtDate(job.deadline)}</span>}
                             </div>
                           </div>
-                        </td>
-                        <td>
-                          <div className="mj-td-dates">
-                            <span>Posted: {job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'N/A'}</span>
-                            <span className={job.daysLeft <= 7 && job.status === "ACTIVE" ? "mj-date-urgent" : ""}>
-                              Expires: {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : 'N/A'}
-                            </span>
+                          <div className="mj-job-card-stats">
+                            <div className="mj-job-stat">
+                              <span className="mj-job-stat-val">{appCount}</span>
+                              <span className="mj-job-stat-lbl">Apps</span>
+                            </div>
+                            <div className="mj-job-stat">
+                              <span className="mj-job-stat-val">{job.views || 0}</span>
+                              <span className="mj-job-stat-lbl">Views</span>
+                            </div>
+                            {job.daysLeft != null && (
+                              <div className="mj-job-stat" style={{ color: job.daysLeft < 3 ? '#dc2626' : undefined }}>
+                                <span className="mj-job-stat-val">{job.daysLeft}d</span>
+                                <span className="mj-job-stat-lbl">Left</span>
+                              </div>
+                            )}
                           </div>
-                        </td>
-                        <td className="mj-td-actions">
-                          <div className="mj-actions">
-                            {job.status === "DRAFT" ? (
-                              <button className="mj-action-btn success" title="Publish" onClick={() => handlePublish(job.id)}>
-                                <Play size={16} />
-                              </button>
-                            ) : job.status === "ACTIVE" ? (
-                              <button className="mj-action-btn danger" title="Close Job" onClick={() => handleClose(job.id)}>
-                                <XCircle size={16} />
-                              </button>
-                            ) : null}
+                        </div>
 
-                            <button className="mj-action-btn" title="View Applicants" onClick={() => setSelectedJobForApplicants(job)}>
-                              <Users size={16} />
-                            </button>
-                            <button className="mj-action-btn" title="Edit">
-                              <Edit2 size={16} />
-                            </button>
-                            <button className="mj-action-btn danger" title="Delete" onClick={() => handleDelete(job)}>
-                              <Trash2 size={16} />
-                            </button>
-                            <button className="mj-action-btn" title="More options">
-                              <MoreVertical size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                        {/* Quick actions row */}
+                        <div className="mj-job-card-actions" onClick={e => e.stopPropagation()}>
+                          <button
+                            className="mj-job-action-btn"
+                            onClick={() => handleJobStatusToggle(job)}
+                            title={job.status === 'ACTIVE' ? 'Pause job' : 'Activate job'}
+                          >
+                            {job.status === 'ACTIVE' ? <Pause size={12}/> : <Play size={12}/>}
+                            {job.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                          </button>
+                          <Link
+                            to={`/employer/post-job?edit=${job.id}`}
+                            className="mj-job-action-btn"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            className="mj-job-action-btn danger"
+                            onClick={() => handleDeleteJob(job.id)}
+                          >
+                            <Trash2 size={12}/> Delete
+                          </button>
+                          <button
+                            className="mj-job-action-btn primary"
+                            onClick={() => { setSelectedJob(job); setAppTab('ALL'); }}
+                          >
+                            <Users size={12}/> {appCount} Applicants <ArrowRight size={11}/>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* ── RIGHT: applicants panel ── */}
+            <div className="mj-apps-col">
+              {!selectedJob ? (
+                <div className="mj-apps-placeholder">
+                  <Users size={32}/>
+                  <h3>Select a job to view applicants</h3>
+                  <p>Click any job on the left to see its applicant list.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mj-col-head">
+                    <div>
+                      <h2>{selectedJob.title}</h2>
+                      <p className="mj-col-sub">{jobApps.length} applicants</p>
+                    </div>
+                    <div className="mj-search-box">
+                      <Search size={13}/>
+                      <input
+                        value={appSearch}
+                        onChange={e => setAppSearch(e.target.value)}
+                        placeholder="Search by name…"
+                      />
+                    </div>
+                  </div>
+
+                  {/* App status tabs */}
+                  <div className="mj-tab-filters">
+                    {APP_STATUS_TABS.map(t => (
+                      <button
+                        key={t.key}
+                        className={`mj-tab${appTab === t.key ? ' active' : ''}`}
+                        onClick={() => setAppTab(t.key)}
+                      >
+                        {t.label}
+                        <span className="mj-tab-count">
+                          {t.key === 'ALL' ? jobApps.length : jobApps.filter(a=>a.status===t.key).length}
+                        </span>
+                      </button>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  </div>
+
+                  {/* Applicant rows */}
+                  {filteredApps.length === 0 ? (
+                    <div className="mj-empty">
+                      <Users size={24}/>
+                      <p>No applicants {appTab !== 'ALL' ? `with status "${appTab}"` : 'yet'}</p>
+                    </div>
+                  ) : (
+                    <div className="mj-app-list">
+                      {filteredApps.map(app => (
+                        <div
+                          key={app.id}
+                          className="mj-app-row"
+                          onClick={() => setSelectedApp(app)}
+                        >
+                          <Avatar name={app.applicant} />
+                          <div className="mj-app-row-info">
+                            <span className="mj-app-row-name">{app.applicant}</span>
+                            <span className="mj-app-row-date">{fmtDate(app.date)}</span>
+                          </div>
+                          {app.expectedSalary && (
+                            <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
+                          )}
+                          <StatusBadge status={app.status}/>
+                          <ArrowRight size={14} className="mj-app-row-arrow"/>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </main>
       </div>
 
-      {/* ── Applications sliding drawer ── */}
-      {selectedJobForApplicants && (
-        <>
-          <div className="mj-drawer-overlay" onClick={() => setSelectedJobForApplicants(null)} />
-          <div className="mj-drawer">
-            <div className="mj-drawer-header">
-              <div className="mj-drawer-title-area">
-                <h2>Candidates List</h2>
-                <p>{selectedJobForApplicants.title} · {filteredApplicants.length} applications</p>
-              </div>
-              <button className="mj-drawer-close" onClick={() => setSelectedJobForApplicants(null)}>
-                <X size={16} />
-              </button>
-            </div>
-            
-            <div className="mj-drawer-body">
-              {filteredApplicants.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748b" }}>
-                  <Users size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
-                  <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>No applicants yet</p>
-                  <p style={{ fontSize: 12.5, marginTop: 4, color: "#94a3b8" }}>
-                    No candidates have applied for this position yet.
-                  </p>
-                </div>
-              ) : (
-                filteredApplicants.map((app) => (
-                  <div key={app.id} className="mj-app-card">
-                    <div className="mj-app-card-header">
-                      <div className="mj-app-candidate-info">
-                        <div className="mj-app-avatar">
-                          {app.avatar ? (
-                            <img src={app.avatar} alt={app.applicant} />
-                          ) : (
-                            app.applicant.charAt(0).toUpperCase()
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="mj-app-name">{app.applicant}</h3>
-                          <div className="mj-app-meta-row">
-                            <span className="mj-app-meta-item"><Mail size={12} /> {app.email || "No email"}</span>
-                            {app.phone && <span className="mj-app-meta-item"><Phone size={12} /> {app.phone}</span>}
-                            {app.city && <span className="mj-app-meta-item"><MapPin size={12} /> {app.city}</span>}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <span className={`mj-app-badge ${app.status.toLowerCase()}`}>
-                        {app.status}
-                      </span>
-                    </div>
-
-                    {app.expectedSalary && (
-                      <div>
-                        <div className="mj-app-section-title">Expected Salary</div>
-                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--kora-primary)" }}>
-                          ${app.expectedSalary.toLocaleString()} USD
-                        </div>
-                      </div>
-                    )}
-
-                    {app.profileSummary && (
-                      <div>
-                        <div className="mj-app-section-title">Candidate Summary</div>
-                        <div className="mj-app-detail-block">{app.profileSummary}</div>
-                      </div>
-                    )}
-
-                    {app.coverLetter && (
-                      <div>
-                        <div className="mj-app-section-title">Cover Letter</div>
-                        <div className="mj-app-detail-block" style={{ fontStyle: "italic", whiteSpace: "pre-wrap" }}>
-                          "{app.coverLetter}"
-                        </div>
-                      </div>
-                    )}
-
-                    {app.skills?.length > 0 && (
-                      <div>
-                        <div className="mj-app-section-title">Skills</div>
-                        <div className="mj-app-skills">
-                          {app.skills.map((skill) => (
-                            <span key={skill} className="mj-app-skill-tag">{skill}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mj-app-actions">
-                      {/* View CV Resume */}
-                      {app.cvUrl ? (
-                        <a
-                          href={app.cvUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mj-drawer-btn secondary"
-                          title="View resume in new tab"
-                        >
-                          <FileText size={14} /> Resume <ExternalLink size={11} />
-                        </a>
-                      ) : (
-                        <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                          <FileText size={14} /> No Resume
-                        </button>
-                      )}
-
-                      {/* Status transitions */}
-                      {app.status === "PENDING" && (
-                        <>
-                          <button
-                            className="mj-drawer-btn success"
-                            onClick={() => updateApplicationStatus(app.id, "SHORTLISTED")}
-                          >
-                            <Check size={14} /> Shortlist
-                          </button>
-                          <button
-                            className="mj-drawer-btn danger"
-                            onClick={() => updateApplicationStatus(app.id, "REJECTED")}
-                          >
-                            <X size={14} /> Reject
-                          </button>
-                        </>
-                      )}
-
-                      {app.status === "SHORTLISTED" && (
-                        <>
-                          <button
-                            className="mj-drawer-btn primary"
-                            onClick={() => setSchedulingApplication(app)}
-                          >
-                            <CalendarIcon size={14} /> Schedule Interview
-                          </button>
-                          <button
-                            className="mj-drawer-btn danger"
-                            onClick={() => updateApplicationStatus(app.id, "REJECTED")}
-                          >
-                            <X size={14} /> Reject
-                          </button>
-                        </>
-                      )}
-
-                      {app.status === "REJECTED" && (
-                        <button
-                          className="mj-drawer-btn neutral"
-                          onClick={() => updateApplicationStatus(app.id, "PENDING")}
-                        >
-                          Reconsider
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ── Interview Scheduler Modal ── */}
-      {schedulingApplication && (
-        <InterviewScheduler
-          application={schedulingApplication}
-          onClose={() => setSchedulingApplication(null)}
-          onScheduled={() => {
-            setSchedulingApplication(null);
-          }}
-        />
-      )}
+      {/* Applicant drawer */}
+      <ApplicantDrawer
+        app={selectedApp}
+        onClose={() => setSelectedApp(null)}
+        onUpdateStatus={handleStatusChange}
+        onSchedule={handleScheduled}
+      />
     </div>
   );
 }
