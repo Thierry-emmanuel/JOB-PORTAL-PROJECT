@@ -266,7 +266,7 @@ export default function EmployerDashboard() {
                   },
                   { icon: <Edit2 size={20} />,     label: 'Company Profile',      color: '#10B981', bg: '#ECFDF5', action: () => navigate('/profile/employer')      },
                   { icon: <Globe size={20} />,     label: 'Browse Jobs',          color: '#2563EB', bg: '#DBEAF8', action: () => navigate('/jobs')                  },
-                  { icon: <BarChart2 size={20} />,  label: 'Market Insights',     color: '#7C3AED', bg: '#F3E8FF', action: () => navigate('/insights')              },
+                  { icon: <BarChart2 size={20} />,  label: 'Market Insights',     color: '#7C3AED', bg: '#F3E8FF', action: () => navigate('/employer/insights')         },
                   { icon: <Home size={20} />,      label: 'Go to Homepage',       color: '#0D9488', bg: '#CCFBF1', action: () => navigate('/')                      },
                 ].map(({ icon, label, color, bg, action }) => (
                   <button key={label} className="ds-quick-btn" onClick={action}>

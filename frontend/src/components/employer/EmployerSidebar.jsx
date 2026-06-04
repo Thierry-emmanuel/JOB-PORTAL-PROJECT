@@ -9,7 +9,7 @@ const NAV = [
   { path: '/employer/jobs',        label: 'Job Postings',    icon: Briefcase        },
   { path: '/employer/interviews',  label: 'Interviews',      icon: CalendarCheck    },
   { path: '/profile/employer',     label: 'Company Profile', icon: Building         },
-  { path: '/insights',             label: 'Market Insights', icon: BarChart2        },
+  { path: '/employer/insights',    label: 'Market Insights', icon: BarChart2        },
   { path: '/jobs',                 label: 'Browse Jobs',     icon: Globe            },
   { path: '/',                     label: 'Home Page',       icon: Home             },
 ];

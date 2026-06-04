@@ -33,6 +33,7 @@ const JobList          = lazy(() => import('./pages/jobs/JobList'));
 const JobDetails       = lazy(() => import('./pages/jobs/JobDetails'));
 const ApplyPage        = lazy(() => import('./pages/jobs/ApplyPage'));
 const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagement'));
+const EmployerInsightsDashPage = lazy(() => import('./pages/employer/EmployerInsightsDashPage'));
 const InsightsPage     = lazy(() => import('./pages/shared/InsightsPage'));
 
 // ── Employer combined view ─────────────────────────────────
@@ -125,6 +126,7 @@ export default function App() {
                 <Route path="/employer/jobs"         element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
                 <Route path="/employer/post-job"     element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
                 <Route path="/employer/interviews"   element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
+                <Route path="/employer/insights"     element={<ProtectedRoute role="EMPLOYER"><EmployerInsightsDashPage /></ProtectedRoute>} />
 
                 {/* ── Public ── */}
                 <Route path="/login"           element={<Login />} />
