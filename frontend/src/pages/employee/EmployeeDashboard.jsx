@@ -5,6 +5,7 @@ import {
   Briefcase, Bookmark, CalendarCheck, Star,
   ArrowRight, Zap, FileText, AlertCircle,
   RefreshCw, CheckCircle2, XCircle, Clock,
+  TrendingUp, Search, BarChart2, CheckCircle, X, Eye,
 } from 'lucide-react';
 import EmployeeLayout from '../../layouts/EmployeeLayout';
 import InterviewCard from '../../components/interviews/InterviewCard';
