@@ -77,6 +77,21 @@ public interface JobListingRepository
     Optional<JobListing> findActiveById(@Param("id") UUID id);
 
     /**
+     * Detail view without status filter — used for authenticated "view-only" access
+     * (e.g., job seeker viewing a job from their application history even if it
+     * has since expired or been set to DRAFT).
+     */
+    @Query("""
+        SELECT jl FROM JobListing jl
+        JOIN FETCH jl.category
+        LEFT JOIN FETCH jl.location
+        LEFT JOIN FETCH jl.skills
+        WHERE jl.id = :id
+          AND jl.status <> JobPortal.project.JobListing.enums.PostingStatus.DELETED
+        """)
+    Optional<JobListing> findAnyById(@Param("id") UUID id);
+
+    /**
      * Resolves a legacy numerical prefix ID to its full UUID string.
      */
     @Query(value = """

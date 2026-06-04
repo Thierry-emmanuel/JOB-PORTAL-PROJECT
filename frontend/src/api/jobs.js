@@ -29,6 +29,16 @@ export const getJob = async (id) => {
   return mapJobDetail(data?.data ?? data);
 };
 
+/**
+ * Fetches job details without filtering by ACTIVE status.
+ * Used for view-only access from application history where the job
+ * may have expired or been set to DRAFT.
+ */
+export const getJobDetail = async (id) => {
+  const { data } = await apiClient.get(`/api/jobs/${id}/detail`);
+  return mapJobDetail(data?.data ?? data);
+};
+
 /* ─── Mappers ────────────────────────────────────────────── */
 
 const mapJobSummary = (job) => ({
@@ -195,7 +205,7 @@ export const rateJob = async (id, rating) => {
 };
 
 const jobsService = {
-  getJobs, getJob,
+  getJobs, getJob, getJobDetail,
   applyToJob, getUserApplications, getUserInterviews,
   getEmployerApplications, updateApplicationStatus,
   withdrawApplication, getApplicationStats,

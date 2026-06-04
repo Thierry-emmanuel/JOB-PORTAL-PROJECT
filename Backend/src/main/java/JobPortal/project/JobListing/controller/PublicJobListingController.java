@@ -109,6 +109,36 @@ public class PublicJobListingController {
         return ResponseEntity.ok(ApiResponse.ok("Job listing retrieved", response));
     }
 
+    // ── GET /api/jobs/{id}/detail (view-only, any status) ────────────────────
+
+    @GetMapping("/{id}/detail")
+    @Operation(
+        summary = "Get a job listing detail (any status)",
+        description = "Returns full details of any non-deleted listing regardless of status. "
+            + "Used for view-only access from application history."
+    )
+    public ResponseEntity<ApiResponse<JobListingResponse>> getListingDetail(
+            @PathVariable String id) {
+
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            try {
+                Long numericalId = Long.parseLong(id);
+                uuid = jobListingService.resolveNumericalIdToUuid(numericalId);
+                if (uuid == null) {
+                    throw new JobPortal.project.JobListing.exception.ResourceNotFoundException("JobListing", id);
+                }
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("Invalid ID format: " + id);
+            }
+        }
+
+        JobListingResponse response = jobListingService.getAnyListingById(uuid);
+        return ResponseEntity.ok(ApiResponse.ok("Job listing retrieved", response));
+    }
+
     // ── GET /api/jobs/search ──────────────────────────────────────────────────
 
     @GetMapping("/search")

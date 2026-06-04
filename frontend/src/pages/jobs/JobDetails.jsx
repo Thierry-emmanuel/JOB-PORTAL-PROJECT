@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { getJob, saveJob, getUserApplications } from '../../api/jobs';
+import { getJob, getJobDetail, saveJob, getUserApplications } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';
 import '../../styles/job-list.css';
 
@@ -39,7 +39,9 @@ export default function JobDetails() {
     let cancelled = false;
     async function load() {
       try {
-        const data = await getJob(id);
+        // When viewOnly=true (from application history), use the /detail endpoint
+        // which returns any non-deleted job regardless of status (ACTIVE/DRAFT/EXPIRED).
+        const data = isViewOnly ? await getJobDetail(id) : await getJob(id);
         if (!cancelled) {
           setJob(data);
           setSaved(data.saved ?? false);

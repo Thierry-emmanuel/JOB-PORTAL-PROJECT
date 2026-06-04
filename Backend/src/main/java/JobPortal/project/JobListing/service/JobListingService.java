@@ -115,6 +115,15 @@ public interface JobListingService {
     JobListingResponse getPublicListingById(UUID listingId);
 
     /**
+     * Returns full details for any non-deleted listing regardless of status.
+     * Used for authenticated "view-only" access from application history.
+     *
+     * @param listingId UUID of the listing
+     * @return full detail response
+     */
+    JobListingResponse getAnyListingById(UUID listingId);
+
+    /**
      * Advanced multi-criteria search across all ACTIVE listings.
      *
      * @param keyword         optional keyword (searched in title, description, skills)

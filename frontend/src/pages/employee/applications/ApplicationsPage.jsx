@@ -8,7 +8,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Briefcase, Clock, ChevronRight, AlertCircle, RefreshCw, Eye,
   CheckCircle2, XCircle, Star, FileText, Video, Phone, MapPin,
-  CalendarCheck, ArrowUpRight, Inbox, Search,
+  CalendarCheck, ArrowUpRight, Inbox, Search, X, FileText2,
+  DollarSign, User, Building2, CalendarDays, MessageSquare,
 } from 'lucide-react';
 import EmployeeLayout from '../../../layouts/EmployeeLayout';
 import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
@@ -74,17 +75,171 @@ const TAB_LABELS = {
   INTERVIEW_SCHEDULED:'Interview', HIRED:'Hired', REJECTED:'Rejected',
 };
 
+/* ─── Application Detail Modal ───────────────────────────── */
+function ApplicationDetailModal({ app, onClose }) {
+  if (!app) return null;
+  const s       = STATUS[app.status] || DEFAULT_STATUS;
+  const iv      = app.interview;
+  const jobLabel = app.jobTitle || `Job #${app.jobPostingId}`;
+
+  // Close on backdrop click
+  const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
+
+  // Close on Escape
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  /* ── Interview type icon map ── */
+  const ivMap = {
+    VIDEO:     { icon: <Video size={13}/>,  color: '#1d4ed8', bg: '#eff6ff', label: 'Video Call'   },
+    PHONE:     { icon: <Phone size={13}/>,  color: '#065f46', bg: '#ecfdf5', label: 'Phone Call'   },
+    IN_PERSON: { icon: <MapPin size={13}/>, color: '#92400e', bg: '#fffbeb', label: 'On-site'      },
+  };
+  const ivType = iv ? (ivMap[iv.type] || ivMap.VIDEO) : null;
+
+  return (
+    <div className="appd-backdrop" onClick={handleBackdrop}>
+      <div className="appd-modal" role="dialog" aria-modal="true" aria-label="Application Details">
+
+        {/* Header */}
+        <div className="appd-header" style={{ borderTop: `4px solid ${s.dot}` }}>
+          <div className="appd-header-left">
+            <div className="appd-header-icon" style={{ background: s.bg, color: s.color }}>
+              <FileText size={20}/>
+            </div>
+            <div>
+              <h2 className="appd-title">{jobLabel}</h2>
+              {app.companyName && <p className="appd-company"><Building2 size={12}/> {app.companyName}</p>}
+            </div>
+          </div>
+          <button className="appd-close" onClick={onClose} aria-label="Close">
+            <X size={18}/>
+          </button>
+        </div>
+
+        {/* Status strip */}
+        <div className="appd-status-strip" style={{ background: s.bg }}>
+          <span className="appd-status-badge" style={{ background: s.dot, color: '#fff' }}>
+            {s.icon} {s.label}
+          </span>
+          {app.appliedAt && (
+            <span className="appd-status-meta">
+              <CalendarDays size={11}/> Applied {fmtDate(app.appliedAt)}
+            </span>
+          )}
+          {app.lastUpdatedAt && app.lastUpdatedAt !== app.appliedAt && (
+            <span className="appd-status-meta">
+              <Clock size={11}/> Updated {fmtDate(app.lastUpdatedAt)}
+            </span>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="appd-body">
+
+          {/* Expected Salary */}
+          {app.expectedSalary && (
+            <div className="appd-section">
+              <p className="appd-section-label"><DollarSign size={13}/> Expected Salary</p>
+              <p className="appd-section-value appd-salary">
+                {Number(app.expectedSalary).toLocaleString()} XAF
+              </p>
+            </div>
+          )}
+
+          {/* Cover Letter */}
+          <div className="appd-section">
+            <p className="appd-section-label"><MessageSquare size={13}/> Cover Letter</p>
+            {app.coverLetter ? (
+              <div className="appd-cover-letter">{app.coverLetter}</div>
+            ) : (
+              <p className="appd-empty-field">No cover letter was provided.</p>
+            )}
+          </div>
+
+          {/* Interview info */}
+          {iv && (
+            <div className="appd-section">
+              <p className="appd-section-label"><CalendarCheck size={13}/> Interview Details</p>
+              <div className="appd-iv-card" style={{ borderLeft: `3px solid ${ivType?.color}` }}>
+                <div className="appd-iv-type" style={{ background: ivType?.bg, color: ivType?.color }}>
+                  {ivType?.icon} {ivType?.label}
+                </div>
+                {iv.scheduledAt && (
+                  <div className="appd-iv-row">
+                    <CalendarDays size={12}/>
+                    <span>{fmtDate(iv.scheduledAt)} at {fmtTime(iv.scheduledAt)}</span>
+                  </div>
+                )}
+                {iv.platform && (
+                  <div className="appd-iv-row">
+                    <Building2 size={12}/>
+                    <span>{iv.platform}</span>
+                  </div>
+                )}
+                {iv.meetingLink && (
+                  <a href={iv.meetingLink} target="_blank" rel="noreferrer" className="appd-iv-join">
+                    <Video size={12}/> Join Meeting <ArrowUpRight size={11}/>
+                  </a>
+                )}
+                {iv.feedback && (
+                  <div className="appd-iv-feedback">
+                    <p className="appd-iv-feedback-label">Feedback</p>
+                    <p>{iv.feedback}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Hired message */}
+          {app.status === 'HIRED' && (
+            <div className="appd-hired-banner">
+              🎉 Congratulations! You were hired for this position.
+            </div>
+          )}
+
+          {/* Rejected message */}
+          {app.status === 'REJECTED' && (
+            <div className="appd-rejected-banner">
+              Thank you for applying. Unfortunately, this application was not selected to move forward.
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div className="appd-footer">
+          <Link
+            to={`/jobs/${app.jobPostingId}?viewOnly=true`}
+            className="appd-btn-primary"
+            onClick={onClose}
+          >
+            <Eye size={13}/> View Job Posting
+          </Link>
+          <button className="appd-btn-ghost" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════ */
 export default function ApplicationsPage() {
   const { user }   = useAuth();
   const { profile, completion, handlePhotoChange } = useEmployeeDashboard();
   const navigate   = useNavigate();
 
-  const [apps,    setApps]    = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
-  const [filter,  setFilter]  = useState('ALL');
-  const [search,  setSearch]  = useState('');
+  const [apps,        setApps]        = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
+  const [filter,      setFilter]      = useState('ALL');
+  const [search,      setSearch]      = useState('');
+  const [selectedApp, setSelectedApp] = useState(null);
 
   const load = useCallback(() => {
     if (!user?.id) return;
@@ -248,6 +403,12 @@ export default function ApplicationsPage() {
 
                 {/* Actions */}
                 <div className="apps-card-actions">
+                  <button
+                    className="apps-action-btn apps-action-btn--primary"
+                    onClick={() => setSelectedApp(app)}
+                  >
+                    <FileText size={12}/> View Application
+                  </button>
                   <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
                     <Eye size={12}/> View Job
                   </Link>
@@ -256,6 +417,14 @@ export default function ApplicationsPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Application Detail Modal */}
+      {selectedApp && (
+        <ApplicationDetailModal
+          app={selectedApp}
+          onClose={() => setSelectedApp(null)}
+        />
       )}
     </EmployeeLayout>
   );

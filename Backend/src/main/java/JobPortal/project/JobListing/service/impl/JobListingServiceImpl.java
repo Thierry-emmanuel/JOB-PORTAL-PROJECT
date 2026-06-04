@@ -203,6 +203,14 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional(readOnly = true)
+    public JobListingResponse getAnyListingById(UUID listingId) {
+        JobListing listing = listingRepository.findAnyById(listingId)
+            .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
+        return mapper.toResponse(listing);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<JobListingSummary> searchListings(
             String keyword, UUID categoryId, JobType jobType,
             String city, ExperienceLevel experienceLevel,

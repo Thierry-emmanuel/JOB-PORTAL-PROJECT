@@ -347,6 +347,325 @@
   border-color: #9ca3af;
 }
 
+.apps-action-btn--primary {
+  background: var(--ds-accent, #1a5c2e);
+  color: #fff;
+  border-color: var(--ds-accent, #1a5c2e);
+}
+.apps-action-btn--primary:hover {
+  background: #e8f5ee;
+  border-color: #1a5c2e;
+  color: #1a5c2e;
+}
+
+/* ── Application Detail Modal ────────────────────────────── */
+.appd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: appd-fade-in 0.18s ease;
+}
+@keyframes appd-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.appd-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  animation: appd-slide-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes appd-slide-up {
+  from { transform: translateY(28px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.appd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.appd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.appd-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.appd-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 3px;
+  line-height: 1.2;
+}
+.appd-company {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+}
+.appd-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.appd-close:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* Status strip */
+.appd-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 22px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.appd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.appd-status-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #6b7280;
+}
+
+/* Body */
+.appd-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+.appd-body::-webkit-scrollbar { width: 5px; }
+.appd-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+.appd-section {}
+.appd-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin: 0 0 8px;
+}
+.appd-section-value {
+  font-size: 14px;
+  color: #111827;
+  margin: 0;
+}
+.appd-salary {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ds-accent, #1a5c2e);
+}
+
+.appd-cover-letter {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+.appd-empty-field {
+  font-size: 13px;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Interview card */
+.appd-iv-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.appd-iv-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+.appd-iv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.appd-iv-join {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a73e8;
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s;
+  width: fit-content;
+}
+.appd-iv-join:hover { background: #1557b0; }
+.appd-iv-feedback {
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+.appd-iv-feedback-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+.appd-iv-feedback p {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Hired/Rejected banners */
+.appd-hired-banner {
+  background: #ecfdf5;
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #065f46;
+  text-align: center;
+}
+.appd-rejected-banner {
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #991b1b;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Footer */
+.appd-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid #f3f4f6;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+.appd-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--ds-accent, #1a5c2e);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.appd-btn-primary:hover { opacity: 0.9; }
+.appd-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.appd-btn-ghost:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
 @media (max-width: 600px) {
   .apps-filter-bar {
     flex-direction: column;
@@ -357,5 +676,9 @@
   }
   .apps-search input {
     width: 100%;
+  }
+  .appd-modal {
+    max-height: 95vh;
+    border-radius: 16px;
   }
 }
