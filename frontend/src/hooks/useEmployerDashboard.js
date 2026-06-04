@@ -13,7 +13,15 @@ import {
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  if (baseUrl) {
+    return `${baseUrl.replace(/\/$/, '')}/ws`;
+  }
+  return 'http://localhost:8080/ws';
+};
+const WS_URL = getWsUrl();
 
 export function useEmployerDashboard() {
   const { user, token } = useAuth();

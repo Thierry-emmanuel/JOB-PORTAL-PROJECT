@@ -7,7 +7,15 @@ import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext(null);
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  if (baseUrl) {
+    return `${baseUrl.replace(/\/$/, '')}/ws`;
+  }
+  return 'http://localhost:8080/ws';
+};
+const WS_URL = getWsUrl();
 
 const TOAST_OPTIONS = {
   position: 'top-right',

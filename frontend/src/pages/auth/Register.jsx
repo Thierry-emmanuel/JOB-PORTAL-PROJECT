@@ -192,7 +192,7 @@ export default function Register() {
             <div className="kora-auth-divider">Or sign up with</div>
 
             <a
-              href={`/oauth2/authorization/google?role=${role || 'JOB_SEEKER'}`}
+              href={`${import.meta.env.VITE_API_BASE_URL || ''}/oauth2/authorization/google?role=${role || 'JOB_SEEKER'}`}
               className="kora-auth-social-btn"
               style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
