@@ -321,14 +321,14 @@ export default function EmployeeDashboard() {
             {applications.slice(0, 5).map(app => (
               <div key={app.id} className="ds-table-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
                 <div className="ds-app-info" role="cell">
-                  <Link to={`/employee/jobs`} className="ds-app-name" onClick={e => { e.preventDefault(); navigate(`/jobs/${app.jobPostingId}`); }}>
+                  <Link to={`/employee/jobs`} className="ds-app-name" onClick={e => { e.preventDefault(); navigate(`/jobs/${app.jobPostingId}?viewOnly=true`); }}>
                     Job #{app.jobPostingId}
                   </Link>
                 </div>
                 <span role="cell"><StatusBadge status={app.status} /></span>
                 <span className="ds-app-job" role="cell">{app.expectedSalary ? `${Number(app.expectedSalary).toLocaleString()} XAF` : '—'}</span>
                 <span className="ds-app-date" role="cell"><Clock size={10} /> {formatDate(app.appliedAt)}</span>
-                <Link to={`/jobs/${app.jobPostingId}`} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
+                <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
               </div>
             ))}
           </div>

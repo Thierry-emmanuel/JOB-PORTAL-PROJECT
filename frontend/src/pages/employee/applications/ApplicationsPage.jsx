@@ -248,7 +248,7 @@ export default function ApplicationsPage() {
 
                 {/* Actions */}
                 <div className="apps-card-actions">
-                  <Link to={`/jobs/${app.jobPostingId}`} className="apps-action-btn">
+                  <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
                     <Eye size={12}/> View Job
                   </Link>
                 </div>

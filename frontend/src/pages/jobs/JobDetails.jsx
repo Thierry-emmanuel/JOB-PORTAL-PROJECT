@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { getJob, saveJob } from '../../api/jobs';
+import { getJob, saveJob, getUserApplications } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';
 import '../../styles/job-list.css';
 
@@ -21,12 +21,16 @@ export default function JobDetails() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const [job,     setJob]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [saved,   setSaved]   = useState(false);
   const [saving,  setSaving]  = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+
+  const isViewOnly = searchParams.get('viewOnly') === 'true';
 
   // Determine if opened from employee dashboard context
   const isEmployee = isAuthenticated && (user?.role || '').toUpperCase().includes('JOB_SEEKER');
@@ -36,7 +40,20 @@ export default function JobDetails() {
     async function load() {
       try {
         const data = await getJob(id);
-        if (!cancelled) { setJob(data); setSaved(data.saved ?? false); }
+        if (!cancelled) {
+          setJob(data);
+          setSaved(data.saved ?? false);
+          let userApplied = data.applied ?? false;
+          if (isAuthenticated && isEmployee && user?.id) {
+            try {
+              const apps = await getUserApplications(user.id);
+              userApplied = apps.some(a => String(a.jobPostingId) === String(data.id));
+            } catch (err) {
+              console.error("Error checking applications", err);
+            }
+          }
+          setHasApplied(userApplied || isViewOnly);
+        }
       } catch {
         if (!cancelled) setError(t('jobs.error_load_job') || 'Failed to load job details.');
       } finally {
@@ -45,7 +62,7 @@ export default function JobDetails() {
     }
     load();
     return () => { cancelled = true; };
-  }, [id, t]);
+  }, [id, t, isAuthenticated, isEmployee, user?.id, isViewOnly]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -170,38 +187,58 @@ export default function JobDetails() {
           {/* ─── Sticky apply card ─── */}
           <div style={{ position:'sticky', top:80 }}>
             <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:24, boxShadow:'0 4px 20px rgba(0,0,0,0.07)' }}>
-              <h2 style={{ fontSize:17, fontWeight:700, color:'#111827', marginBottom:8 }}>Ready to Apply?</h2>
-              <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
-                {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
-              </p>
+              
+              {/* If candidate/guest */}
+              {(isEmployee || !isAuthenticated) ? (
+                <>
+                  {hasApplied ? (
+                    <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46', marginBottom:12 }}>
+                      ✓ Application submitted
+                    </div>
+                  ) : (
+                    <>
+                      <h2 style={{ fontSize:17, fontWeight:700, color:'#111827', marginBottom:8 }}>Ready to Apply?</h2>
+                      <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
+                        {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
+                      </p>
+                      <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
+                        onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform=''}
+                      >
+                        Apply Now →
+                      </Link>
+                    </>
+                  )}
 
-              {job.applied ? (
-                <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46' }}>
-                  ✓ Application submitted
-                </div>
+                  {!hasApplied && (
+                    <button onClick={handleSave} disabled={saving} style={{
+                      width:'100%', background: saved ? '#E8F5EE' : '#F9FAFB',
+                      color: saved ? '#1A5C2E' : '#6B7280',
+                      border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
+                      borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
+                    }}>
+                      {saving ? 'Saving…' : saved ? '✓ Saved for Later' : '🔖 Save for Later'}
+                    </button>
+                  )}
+
+                  <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
+                    <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6 }}>
+                      💡 Tip: Complete your profile to increase your chances of being shortlisted.
+                    </p>
+                  </div>
+                </>
               ) : (
-                <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
-                  onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform=''}
-                >
-                  Apply Now →
-                </Link>
+                /* If employer/admin */
+                <div style={{ textAlign: 'center', color: '#6B7280', fontSize: 14 }}>
+                  <p style={{ margin: '0 0 16px 0', fontWeight: 600 }}>Viewing details as {user?.role?.replace('ROLE_','')?.toLowerCase() || 'user'}</p>
+                  <Link to={user?.role?.includes('EMPLOYER') ? '/dashboard/employer' : '/admin/dashboard'} style={{
+                    display: 'block', background: '#1A5C2E', color: '#fff', borderRadius: 12, padding: '12px',
+                    textDecoration: 'none', fontWeight: 700, fontSize: 14, boxShadow:'0 4px 16px rgba(26,92,46,0.25)'
+                  }}>
+                    Go to Dashboard
+                  </Link>
+                </div>
               )}
-
-              <button onClick={handleSave} disabled={saving} style={{
-                width:'100%', background: saved ? '#E8F5EE' : '#F9FAFB',
-                color: saved ? '#1A5C2E' : '#6B7280',
-                border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
-                borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
-              }}>
-                {saving ? 'Saving…' : saved ? '✓ Saved for Later' : '🔖 Save for Later'}
-              </button>
-
-              <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
-                <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6 }}>
-                  💡 Tip: Complete your profile to increase your chances of being shortlisted.
-                </p>
-              </div>
             </div>
           </div>
         </div>

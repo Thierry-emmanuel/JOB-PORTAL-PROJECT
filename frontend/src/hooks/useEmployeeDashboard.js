@@ -186,6 +186,7 @@ export default function useEmployeeDashboard() {
     } catch (err) {
       console.error('[Dashboard] photo upload failed:', err);
       console.error('[Dashboard] photo upload failed - throw to caller');
+      throw err;
     }
   }, [profile, user]);
 

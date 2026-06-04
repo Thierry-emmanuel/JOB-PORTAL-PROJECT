@@ -25,7 +25,7 @@ public class Employer extends User {
     @Column
     private String region;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String avatarUrl;
 
     @Column

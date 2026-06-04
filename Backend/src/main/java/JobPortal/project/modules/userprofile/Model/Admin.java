@@ -22,7 +22,7 @@ public class Admin extends User {
     @Column
     private String department;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String avatarUrl;
 
     // Defines the level of access: SUPER_ADMIN can manage other admins

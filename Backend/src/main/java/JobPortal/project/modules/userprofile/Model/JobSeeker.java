@@ -28,7 +28,7 @@ public class JobSeeker extends User {
     @Column(columnDefinition = "TEXT")
     private String profileSummary;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String avatarUrl;
 
     @Column
