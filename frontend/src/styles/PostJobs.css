@@ -9,7 +9,7 @@
   flex-wrap: wrap;
 }
 .pj-topbar-left h1 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 22px;
   font-weight: 800;
   color: var(--kora-text-dark);
@@ -105,7 +105,7 @@
   padding: 28px 32px;
 }
 .pj-form-card-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 17px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -230,7 +230,7 @@
   top: 20px;
 }
 .pj-preview-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 14px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -328,7 +328,7 @@
   justify-content: center;
 }
 .pj-success h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 22px;
   color: var(--kora-text-dark);
   margin: 0;

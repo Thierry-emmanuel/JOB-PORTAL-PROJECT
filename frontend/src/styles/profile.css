@@ -175,7 +175,7 @@
   justify-content: center;
 }
 .kora-header-avatar-placeholder span {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 30px;
   font-weight: 700;
   color: white;
@@ -209,7 +209,7 @@
   margin-bottom: 10px;
 }
 .kora-header-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 26px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -343,7 +343,7 @@
   color: var(--kora-primary);
 }
 .kora-section-title h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 19px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -458,7 +458,7 @@
   margin-bottom: 20px;
 }
 .kora-form-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 15px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -956,7 +956,7 @@
   color: white;
 }
 .kora-modal-header h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 18px;
   font-weight: 700;
 }
@@ -1011,7 +1011,7 @@
   color: var(--kora-primary);
 }
 .kora-chart-header h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   font-size: 14.5px;
   font-weight: 700;
   color: var(--kora-text-dark);
@@ -1035,7 +1035,7 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--kora-primary);
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
 }
 
 /* ============================================================

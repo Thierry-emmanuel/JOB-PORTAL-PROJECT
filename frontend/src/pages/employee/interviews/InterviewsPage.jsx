@@ -15,6 +15,7 @@ import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
 import { useAuth } from '../../../context/AuthContext';
 import { getInterviewsBySeeker, cancelInterview } from '../../../api/interviews';
 import '../../../styles/employee-dashboard.css';
+import '../../../styles/interviews.css';
 
 /* ─── Helpers ────────────────────────────────────────────── */
 const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });

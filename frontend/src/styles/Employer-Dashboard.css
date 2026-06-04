@@ -91,7 +91,7 @@
   font-size: 24px;
   font-weight: 800;
   color: var(--kora-text-dark);
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   margin: 0 0 3px;
 }
 .ed-topbar-sub {
@@ -193,7 +193,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--kora-text-dark);
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
   margin: 0;
   line-height: 1;
 }

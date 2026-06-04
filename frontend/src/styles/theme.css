@@ -34,7 +34,7 @@
 
   /* ── Typography ───────────────────────────────────────────────────────── */
   --kora-font:         'Poppins', 'DM Sans', sans-serif;
-  --kora-font-display: 'Playfair Display', serif;
+  --kora-font-display: var(--kora-font);
   --kora-font-body:    'DM Sans', 'Poppins', sans-serif;
 
   /* ── Shadows ──────────────────────────────────────────────────────────── */

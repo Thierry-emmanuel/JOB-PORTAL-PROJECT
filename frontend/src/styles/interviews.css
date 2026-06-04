@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════════════
+   interviews.css — Candidate InterviewsPage Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.iv-section {
+  margin-bottom: 24px;
+}
+
+.iv-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.iv-section-head h2 {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.iv-section-head-muted {
+  color: #6b7280 !important;
+}
+.iv-section-icon {
+  color: var(--ds-accent, #1a5c2e);
+  flex-shrink: 0;
+}
+.iv-section-icon--muted {
+  color: #9ca3af !important;
+}
+.iv-section-count {
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.iv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.iv-card {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+}
+.iv-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
+}
+.iv-card--upcoming {
+  background: #fafffe;
+}
+
+.iv-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.iv-card-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.iv-status-badge {
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.iv-card-job h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 4px;
+}
+.iv-card-company {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0 0 2px;
+}
+.iv-card-platform {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.iv-card-datetime {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.iv-datetime-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #4b5563;
+}
+.iv-countdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+
+.iv-action-section {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.iv-join-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #1a73e8;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+.iv-join-btn:hover {
+  background: #1557b0;
+}
+
+.iv-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: #374151;
+  transition: all 0.15s;
+}
+.iv-copy-btn.copied {
+  background: var(--ds-accent-light, #e8f5ee);
+  border-color: #86efac;
+  color: #065f46;
+}
+
+.iv-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1.5px solid;
+}
+.iv-info-card--phone {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.iv-info-card--location {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+.iv-info-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  margin-bottom: 2px;
+}
+.iv-info-sub {
+  font-size: 12.5px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+.iv-info-address {
+  font-size: 12.5px;
+  color: #78350f;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.iv-maps-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1a73e8;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: 5px;
+}
+.iv-maps-link:hover {
+  text-decoration: underline;
+}
+
+.iv-feedback {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+}
+.iv-feedback-text {
+  font-size: 13px;
+  color: #374151;
+  font-style: italic;
+  line-height: 1.6;
+  margin: 4px 0 0;
+}
+
+.iv-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: auto;
+}
+.iv-cancel-btn:hover {
+  background: #fee2e2;
+}
+
+@media (max-width: 900px) {
+  .iv-grid {
+    grid-template-columns: 1fr;
+  }
+}

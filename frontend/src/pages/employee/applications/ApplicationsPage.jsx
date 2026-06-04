@@ -15,6 +15,7 @@ import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
 import { useAuth } from '../../../context/AuthContext';
 import { getUserApplications } from '../../../api/jobs';
 import '../../../styles/employee-dashboard.css';
+import '../../../styles/applications.css';
 
 /* ─── Status config ──────────────────────────────────────── */
 const STATUS = {

@@ -51,7 +51,7 @@
   font-size: 22px;
   font-weight: 700;
   color: var(--kora-accent);
-  font-family: 'Playfair Display', serif;
+  font-family: var(--kora-font);
 }
 .kora-stat-pill span {
   font-size: 10.5px;
