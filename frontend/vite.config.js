@@ -70,6 +70,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/login/oauth2': {
+        target: BACKEND_URL,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

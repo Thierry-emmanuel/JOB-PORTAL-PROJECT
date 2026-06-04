@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import logo from "../../assets/absolute-size-logo.png";
 import "../../styles/auth.css";
@@ -15,6 +15,18 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read OAuth2 error from URL (set by backend failureHandler → /login?error=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const oauthError = params.get('error');
+    if (oauthError) {
+      setError(`Google sign-in failed: ${decodeURIComponent(oauthError)}`);
+    }
+  }, [location.search]);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

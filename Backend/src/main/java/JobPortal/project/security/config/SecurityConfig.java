@@ -22,6 +22,9 @@ public class SecurityConfig {
     private final JobPortal.project.security.oauth2.CustomOAuth2UserService customOAuth2UserService;
     private final JobPortal.project.security.oauth2.OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origin:http://localhost:5173}")
+    private String frontendUrl;
+
     /**
      * Returns 401 JSON instead of redirecting to /login.
      * Prevents CORS errors caused by Spring's default form-login redirect
@@ -48,6 +51,7 @@ public class SecurityConfig {
                         "/api/auth/**",
                         "/oauth2/**",               // initiate OAuth2 login
                         "/login/oauth2/**",         // Spring OAuth2 callback
+                        "/login/**",                // permit login error paths
                         "/swagger-ui/**", "/v3/api-docs/**",
                         "/api/v1/jobs/**", "/api/jobs/**",
                         "/api/ai/**", "/api/v1/insights/**",
@@ -61,6 +65,11 @@ public class SecurityConfig {
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler((request, response, exception) -> {
+                    org.slf4j.LoggerFactory.getLogger(SecurityConfig.class).error("OAuth2 Login Failed: ", exception);
+                    String targetUrl = frontendUrl + "/login?error=" + java.net.URLEncoder.encode(exception.getLocalizedMessage(), java.nio.charset.StandardCharsets.UTF_8);
+                    response.sendRedirect(targetUrl);
+                })
             )
             .addFilterBefore(new JobPortal.project.security.oauth2.OAuth2RoleRequestFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(authTokenFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
