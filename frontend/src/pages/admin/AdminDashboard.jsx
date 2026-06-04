@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Building2, Briefcase, Users, BarChart3, ChevronLeft, ChevronRight,
   Check, Ban, Trash2, Eye, Flag, AlertCircle, X, Search, TrendingUp,

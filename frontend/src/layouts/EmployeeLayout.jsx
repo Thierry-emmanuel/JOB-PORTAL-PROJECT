@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import {
   LayoutDashboard, Briefcase, Bookmark, CalendarCheck,
   BarChart2, Menu, X, Settings, LogOut,
-  ChevronLeft, ChevronRight, User,
+  ChevronLeft, ChevronRight, User, Home,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import koraLogo from '../assets/absolute-size-logo.png';
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { key: 'saved',        label: 'Saved Jobs',      icon: Bookmark,        to: '/employee/saved'        },
   { key: 'interviews',   label: 'Interviews',      icon: CalendarCheck,   to: '/employee/interviews'   },
   { key: 'insights',     label: 'Market Insights', icon: BarChart2,       to: '/employee/insights'     },
+  { key: 'home',         label: 'Home Page',       icon: Home,            to: '/'                      },
 ];
 
 const NavItem = memo(function NavItem({ item, active, collapsed, badge }) {

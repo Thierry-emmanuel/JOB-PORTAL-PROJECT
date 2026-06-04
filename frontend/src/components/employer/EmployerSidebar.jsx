@@ -1,13 +1,17 @@
 import { useRef } from 'react';
-import { Camera, Briefcase, CalendarCheck, LayoutDashboard, LogOut, CheckCircle } from 'lucide-react';
+import { Camera, Briefcase, CalendarCheck, LayoutDashboard, LogOut, CheckCircle, Home, Globe, BarChart2, Building } from 'lucide-react';
 import koraLogo from '../../assets/absolute-size-logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const NAV = [
-  { path: '/employer/dashboard',   label: 'Overview',      icon: LayoutDashboard },
-  { path: '/employer/jobs',        label: 'Job Postings',  icon: Briefcase        },
-  { path: '/employer/interviews',  label: 'Interviews',    icon: CalendarCheck    },
+  { path: '/employer/dashboard',   label: 'Overview',        icon: LayoutDashboard },
+  { path: '/employer/jobs',        label: 'Job Postings',    icon: Briefcase        },
+  { path: '/employer/interviews',  label: 'Interviews',      icon: CalendarCheck    },
+  { path: '/profile/employer',     label: 'Company Profile', icon: Building         },
+  { path: '/insights',             label: 'Market Insights', icon: BarChart2        },
+  { path: '/jobs',                 label: 'Browse Jobs',     icon: Globe            },
+  { path: '/',                     label: 'Home Page',       icon: Home             },
 ];
 
 export default function EmployerSidebar({ employer, loading, stats, onPhotoChange }) {

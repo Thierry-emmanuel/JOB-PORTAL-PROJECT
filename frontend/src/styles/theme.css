@@ -92,6 +92,20 @@
   --kora-radius-pill: var(--kora-r-pill);
 }
 
+.ds-root.employer {
+  --kora-primary:       var(--ds-accent, #E07B39);
+  --kora-primary-light: var(--ds-accent-dark, #b85e25);
+  --kora-primary-pale:  var(--ds-accent-light, #FFF3EA);
+  --kora-primary-glow:  var(--ds-accent-glow, rgba(224, 123, 57, 0.15));
+}
+
+.ds-root.admin {
+  --kora-primary:       var(--ds-accent, #6D28D9);
+  --kora-primary-light: var(--ds-accent-dark, #4c1d95);
+  --kora-primary-pale:  var(--ds-accent-light, #EDE9FE);
+  --kora-primary-glow:  var(--ds-accent-glow, rgba(109, 40, 217, 0.15));
+}
+
 /* ── Accessibility helper ─────────────────────────────────────────────────── */
 .sr-only {
   position: absolute;

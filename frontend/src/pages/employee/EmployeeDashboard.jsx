@@ -6,6 +6,7 @@ import {
   ArrowRight, Zap, FileText, AlertCircle,
   RefreshCw, CheckCircle2, XCircle, Clock,
   TrendingUp, Search, BarChart2, CheckCircle, X, Eye,
+  Home, User
 } from 'lucide-react';
 import EmployeeLayout from '../../layouts/EmployeeLayout';
 import InterviewCard from '../../components/interviews/InterviewCard';
@@ -239,10 +240,13 @@ export default function EmployeeDashboard() {
         <div className="ds-card-body">
           <div className="ds-quick-grid">
             {[
-              { icon:<Search size={20}/>,      label:'Browse Jobs',        color:'#1A5C2E', bg:'#E8F5EE', to:'/employee/jobs'         },
-              { icon:<FileText size={20}/>,    label:'My Applications',    color:'#E07B39', bg:'#FFF3EA', to:'/employee/applications'  },
-              { icon:<CalendarCheck size={20}/>, label:'My Interviews',    color:'#3B82F6', bg:'#EFF6FF', to:'/employee/interviews'    },
-              { icon:<BarChart2 size={20}/>,   label:'Market Insights',    color:'#8B5CF6', bg:'#F5F3FF', to:'/employee/insights'      },
+              { icon: <Search size={20}/>,       label: 'Browse Jobs',      color: '#1A5C2E', bg: '#E8F5EE', to: '/employee/jobs'         },
+              { icon: <FileText size={20}/>,     label: 'My Applications',  color: '#E07B39', bg: '#FFF3EA', to: '/employee/applications'  },
+              { icon: <CalendarCheck size={20}/>, label: 'My Interviews',    color: '#3B82F6', bg: '#EFF6FF', to: '/employee/interviews'    },
+              { icon: <Bookmark size={20}/>,     label: 'Saved Jobs',       color: '#F97316', bg: '#FFF3EA', to: '/employee/saved'         },
+              { icon: <BarChart2 size={20}/>,    label: 'Market Insights',  color: '#8B5CF6', bg: '#F5F3FF', to: '/employee/insights'      },
+              { icon: <User size={20}/>,          label: 'My Profile',       color: '#10B981', bg: '#ECFDF5', to: '/profile/job-seeker'     },
+              { icon: <Home size={20}/>,          label: 'Go to Homepage',   color: '#0D9488', bg: '#CCFBF1', to: '/'                      },
             ].map(({ icon, label, color, bg, to }) => (
               <button key={label} className="ds-quick-btn" onClick={() => navigate(to)}>
                 <div className="ds-quick-icon" style={{ background: bg, color }}>{icon}</div>

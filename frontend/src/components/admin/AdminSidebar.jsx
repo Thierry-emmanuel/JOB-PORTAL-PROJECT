@@ -1,8 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut, LayoutDashboard, Building2, Briefcase, Users,
   BarChart3, ShieldCheck, FileText, MessageSquare, CalendarClock,
-  Settings, Bell, ImagePlay, ClipboardList,
+  Settings, Bell, ImagePlay, ClipboardList, User,
 } from 'lucide-react';
 import koraLogo from '../../assets/absolute-size-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -47,6 +47,17 @@ const NAV_SECTIONS = [
 export default function AdminSidebar({ activeTab, setActiveTab }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isDashboard = location.pathname.startsWith('/admin/dashboard');
+
+  const handleItemClick = (key) => {
+    if (isDashboard) {
+      setActiveTab?.(key);
+    } else {
+      navigate('/admin/dashboard', { state: { defaultTab: key } });
+    }
+  };
 
   const displayName = user?.fullName ?? user?.name ?? user?.email ?? 'Administrator';
   const initials = displayName.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'AD';
@@ -54,7 +65,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }) {
   return (
     <div className="adm-sb">
       {/* Logo */}
-      <div className="adm-sb-logo">
+      <div className="adm-sb-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/dashboard')}>
         <img src={koraLogo} alt="Kora" />
         <span className="adm-sb-badge">Admin</span>
       </div>
@@ -79,7 +90,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }) {
               <button
                 key={key}
                 className={`adm-nav-item${activeTab === key ? ' active' : ''}`}
-                onClick={() => setActiveTab(key)}
+                onClick={() => handleItemClick(key)}
                 aria-current={activeTab === key ? 'page' : undefined}
               >
                 <Icon size={16} />
@@ -91,10 +102,19 @@ export default function AdminSidebar({ activeTab, setActiveTab }) {
       </nav>
 
       {/* Footer */}
-      <div className="adm-sb-footer">
+      <div className="adm-sb-footer" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <button
+          className={`adm-nav-item${location.pathname === '/profile/admin' ? ' active' : ''}`}
+          onClick={() => navigate('/profile/admin')}
+          style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left' }}
+        >
+          <User size={16} />
+          <span>My Profile</span>
+        </button>
         <button
           className="adm-nav-item logout"
           onClick={() => { logout(); navigate('/login'); }}
+          style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left' }}
         >
           <LogOut size={16} />
           <span>Sign Out</span>

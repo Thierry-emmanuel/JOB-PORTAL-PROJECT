@@ -8,8 +8,10 @@ import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
 import "../../styles/admin-profile.css";
+import "../../styles/dashboard-shell.css";
 import { useAuth } from "../../context/AuthContext";
 import { getAdminProfile, updateAdminProfile } from "../../api/profiles";
+import AdminSidebar from "../../components/admin/AdminSidebar";
 
 function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
   if (!open) return null;
@@ -377,67 +379,17 @@ export default function AdminProfile() {
   const { stats } = profile;
 
   return (
-    <div className="kora-profile-root admin">
+    <div className="ds-root admin">
       <ConfirmModal open={!!deleteUserId} title="Delete User" body="Permanently delete this user? This cannot be undone." onConfirm={confirmDeleteUser} onCancel={() => setDeleteUserId(null)} />
-      <div className="kora-bg-mesh" />
-      <div className="kora-profile-layout">
+      <div className="ds-body">
 
         {/* ── SIDEBAR ── */}
-        <aside className="kora-sidebar kora-admin-sidebar">
-          <div className="kora-sidebar-inner">
-            <div className="kora-sidebar-logo">
-              <img src={koraLogo} alt="KORA" />
-            </div>
-
-            <div className="kora-sidebar-avatar-section">
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.fullName} className="kora-admin-avatar-img" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--kora-border)', marginBottom: '10px' }} />
-              ) : (
-                <div className="kora-admin-avatar"><Shield size={32} /></div>
-              )}
-              <p className="kora-sidebar-name">{profile.fullName}</p>
-              {profile.department ? (
-                <p className="kora-sidebar-role">{profile.department} Department</p>
-              ) : (
-                <p className="kora-sidebar-role">Platform Administrator</p>
-              )}
-            </div>
-
-            <div className="kora-admin-quick-stat">
-              <div className="kora-quick-stat-item">
-                <strong>{stats.pendingApprovals}</strong>
-                <span>Pending Approvals</span>
-              </div>
-            </div>
-
-            <nav className="kora-sidebar-nav">
-              <p className="kora-sidebar-nav-label">Administration</p>
-              {[
-                { icon: <BarChart2 size={16} />, label: "Dashboard" },
-                { icon: <Users size={16} />, label: "User Management", count: stats.totalUsers },
-                { icon: <Briefcase size={16} />, label: "Job Postings", count: stats.activeJobs },
-                { icon: <AlertCircle size={16} />, label: "Pending Approvals", count: stats.pendingApprovals },
-                { icon: <Bell size={16} />, label: "Notifications" },
-                { icon: <Settings size={16} />, label: "Platform Settings" },
-              ].map(({ icon, label, count }) => (
-                <button key={label} className="kora-sidebar-nav-item">
-                  {icon}<span>{label}</span>
-                  {count !== undefined && <span className="kora-nav-badge">{count}</span>}
-                </button>
-              ))}
-
-              {/* Reset Password */}
-              <button className="kora-sidebar-nav-item kora-reset-pwd-btn" onClick={() => setResetModal(true)}>
-                <KeyRound size={16} /><span>Reset Password</span>
-              </button>
-            </nav>
-
-            <button className="kora-sidebar-logout"><LogOut size={15} />Sign Out</button>
-          </div>
+        <aside className="ds-sidebar">
+          <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         </aside>
 
         {/* ── MAIN ── */}
-        <main className="kora-main-content">
+        <main className="ds-main">
 
           {/* Admin Header */}
           <div className="kora-profile-header">
