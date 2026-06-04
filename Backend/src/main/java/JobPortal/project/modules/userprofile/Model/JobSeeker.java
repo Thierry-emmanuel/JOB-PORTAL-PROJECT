@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -49,6 +50,22 @@ public class JobSeeker extends User {
 
     @Column
     private Boolean isOpenToWork = true;
+
+    @Convert(converter = JsonListConverter.class)
+    @Column(columnDefinition = "LONGTEXT")
+    private List<Object> experiences;
+
+    @Convert(converter = JsonListConverter.class)
+    @Column(columnDefinition = "LONGTEXT")
+    private List<Object> education;
+
+    @Convert(converter = JsonListConverter.class)
+    @Column(columnDefinition = "LONGTEXT")
+    private List<Object> skills;
+
+    @Convert(converter = JsonListConverter.class)
+    @Column(columnDefinition = "LONGTEXT")
+    private List<Object> languages;
 
     public JobSeeker(String fullName, String email, String password) {
         super();

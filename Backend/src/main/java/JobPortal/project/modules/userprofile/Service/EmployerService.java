@@ -52,6 +52,9 @@ public class EmployerService {
         existing.setAvatarUrl(updatedData.getAvatarUrl());
         existing.setJobTitle(updatedData.getJobTitle());
         existing.setBio(updatedData.getBio());
+        existing.setContactName(updatedData.getContactName());
+        existing.setSector(updatedData.getSector());
+        existing.setWebsite(updatedData.getWebsite());
 
         // Recompute score after update
         existing.computeProfileScore();

@@ -34,6 +34,15 @@ public class Employer extends User {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    @Column
+    private String contactName;
+
+    @Column
+    private String sector;
+
+    @Column
+    private String website;
+
     // Set to false until Admin approves the account (FR07)
     @Column(nullable = false)
     private Boolean isApproved = false;

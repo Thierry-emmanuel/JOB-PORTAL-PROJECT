@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Briefcase, Clock, ChevronRight, AlertCircle, RefreshCw, Eye,
   CheckCircle2, XCircle, Star, FileText, Video, Phone, MapPin,
-  CalendarCheck, ArrowUpRight, Inbox, Search, X, FileText2,
+  CalendarCheck, ArrowUpRight, Inbox, Search, X, ClipboardList,
   DollarSign, User, Building2, CalendarDays, MessageSquare,
 } from 'lucide-react';
 import EmployeeLayout from '../../../layouts/EmployeeLayout';
@@ -407,7 +407,7 @@ export default function ApplicationsPage() {
                     className="apps-action-btn apps-action-btn--primary"
                     onClick={() => setSelectedApp(app)}
                   >
-                    <FileText size={12}/> View Application
+                    <ClipboardList size={12}/> View Application
                   </button>
                   <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
                     <Eye size={12}/> View Job

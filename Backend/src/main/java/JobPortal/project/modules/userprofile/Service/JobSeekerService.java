@@ -69,6 +69,10 @@ public class JobSeekerService {
         existing.setIsOpenToWork(updatedData.getIsOpenToWork());
         existing.setCvUrl(updatedData.getCvUrl());
         existing.setCvFileName(updatedData.getCvFileName());
+        existing.setExperiences(updatedData.getExperiences());
+        existing.setEducation(updatedData.getEducation());
+        existing.setSkills(updatedData.getSkills());
+        existing.setLanguages(updatedData.getLanguages());
 
         // Recompute score after update
         existing.computeProfileScore();
