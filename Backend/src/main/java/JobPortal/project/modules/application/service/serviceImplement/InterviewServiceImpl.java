@@ -392,6 +392,19 @@ public class InterviewServiceImpl implements InterviewService {
             interview.setGoogleCalendarEventId(eventId);
             // Persist any Meet link / platform that the calendar service wrote back.
             interviewRepository.save(interview);
+        } else {
+            // Calendar event creation failed/skipped (no OAuth2 login or token expired)
+            // If the platform is "Google Meet" and the link is our random placeholder,
+            // we should replace it with a functional Jitsi Meet link to avoid Google 404!
+            if ("Google Meet".equalsIgnoreCase(interview.getPlatform())
+                    && interview.getMeetingLink() != null
+                    && interview.getMeetingLink().startsWith("https://meet.google.com/")) {
+                String randomCode = interview.getMeetingLink().substring(interview.getMeetingLink().lastIndexOf('/') + 1);
+                interview.setMeetingLink("https://meet.jit.si/Kora-Interview-" + randomCode);
+                interview.setPlatform("Jitsi Meet");
+                interviewRepository.save(interview);
+                log.info("Google Calendar sync skipped/failed. Switched interview {} meeting link from Google Meet placeholder to functional Jitsi Meet link.", interview.getId());
+            }
         }
     }
 

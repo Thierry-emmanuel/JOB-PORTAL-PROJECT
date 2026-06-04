@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Briefcase, Users, Eye, Star, Bell, X,
   Plus, ChevronRight, Clock, ArrowUp, ArrowDown,
-  AlertTriangle, Search, TrendingUp, Edit2,
-  RefreshCw, Video, MapPin,
+  AlertTriangle, AlertCircle, Search, TrendingUp, Edit2,
+  RefreshCw, Video, MapPin, CheckCircle,
   Mail, Phone, ExternalLink, FileText, Check, Calendar as CalendarIcon
 } from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';

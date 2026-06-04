@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Video, Phone, MapPin, Calendar, Clock, Globe,
   CheckCircle2, Copy, Check, Send, Zap, User,
-  ArrowRight, AlertCircle, Briefcase,
+  ArrowRight, AlertCircle, Briefcase, CalendarClock,
 } from 'lucide-react';
 import { scheduleInterview } from '../../api/interviews';
 import { useAuth } from '../../context/AuthContext';

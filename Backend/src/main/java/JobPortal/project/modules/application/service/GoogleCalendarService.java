@@ -2,6 +2,7 @@ package JobPortal.project.modules.application.service;
 
 import JobPortal.project.modules.application.model.Interview;
 import JobPortal.project.modules.auth.repository.UserRepository;
+import JobPortal.project.modules.auth.Model.User;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
@@ -181,13 +182,69 @@ public class GoogleCalendarService {
 
     private Calendar getCalendarService() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (!(auth instanceof OAuth2AuthenticationToken oauthToken)) return null;
+        if (auth == null) {
+            log.debug("getCalendarService: Authentication is null");
+            return null;
+        }
 
-        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-                oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
-        if (client == null || client.getAccessToken() == null) return null;
-        if (httpTransport == null) return null;
+        String principalName = null;
+        if (auth instanceof OAuth2AuthenticationToken oauthToken) {
+            principalName = oauthToken.getName();
+            log.debug("getCalendarService: Found OAuth2AuthenticationToken with principal name: {}", principalName);
+        } else {
+            String email = auth.getName();
+            if (email != null && !email.isBlank()) {
+                log.debug("getCalendarService: Checking JWT authentication for email: {}", email);
+                var userOpt = userRepository.findByEmail(email);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    if (user.getProvider() == User.Provider.GOOGLE) {
+                        principalName = user.getProviderId();
+                        log.debug("getCalendarService: Found Google provider user with providerId: {}", principalName);
+                    } else {
+                        log.debug("getCalendarService: User provider is not GOOGLE, it is: {}", user.getProvider());
+                    }
+                } else {
+                    log.debug("getCalendarService: No user found in repository for email: {}", email);
+                }
+            }
+        }
 
+        if (principalName == null) {
+            log.debug("getCalendarService: No Google provider principal name resolved, defaulting to auth.getName(): {}", auth.getName());
+            principalName = auth.getName();
+        }
+
+        if (principalName == null) {
+            return null;
+        }
+
+        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient("google", principalName);
+        if (client == null) {
+            log.debug("getCalendarService: No OAuth2AuthorizedClient found for registrationId 'google' with principalName: {}", principalName);
+            // Try email as fallback
+            if (auth.getName() != null && !auth.getName().equals(principalName)) {
+                log.debug("getCalendarService: Retrying client load using auth.getName() as principalName: {}", auth.getName());
+                client = authorizedClientService.loadAuthorizedClient("google", auth.getName());
+            }
+        }
+
+        if (client == null) {
+            log.warn("getCalendarService: Failed to resolve OAuth2AuthorizedClient for user: {}", auth.getName());
+            return null;
+        }
+
+        if (client.getAccessToken() == null) {
+            log.warn("getCalendarService: Google AccessToken is null for user: {}", auth.getName());
+            return null;
+        }
+
+        if (httpTransport == null) {
+            log.error("getCalendarService: httpTransport is null");
+            return null;
+        }
+
+        log.info("getCalendarService: Successfully resolved Google OAuth2 credentials for: {}", auth.getName());
         var token = new AccessToken(
                 client.getAccessToken().getTokenValue(),
                 Date.from(client.getAccessToken().getExpiresAt()));
