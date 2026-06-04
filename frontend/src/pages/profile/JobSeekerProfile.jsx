@@ -68,14 +68,18 @@ function CompletionRing({ pct }) {
   const dash = (pct / 100) * circ;
   const color = pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444';
   return (
-    <svg width={96} height={96} viewBox="0 0 96 96" style={{ display:'block' }}>
-      <circle cx={48} cy={48} r={r} fill="none" stroke="#F3F4F6" strokeWidth={8} />
-      <circle cx={48} cy={48} r={r} fill="none" stroke={color} strokeWidth={8}
-        strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-        transform="rotate(-90 48 48)" style={{ transition:'stroke-dasharray 0.6s ease' }} />
-      <text x={48} y={44} textAnchor="middle" fontSize={18} fontWeight={800} fill={color}>{pct}%</text>
-      <text x={48} y={60} textAnchor="middle" fontSize={9} fontWeight={600} fill="#6B7280">COMPLETE</text>
-    </svg>
+    <>
+      <svg className="kora-ring-svg" viewBox="0 0 96 96">
+        <circle cx={48} cy={48} r={r} fill="none" stroke="#F3F4F6" strokeWidth={8} />
+        <circle cx={48} cy={48} r={r} fill="none" stroke={color} strokeWidth={8}
+          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+          transform="rotate(-90 48 48)" style={{ transition:'stroke-dasharray 0.6s ease' }} />
+      </svg>
+      <div className="kora-ring-label">
+        <span className="kora-ring-pct" style={{ color }}>{pct}%</span>
+        <span className="kora-ring-text">Strength</span>
+      </div>
+    </>
   );
 }
 
@@ -177,60 +181,58 @@ export default function JobSeekerProfile() {
       </div>
 
       {/* ── Profile overview banner ── */}
-      <div className="ds-card" style={{ padding:0, overflow:'hidden' }}>
-        {/* Cover banner */}
-        <div style={{ height:90, background:'linear-gradient(135deg, #1A5C2E 0%, #0D3D1F 60%, #F97316 100%)', position:'relative' }}>
-          <div style={{ position:'absolute', inset:0, opacity:0.15, backgroundImage:'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize:'24px 24px' }}/>
+      <div className="kora-profile-header">
+        <div className="kora-header-banner">
+          <div className="kora-banner-pattern" />
+          <div className="kora-banner-gradient" />
         </div>
-
-        <div style={{ padding:'0 24px 24px', display:'flex', gap:24, alignItems:'flex-end', marginTop:-44, flexWrap:'wrap' }}>
-          {/* Avatar */}
-          <div style={{ position:'relative', flexShrink:0 }}>
-            <div style={{ width:88, height:88, borderRadius:20, border:'4px solid #fff', background:'#E8F5EE', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', boxShadow:'0 4px 16px rgba(0,0,0,0.12)' }}>
-              {profile.profilePhoto
-                ? <img src={profile.profilePhoto} alt="Profile" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                : <span style={{ fontSize:28, fontWeight:800, color:'#1A5C2E' }}>{(profile.fullName || 'U').charAt(0)}</span>}
-            </div>
-            <label htmlFor="photo-upload" style={{ position:'absolute', bottom:-4, right:-4, width:28, height:28, borderRadius:8, background:'#1A5C2E', border:'2px solid #fff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-              <Camera size={12} color="#fff"/>
+        <div className="kora-header-body">
+          <div className="kora-header-avatar-wrap uploadable">
+            {profile.profilePhoto ? (
+              <img src={profile.profilePhoto} alt={profile.fullName} className="kora-header-avatar-img" />
+            ) : (
+              <div className="kora-header-avatar-placeholder">
+                <span>{(profile.fullName || 'U').charAt(0)}</span>
+              </div>
+            )}
+            <label className="kora-avatar-upload-overlay" htmlFor="photo-upload">
+              <Camera size={18} />
+              <span>Upload</span>
             </label>
-            <input id="photo-upload" type="file" accept="image/*" style={{ display:'none' }} onChange={e => e.target.files[0] && handlePhotoChange(e.target.files[0])} />
+            <input id="photo-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && handlePhotoChange(e.target.files[0])} />
           </div>
 
-          <div style={{ flex:1, paddingTop:50, minWidth:200 }}>
-            <h2 style={{ fontSize:20, fontWeight:800, color:'#111827', margin:'0 0 4px' }}>{profile.fullName || 'Your Name'}</h2>
-            <p style={{ fontSize:14, color:'#6B7280', margin:'0 0 8px' }}>{profile.email}</p>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-              {profile.city && <span style={{ fontSize:12, color:'#374151', background:'#F3F4F6', padding:'3px 10px', borderRadius:20 }}>📍 {profile.city}{profile.region ? `, ${profile.region}` : ''}</span>}
-              {profile.phone && <span style={{ fontSize:12, color:'#374151', background:'#F3F4F6', padding:'3px 10px', borderRadius:20 }}>📞 {profile.phone}</span>}
+          <div className="kora-header-info">
+            <div className="kora-header-name-row">
+              <div>
+                <h1 className="kora-header-name">{profile.fullName || 'Your Name'}</h1>
+              </div>
+              <button className="kora-edit-btn" onClick={() => setEditModal({ open: true, section: 'basic' })}>
+                <Edit3 size={15} /> Edit Profile
+              </button>
+            </div>
+            {profile.summary && <p className="kora-header-summary">{profile.summary}</p>}
+            <div className="kora-header-meta">
+              <span className="kora-meta-chip">{profile.email}</span>
+              {profile.phone && <span className="kora-meta-chip">📞 {profile.phone}</span>}
+              {profile.city && <span className="kora-meta-chip">📍 {profile.city}{profile.region ? `, ${profile.region}` : ''}</span>}
             </div>
           </div>
 
-          <div style={{ display:'flex', alignItems:'center', gap:16, paddingTop:50 }}>
+          <div className="kora-completion-ring-wrap">
             <CompletionRing pct={completion} />
-            <button onClick={() => setEditModal({ open:true, section:'basic' })} className="ds-btn ds-btn-primary" style={{ flexShrink:0 }}>
-              <Edit3 size={14}/> Edit Profile
-            </button>
           </div>
         </div>
 
         {/* Completion nudge */}
         {completion < 100 && missing.length > 0 && (
-          <div style={{ margin:'0 24px 20px', background:'#FFFBEB', border:'1.5px solid #FDE68A', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12 }}>
-            <span style={{ fontSize:18 }}>💡</span>
-            <div style={{ flex:1 }}>
-              <p style={{ fontSize:13, fontWeight:700, color:'#92400E', margin:'0 0 2px' }}>Complete your profile to boost visibility</p>
-              <p style={{ fontSize:12, color:'#B45309', margin:0 }}>Missing: {missing.slice(0,3).map(i => i.label).join(', ')}{missing.length > 3 ? ` +${missing.length - 3} more` : ''}</p>
+          <div style={{ margin: '0 32px 24px', background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 18 }}>💡</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#92400E', margin: '0 0 2px' }}>Complete your profile to boost visibility</p>
+              <p style={{ fontSize: 12, color: '#B45309', margin: 0 }}>Missing: {missing.slice(0, 3).map(i => i.label).join(', ')}{missing.length > 3 ? ` +${missing.length - 3} more` : ''}</p>
             </div>
-            <span style={{ fontSize:13, fontWeight:700, color:'#92400E' }}>+{missing.reduce((s,i) => s+i.weight, 0)}%</span>
-          </div>
-        )}
-
-        {/* Summary */}
-        {profile.summary && (
-          <div style={{ margin:'0 24px 24px', padding:'16px', background:'#F9FAFB', borderRadius:12 }}>
-            <p style={{ fontSize:11, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.8px', margin:'0 0 8px' }}>About Me</p>
-            <p style={{ fontSize:14, color:'#374151', lineHeight:1.7, margin:0 }}>{profile.summary}</p>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>+{missing.reduce((s, i) => s + i.weight, 0)}%</span>
           </div>
         )}
       </div>

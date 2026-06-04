@@ -312,7 +312,10 @@ const TAB_META = {
    ═══════════════════════════════════════════════════════════════════ */
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [tab, setTab] = useState('overview');
+  const location = useLocation();
+  const [tab, setTab] = useState(() => {
+    return location.state?.defaultTab || 'overview';
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState(null);
 

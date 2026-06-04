@@ -1,7 +1,7 @@
 /* ── Employer Profile Specific Styles ── */
 
 .employer-banner {
-  background: linear-gradient(135deg, #1A5C2E 0%, #1a4a42 60%, #F97316 140%);
+  background: linear-gradient(135deg, var(--ds-accent-dark, #b85e25) 0%, var(--ds-accent, #E07B39) 60%, var(--kora-accent, #F97316) 140%);
 }
 
 .kora-employer-logo-img {
@@ -10,7 +10,7 @@
   padding: 4px;
 }
 .kora-employer-placeholder {
-  background: linear-gradient(135deg, var(--kora-primary), #1a4a42);
+  background: linear-gradient(135deg, var(--kora-primary), var(--ds-accent-dark, #b85e25));
 }
 .kora-employer-contact-name {
   font-size: 13px;

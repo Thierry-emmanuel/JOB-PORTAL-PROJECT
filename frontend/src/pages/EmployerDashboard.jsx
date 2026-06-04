@@ -256,7 +256,7 @@ export default function EmployerDashboard() {
             <div className="ds-card-body">
               <div className="ds-quick-grid">
                 {[
-                  { icon: <Plus size={20} />,      label: 'Post New Job',         color: '#1A5C2E', bg: '#E8F5EE', action: () => navigate('/employer/post-job')    },
+                  { icon: <Plus size={20} />,      label: 'Post New Job',         color: 'var(--ds-accent)', bg: 'var(--ds-accent-light)', action: () => navigate('/employer/post-job')    },
                   { icon: <Users size={20} />,     label: 'Review Applications',  color: '#E07B39', bg: '#FFF3EA', action: () => navigate('/employer/jobs')         },
                   { icon: <Video size={20} />,     label: 'Schedule Interview',   color: '#1565C0', bg: '#EFF6FF', action: () => {
                       const s = applications.find(a => a.status === 'SHORTLISTED');
