@@ -48,7 +48,7 @@ export default function Login() {
   };
 
   return (
-    <div className="kora-auth-root">
+    <div className={`kora-auth-root ${selectedRole === 'EMPLOYER' ? 'employer' : 'job-seeker'}`}>
       {/* Home link */}
       <Link to="/" style={{ position:'fixed', top:16, left:20, display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#374151', textDecoration:'none', background:'#fff', padding:'7px 14px', borderRadius:10, boxShadow:'0 1px 6px rgba(0,0,0,0.1)', zIndex:10 }}>
         ← Home
@@ -88,6 +88,7 @@ export default function Login() {
                   placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -102,6 +103,7 @@ export default function Login() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   required
                 />
                 <button
@@ -131,43 +133,43 @@ export default function Login() {
             <div className="kora-auth-divider">Or continue with</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Select your role for Google sign-in:</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--kora-text-muted)' }}>Select your role for Google sign-in:</label>
               <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 4 }}>
                 <button
-                  type="button"
-                  onClick={() => setSelectedRole('JOB_SEEKER')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    border: 'none',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    background: selectedRole === 'JOB_SEEKER' ? '#ffffff' : 'transparent',
-                    color: selectedRole === 'JOB_SEEKER' ? '#1A5C2E' : '#64748b',
-                    boxShadow: selectedRole === 'JOB_SEEKER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'all 0.15s ease'
-                  }}
+                   type="button"
+                   onClick={() => setSelectedRole('JOB_SEEKER')}
+                   style={{
+                     flex: 1,
+                     padding: '6px 12px',
+                     borderRadius: 6,
+                     border: 'none',
+                     fontSize: 13,
+                     fontWeight: 600,
+                     cursor: 'pointer',
+                     background: selectedRole === 'JOB_SEEKER' ? '#ffffff' : 'transparent',
+                     color: selectedRole === 'JOB_SEEKER' ? 'var(--kora-primary)' : 'var(--kora-text-muted)',
+                     boxShadow: selectedRole === 'JOB_SEEKER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                     transition: 'all 0.15s ease'
+                   }}
                 >
                   Job Seeker
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setSelectedRole('EMPLOYER')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    border: 'none',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    background: selectedRole === 'EMPLOYER' ? '#ffffff' : 'transparent',
-                    color: selectedRole === 'EMPLOYER' ? '#1A5C2E' : '#64748b',
-                    boxShadow: selectedRole === 'EMPLOYER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'all 0.15s ease'
-                  }}
+                   type="button"
+                   onClick={() => setSelectedRole('EMPLOYER')}
+                   style={{
+                     flex: 1,
+                     padding: '6px 12px',
+                     borderRadius: 6,
+                     border: 'none',
+                     fontSize: 13,
+                     fontWeight: 600,
+                     cursor: 'pointer',
+                     background: selectedRole === 'EMPLOYER' ? '#ffffff' : 'transparent',
+                     color: selectedRole === 'EMPLOYER' ? 'var(--kora-primary)' : 'var(--kora-text-muted)',
+                     boxShadow: selectedRole === 'EMPLOYER' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                     transition: 'all 0.15s ease'
+                   }}
                 >
                   Employer
                 </button>

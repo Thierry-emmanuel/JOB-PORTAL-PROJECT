@@ -58,7 +58,7 @@ export default function Register() {
   };
 
   return (
-    <div className="kora-auth-root">
+    <div className={`kora-auth-root ${role === 'EMPLOYER' ? 'employer' : 'job-seeker'}`}>
       <Link to="/" style={{ position:'fixed', top:16, left:20, display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#374151', textDecoration:'none', background:'#fff', padding:'7px 14px', borderRadius:10, boxShadow:'0 1px 6px rgba(0,0,0,0.1)', zIndex:10 }}>
         ← Home
       </Link>
@@ -81,7 +81,11 @@ export default function Register() {
           <p className="kora-auth-subtitle">Join us today. It only takes a minute.</p>
 
           <form className="kora-auth-form" onSubmit={handleSubmit} style={{ gap: '15px' }}>
-            {error && <div style={{color: 'red', marginBottom: '5px', fontSize: '14px'}}>{error}</div>}
+            {error && (
+              <div style={{ color: '#dc2626', marginBottom: 10, fontSize: 14, background: '#fee2e2', padding: '10px 14px', borderRadius: 8, border: '1px solid #fca5a5' }}>
+                {error}
+              </div>
+            )}
 
             <div className="kora-auth-field">
               <div className="kora-auth-input-wrapper">
@@ -92,6 +96,7 @@ export default function Register() {
                   placeholder="Full Name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -106,6 +111,7 @@ export default function Register() {
                   placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -137,6 +143,7 @@ export default function Register() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
                 <button
@@ -158,6 +165,7 @@ export default function Register() {
                   placeholder="Confirm Password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
                 <button

@@ -367,4 +367,14 @@ public class JobListingServiceImpl implements JobListingService {
         }
         return found;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UUID resolveNumericalIdToUuid(Long numericalId) {
+        String uuidStr = listingRepository.findIdByNumericalId(numericalId);
+        if (uuidStr == null) {
+            return null;
+        }
+        return UUID.fromString(uuidStr);
+    }
 }

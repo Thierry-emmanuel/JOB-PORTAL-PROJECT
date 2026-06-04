@@ -87,9 +87,25 @@ public class PublicJobListingController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Listing found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Listing not found or not ACTIVE")
     public ResponseEntity<ApiResponse<JobListingResponse>> getListingById(
-            @PathVariable UUID id) {
+            @PathVariable String id) {
 
-        JobListingResponse response = jobListingService.getPublicListingById(id);
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            // Not a UUID format, check if it's a numeric ID prefix
+            try {
+                Long numericalId = Long.parseLong(id);
+                uuid = jobListingService.resolveNumericalIdToUuid(numericalId);
+                if (uuid == null) {
+                    throw new JobPortal.project.JobListing.exception.ResourceNotFoundException("JobListing", id);
+                }
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("Invalid ID format: " + id);
+            }
+        }
+
+        JobListingResponse response = jobListingService.getPublicListingById(uuid);
         return ResponseEntity.ok(ApiResponse.ok("Job listing retrieved", response));
     }
 

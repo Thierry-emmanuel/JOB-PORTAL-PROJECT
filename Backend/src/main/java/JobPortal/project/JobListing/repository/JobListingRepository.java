@@ -76,6 +76,16 @@ public interface JobListingRepository
         """)
     Optional<JobListing> findActiveById(@Param("id") UUID id);
 
+    /**
+     * Resolves a legacy numerical prefix ID to its full UUID string.
+     */
+    @Query(value = """
+        SELECT BIN_TO_UUID(jl.id) FROM job_listings jl
+        WHERE CAST(SUBSTRING_INDEX(BIN_TO_UUID(jl.id), '-', 1) AS SIGNED) = :numericalId
+        LIMIT 1
+        """, nativeQuery = true)
+    String findIdByNumericalId(@Param("numericalId") Long numericalId);
+
     // ── Admin ─────────────────────────────────────────────────────────────────
 
     /**

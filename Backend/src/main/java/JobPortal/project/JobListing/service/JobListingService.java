@@ -174,4 +174,12 @@ public interface JobListingService {
      * @param listingId UUID of the listing to remove
      */
     void adminDeleteListing(Long adminId, UUID listingId);
+
+    /**
+     * Resolves a legacy numerical prefix ID to its full UUID representation.
+     *
+     * @param numericalId prefix ID
+     * @return full UUID or null if not found
+     */
+    UUID resolveNumericalIdToUuid(Long numericalId);
 }

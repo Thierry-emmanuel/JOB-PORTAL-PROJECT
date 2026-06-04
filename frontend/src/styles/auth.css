@@ -1,27 +1,30 @@
-/* ============================================================
-   KORA JOB PORTAL — Redesigned Auth Pages (Login & Register)
-   Brand: #1A5C2E (deep forest green) | #F97316 (orange accent)
-   ============================================================ */
-
-:root {
-  --kora-primary: #1A5C2E;
-  --kora-primary-light: #16423c;
-  --kora-accent: #F97316;
-  --kora-bg-light: #f0f4f3;
-  --kora-input-bg: #f0f4f8;
-  --kora-text-dark: #1a1a1a;
-  --kora-text-muted: #666;
-  --kora-white: #ffffff;
-}
-
 .kora-auth-root {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #F4F6F9;
-  font-family: 'Inter', 'DM Sans', sans-serif;
+  background: var(--kora-bg, #F4F6F9);
+  font-family: var(--kora-font, 'Poppins', sans-serif);
   padding: 20px;
+  
+  /* Fallback defaults */
+  --kora-primary: var(--kora-green, #1A5C2E);
+  --kora-primary-light: var(--kora-green-dark, #0D3D1F);
+  --kora-accent: var(--kora-orange, #F97316);
+  --kora-bg-light: var(--kora-green-light, #E8F5EE);
+  --kora-input-bg: var(--kora-bg, #F9FAFB);
+  --kora-text-dark: var(--kora-ink, #111827);
+  --kora-text-muted: var(--kora-muted, #6B7280);
+  --kora-white: #ffffff;
+  
+  transition: all 0.3s ease;
+}
+
+/* Dynamic Employer Theme Swapper */
+.kora-auth-root.employer {
+  --kora-primary: var(--kora-orange, #F97316);
+  --kora-primary-light: #ea6e0f;
+  --kora-bg-light: var(--kora-orange-light, #FFF3EA);
 }
 
 .kora-auth-container {
@@ -31,13 +34,14 @@
   background: var(--kora-white);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--kora-shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.1));
+  transition: box-shadow 0.3s ease;
 }
 
 /* Left Side - Branding & Patterns */
 .kora-auth-left {
   flex: 1;
-  background: linear-gradient(135deg, #1A5C2E 0%, #16423c 100%);
+  background: linear-gradient(135deg, var(--kora-primary) 0%, var(--kora-primary-light) 100%);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -47,6 +51,7 @@
   color: white;
   overflow: hidden;
   text-align: center;
+  transition: background 0.3s ease;
 }
 
 /* Abstract Patterns */
@@ -256,7 +261,7 @@ select.kora-auth-input {
 }
 
 .kora-auth-btn:hover {
-  background: #124039;
+  background: var(--kora-primary-light);
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(11, 43, 38, 0.2);
 }
