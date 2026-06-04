@@ -16,6 +16,7 @@ import com.google.api.services.calendar.model.EventDateTime;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.UserCredentials;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,15 @@ public class GoogleCalendarService {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserRepository userRepository;
+
+    @org.springframework.beans.factory.annotation.Value("${app.google.calendar.client-id:}")
+    private String centralClientId;
+
+    @org.springframework.beans.factory.annotation.Value("${app.google.calendar.client-secret:}")
+    private String centralClientSecret;
+
+    @org.springframework.beans.factory.annotation.Value("${app.google.calendar.refresh-token:}")
+    private String centralRefreshToken;
 
     /** Reuse one transport for all requests – creating it is expensive. */
     private NetHttpTransport httpTransport;
@@ -181,9 +191,34 @@ public class GoogleCalendarService {
     }
 
     private Calendar getCalendarService() {
+        // 1. Try to use central Google Calendar credentials if present
+        if (centralClientId != null && !centralClientId.isBlank() &&
+                centralClientSecret != null && !centralClientSecret.isBlank() &&
+                centralRefreshToken != null && !centralRefreshToken.isBlank()) {
+            log.info("getCalendarService: Using central Google Calendar credentials");
+            if (httpTransport == null) {
+                log.error("getCalendarService: httpTransport is null");
+                return null;
+            }
+            try {
+                GoogleCredentials credentials = UserCredentials.newBuilder()
+                        .setClientId(centralClientId)
+                        .setClientSecret(centralClientSecret)
+                        .setRefreshToken(centralRefreshToken)
+                        .build();
+                return new Calendar.Builder(httpTransport, GsonFactory.getDefaultInstance(),
+                        new HttpCredentialsAdapter(credentials))
+                        .setApplicationName("Kora Job Portal")
+                        .build();
+            } catch (Exception e) {
+                log.error("Failed to build Calendar service using central credentials, falling back to per-user auth", e);
+            }
+        }
+
+        // 2. Fall back to existing per-user OAuth credentials
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
-            log.debug("getCalendarService: Authentication is null");
+            log.debug("getCalendarService: Authentication is null and no central credentials configured");
             return null;
         }
 
