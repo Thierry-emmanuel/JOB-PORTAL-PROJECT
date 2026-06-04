@@ -62,6 +62,16 @@ public class JobListingExceptionHandler {
                         false, "Validation failed", errors, java.time.LocalDateTime.now()));
     }
 
+    /** 400 – path parameter type mismatch */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String typeName = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String detail = String.format("Parameter '%s' should be of type '%s'", ex.getName(), typeName);
+        log.warn("[JobListing] Type mismatch: {}", detail);
+        return ResponseEntity.badRequest().body(ApiResponse.error(detail));
+    }
+
     /** 500 – catch-all for unexpected errors */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {

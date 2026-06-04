@@ -75,6 +75,22 @@ public class GlobalExceptionHandler {
     }
 
     // ------------------------------------------------------------------ //
+    //  400 — controller path parameter mismatch                            //
+    // ------------------------------------------------------------------ //
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String typeName = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String detail = String.format("Parameter '%s' should be of type '%s'", ex.getName(), typeName);
+        log.warn("Type mismatch: {}", detail);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+        problem.setType(URI.create("urn:problem:type-mismatch"));
+        problem.setTitle("Type Mismatch");
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    // ------------------------------------------------------------------ //
     //  400 — Bean Validation failures (@Valid on request bodies)          //
     // ------------------------------------------------------------------ //
 
