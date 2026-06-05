@@ -108,7 +108,7 @@ public class NotificationService {
         if (targetRole == null) {
             recipients = userRepository.findAll();
         } else {
-            recipients = userRepository.findAll().stream().filter(u -> u.getRole() == targetRole).toList();
+            recipients = userRepository.findAllByRole(targetRole);
         }
 
         List<Notification> notifications = recipients.stream().map(recipient -> 
