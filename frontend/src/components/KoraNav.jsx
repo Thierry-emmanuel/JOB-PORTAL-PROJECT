@@ -57,9 +57,11 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
+  const isDarkHeaderPage = location.pathname === '/jobs';
+
   return (
     <nav
-      className={`kn-nav${scrolled ? ' kn-nav--scrolled' : ''}`}
+      className={`kn-nav${scrolled ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}`}
       aria-label="Main navigation"
     >
       <div className="kn-inner">
@@ -95,16 +97,7 @@ export default function KoraNav() {
         <div className="kn-auth" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <button 
             onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}
-            style={{ 
-              background: 'rgba(255,255,255,0.1)', 
-              border: '1px solid rgba(255,255,255,0.2)', 
-              color: 'white', 
-              padding: '4px 8px', 
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: '600'
-            }}
+            className="kn-lang-btn"
           >
             {i18n.language === 'en' ? 'FR' : 'EN'}
           </button>

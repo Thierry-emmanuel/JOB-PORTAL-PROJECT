@@ -17,7 +17,7 @@
 /* Green gradient header (mirrors KoraHome StatsBand) */
 .jl-header {
   background: linear-gradient(135deg, var(--kora-green) 0%, var(--kora-green-dark) 100%);
-  padding: 48px 48px 40px;
+  padding: calc(var(--kora-nav-h, 72px) + 32px) 48px 40px;
 }
 .jl-header-inner {
   max-width: var(--kora-max-w);
@@ -822,7 +822,7 @@
   .jd-sidebar  { position: static; }
   .jl-container,
   .jd-container { padding: 24px 20px 40px; }
-  .jl-header    { padding: 32px 20px 28px; }
+  .jl-header    { padding: calc(var(--kora-nav-h, 72px) + 16px) 20px 28px; }
 }
 @media (max-width: 640px) {
   .jl-grid      { grid-template-columns: 1fr; }

@@ -120,18 +120,81 @@
    KoraNav — shared sticky top navigation bar
    ══════════════════════════════════════════════════════════════════════════════ */
 .kn-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 200;
-  background: var(--kora-white);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: transparent;
   padding: 0 48px;
   border-bottom: 1px solid transparent;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--kora-font);
 }
 .kn-nav--scrolled {
-  border-bottom-color: var(--kora-border);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom-color: var(--kora-border) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07) !important;
+}
+.ap-page, .jd-page, .insights-root {
+  padding-top: var(--kora-nav-h, 72px);
+}
+.kn-lang-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.kn-lang-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--kora-green);
+}
+/* Light text adjustments for transparent navbar overlaying dark header background */
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-brand {
+  color: var(--kora-white);
+  transition: color 0.3s;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-tagline {
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.3s;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-link {
+  color: rgba(255, 255, 255, 0.95);
+  transition: color 0.3s;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-link:hover,
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-link--active {
+  color: var(--kora-orange);
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-btn-ghost {
+  color: rgba(255, 255, 255, 0.95);
+  transition: color 0.3s;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-btn-ghost:hover {
+  color: var(--kora-orange);
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-user-name {
+  color: rgba(255, 255, 255, 0.95);
+  transition: color 0.3s;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-user-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-lang-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+.kn-nav--light-text:not(.kn-nav--scrolled) .kn-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
 }
 .kn-inner {
   max-width: var(--kora-max-w);
