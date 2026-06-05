@@ -188,10 +188,12 @@ function Navbar({ logoSrc, onLogoUpload }) {
 
   return (
     <nav style={{
-      position:"sticky", top:0, zIndex:200, background:"#fff",
+      position:"fixed", top:0, left:0, right:0, zIndex:200,
+      background: scrolled ? "rgba(255, 255, 255, 0.88)" : (menuOpen ? "rgba(13, 61, 31, 0.96)" : "transparent"),
+      backdropFilter: scrolled || menuOpen ? "blur(16px)" : "none",
       borderBottom: scrolled ? `1px solid ${BORDER}` : "1px solid transparent",
       boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.07)" : "none",
-      transition:"box-shadow 0.3s, border-color 0.3s",
+      transition:"all 0.3s cubic-bezier(0.16,1,0.3,1)",
     }}>
       {/* ── Main bar ── */}
       <div style={{
@@ -207,8 +209,8 @@ function Navbar({ logoSrc, onLogoUpload }) {
             <img src={Kora_Logo} alt="Logo" style={{ width:"100%", height:"100%", objectFit:"contain" }} />
           </div>
           <div>
-            <div style={{ fontWeight:800, fontSize:16, color:G, letterSpacing:"-0.3px", lineHeight:1 }}>KORA</div>
-            <div style={{ fontSize:8, color:O, fontWeight:600, letterSpacing:"1.5px" }}>UNLOCK YOUR CAREER</div>
+            <div style={{ fontWeight:800, fontSize:16, color: (scrolled && !menuOpen) ? G : "#fff", letterSpacing:"-0.3px", lineHeight:1, transition: "color 0.3s" }}>KORA</div>
+            <div style={{ fontSize:8, color: (scrolled && !menuOpen) ? O : "rgba(255, 255, 255, 0.8)", fontWeight:600, letterSpacing:"1.5px", transition: "color 0.3s" }}>UNLOCK YOUR CAREER</div>
           </div>
         </Link>
 
@@ -216,9 +218,10 @@ function Navbar({ logoSrc, onLogoUpload }) {
         <div className="kora-desktop-nav" style={{ flex:1, display:"flex", justifyContent:"center", gap:4, alignItems:"center" }}>
           {navLinks.map(link => (
             <button key={link.key} onClick={() => handleNavClick(link)} style={{
-              fontSize:14, fontWeight:500, color: activeNav===link.key ? O : "#374151",
+              fontSize:14, fontWeight:500, color: activeNav===link.key ? O : (scrolled ? "#374151" : "rgba(255, 255, 255, 0.95)"),
               cursor:"pointer", padding:"6px 14px", background:"none", border:"none",
               fontFamily:"inherit", whiteSpace:"nowrap", position:"relative",
+              transition: "color 0.3s"
             }}>
               {link.label}
               <span style={{
@@ -232,14 +235,14 @@ function Navbar({ logoSrc, onLogoUpload }) {
         {/* Desktop auth buttons */}
         <div className="kora-desktop-nav" style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
           {/* Language Switcher */}
-          <div style={{ display:"flex", background:"#F3F4F6", borderRadius:8, padding:2, marginRight:8 }}>
+          <div style={{ display:"flex", background: scrolled ? "#F3F4F6" : "rgba(255,255,255,0.15)", borderRadius:8, padding:2, marginRight:8, transition: "background-color 0.3s" }}>
             <button
               onClick={() => i18n.changeLanguage('fr')}
-              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'fr' ? "#fff" : "transparent", color: i18n.language === 'fr' ? G : MUTED, boxShadow: i18n.language === 'fr' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'fr' ? "#fff" : "transparent", color: i18n.language === 'fr' ? G : (scrolled ? MUTED : "rgba(255,255,255,0.85)"), boxShadow: i18n.language === 'fr' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
             >FR</button>
             <button
               onClick={() => i18n.changeLanguage('en')}
-              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'en' ? "#fff" : "transparent", color: i18n.language === 'en' ? G : MUTED, boxShadow: i18n.language === 'en' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+              style={{ padding:"4px 8px", border:"none", borderRadius:6, fontSize:11, fontWeight:700, cursor:"pointer", background: i18n.language === 'en' ? "#fff" : "transparent", color: i18n.language === 'en' ? G : (scrolled ? MUTED : "rgba(255,255,255,0.85)"), boxShadow: i18n.language === 'en' ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
             >EN</button>
           </div>
 
@@ -254,7 +257,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
             <>
               <Link
                 to="/login"
-                style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color:"#374151", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit", textDecoration: "none" }}
+                style={{ background:"none", border:"none", fontSize:14, fontWeight:500, color: scrolled ? "#374151" : "#fff", cursor:"pointer", padding:"8px 14px", fontFamily:"inherit", textDecoration: "none", transition: "color 0.3s" }}
               >
                 {t('nav.login')}
               </Link>
@@ -292,18 +295,19 @@ function Navbar({ logoSrc, onLogoUpload }) {
             aria-expanded={menuOpen}
             style={{
               width:40, height:40, borderRadius:8,
-              border:`1.5px solid ${BORDER}`,
-              background:"#fff",
+              border: scrolled ? `1.5px solid ${BORDER}` : (menuOpen ? "1.5px solid rgba(255, 255, 255, 0.3)" : "1.5px solid rgba(255, 255, 255, 0.4)"),
+              background: scrolled ? "rgba(255,255,255,0.85)" : "transparent",
               cursor:"pointer",
               display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:5,
               padding:0, flexShrink:0,
+              transition: "all 0.3s"
             }}
           >
             {/* Three bars that animate into X */}
             {[0,1,2].map(i => (
               <span key={i} style={{
                 display:"block", height:2, borderRadius:2,
-                background: INK,
+                background: scrolled ? INK : "#fff",
                 width: menuOpen ? (i === 1 ? 0 : 22) : 22,
                 transform: menuOpen
                   ? (i === 0 ? "translateY(7px) rotate(45deg)" : i === 2 ? "translateY(-7px) rotate(-45deg)" : "none")
@@ -321,18 +325,18 @@ function Navbar({ logoSrc, onLogoUpload }) {
         overflow:"hidden",
         maxHeight: menuOpen ? 400 : 0,
         transition:"max-height 0.35s cubic-bezier(0.16,1,0.3,1)",
-        borderTop: menuOpen ? `1px solid ${BORDER}` : "none",
-        background:"#fff",
+        borderTop: menuOpen ? (scrolled ? `1px solid ${BORDER}` : "1px solid rgba(255, 255, 255, 0.1)") : "none",
+        background: scrolled ? "rgba(255, 255, 255, 0.95)" : "rgba(13, 61, 31, 0.96)",
       }}>
         <div style={{ padding:"8px 16px 16px" }}>
           {navLinks.map(link => (
             <button key={link.key} onClick={() => { handleNavClick(link); setMenuOpen(false); }} style={{
               display:"block", width:"100%", textAlign:"left",
               fontSize:15, fontWeight: activeNav===link.key ? 700 : 500,
-              color: activeNav===link.key ? O : INK,
+              color: activeNav===link.key ? O : (scrolled ? INK : "rgba(255, 255, 255, 0.95)"),
               cursor:"pointer", padding:"12px 8px",
               background:"none", border:"none", fontFamily:"inherit",
-              borderBottom:`1px solid ${BORDER}`,
+              borderBottom: scrolled ? `1px solid ${BORDER}` : "1px solid rgba(255, 255, 255, 0.1)",
             }}>
               {link.label}
             </button>
@@ -341,7 +345,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
             <Link 
               to={getDashboardPath()}
               onClick={() => setMenuOpen(false)}
-              style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:G, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
+              style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color: scrolled ? G : "#10B981", cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
             >
               Dashboard
             </Link>
@@ -350,7 +354,7 @@ function Navbar({ logoSrc, onLogoUpload }) {
               <Link 
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:INK, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
+                style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color: scrolled ? INK : "#fff", cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
               >
                 Connexion
               </Link>
@@ -534,7 +538,7 @@ function Hero() {
     t('hero.creative');
 
   return (
-    <section style={{ position:"relative", minHeight:"min(calc(100vh - 64px), 620px)", height:"calc(100vh - 64px)", overflow:"hidden" }}>
+    <section style={{ position:"relative", minHeight:"min(100vh, 680px)", height:"100vh", overflow:"hidden" }}>
 
       {/* Layer 0: gradient per slide or custom gradient */}
       {customGrad ? (
@@ -591,7 +595,7 @@ function Hero() {
       <div style={{ position:"absolute", inset:0, zIndex:6, background:"radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%)", pointerEvents:"none" }}/>
 
       {/* Layer 3: job-card content with Framer stagger */}
-      <div style={{ position:"absolute", inset:0, zIndex:7, display:"flex", alignItems:"center", padding:"0 clamp(20px, 5vw, 80px)" }}>
+      <div style={{ position:"absolute", inset:0, zIndex:7, display:"flex", alignItems:"center", padding:"64px clamp(20px, 5vw, 80px) 0" }}>
         <AnimatePresence mode="wait">
           <motion.div key={displaySlide} variants={contentParent} initial="hidden" animate="show" exit="exit" style={{ maxWidth:650, width:"100%" }}>
 
