@@ -57,6 +57,7 @@ public class JobListingServiceImpl implements JobListingService {
     private final JobListingRepository     listingRepository;
     private final JobCategoryRepository    categoryRepository;
     private final ListingSkillRepository   skillRepository;
+    private final JobLocationRepository    locationRepository;
     private final JobListingMapper         mapper;
 
     // Spring ApplicationEventPublisher — injected for cross-module event broadcasting
@@ -95,6 +96,8 @@ public class JobListingServiceImpl implements JobListingService {
             .experienceLevel(req.experienceLevel())
             .deadline(req.deadline())
             .skills(skills)
+            .qualificationNeeded(req.qualificationNeeded())
+            .requiresInterview(req.requiresInterview() != null ? req.requiresInterview() : false)
             .status(PostingStatus.DRAFT)
             .viewCount(0)
             .build();
@@ -126,6 +129,8 @@ public class JobListingServiceImpl implements JobListingService {
         if (req.salaryMax()       != null) listing.setSalaryMax(req.salaryMax());
         if (req.experienceLevel() != null) listing.setExperienceLevel(req.experienceLevel());
         if (req.deadline()        != null) listing.setDeadline(req.deadline());
+        if (req.qualificationNeeded() != null) listing.setQualificationNeeded(req.qualificationNeeded());
+        if (req.requiresInterview()   != null) listing.setRequiresInterview(req.requiresInterview());
 
         if (req.categoryId() != null) {
             listing.setCategory(categoryRepository.findById(req.categoryId())
@@ -384,5 +389,17 @@ public class JobListingServiceImpl implements JobListingService {
             return null;
         }
         return UUID.fromString(uuidStr);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<JobLocation> getAllLocations() {
+        return locationRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ListingSkill> getAllSkills() {
+        return skillRepository.findAll();
     }
 }

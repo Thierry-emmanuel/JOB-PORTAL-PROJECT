@@ -96,6 +96,13 @@ public class JobListing {
     @Column(nullable = false)
     private LocalDate deadline;
 
+    @Column(name = "qualification_needed", columnDefinition = "TEXT")
+    private String qualificationNeeded;
+
+    @Column(name = "requires_interview", nullable = false)
+    @Builder.Default
+    private Boolean requiresInterview = false;
+
     // ── Status ──────────────────────────────────────────────────────────────────
 
     @Enumerated(EnumType.STRING)

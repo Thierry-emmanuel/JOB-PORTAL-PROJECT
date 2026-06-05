@@ -39,6 +39,8 @@ public class JobListingMapper {
             jl.getExperienceLevel(),
             jl.getDeadline(),
             jl.getViewCount() == null ? 0 : jl.getViewCount(),
+            jl.getQualificationNeeded(),
+            jl.getRequiresInterview(),
             jl.getCategory() == null ? null : new JobListingResponse.CategorySummary(
                 jl.getCategory().getId(),
                 jl.getCategory().getName(),

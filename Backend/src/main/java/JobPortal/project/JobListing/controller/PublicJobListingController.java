@@ -5,6 +5,8 @@ import JobPortal.project.JobListing.dto.response.CategoryResponse;
 import JobPortal.project.JobListing.dto.response.JobListingResponse;
 import JobPortal.project.JobListing.dto.response.JobListingSummary;
 import JobPortal.project.JobListing.enums.ExperienceLevel;
+import JobPortal.project.JobListing.entity.JobLocation;
+import JobPortal.project.JobListing.entity.ListingSkill;
 import JobPortal.project.JobListing.enums.JobType;
 import JobPortal.project.JobListing.service.JobListingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -208,5 +210,21 @@ public class PublicJobListingController {
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategories() {
         List<CategoryResponse> categories = jobListingService.getAllCategories();
         return ResponseEntity.ok(ApiResponse.ok("Categories retrieved", categories));
+    }
+
+    // ── GET /api/jobs/locations ──────────────────────────────────────────────
+    @GetMapping("/locations")
+    @Operation(summary = "List all job locations")
+    public ResponseEntity<ApiResponse<List<JobLocation>>> getLocations() {
+        List<JobLocation> locations = jobListingService.getAllLocations();
+        return ResponseEntity.ok(ApiResponse.ok("Locations retrieved", locations));
+    }
+
+    // ── GET /api/jobs/skills ─────────────────────────────────────────────────
+    @GetMapping("/skills")
+    @Operation(summary = "List all platform skills")
+    public ResponseEntity<ApiResponse<List<ListingSkill>>> getSkills() {
+        List<ListingSkill> skills = jobListingService.getAllSkills();
+        return ResponseEntity.ok(ApiResponse.ok("Skills retrieved", skills));
     }
 }

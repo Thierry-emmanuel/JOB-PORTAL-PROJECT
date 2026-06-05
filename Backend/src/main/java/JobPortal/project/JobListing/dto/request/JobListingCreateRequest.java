@@ -61,6 +61,12 @@ public record JobListingCreateRequest(
     @Schema(description = "Set of skill UUIDs required for this position")
     Set<UUID> skillIds,
 
+    @Schema(description = "Qualifications or education required for the position", example = "Bachelor's degree in CS")
+    String qualificationNeeded,
+
+    @Schema(description = "If an interview is required for this job listing", defaultValue = "false")
+    Boolean requiresInterview,
+
     @Schema(description = "If true, immediately publish as ACTIVE; otherwise saved as DRAFT",
             defaultValue = "false")
     boolean publishImmediately

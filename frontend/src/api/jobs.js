@@ -224,6 +224,26 @@ export const getCompanyStats = async (companyId, seekerId) => {
   return data;
 };
 
+export const createJob = async (requestBody) => {
+  const { data } = await apiClient.post('/api/jobs', requestBody);
+  return data?.data ?? data;
+};
+
+export const updateJob = async (id, requestBody) => {
+  const { data } = await apiClient.put(`/api/jobs/${id}`, requestBody);
+  return data?.data ?? data;
+};
+
+export const getLocations = async () => {
+  const { data } = await apiClient.get('/api/jobs/locations');
+  return data?.data ?? data ?? [];
+};
+
+export const getSkills = async () => {
+  const { data } = await apiClient.get('/api/jobs/skills');
+  return data?.data ?? data ?? [];
+};
+
 const jobsService = {
   getJobs, getJob, getJobDetail,
   applyToJob, getUserApplications, getUserInterviews,
@@ -233,6 +253,7 @@ const jobsService = {
   getEmployerCompanies, getCompanies, getCategories,
   saveJob, rateJob,
   updateApplicationReview, toggleCompanyLike, getCompanyStats,
+  createJob, updateJob, getLocations, getSkills,
 };
 
 export default jobsService;

@@ -50,6 +50,12 @@ public record JobListingUpdateRequest(
     @Schema(description = "Updated application deadline")
     LocalDate deadline,
 
+    @Schema(description = "Updated qualifications or education required")
+    String qualificationNeeded,
+
+    @Schema(description = "Updated interview requirement status")
+    Boolean requiresInterview,
+
     @Schema(description = "Replacement skill set (fully replaces existing skills when provided)")
     Set<UUID> skillIds
 

@@ -12,6 +12,8 @@ import JobPortal.project.JobListing.enums.JobType;
 import JobPortal.project.JobListing.enums.PostingStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import JobPortal.project.JobListing.entity.JobLocation;
+import JobPortal.project.JobListing.entity.ListingSkill;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -191,4 +193,8 @@ public interface JobListingService {
      * @return full UUID or null if not found
      */
     UUID resolveNumericalIdToUuid(Long numericalId);
+
+    List<JobLocation> getAllLocations();
+
+    List<ListingSkill> getAllSkills();
 }

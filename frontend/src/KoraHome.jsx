@@ -16,66 +16,24 @@ const INK  = "#111827";
 const MUTED= "#6B7280";
 const BORDER="#E5E7EB";
 
-/* ─── DATA ──────────────────────────────────────────────────── */
-const SLIDES_MOCK = [
-  { eyebrow:"POSTE VEDETTE",       title:"Senior Frontend\nDeveloper",  company:"Orange Digital Centre", location:"Douala · Remote OK",  salary:"2.5M – 4M FCFA/mo", match:94, tag:"TECH",    tagColor:"#3B82F6" },
-  { eyebrow:"OPPORTUNITÉ FINANCE", title:"Product Manager\nFintech",    company:"Afriland First Bank",   location:"Yaoundé · CDI",       salary:"3M – 5M FCFA/mo",   match:88, tag:"FINANCE", tagColor:"#1D4ED8" },
-  { eyebrow:"RÔLE CRÉATIF",        title:"Lead UX\nDesigner",           company:"CamTech Solutions",     location:"Remote · Contract",   salary:"1.8M – 3M FCFA/mo", match:81, tag:"DESIGN",  tagColor:"#7C3AED" },
-];
+/* ─── CATEGORY EMOJI ICONS MAPPING ──────────────────────────── */
+const CATEGORY_ICONS = {
+  "Technologie": "💻",
+  "Technology": "💻",
+  "Finance": "📊",
+  "Ingénierie": "⚙️",
+  "Engineering": "⚙️",
+  "Design": "🎨",
+  "Marketing": "📣",
+  "Santé": "🏥",
+  "Healthcare": "🏥",
+  "Commercial": "🤝",
+  "Sales": "🤝",
+  "Éducation": "📚",
+  "Education": "📚"
+};
 
-const JOBS_MOCK = [
-  { id:1, title:"Senior Frontend Developer", company:"Orange Digital Centre", location:"Douala",   type:"Full-time", salary:"2.5M – 4M FCFA/mo",   posted:0, logo:"OD", match:94, tags:["React","TypeScript"], remote:true,  applicants:12 },
-  { id:2, title:"Product Manager",           company:"Afriland First Bank",   location:"Yaoundé",  type:"Full-time", salary:"3M – 5M FCFA/mo",     posted:1, logo:"AF", match:88, tags:["Fintech","Agile"],    remote:false, applicants:34 },
-  { id:3, title:"Data Scientist",            company:"CamTech Solutions",     location:"Remote",   type:"Contract",  salary:"1.8M – 3M FCFA/mo",   posted:3, logo:"CT", match:81, tags:["Python","ML"],        remote:true,  applicants:7  },
-  { id:4, title:"DevOps Engineer",           company:"MTN Cameroon",          location:"Douala",   type:"Full-time", salary:"2.2M – 3.8M FCFA/mo", posted:0, logo:"MT", match:76, tags:["AWS","Docker"],       remote:false, applicants:19 },
-  { id:5, title:"Responsable Marketing",     company:"Jumia Cameroun",        location:"Douala",   type:"Full-time", salary:"1.5M – 2.5M FCFA/mo", posted:2, logo:"JM", match:71, tags:["SEO","Brand"],        remote:false, applicants:28 },
-  { id:6, title:"Analyste Financier",        company:"UBA Bank",              location:"Yaoundé",  type:"Full-time", salary:"2M – 3.5M FCFA/mo",   posted:1, logo:"UB", match:79, tags:["Excel","Finance"],    remote:false, applicants:22 },
-];
-
-const CATEGORIES_MOCK = [
-  { name:"Technologie", count:342, trend:"+12%", icon:"💻" },
-  { name:"Finance",     count:218, trend:"+8%",  icon:"📊" },
-  { name:"Ingénierie",  count:289, trend:"+6%",  icon:"⚙️" },
-  { name:"Design",      count:88,  trend:"+31%", icon:"🎨" },
-  { name:"Marketing",   count:156, trend:"+15%", icon:"📣" },
-  { name:"Santé",       count:124, trend:"+22%", icon:"🏥" },
-  { name:"Commercial",  count:201, trend:"+19%", icon:"🤝" },
-  { name:"Éducation",   count:97,  trend:"+5%",  icon:"📚" },
-];
-
-const COMPANIES_MOCK = [
-  { name:"MTN Cameroon",  abbr:"MTN", roles:23, hot:true  },
-  { name:"Orange CM",     abbr:"ORG", roles:18, hot:true  },
-  { name:"Afriland Bank", abbr:"AFL", roles:15, hot:false },
-  { name:"Jumia",         abbr:"JMI", roles:31, hot:true  },
-  { name:"Expresso",      abbr:"EXP", roles:9,  hot:false },
-  { name:"CamTel",        abbr:"CTL", roles:12, hot:false },
-  { name:"Dangote",       abbr:"DNG", roles:44, hot:true  },
-  { name:"UBA Bank",      abbr:"UBA", roles:17, hot:true  },
-];
-
-/*
- * ─── TICKER FEED DATA ───────────────────────────────────────────
- * Each entry is tagged with a `type`:
- *   "company"  → posted by a company (job announcements, news)
- *   "user"     → user-activity update (applications, profile matches, etc.)
- *
- * The Ticker component filters to only show "company" entries.
- */
-const TICKER_FEED = [
-  { type:"company", msg:"Orange CM : 8 nouveaux postes en ingénierie" },
-  { type:"user",    msg:"Emmanuel K. accepté chez MTN · Douala" },
-  { type:"company", msg:"Afriland recrute sur 15 postes" },
-  { type:"user",    msg:"Beatrice N. postule chez Expresso" },
-  { type:"company", msg:"Dangote : 44 postes ouverts dès aujourd'hui" },
-  { type:"user",    msg:"Martin A. — Senior DevOps Engineer" },
-  { type:"company", msg:"MTN Cameroon : ouverture de 23 postes tech" },
-  { type:"user",    msg:"Claudine T. — 94% de compatibilité" },
-  { type:"company", msg:"Jumia Cameroun : 31 offres publiées ce mois" },
-  { type:"company", msg:"UBA Bank : recrutement de 17 talents · Yaoundé" },
-  { type:"user",    msg:"Patrick M. postule chez CamTech Solutions" },
-  { type:"company", msg:"CamTel : nouvelles opportunités en ingénierie réseau" },
-];
+const getCategoryIcon = (name) => CATEGORY_ICONS[name] || "💼";
 
 const FILTERS = ["Tous","Remote","Full-time","Stage","Tech","Finance","Design"];
 
@@ -411,7 +369,7 @@ function Hero() {
   const navigate = useNavigate();
 
   const [heroConfig, setHeroConfig]     = useState(null);
-  const [slides, setSlides]             = useState(SLIDES_MOCK);
+  const [slides, setSlides]             = useState([]);
   const [current, setCurrent]           = useState(0);
   const [paused, setPaused]             = useState(false);
   const [animating, setAnimating]       = useState(false);
@@ -445,9 +403,23 @@ function Hero() {
     }).catch(console.error);
   }, []);
 
+  const welcomeSlide = {
+    eyebrow: "BIENVENUE",
+    title: "Bienvenue sur Kora\nJob Portal",
+    company: "Kora Platform",
+    location: "Cameroun",
+    salary: "Négociable",
+    match: 100,
+    tag: "KORA",
+    tagColor: "#F97316",
+    id: null
+  };
+  const currentSlides = (slides && slides.length > 0) ? slides : [welcomeSlide];
+
   /* Job carousel */
-  const total = slides.length;
+  const total = currentSlides.length;
   const goTo = useCallback((idx) => {
+    if (total <= 0) return;
     const next = ((idx % total) + total) % total;
     setAnimating(true);
     setTimeout(() => { setDisplaySlide(next); setCurrent(next); setAnimating(false); }, 280);
@@ -499,11 +471,12 @@ function Hero() {
     return "/employee/dashboard";
   };
 
-  const s = slides[displaySlide] || slides[0];
+  const s = currentSlides[displaySlide] || currentSlides[0] || welcomeSlide;
   const handleAction = () => { if (s.id) navigate(`/jobs/${s.id}`); else navigate("/jobs"); };
   const eyebrowLabel =
     s.eyebrow === "POSTE VEDETTE"       ? t('hero.featured') :
     s.eyebrow === "OPPORTUNITÉ FINANCE" ? t('hero.finance')  :
+    s.eyebrow === "BIENVENUE"           ? "KORA PLATFORM" :
     t('hero.creative');
 
   return (
@@ -640,7 +613,7 @@ function Hero() {
       <div style={{ position:"absolute", right:"clamp(12px,4vw,48px)", bottom:48, zIndex:8, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10 }}>
         <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.55)" }}>{current+1}/{total}</span>
         <div style={{ display:"flex", gap:6 }}>
-          {slides.map((_, i) => (
+          {currentSlides.map((_, i) => (
             <button key={i} onClick={() => goTo(i)} style={{ height:7, width: i===current ? 28 : 7, borderRadius:4, border:"none", cursor:"pointer", padding:0, background: i===current ? O : "rgba(255,255,255,0.35)", transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)" }}/>
           ))}
         </div>
@@ -690,11 +663,34 @@ function Hero() {
  * are excluded by filtering TICKER_FEED to type === "company".
  */
 function Ticker() {
-  const companyMsgs = TICKER_FEED
-    .filter(item => item.type === "company")
-    .map(item => item.msg);
+  const [messages, setMessages] = useState([]);
 
-  // Duplicate for seamless loop
+  useEffect(() => {
+    getJobs({ page: 1, limit: 10 }).then(res => {
+      if (res.data && res.data.length > 0) {
+        const msgs = res.data.map(job => {
+          const compName = job.company || "Une entreprise partenaire";
+          const jobTitle = job.title || "Opportunité";
+          const loc = job.location || "Cameroun";
+          return `${compName} recrute : ${jobTitle} (${loc})`;
+        });
+        setMessages(msgs);
+      } else {
+        setMessages([
+          "Kora CM : Bienvenue sur la plateforme de recrutement premium",
+          "Kora CM : Trouvez les meilleures opportunités professionnelles",
+          "Kora CM : Rejoignez des milliers de professionnels talentueux"
+        ]);
+      }
+    }).catch(() => {
+      setMessages([
+        "Kora CM : Bienvenue sur la plateforme de recrutement premium",
+        "Kora CM : Trouvez les meilleures opportunités professionnelles"
+      ]);
+    });
+  }, []);
+
+  const companyMsgs = messages.length > 0 ? messages : ["Chargement des annonces en cours..."];
   const msgs = [...companyMsgs, ...companyMsgs];
 
   return (
@@ -703,7 +699,7 @@ function Ticker() {
       <div style={{ display:"flex", alignItems:"center" }}>
         <div style={{ background:G, color:"white", padding:"5px 14px", fontSize:10, fontWeight:700, letterSpacing:2, flexShrink:0, whiteSpace:"nowrap" }}>EN DIRECT</div>
         <div style={{ overflow:"hidden", flex:1, WebkitMaskImage:"linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)" }}>
-          <div style={{ display:"flex", gap:48, width:"max-content", animation:`ticker ${companyMsgs.length * 5}s linear infinite` }}>
+          <div style={{ display:"flex", gap:48, width:"max-content", animation:`ticker ${companyMsgs.length * 8}s linear infinite` }}>
             {msgs.map((m, i) => (
               <span key={i} style={{ fontSize:12, fontWeight:400, color:G2, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:16 }}>
                 <span style={{ width:6, height:6, borderRadius:"50%", background:O, display:"inline-block", animation:"blink 1.4s infinite" }}/>
@@ -791,21 +787,44 @@ function StatsBand() {
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !counted.current) {
         counted.current = true;
-        const targets = { jobs:10000, companies:500, candidates:50000, rate:95 };
-        const dur = 1800;
-        const start = performance.now();
-        function tick(now) {
-          const p = Math.min((now - start) / dur, 1);
-          const ease = 1 - Math.pow(1 - p, 3);
-          setCounts({
-            jobs:       Math.floor(ease * targets.jobs),
-            companies:  Math.floor(ease * targets.companies),
-            candidates: Math.floor(ease * targets.candidates),
-            rate:       Math.floor(ease * targets.rate),
-          });
-          if (p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
+        fetchLiveHero().then(cfg => {
+          const targets = {
+            jobs:       cfg?.liveJobCount || 10,
+            companies:  cfg?.liveCompanyCount || 5,
+            candidates: cfg?.liveSeekerCount || 20,
+            rate:       95,
+          };
+          const dur = 1800;
+          const start = performance.now();
+          function tick(now) {
+            const p = Math.min((now - start) / dur, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            setCounts({
+              jobs:       Math.floor(ease * targets.jobs),
+              companies:  Math.floor(ease * targets.companies),
+              candidates: Math.floor(ease * targets.candidates),
+              rate:       Math.floor(ease * targets.rate),
+            });
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        }).catch(() => {
+          const targets = { jobs: 10, companies: 5, candidates: 20, rate: 95 };
+          const dur = 1800;
+          const start = performance.now();
+          function tick(now) {
+            const p = Math.min((now - start) / dur, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            setCounts({
+              jobs:       Math.floor(ease * targets.jobs),
+              companies:  Math.floor(ease * targets.companies),
+              candidates: Math.floor(ease * targets.candidates),
+              rate:       Math.floor(ease * targets.rate),
+            });
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
       }
     }, { threshold: 0.3 });
     obs.observe(el);
@@ -949,9 +968,9 @@ function JobCard({ job, delay }) {
 
 /* ─── JOBS SECTION ──────────────────────────────────────────── */
 function JobsSection() {
-  const { t } = useTranslation();                          // ← WAS MISSING
+  const { t } = useTranslation();
   const [ref, style] = useReveal(0);
-  const [jobs, setJobs] = useState(JOBS_MOCK);
+  const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
     getJobs({ page: 1, limit: 6 }).then(res => {
@@ -962,8 +981,13 @@ function JobsSection() {
           applicants: Math.floor(Math.random() * 50) + 1,
           posted: Math.max(0, Math.floor((Date.now() - new Date(job.postedAt).getTime()) / 86400000))
         })));
+      } else {
+        setJobs([]);
       }
-    }).catch(console.error);
+    }).catch(err => {
+      console.error(err);
+      setJobs([]);
+    });
   }, []);
   return (
     <section style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
@@ -978,9 +1002,19 @@ function JobsSection() {
             {t('jobs.view_all', { count: 10000 })} →
           </Link>
         </div>
-        <div className="kora-jobs-grid">
-          {jobs.map((job, i) => <JobCard key={job.id} job={job} delay={[60,140,220,300,380,460][i] || 0} />)}
-        </div>
+        {jobs.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
+            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>💼</span>
+            <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('jobs.empty_title', 'Aucune offre disponible')}</h3>
+            <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
+              {t('jobs.empty_desc', "Il n'y a pas de postes vacants pour le moment. Veuillez revenir plus tard ou publier une nouvelle offre.")}
+            </p>
+          </div>
+        ) : (
+          <div className="kora-jobs-grid">
+            {jobs.map((job, i) => <JobCard key={job.id} job={job} delay={[60,140,220,300,380,460][i] || 0} />)}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -989,9 +1023,10 @@ function JobsSection() {
 /* ─── CATEGORIES ────────────────────────────────────────────── */
 function CategoriesSection() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
-  const [categories, setCategories] = useState(CATEGORIES_MOCK);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     getCategories().then(data => {
@@ -1000,10 +1035,15 @@ function CategoriesSection() {
           name: cat.name,
           count: Math.floor(Math.random() * 300) + 50,
           trend: `+${Math.floor(Math.random() * 30) + 5}%`,
-          icon: cat.iconUrl || CATEGORIES_MOCK[i % CATEGORIES_MOCK.length].icon
+          icon: cat.iconUrl || getCategoryIcon(cat.name)
         })));
+      } else {
+        setCategories([]);
       }
-    }).catch(console.error);
+    }).catch(err => {
+      console.error(err);
+      setCategories([]);
+    });
   }, []);
   return (
     <section style={{ background:"#fff", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
@@ -1013,27 +1053,37 @@ function CategoriesSection() {
           <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>Parcourir par Secteur</h2>
           <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>Survolez une carte pour voir le salaire moyen</p>
         </div>
-        <div className="kora-categories-grid">
-          {categories.map((cat, i) => {
-            const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
-            return (
-              <div key={cat.name} ref={ref} style={{
-                ...style,
-                background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
-                cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
-              }}
-                onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
-              >
-                <span style={{ fontSize:26, display:"block", marginBottom:10 }}>{cat.icon}</span>
-                <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
-                <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
-                <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
-              </div>
-            );
-          })}
-        </div>
+        {categories.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
+            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>📊</span>
+            <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('categories.empty_title', 'Aucun secteur trouvé')}</h3>
+            <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
+              {t('categories.empty_desc', "Les secteurs d'activité seront affichés dès qu'ils seront disponibles dans le système.")}
+            </p>
+          </div>
+        ) : (
+          <div className="kora-categories-grid">
+            {categories.map((cat, i) => {
+              const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
+              return (
+                <div key={cat.name} ref={ref} style={{
+                  ...style,
+                  background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
+                  cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+                }}
+                  onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+                >
+                  <span style={{ fontSize:26, display:"block", marginBottom:10 }}>{cat.icon}</span>
+                  <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
+                  <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
+                  <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1042,9 +1092,10 @@ function CategoriesSection() {
 /* ─── COMPANIES ─────────────────────────────────────────────── */
 function CompaniesSection() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [hRef, hStyle] = useReveal(0);
-  const [companies, setCompanies] = useState(COMPANIES_MOCK);
+  const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
     getCompanies().then(data => {
@@ -1056,8 +1107,13 @@ function CompaniesSection() {
           roles: Math.floor(Math.random() * 40) + 5,
           hot: i < 4
         })));
+      } else {
+        setCompanies([]);
       }
-    }).catch(console.error);
+    }).catch(err => {
+      console.error(err);
+      setCompanies([]);
+    });
   }, []);
   return (
     <section id="companies-section" style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
@@ -1070,35 +1126,45 @@ function CompaniesSection() {
             Pulse vert = postes ouverts en ce moment
           </p>
         </div>
-        <div className="kora-companies-grid">
-          {companies.map((co, i) => {
-            const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
-            return (
-              <div key={co.name} ref={ref} style={{
-                ...style,
-                background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
-                cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
-              }}
-                onClick={() => navigate(`/jobs?search=${encodeURIComponent(co.name)}`)}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
-              >
-                <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
-                  {co.logo ? (
-                    <img src={co.logo} alt={`${co.name} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                  ) : (
-                    <span style={{ fontWeight:800, fontSize:12, color:G }}>{co.abbr}</span>
-                  )}
-                  {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite", zIndex:2 }}/>}
+        {companies.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
+            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>🏢</span>
+            <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('companies.empty_title', 'Aucune entreprise trouvée')}</h3>
+            <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
+              {t('companies.empty_desc', "Les entreprises partenaires apparaîtront ici dès leur inscription.")}
+            </p>
+          </div>
+        ) : (
+          <div className="kora-companies-grid">
+            {companies.map((co, i) => {
+              const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
+              return (
+                <div key={co.name} ref={ref} style={{
+                  ...style,
+                  background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
+                  cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
+                }}
+                  onClick={() => navigate(`/jobs?search=${encodeURIComponent(co.name)}`)}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+                >
+                  <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
+                    {co.logo ? (
+                      <img src={co.logo} alt={`${co.name} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                    ) : (
+                      <span style={{ fontWeight:800, fontSize:12, color:G }}>{co.abbr}</span>
+                    )}
+                    {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite", zIndex:2 }}/>}
+                  </div>
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:INK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{co.name}</div>
+                    <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{co.roles} postes ouverts</div>
+                  </div>
                 </div>
-                <div style={{ minWidth:0 }}>
-                  <div style={{ fontWeight:700, fontSize:13, color:INK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{co.name}</div>
-                  <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{co.roles} postes ouverts</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -30,6 +30,8 @@ public record JobListingResponse(
     ExperienceLevel experienceLevel,
     LocalDate       deadline,
     int             viewCount,
+    String          qualificationNeeded,
+    Boolean         requiresInterview,
 
     CategorySummary  category,
     CompanySummary   company,

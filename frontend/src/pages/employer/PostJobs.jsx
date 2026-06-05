@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
   Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
-  Eye, Lightbulb
+  Eye, Lightbulb, Save, XCircle
 } from "lucide-react";
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
+import {
+  createJob,
+  updateJob,
+  getLocations,
+  getSkills,
+  getCategories,
+  getJobDetail
+} from "../../api/jobs";
 import "../../styles/dashboard-shell.css";
 import "../../styles/PostJobs.css";
 
@@ -18,20 +26,15 @@ const STEPS = [
 ];
 
 const INITIAL_FORM = {
-  title: "", category: "", type: "", location: "", deadline: "",
+  title: "", categoryId: "", type: "", locationId: "", deadline: "",
   salaryMin: "", salaryMax: "", currency: "XAF",
   description: "", experience: "", remote: false,
   skills: [], benefits: [], languages: [],
+  qualificationNeeded: "", requiresInterview: false
 };
 
-const CATEGORIES = [
-  "Software Engineering","Data & Analytics","Design & UX","Product Management",
-  "Marketing","Sales","Operations","Finance","Human Resources","Customer Support","Other",
-];
 const JOB_TYPES   = ["FULL_TIME","PART_TIME","CONTRACT","INTERNSHIP","FREELANCE"];
 const LEVELS      = ["ENTRY","JUNIOR","MID","SENIOR","LEAD","EXECUTIVE"];
-const SKILL_OPTS  = ["JavaScript","TypeScript","React","Node.js","Python","Java","Spring Boot",
-                     "SQL","PostgreSQL","Docker","AWS","Git","REST APIs","GraphQL","Agile/Scrum"];
 const BENEFIT_OPTS = ["Health Insurance","Remote Work","Paid Leave","Transport Allowance",
                       "Performance Bonus","Training Budget","Flexible Hours","Stock Options"];
 
@@ -94,7 +97,7 @@ function TagInput({ items, options, placeholder, onAdd, onRemove }) {
   );
 }
 
-function Step1({ form, setForm, errors }) {
+function Step1({ form, setForm, errors, dbCategories, dbLocations }) {
   const f = (key, val) => setForm(p => ({ ...p, [key]: val }));
   return (
     <div className="pj-step-body">
@@ -103,21 +106,24 @@ function Step1({ form, setForm, errors }) {
         <Field label="Job Title" required error={errors.title}>
           <input className="pj-input" placeholder="e.g. Senior Java Developer" value={form.title} onChange={e => f("title", e.target.value)} />
         </Field>
-        <Field label="Category" required error={errors.category}>
-          <select className="pj-input" value={form.category} onChange={e => f("category", e.target.value)}>
+        <Field label="Category" required error={errors.categoryId}>
+          <select className="pj-input" value={form.categoryId} onChange={e => f("categoryId", e.target.value)}>
             <option value="">Select category…</option>
-            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+            {dbCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </Field>
         <Field label="Contract Type" required error={errors.type}>
           <select className="pj-input" value={form.type} onChange={e => f("type", e.target.value)}>
             <option value="">Select type…</option>
-            {JOB_TYPES.map(t => <option key={t}>{t}</option>)}
+            {JOB_TYPES.map(t => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
           </select>
         </Field>
-        <Field label="Location" required error={errors.location}>
+        <Field label="Location" required error={errors.locationId}>
           <div className="pj-input-icon"><MapPin size={15} />
-            <input className="pj-input pj-input-with-icon" placeholder="e.g. Douala, Cameroon" value={form.location} onChange={e => f("location", e.target.value)} />
+            <select className="pj-input pj-input-with-icon" value={form.locationId} onChange={e => f("locationId", e.target.value)}>
+              <option value="">Select location…</option>
+              {dbLocations.map(l => <option key={l.id} value={l.id}>{l.city}{l.country ? `, ${l.country}` : ""}</option>)}
+            </select>
           </div>
         </Field>
         <Field label="Application Deadline" required error={errors.deadline}>
@@ -157,8 +163,11 @@ function Step2({ form, setForm, errors }) {
     <div className="pj-step-body">
       <h2 className="pj-step-title"><FileText size={18} /> Job Details</h2>
       <Field label="Job Description" required error={errors.description}>
-        <textarea className="pj-textarea" rows={8} placeholder="Describe the role, responsibilities, team culture…" value={form.description} onChange={e => f("description", e.target.value)} />
-        <span className="pj-char-count">{form.description.length}/3000</span>
+        <textarea className="pj-textarea" rows={6} placeholder="Describe the role, responsibilities, team culture…" value={form.description} onChange={e => f("description", e.target.value)} />
+        <span className="pj-char-count">{form.description?.length}/3000</span>
+      </Field>
+      <Field label="Qualification Needed" required error={errors.qualificationNeeded}>
+        <textarea className="pj-textarea" rows={3} placeholder="Bachelor's degree in CS, 3+ years experience, certifications, etc." value={form.qualificationNeeded} onChange={e => f("qualificationNeeded", e.target.value)} />
       </Field>
       <Field label="Experience Level" required error={errors.experience}>
         <div className="pj-pills">
@@ -167,6 +176,14 @@ function Step2({ form, setForm, errors }) {
           ))}
         </div>
       </Field>
+      <div className="pj-form-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "10px" }}>
+        <Field label="">
+          <label className="pj-checkbox">
+            <input type="checkbox" checked={form.requiresInterview} onChange={e => f("requiresInterview", e.target.checked)} />
+            <span style={{ fontWeight: 600, color: "var(--ds-ink)" }}>Requires Interview process</span>
+          </label>
+        </Field>
+      </div>
       <Field label="Benefits">
         <div className="pj-check-grid">
           {BENEFIT_OPTS.map(b => (
@@ -182,7 +199,7 @@ function Step2({ form, setForm, errors }) {
   );
 }
 
-function Step3({ form, setForm, errors }) {
+function Step3({ form, setForm, errors, skillOpts }) {
   const f = (key, val) => setForm(p => ({ ...p, [key]: val }));
   const addSkill    = s => !form.skills.includes(s)    && f("skills",    [...form.skills, s]);
   const addLang     = l => !form.languages.includes(l) && f("languages", [...form.languages, l]);
@@ -190,7 +207,7 @@ function Step3({ form, setForm, errors }) {
     <div className="pj-step-body">
       <h2 className="pj-step-title"><Tag size={18} /> Requirements</h2>
       <Field label="Required Skills" required error={errors.skills}>
-        <TagInput items={form.skills} options={SKILL_OPTS} placeholder="Type or pick a skill…"
+        <TagInput items={form.skills} options={skillOpts} placeholder="Type or pick a skill…"
           onAdd={addSkill} onRemove={s => f("skills", form.skills.filter(x => x !== s))} />
       </Field>
       <Field label="Languages">
@@ -201,24 +218,33 @@ function Step3({ form, setForm, errors }) {
   );
 }
 
-function Step4({ form }) {
+function Step4({ form, dbCategories, dbLocations }) {
+  const catName = dbCategories.find(c => c.id === form.categoryId)?.name || "—";
+  const locCity = dbLocations.find(l => l.id === form.locationId)?.city || "—";
   return (
     <div className="pj-step-body">
       <h2 className="pj-step-title"><Eye size={18} /> Review &amp; Publish</h2>
       <div className="pj-review-grid">
         {[
           ["Job Title",     form.title       || "—"],
-          ["Category",      form.category    || "—"],
+          ["Category",      catName],
           ["Type",          form.type        || "—"],
-          ["Location",      form.location    || "—"],
+          ["Location",      locCity],
           ["Experience",    form.experience  || "—"],
           ["Deadline",      form.deadline    || "—"],
+          ["Interview?",    form.requiresInterview ? "Yes, required" : "No, optional"],
           ["Salary",        form.salaryMin && form.salaryMax ? `${Number(form.salaryMin).toLocaleString()} – ${Number(form.salaryMax).toLocaleString()} ${form.currency}` : "Not specified"],
           ["Remote",        form.remote ? "Yes" : "No"],
         ].map(([k, v]) => (
           <div key={k} className="pj-review-row"><span className="pj-review-key">{k}</span><span className="pj-review-val">{v}</span></div>
         ))}
       </div>
+      {form.qualificationNeeded && (
+        <div className="pj-review-desc" style={{ marginBottom: 16 }}>
+          <p className="pj-review-key">Qualifications Needed</p>
+          <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, marginTop: 6 }}>{form.qualificationNeeded}</p>
+        </div>
+      )}
       {form.description && (
         <div className="pj-review-desc">
           <p className="pj-review-key">Description</p>
@@ -226,15 +252,15 @@ function Step4({ form }) {
         </div>
       )}
       {form.skills.length > 0 && (
-        <div className="pj-review-desc">
+        <div className="pj-review-desc" style={{ marginTop: 16 }}>
           <p className="pj-review-key">Skills</p>
           <div className="pj-tags" style={{ marginTop: 6 }}>
             {form.skills.map(s => <span key={s} className="pj-tag" style={{ cursor: "default" }}>{s}</span>)}
           </div>
         </div>
       )}
-      <div className="pj-review-tip">
-        <Lightbulb size={14} /> <strong>Tip:</strong> Jobs with complete descriptions get 3× more applications.
+      <div className="pj-review-tip" style={{ marginTop: 24 }}>
+        <Lightbulb size={14} /> <strong>Tip:</strong> Jobs with complete requirements get 3× more applications.
       </div>
     </div>
   );
@@ -248,23 +274,78 @@ export default function PostJob({ onBack, onSuccess }) {
   const [submitted,   setSubmitted]   = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
 
-  const { employer, loading, stats } = useEmployerDashboard();
+  const [dbCategories, setDbCategories] = useState([]);
+  const [dbLocations,  setDbLocations]  = useState([]);
+  const [dbSkills,     setDbSkills]     = useState([]);
+  const [loadingDb,    setLoadingDb]    = useState(true);
+  const [isEditMode,   setIsEditMode]   = useState(false);
+  const [editId,       setEditId]       = useState(null);
+
+  const { employer, loading, stats, refresh } = useEmployerDashboard();
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const editIdParam = query.get("edit");
+
+    const loadPlatformData = async () => {
+      try {
+        const [cats, locs, sks] = await Promise.all([
+          getCategories(),
+          getLocations(),
+          getSkills()
+        ]);
+        setDbCategories(cats);
+        setDbLocations(locs);
+        setDbSkills(sks);
+
+        if (editIdParam) {
+          setIsEditMode(true);
+          setEditId(editIdParam);
+          const job = await getJobDetail(editIdParam);
+          setForm({
+            title: job.title || "",
+            categoryId: job.category?.id || "",
+            type: job.jobType || "",
+            locationId: job.location?.id || "",
+            deadline: job.deadline || "",
+            salaryMin: job.salaryMin ? parseInt(job.salaryMin.toString().replace(/[^0-9]/g, '')) : "",
+            salaryMax: job.salaryMax ? parseInt(job.salaryMax.toString().replace(/[^0-9]/g, '')) : "",
+            currency: "XAF",
+            description: job.description || "",
+            experience: job.experienceLevel || "",
+            remote: job.location?.city === "Remote",
+            skills: job.tags || [],
+            benefits: [],
+            languages: [],
+            qualificationNeeded: job.qualificationNeeded || "",
+            requiresInterview: job.requiresInterview || false,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load platform reference data:", err);
+      } finally {
+        setLoadingDb(false);
+      }
+    };
+    loadPlatformData();
+  }, []);
 
   const validate = (s) => {
     const e = {};
-    if (s === 1) {
+    if (s === 1 || isEditMode) {
       if (!form.title.trim())    e.title    = "Job title is required.";
-      if (!form.category)        e.category = "Please select a category.";
+      if (!form.categoryId)      e.categoryId = "Please select a category.";
       if (!form.type)            e.type     = "Please select a contract type.";
-      if (!form.location.trim()) e.location = "Location is required.";
+      if (!form.locationId)      e.locationId = "Location is required.";
       if (!form.deadline)        e.deadline = "Please set a deadline.";
     }
-    if (s === 2) {
+    if (s === 2 || isEditMode) {
       if (!form.description.trim())       e.description = "Description is required.";
       if (form.description.length > 3000) e.description = "Max 3000 characters.";
       if (!form.experience)               e.experience  = "Please select an experience level.";
+      if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications information is required.";
     }
-    if (s === 3) {
+    if (s === 3 || isEditMode) {
       if (form.skills.length === 0) e.skills = "Add at least one skill.";
     }
     setErrors(e);
@@ -273,8 +354,89 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const handleNext    = () => { if (validate(step)) setStep(s => s + 1); };
   const handleBack    = () => { setErrors({}); setStep(s => s - 1); };
-  const handlePublish = () => { if (validate(4)) setSubmitted(true); };
-  const handleDraft   = () => { setSavingDraft(true); setTimeout(() => { setSavingDraft(false); }, 900); };
+
+  const handlePublish = async () => {
+    const validateStep = isEditMode ? 1 : 4;
+    if (!validate(validateStep)) return;
+
+    const selectedSkillIds = form.skills
+      .map(name => dbSkills.find(s => s.name === name)?.id)
+      .filter(Boolean);
+
+    const payload = {
+      title: form.title,
+      description: form.description,
+      categoryId: form.categoryId,
+      companyId: employer?.companyId || 1,
+      locationId: form.locationId || null,
+      jobType: form.type,
+      salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
+      salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
+      experienceLevel: form.experience,
+      deadline: form.deadline,
+      skillIds: selectedSkillIds,
+      qualificationNeeded: form.qualificationNeeded,
+      requiresInterview: form.requiresInterview,
+      publishImmediately: true
+    };
+
+    try {
+      if (isEditMode) {
+        await updateJob(editId, payload);
+      } else {
+        await createJob(payload);
+      }
+      refresh();
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setErrors({ api: "Failed to publish listing. Please check details." });
+    }
+  };
+
+  const handleDraft = async () => {
+    if (!form.title.trim()) {
+      setErrors({ title: "Job title is required to save draft." });
+      return;
+    }
+    setSavingDraft(true);
+
+    const selectedSkillIds = form.skills
+      .map(name => dbSkills.find(s => s.name === name)?.id)
+      .filter(Boolean);
+
+    const payload = {
+      title: form.title,
+      description: form.description,
+      categoryId: form.categoryId || null,
+      companyId: employer?.companyId || 1,
+      locationId: form.locationId || null,
+      jobType: form.type || "FULL_TIME",
+      salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
+      salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
+      experienceLevel: form.experience || "MID",
+      deadline: form.deadline || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      skillIds: selectedSkillIds,
+      qualificationNeeded: form.qualificationNeeded || "",
+      requiresInterview: form.requiresInterview || false,
+      publishImmediately: false
+    };
+
+    try {
+      if (isEditMode) {
+        await updateJob(editId, payload);
+      } else {
+        await createJob(payload);
+      }
+      refresh();
+      onBack();
+    } catch (err) {
+      console.error(err);
+      setErrors({ api: "Failed to save draft." });
+    } finally {
+      setSavingDraft(false);
+    }
+  };
 
   /* Shared shell wrapper */
   const Shell = ({ children }) => (
@@ -288,6 +450,17 @@ export default function PostJob({ onBack, onSuccess }) {
     </div>
   );
 
+  if (loadingDb || loading) {
+    return (
+      <Shell>
+        <div className="mj-loading" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "400px" }}>
+          <div className="mj-spinner" style={{ width: 40, height: 40, border: "3px solid #E5E7EB", borderTopColor: "var(--ds-accent)", borderRadius: "50%", animation: "mj-spin 0.8s linear infinite" }}/>
+          <span style={{ marginTop: 12, fontSize: 14, color: "#6B7280" }}>Loading job editor…</span>
+        </div>
+      </Shell>
+    );
+  }
+
   if (submitted) {
     return (
       <Shell>
@@ -296,23 +469,82 @@ export default function PostJob({ onBack, onSuccess }) {
             <CheckCircle size={32} />
           </div>
           <div>
-            <h1 className="ds-hero-title">Job Posted Successfully! 🎉</h1>
+            <h1 className="ds-hero-title">{isEditMode ? "Job Updated Successfully! 🎉" : "Job Posted Successfully! 🎉"}</h1>
             <p className="ds-hero-sub">"{form.title}" is now live. Candidates can start applying immediately.</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="ds-btn ds-btn-ghost" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.3)" }} onClick={onBack}>
               <ArrowLeft size={14} /> Back to Jobs
             </button>
-            <button className="ds-btn" style={{ background: "#fff", color: "var(--ds-accent)", fontWeight: 700 }}
-              onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL_FORM); setErrors({}); }}>
-              <Plus size={14} /> Post Another
-            </button>
+            {!isEditMode && (
+              <button className="ds-btn" style={{ background: "#fff", color: "var(--ds-accent)", fontWeight: 700 }}
+                onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL_FORM); setErrors({}); }}>
+                <Plus size={14} /> Post Another
+              </button>
+            )}
           </div>
         </div>
       </Shell>
     );
   }
 
+  /* Single-page form for Edit Mode */
+  if (isEditMode) {
+    const skillOpts = dbSkills.map(s => s.name);
+    return (
+      <Shell>
+        <div className="ds-page-header">
+          <div>
+            <h1 className="ds-page-title">Edit Job Listing</h1>
+            <p className="ds-page-sub">Update the details for your job posting on Kora.</p>
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button className="ds-btn ds-btn-ghost" onClick={onBack}><XCircle size={14} /> Cancel</button>
+            <button className="ds-btn ds-btn-primary" onClick={handlePublish}><CheckCircle size={14} /> Confirm Changes</button>
+          </div>
+        </div>
+
+        {errors.api && (
+          <div style={{ background: "#FEF2F2", color: "#B91C1C", border: "1px solid #FCA5A5", borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 13 }}>
+            {errors.api}
+          </div>
+        )}
+
+        <div className="pj-form-layout" style={{ gridTemplateColumns: "1fr" }}>
+          <div className="pj-form-card ds-card" style={{ display: "flex", flexDirection: "column", gap: 32, padding: "32px" }}>
+            
+            {/* Part 1: Basic Information */}
+            <Step1 form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations} />
+            
+            <hr style={{ border: "none", borderTop: "1px solid #E5E7EB", margin: "10px 0" }} />
+
+            {/* Part 2: Job Details & Qualifications */}
+            <Step2 form={form} setForm={setForm} errors={errors} />
+
+            <hr style={{ border: "none", borderTop: "1px solid #E5E7EB", margin: "10px 0" }} />
+
+            {/* Part 3: Requirements & Skills */}
+            <Step3 form={form} setForm={setForm} errors={errors} skillOpts={skillOpts} />
+
+            {/* Actions footer */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid #E5E7EB", paddingTop: 24, marginTop: 12 }}>
+              <button className="ds-btn ds-btn-ghost" style={{ border: "1.5px solid #D1D5DB" }} onClick={onBack}>
+                Cancel
+              </button>
+              <button className="ds-btn ds-btn-primary" onClick={handlePublish}>
+                <Save size={14} /> Confirm &amp; Save Changes
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  /* Standard step-by-step Wizard for Creating */
+  const skillOpts = dbSkills.map(s => s.name);
+  const locCity = dbLocations.find(l => l.id === form.locationId)?.city || "Location";
   return (
     <Shell>
       {/* Page header */}
@@ -329,16 +561,22 @@ export default function PostJob({ onBack, onSuccess }) {
         </div>
       </div>
 
+      {errors.api && (
+        <div style={{ background: "#FEF2F2", color: "#B91C1C", border: "1px solid #FCA5A5", borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 13 }}>
+          {errors.api}
+        </div>
+      )}
+
       {/* Step indicator */}
       <StepIndicator current={step} />
 
       {/* Form + Preview */}
       <div className="pj-form-layout">
         <div className="pj-form-card ds-card">
-          {step === 1 && <Step1 form={form} setForm={setForm} errors={errors} />}
+          {step === 1 && <Step1 form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations} />}
           {step === 2 && <Step2 form={form} setForm={setForm} errors={errors} />}
-          {step === 3 && <Step3 form={form} setForm={setForm} errors={errors} />}
-          {step === 4 && <Step4 form={form} />}
+          {step === 3 && <Step3 form={form} setForm={setForm} errors={errors} skillOpts={skillOpts} />}
+          {step === 4 && <Step4 form={form} dbCategories={dbCategories} dbLocations={dbLocations} />}
 
           <div className="pj-step-nav">
             <div>{step > 1 && <button className="ds-btn ds-btn-ghost" onClick={handleBack}><ArrowLeft size={14} /> Back</button>}</div>
@@ -359,8 +597,8 @@ export default function PostJob({ onBack, onSuccess }) {
           </div>
           <div className="ds-card-body">
             <h4 style={{ fontWeight: 800, fontSize: 16, margin: "0 0 4px" }}>{form.title || "Job Title"}</h4>
-            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 12px" }}>{employer?.companyName || "Your Company"} · {form.location || "Location"}</p>
-            {form.type && <span className="ds-job-type" style={{ marginRight: 6 }}>{form.type}</span>}
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 12px" }}>{employer?.companyName || "Your Company"} · {locCity}</p>
+            {form.type && <span className="ds-job-type" style={{ marginRight: 6 }}>{form.type.replace("_", " ")}</span>}
             {form.remote && <span className="ds-job-type" style={{ background: "#F0FDF4", color: "#16A34A" }}>Remote</span>}
             {form.description && <p style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.6, marginTop: 12 }}>{form.description.slice(0, 160)}{form.description.length > 160 ? "…" : ""}</p>}
             {form.skills.length > 0 && (
