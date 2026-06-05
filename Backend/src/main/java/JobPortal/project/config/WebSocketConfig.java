@@ -23,7 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns(allowedOrigin)
+                .setAllowedOriginPatterns(allowedOrigin, "https://job-portal-project-bay.vercel.app")
                 .withSockJS();
     }
 }

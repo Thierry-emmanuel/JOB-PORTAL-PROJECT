@@ -1021,6 +1021,27 @@ function JobsSection() {
 }
 
 /* ─── CATEGORIES ────────────────────────────────────────────── */
+function CategoryCard({ cat, delay }) {
+  const navigate = useNavigate();
+  const [ref, style] = useReveal(delay);
+  return (
+    <div ref={ref} style={{
+      ...style,
+      background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
+      cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+    }}
+      onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
+      onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+    >
+      <span style={{ fontSize:26, display:"block", marginBottom:10 }}>{cat.icon}</span>
+      <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
+      <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
+      <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
+    </div>
+  );
+}
+
 function CategoriesSection() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -1063,25 +1084,9 @@ function CategoriesSection() {
           </div>
         ) : (
           <div className="kora-categories-grid">
-            {categories.map((cat, i) => {
-              const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
-              return (
-                <div key={cat.name} ref={ref} style={{
-                  ...style,
-                  background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
-                  cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
-                }}
-                  onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
-                >
-                  <span style={{ fontSize:26, display:"block", marginBottom:10 }}>{cat.icon}</span>
-                  <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
-                  <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
-                  <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
-                </div>
-              );
-            })}
+            {categories.map((cat, i) => (
+              <CategoryCard key={cat.name} cat={cat} delay={[60,140,220,300,380,460,540,620][i] || 0} />
+            ))}
           </div>
         )}
       </div>
@@ -1090,6 +1095,35 @@ function CategoriesSection() {
 }
 
 /* ─── COMPANIES ─────────────────────────────────────────────── */
+function CompanyCard({ co, delay }) {
+  const navigate = useNavigate();
+  const [ref, style] = useReveal(delay);
+  return (
+    <div ref={ref} style={{
+      ...style,
+      background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
+      cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
+    }}
+      onClick={() => navigate(`/jobs?search=${encodeURIComponent(co.name)}`)}
+      onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+    >
+      <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
+        {co.logo ? (
+          <img src={co.logo} alt={`${co.name} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+        ) : (
+          <span style={{ fontWeight:800, fontSize:12, color:G }}>{co.abbr}</span>
+        )}
+        {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite", zIndex:2 }}/>}
+      </div>
+      <div style={{ minWidth:0 }}>
+        <div style={{ fontWeight:700, fontSize:13, color:INK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{co.name}</div>
+        <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{co.roles} postes ouverts</div>
+      </div>
+    </div>
+  );
+}
+
 function CompaniesSection() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -1136,33 +1170,9 @@ function CompaniesSection() {
           </div>
         ) : (
           <div className="kora-companies-grid">
-            {companies.map((co, i) => {
-              const [ref, style] = useReveal([60,140,220,300,380,460,540,620][i]);
-              return (
-                <div key={co.name} ref={ref} style={{
-                  ...style,
-                  background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:12, padding:"16px 18px",
-                  cursor:"pointer", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s",
-                }}
-                  onClick={() => navigate(`/jobs?search=${encodeURIComponent(co.name)}`)}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(26,92,46,0.09)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
-                >
-                  <div style={{ width:44, height:44, borderRadius:10, background:G_L, border:`1.5px solid rgba(26,92,46,0.13)`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
-                    {co.logo ? (
-                      <img src={co.logo} alt={`${co.name} logo`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                    ) : (
-                      <span style={{ fontWeight:800, fontSize:12, color:G }}>{co.abbr}</span>
-                    )}
-                    {co.hot && <span style={{ position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%", background:"#22C55E", border:"2.5px solid white", animation:"blink 1.4s infinite", zIndex:2 }}/>}
-                  </div>
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ fontWeight:700, fontSize:13, color:INK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{co.name}</div>
-                    <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{co.roles} postes ouverts</div>
-                  </div>
-                </div>
-              );
-            })}
+            {companies.map((co, i) => (
+              <CompanyCard key={co.name} co={co} delay={[60,140,220,300,380,460,540,620][i] || 0} />
+            ))}
           </div>
         )}
       </div>

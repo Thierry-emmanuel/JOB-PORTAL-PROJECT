@@ -18,7 +18,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(allowedOrigin, "http://localhost:5174", "http://localhost:5175")
+                .allowedOrigins(allowedOrigin, "https://job-portal-project-bay.vercel.app", "http://localhost:5174", "http://localhost:5175")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
