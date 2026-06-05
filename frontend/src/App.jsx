@@ -1,5 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -86,6 +87,96 @@ const GlobalLoader = () => (
   </div>
 );
 
+const pageVariants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 }
+};
+
+const pageTransition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 35,
+  mass: 1
+};
+
+function PageWrapper({ children }) {
+  return (
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={pageVariants}
+      transition={pageTransition}
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        willChange: "transform, opacity"
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  const wrap = (component, role = null) => {
+    const wrappedComp = <PageWrapper>{component}</PageWrapper>;
+    if (role) {
+      return <ProtectedRoute role={role}>{wrappedComp}</ProtectedRoute>;
+    }
+    return wrappedComp;
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={wrap(<KoraHome />)} />
+
+        {/* ── Admin ── */}
+        <Route path="/admin/dashboard" element={wrap(<AdminDashboard />, "ADMIN")} />
+        <Route path="/profile/admin"   element={wrap(<AdminProfile />, "ADMIN")} />
+
+        {/* ── Job Seeker ── */}
+        <Route path="/profile/job-seeker"    element={wrap(<JobSeekerProfile />, "JOB_SEEKER")} />
+        <Route path="/employee/dashboard"    element={wrap(<EmployeeDashboard />, "JOB_SEEKER")} />
+        <Route path="/employee/applications" element={wrap(<ApplicationsPage />, "JOB_SEEKER")} />
+        <Route path="/employee/saved"        element={wrap(<SavedJobsPage />, "JOB_SEEKER")} />
+        <Route path="/employee/interviews"   element={wrap(<InterviewsPage />, "JOB_SEEKER")} />
+        <Route path="/employee/jobs"         element={wrap(<BrowseJobsPage />, "JOB_SEEKER")} />
+        <Route path="/employee/insights"     element={wrap(<InsightsDashPage />, "JOB_SEEKER")} />
+
+        {/* ── Employer ── */}
+        <Route path="/profile/employer"      element={wrap(<EmployerProfile />, "EMPLOYER")} />
+        <Route path="/dashboard/employer"    element={wrap(<EmployerDashboard />, "EMPLOYER")} />
+        <Route path="/employer/dashboard"    element={wrap(<EmployerDashboard />, "EMPLOYER")} />
+        <Route path="/employer/jobs"         element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
+        <Route path="/employer/post-job"     element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
+        <Route path="/employer/interviews"   element={wrap(<InterviewManagement />, "EMPLOYER")} />
+        <Route path="/employer/insights"     element={wrap(<EmployerInsightsDashPage />, "EMPLOYER")} />
+
+        {/* ── Public ── */}
+        <Route path="/login"           element={wrap(<Login />)} />
+        <Route path="/register"        element={wrap(<Register />)} />
+        <Route path="/oauth2/redirect" element={wrap(<OAuth2RedirectHandler />)} />
+        <Route path="/dashboard"       element={<Navigate to="/employee/dashboard" replace />} />
+        <Route path="/jobs"            element={wrap(<JobList />)} />
+        <Route path="/jobs/:id"        element={wrap(<JobDetails />)} />
+        <Route path="/jobs/:id/apply"  element={wrap(<ApplyPage />)} />
+        <Route path="/insights"        element={wrap(<InsightsPage />)} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 // ── App ────────────────────────────────────────────────────
 export default function App() {
   return (
@@ -94,50 +185,7 @@ export default function App() {
         <NotificationProvider>
           <BrowserRouter>
             <Suspense fallback={<GlobalLoader />}>
-              <Routes>
-                <Route path="/" element={<KoraHome />} />
-
-                {/* ── Admin ── */}
-                {/* ✅ FIX 7: was <ProtectedRoute allowedRoles={['ADMIN']}> — prop ignored */}
-                <Route path="/admin/dashboard" element={
-                  <ProtectedRoute role="ADMIN">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile/admin" element={
-                  <ProtectedRoute role="ADMIN">
-                    <AdminProfile />
-                  </ProtectedRoute>
-                } />
-
-                {/* ── Job Seeker ── */}
-                <Route path="/profile/job-seeker"    element={<ProtectedRoute role="JOB_SEEKER"><JobSeekerProfile /></ProtectedRoute>} />
-                <Route path="/employee/dashboard"    element={<ProtectedRoute role="JOB_SEEKER"><EmployeeDashboard /></ProtectedRoute>} />
-                <Route path="/employee/applications" element={<ProtectedRoute role="JOB_SEEKER"><ApplicationsPage /></ProtectedRoute>} />
-                <Route path="/employee/saved"        element={<ProtectedRoute role="JOB_SEEKER"><SavedJobsPage /></ProtectedRoute>} />
-                <Route path="/employee/interviews"   element={<ProtectedRoute role="JOB_SEEKER"><InterviewsPage /></ProtectedRoute>} />
-                <Route path="/employee/jobs"         element={<ProtectedRoute role="JOB_SEEKER"><BrowseJobsPage /></ProtectedRoute>} />
-                <Route path="/employee/insights"     element={<ProtectedRoute role="JOB_SEEKER"><InsightsDashPage /></ProtectedRoute>} />
-
-                {/* ── Employer ── */}
-                <Route path="/profile/employer"      element={<ProtectedRoute role="EMPLOYER"><EmployerProfile /></ProtectedRoute>} />
-                <Route path="/dashboard/employer"    element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
-                <Route path="/employer/dashboard"    element={<ProtectedRoute role="EMPLOYER"><EmployerDashboard /></ProtectedRoute>} />
-                <Route path="/employer/jobs"         element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-                <Route path="/employer/post-job"     element={<ProtectedRoute role="EMPLOYER"><EmployerJobsManager /></ProtectedRoute>} />
-                <Route path="/employer/interviews"   element={<ProtectedRoute role="EMPLOYER"><InterviewManagement /></ProtectedRoute>} />
-                <Route path="/employer/insights"     element={<ProtectedRoute role="EMPLOYER"><EmployerInsightsDashPage /></ProtectedRoute>} />
-
-                {/* ── Public ── */}
-                <Route path="/login"           element={<Login />} />
-                <Route path="/register"        element={<Register />} />
-                <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-                <Route path="/dashboard"       element={<Navigate to="/employee/dashboard" replace />} />
-                <Route path="/jobs"            element={<JobList />} />
-                <Route path="/jobs/:id"        element={<JobDetails />} />
-                <Route path="/jobs/:id/apply"  element={<ApplyPage />} />
-                <Route path="/insights"        element={<InsightsPage />} />
-              </Routes>
+              <AnimatedRoutes />
             </Suspense>
           </BrowserRouter>
         </NotificationProvider>
