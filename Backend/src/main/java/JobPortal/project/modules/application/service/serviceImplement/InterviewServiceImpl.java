@@ -271,28 +271,8 @@ public class InterviewServiceImpl implements InterviewService {
         // Update Google Calendar
         if (saved.getGoogleCalendarEventId() != null) {
             googleCalendarService.cancelInterviewEvent(saved.getGoogleCalendarEventId()); // Simple approach: recreate
-            String originalLink = saved.getMeetingLink();
             String newEventId = googleCalendarService.createInterviewEvent(saved);
             saved.setGoogleCalendarEventId(newEventId);
-            if (newEventId != null) {
-                if ("Google Meet".equalsIgnoreCase(saved.getPlatform())
-                        && saved.getMeetingLink() != null
-                        && saved.getMeetingLink().equals(originalLink)
-                        && saved.getMeetingLink().startsWith("https://meet.google.com/")) {
-                    String randomCode = saved.getMeetingLink().substring(saved.getMeetingLink().lastIndexOf('/') + 1);
-                    saved.setMeetingLink("https://meet.jit.si/Kora-Interview-" + randomCode);
-                    saved.setPlatform("Jitsi Meet");
-                    log.info("Reschedule: Google Calendar synced but did not provision a Meet URL. Switched to Jitsi Meet fallback.");
-                }
-            } else {
-                if ("Google Meet".equalsIgnoreCase(saved.getPlatform())
-                        && saved.getMeetingLink() != null
-                        && saved.getMeetingLink().startsWith("https://meet.google.com/")) {
-                    String randomCode = saved.getMeetingLink().substring(saved.getMeetingLink().lastIndexOf('/') + 1);
-                    saved.setMeetingLink("https://meet.jit.si/Kora-Interview-" + randomCode);
-                    saved.setPlatform("Jitsi Meet");
-                }
-            }
             interviewRepository.save(saved);
         }
 
@@ -420,36 +400,10 @@ public class InterviewServiceImpl implements InterviewService {
      * back onto the entity; we persist that change here.
      */
     private void syncCalendar(Interview interview) {
-        String originalLink = interview.getMeetingLink();
         String eventId = googleCalendarService.createInterviewEvent(interview);
         if (eventId != null) {
             interview.setGoogleCalendarEventId(eventId);
-            // If the link is still the same Google Meet placeholder, it means the calendar service
-            // did not update it with a real Meet URL (e.g. because of non-workspace Google account).
-            // Fall back to Jitsi to ensure the meeting link actually works.
-            if ("Google Meet".equalsIgnoreCase(interview.getPlatform())
-                    && interview.getMeetingLink() != null
-                    && interview.getMeetingLink().equals(originalLink)
-                    && interview.getMeetingLink().startsWith("https://meet.google.com/")) {
-                String randomCode = interview.getMeetingLink().substring(interview.getMeetingLink().lastIndexOf('/') + 1);
-                interview.setMeetingLink("https://meet.jit.si/Kora-Interview-" + randomCode);
-                interview.setPlatform("Jitsi Meet");
-                log.info("Google Calendar synced but did not provision a Meet URL. Switched interview {} link to Jitsi Meet fallback.", interview.getId());
-            }
             interviewRepository.save(interview);
-        } else {
-            // Calendar event creation failed/skipped (no OAuth2 login or token expired)
-            // If the platform is "Google Meet" and the link is our random placeholder,
-            // we should replace it with a functional Jitsi Meet link to avoid Google 404!
-            if ("Google Meet".equalsIgnoreCase(interview.getPlatform())
-                    && interview.getMeetingLink() != null
-                    && interview.getMeetingLink().startsWith("https://meet.google.com/")) {
-                String randomCode = interview.getMeetingLink().substring(interview.getMeetingLink().lastIndexOf('/') + 1);
-                interview.setMeetingLink("https://meet.jit.si/Kora-Interview-" + randomCode);
-                interview.setPlatform("Jitsi Meet");
-                interviewRepository.save(interview);
-                log.info("Google Calendar sync skipped/failed. Switched interview {} meeting link from Google Meet placeholder to functional Jitsi Meet link.", interview.getId());
-            }
         }
     }
 
