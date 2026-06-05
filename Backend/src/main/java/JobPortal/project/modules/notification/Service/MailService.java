@@ -15,9 +15,12 @@ public class MailService {
 
     private final JavaMailSender mailSender;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username}")
+    private String mailUsername;
+
     @Async("koraAsyncExecutor")
     public void sendEmail(String to, String subject, String body) {
-        log.info("Sending email → to={}, subject={}", to, subject);
+        log.info("Sending email via {} → to={}, subject={}", mailUsername, to, subject);
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");

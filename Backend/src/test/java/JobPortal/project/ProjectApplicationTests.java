@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.mail.username=emmanueltsafack2005@gmail.com",
+    "spring.mail.password=ofoaxklbzatkbgwp"
+})
 class ProjectApplicationTests {
 
     @Autowired
@@ -22,7 +25,7 @@ class ProjectApplicationTests {
             "Test Kora Email Optimisé",
             "Ceci est un message de test envoyé depuis les tests d'intégration Kora pour valider le nouveau template HTML."
         );
-        // Wait briefly for the async executor to process the email task
-        Thread.sleep(3000);
+        // Wait longer for the async executor to complete SMTP transmission
+        Thread.sleep(12000);
     }
 }

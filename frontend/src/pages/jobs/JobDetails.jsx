@@ -97,7 +97,7 @@ export default function JobDetails() {
   if (loading) {
     return (
       <div className="jd-page">
-        {!isEmployee && <KoraNav />}
+        <KoraNav />
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16 }}>
           <div style={{ width:36, height:36, border:'3px solid #E5E7EB', borderTopColor:'#1A5C2E', borderRadius:'50%', animation:'jd-spin 0.8s linear infinite' }} />
           <p style={{ fontSize:14, color:'#6B7280' }}>Loading job details…</p>
@@ -110,7 +110,7 @@ export default function JobDetails() {
   if (error || !job) {
     return (
       <div className="jd-page">
-        {!isEmployee && <KoraNav />}
+        <KoraNav />
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16, padding:24 }}>
           <div style={{ fontSize:48 }}>😕</div>
           <h2 style={{ fontSize:20, fontWeight:700, color:'#111827', margin:0 }}>Job Not Found</h2>
@@ -125,7 +125,7 @@ export default function JobDetails() {
 
   return (
     <div className="jd-page">
-      {!isEmployee && <KoraNav />}
+      <KoraNav />
 
       <div style={{ maxWidth:1100, margin:'0 auto', padding:'24px 16px' }}>
         {/* Back button */}
