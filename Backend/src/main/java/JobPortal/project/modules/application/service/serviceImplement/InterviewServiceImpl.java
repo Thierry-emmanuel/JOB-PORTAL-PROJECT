@@ -353,6 +353,33 @@ public class InterviewServiceImpl implements InterviewService {
             googleCalendarService.cancelInterviewEvent(interview.getGoogleCalendarEventId());
         }
 
+        // Notify candidate of cancellation
+        try {
+            Application application = interview.getApplication();
+            if (application != null) {
+                User seeker = userRepository.findById(application.getSeekerId()).orElse(null);
+                if (seeker != null) {
+                    String jobTitle = "your applied job";
+                    String uuidStr = jobListingRepository.findIdByNumericalId(application.getJobPostingId());
+                    if (uuidStr != null) {
+                        JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
+                        if (job != null) {
+                            jobTitle = job.getTitle();
+                        }
+                    }
+                    eventPublisher.publishEvent(new NotificationEvent(
+                            this,
+                            seeker,
+                            "Interview Cancelled",
+                            "Hello " + seeker.getFullName() + ",\n\nYour scheduled interview for the position of " + jobTitle + " has been cancelled.",
+                            NotificationType.APPLICATION_STATUS
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to notify seeker of cancelled interview: {}", e.getMessage());
+        }
+
         interviewRepository.delete(interview);
         log.info("Interview {} cancelled", interviewId);
     }

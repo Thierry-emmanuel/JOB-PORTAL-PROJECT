@@ -62,6 +62,7 @@ public class JobListingServiceImpl implements JobListingService {
 
     // Spring ApplicationEventPublisher — injected for cross-module event broadcasting
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final JobPortal.project.modules.auth.repository.UserRepository userRepository;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // EMPLOYER OPERATIONS
@@ -109,6 +110,10 @@ public class JobListingServiceImpl implements JobListingService {
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Employer {} created listing {} (status={})",
                  employerId, saved.getId(), saved.getStatus());
+
+        if (saved.getStatus() == PostingStatus.ACTIVE) {
+            notifyEmployerOfPublication(employerId, saved);
+        }
 
         return mapper.toResponse(saved);
     }
@@ -178,6 +183,11 @@ public class JobListingServiceImpl implements JobListingService {
         applyStatusTransition(listing, req.status());
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Employer {} changed listing {} → {}", employerId, listingId, req.status());
+        
+        if (saved.getStatus() == PostingStatus.ACTIVE) {
+            notifyEmployerOfPublication(employerId, saved);
+        }
+        
         return mapper.toResponse(saved);
     }
 
@@ -279,6 +289,7 @@ public class JobListingServiceImpl implements JobListingService {
         JobListing listing = listingRepository.findById(listingId)
             .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
 
+        PostingStatus oldStatus = listing.getStatus();
         applyAdminTransition(listing, req.status(), req.reason());
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Admin {} moderated listing {} → {} (reason={})",
@@ -287,6 +298,8 @@ public class JobListingServiceImpl implements JobListingService {
         if (req.status() == PostingStatus.DELETED) {
             eventPublisher.publishEvent(
                 new JobPortal.project.JobListing.config.JobListingDeletedEvent(this, listingId));
+        } else if (saved.getStatus() == PostingStatus.ACTIVE && oldStatus != PostingStatus.ACTIVE) {
+            notifyEmployerOfPublication(saved.getEmployerId(), saved);
         }
 
         return mapper.toResponse(saved);
@@ -416,5 +429,21 @@ public class JobListingServiceImpl implements JobListingService {
     @Transactional(readOnly = true)
     public List<ListingSkill> getAllSkills() {
         return skillRepository.findAll();
+    }
+
+    private void notifyEmployerOfPublication(Long employerId, JobListing listing) {
+        try {
+            userRepository.findById(employerId).ifPresent(employer -> {
+                eventPublisher.publishEvent(new JobPortal.project.modules.notification.Event.NotificationEvent(
+                    this,
+                    employer,
+                    "Job Posting Published Successfully",
+                    "Hello " + employer.getFullName() + ",\n\nYour job listing '" + listing.getTitle() + "' has been successfully published on Kora and is now live for candidates to view and apply.",
+                    JobPortal.project.enums.NotificationType.JOB_ALERT
+                ));
+            });
+        } catch (Exception e) {
+            log.warn("Failed to notify employer of job publication: {}", e.getMessage());
+        }
     }
 }

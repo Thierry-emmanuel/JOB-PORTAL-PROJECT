@@ -6,7 +6,10 @@ import JobPortal.project.modules.userprofile.Model.JobSeeker;
 import JobPortal.project.modules.userprofile.Repository.AdminRepository;
 import JobPortal.project.modules.userprofile.Repository.EmployerRepository;
 import JobPortal.project.modules.userprofile.Repository.JobSeekerRepository;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +26,9 @@ public class AdminService {
 
     @Autowired
     private JobSeekerRepository jobSeekerRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // Get all Admins
     public List<Admin> getAllAdmins() {
@@ -68,11 +74,28 @@ public class AdminService {
         Employer employer = employerRepository.findById(employerId)
                 .orElseThrow(() -> new RuntimeException("Employer not found with id: " + employerId));
 
+        boolean wasApproved = employer.getIsApproved();
         employer.setIsApproved(true);
         admin.incrementActionsPerformed();
 
         adminRepository.save(admin);
-        return employerRepository.save(employer);
+        Employer saved = employerRepository.save(employer);
+
+        if (!wasApproved) {
+            try {
+                eventPublisher.publishEvent(new NotificationEvent(
+                    this,
+                    saved,
+                    "Employer Profile Verified & Approved",
+                    "Hello " + saved.getFullName() + ",\n\nCongratulations! Your employer profile has been successfully verified and approved by the Kora administration. You can now publish job listings and schedule interviews.",
+                    NotificationType.WELCOME
+                ));
+            } catch (Exception e) {
+                // Ignore or log notification publisher exceptions
+            }
+        }
+
+        return saved;
     }
 
     // Suspend a JobSeeker account (FR31)

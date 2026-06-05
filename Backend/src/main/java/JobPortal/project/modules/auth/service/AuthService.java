@@ -87,7 +87,7 @@ public class AuthService {
                 this,
                 saved,
                 "Welcome to Kora Job Portal",
-                "Hello " + saved.getFullName() + ",\n\nWelcome to Kora Job Portal! Your account has been successfully created as a " + request.getRole() + ".",
+                "Hello " + saved.getFullName() + ",\n\nWelcome to Kora Job Portal! Your account has been successfully created as a " + request.getRole() + ".\n\nPlease verify your email address by clicking the link below:\nhttps://job-portal-project-bay.vercel.app/verify?email=" + saved.getEmail() + "\n\n(Note: Your account is already pre-verified and active for your convenience!)",
                 NotificationType.WELCOME
         ));
 

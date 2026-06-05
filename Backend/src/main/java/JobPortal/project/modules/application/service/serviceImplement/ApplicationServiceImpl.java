@@ -89,6 +89,14 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 "A new application has been submitted by " + seeker.getFullName() + " for the position of " + job.getTitle() + ".",
                                 NotificationType.NEW_APPLICATION
                         ));
+
+                        eventPublisher.publishEvent(new NotificationEvent(
+                                this,
+                                seeker,
+                                "Application Submitted Successfully",
+                                "Hello " + seeker.getFullName() + ",\n\nYour application for the position of " + job.getTitle() + " has been successfully submitted. We will notify you when there is an update.",
+                                NotificationType.APPLICATION_STATUS
+                        ));
                     }
                 }
             }

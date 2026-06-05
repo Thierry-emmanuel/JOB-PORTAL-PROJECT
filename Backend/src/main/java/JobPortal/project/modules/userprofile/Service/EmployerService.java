@@ -2,7 +2,10 @@ package JobPortal.project.modules.userprofile.Service;
 
 import JobPortal.project.modules.userprofile.Model.Employer;
 import JobPortal.project.modules.userprofile.Repository.EmployerRepository;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +16,9 @@ public class EmployerService {
 
     @Autowired
     private EmployerRepository employerRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // Get all Employers
     public List<Employer> getAllEmployers() {
@@ -66,8 +72,24 @@ public class EmployerService {
     public Employer approveEmployer(Long id) {
         Employer employer = employerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employer not found with id: " + id));
+        boolean wasApproved = employer.getIsApproved();
         employer.setIsApproved(true);
-        return employerRepository.save(employer);
+        Employer saved = employerRepository.save(employer);
+        
+        if (!wasApproved) {
+            try {
+                eventPublisher.publishEvent(new NotificationEvent(
+                    this,
+                    saved,
+                    "Employer Profile Verified & Approved",
+                    "Hello " + saved.getFullName() + ",\n\nCongratulations! Your employer profile has been successfully verified and approved by the Kora administration. You can now publish job listings and schedule interviews.",
+                    NotificationType.WELCOME
+                ));
+            } catch (Exception e) {
+                // Silently ignore or log notification publish errors
+            }
+        }
+        return saved;
     }
 
     // Get all Employers pending approval

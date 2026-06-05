@@ -15,9 +15,12 @@ import JobPortal.project.modules.userprofile.Model.JobSeeker;
 import JobPortal.project.modules.userprofile.Model.Employer;
 import JobPortal.project.modules.userprofile.Model.Admin;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
 
 import java.util.List;
 import java.util.Set;
@@ -33,6 +36,7 @@ public class AdminService {
     private final ApplicationRepository applicationRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public DashboardStatsDTO getDashboardStats() {
@@ -253,6 +257,8 @@ public class AdminService {
             user.setIsActive(dto.getIsActive());
         }
 
+        boolean wasApproved = false;
+
         if (user instanceof JobSeeker) {
             JobSeeker seeker = (JobSeeker) user;
             seeker.setPhone(dto.getPhone());
@@ -267,6 +273,7 @@ public class AdminService {
             seeker.computeProfileScore();
         } else if (user instanceof Employer) {
             Employer emp = (Employer) user;
+            wasApproved = emp.getIsApproved() != null && emp.getIsApproved();
             emp.setPhone(dto.getPhone());
             emp.setCity(dto.getCity());
             emp.setRegion(dto.getRegion());
@@ -285,7 +292,23 @@ public class AdminService {
             }
         }
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        if (saved instanceof Employer && saved.getIsActive() && ((Employer) saved).getIsApproved() != null && ((Employer) saved).getIsApproved() && !wasApproved) {
+            try {
+                eventPublisher.publishEvent(new NotificationEvent(
+                    this,
+                    saved,
+                    "Employer Profile Verified & Approved",
+                    "Hello " + saved.getFullName() + ",\n\nCongratulations! Your employer profile has been successfully verified and approved by the Kora administration. You can now publish job listings and schedule interviews.",
+                    NotificationType.WELCOME
+                ));
+            } catch (Exception e) {
+                // Ignore notification event publish exceptions
+            }
+        }
+
+        return saved;
     }
 
     @Transactional
