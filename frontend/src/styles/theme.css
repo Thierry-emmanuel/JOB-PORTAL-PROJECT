@@ -120,19 +120,14 @@
    KoraNav — shared sticky top navigation bar
    ══════════════════════════════════════════════════════════════════════════════ */
 .kn-nav {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 200;
   background: var(--kora-white);
   padding: 0 48px;
   border-bottom: 1px solid transparent;
   transition: border-color 0.3s, box-shadow 0.3s;
   font-family: var(--kora-font);
-}
-.jl-page, .ap-page, .jd-page, .insights-root {
-  padding-top: var(--kora-nav-h, 72px);
 }
 .kn-nav--scrolled {
   border-bottom-color: var(--kora-border);
