@@ -6,6 +6,24 @@ import { useAuth } from "./context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { getJobs, getCategories, getCompanies } from "./api/jobs";
 import { fetchLiveHero } from "./api/hero";
+import {
+  Laptop,
+  BarChart3,
+  Settings,
+  Palette,
+  Megaphone,
+  HeartPulse,
+  Handshake,
+  BookOpen,
+  Briefcase,
+  Building2,
+  MapPin,
+  DollarSign,
+  Search,
+  Users,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 
 const G    = "#1A5C2E";
 const G2   = "#0D3D1F";
@@ -18,22 +36,58 @@ const BORDER="#E5E7EB";
 
 /* ─── CATEGORY EMOJI ICONS MAPPING ──────────────────────────── */
 const CATEGORY_ICONS = {
-  "Technologie": "💻",
-  "Technology": "💻",
-  "Finance": "📊",
-  "Ingénierie": "⚙️",
-  "Engineering": "⚙️",
-  "Design": "🎨",
-  "Marketing": "📣",
-  "Santé": "🏥",
-  "Healthcare": "🏥",
-  "Commercial": "🤝",
-  "Sales": "🤝",
-  "Éducation": "📚",
-  "Education": "📚"
+  "Technologie": Laptop,
+  "Technology": Laptop,
+  "Finance": BarChart3,
+  "Ingénierie": Settings,
+  "Engineering": Settings,
+  "Design": Palette,
+  "Marketing": Megaphone,
+  "Santé": HeartPulse,
+  "Healthcare": HeartPulse,
+  "Commercial": Handshake,
+  "Sales": Handshake,
+  "Éducation": BookOpen,
+  "Education": BookOpen
 };
 
-const getCategoryIcon = (name) => CATEGORY_ICONS[name] || "💼";
+const getCategoryIcon = (name) => CATEGORY_ICONS[name] || Briefcase;
+
+function renderIcon(IconOrEmojiOrUrl, size = 26, color = G) {
+  if (!IconOrEmojiOrUrl) return <Briefcase size={size} style={{ color }} />;
+  if (typeof IconOrEmojiOrUrl === "string") {
+    if (IconOrEmojiOrUrl.startsWith("http://") || IconOrEmojiOrUrl.startsWith("https://") || IconOrEmojiOrUrl.startsWith("/")) {
+      return <img src={IconOrEmojiOrUrl} alt="icon" style={{ width: size, height: size, objectFit: "contain" }} />;
+    }
+    const emojiMap = {
+      "💻": Laptop,
+      "📊": BarChart3,
+      "⚙️": Settings,
+      "⚙": Settings,
+      "🎨": Palette,
+      "📣": Megaphone,
+      "🏥": HeartPulse,
+      "Healthcare": HeartPulse,
+      "🤝": Handshake,
+      "📚": BookOpen,
+      "💼": Briefcase,
+      "🏢": Building2,
+      "📍": MapPin,
+      "💰": DollarSign,
+      "🔍": Search,
+      "👥": Users,
+      "✓": CheckCircle,
+      "⏱": Clock
+    };
+    const MappedIcon = emojiMap[IconOrEmojiOrUrl];
+    if (MappedIcon) {
+      return <MappedIcon size={size} style={{ color }} />;
+    }
+    return <span style={{ fontSize: size }}>{IconOrEmojiOrUrl}</span>;
+  }
+  const IconComponent = IconOrEmojiOrUrl;
+  return <IconComponent size={size} style={{ color }} />;
+}
 
 const FILTERS = ["Tous","Remote","Full-time","Stage","Tech","Finance","Design"];
 
@@ -553,7 +607,7 @@ function Hero() {
             <motion.div variants={contentItem} style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
               {[{ icon:"🏢", val:s.company },{ icon:"📍", val:s.location },{ icon:"💰", val:s.salary }].map(chip => (
                 <div key={chip.val} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"5px 12px", fontSize:"clamp(11px,2.5vw,13px)", color:"rgba(255,255,255,0.9)" }}>
-                  <span>{chip.icon}</span>{chip.val}
+                  <span style={{ display:"flex", alignItems:"center" }}>{renderIcon(chip.icon, 14, "#fff")}</span>{chip.val}
                 </div>
               ))}
             </motion.div>
@@ -744,11 +798,11 @@ function SearchSection() {
         {/* Search inputs */}
         <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
           <div style={{ flex:"1 1 200px", minWidth:0, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8, boxShadow:"0 2px 8px rgba(0,0,0,0.04)" }}>
-            <span style={{ color:"#9CA3AF", fontSize:16, flexShrink:0 }}>🔍</span>
+            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon("🔍", 16, "#9CA3AF")}</span>
             <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Titre de poste, compétence…" aria-label="Rechercher un poste" value={searchKw} onChange={e => setSearchKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
           <div style={{ flex:"0 1 180px", minWidth:120, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8 }}>
-            <span style={{ color:"#9CA3AF", fontSize:16, flexShrink:0 }}>📍</span>
+            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon("📍", 16, "#9CA3AF")}</span>
             <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Ville ou Remote" aria-label="Localisation" value={locationKw} onChange={e => setLocationKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
           <button onClick={handleSearch} style={{ background:G, color:"white", border:"none", padding:"0 22px", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", minHeight:48, flexShrink:0, whiteSpace:"nowrap" }}>
@@ -843,7 +897,7 @@ function StatsBand() {
       <div style={{ maxWidth:1300, margin:"0 auto", display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:0 }} className="kora-stats-grid">
         {stats.map((s, i) => (
           <div key={i} style={{ textAlign:"center", padding:"clamp(12px,3vw,16px) 0", borderRight: i % 2 === 0 ? "1px solid rgba(255,255,255,0.15)" : "none", borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.15)" : "none" }}>
-            <div style={{ fontSize:20, marginBottom:6 }}>{s.icon}</div>
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>{renderIcon(s.icon, 24, "#fff")}</div>
             <div style={{ fontSize:"clamp(28px,5vw,44px)", fontWeight:800, color:"#fff", lineHeight:1, letterSpacing:"-1.5px" }}>
               {s.val}<span style={{ color:O, fontSize:"clamp(20px,3.5vw,30px)" }}>{s.suf}</span>
             </div>
@@ -930,9 +984,9 @@ function JobCard({ job, delay }) {
 
       <h3 style={{ fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, color:INK, marginBottom:8, lineHeight:1.35 }}>{job.title}</h3>
       <div style={{ display:"flex", gap:10, flexWrap:"wrap", fontSize:12, color:MUTED, marginBottom:10 }}>
-        <span>📍 {job.location}</span>
-        <span>⏱ {job.type}</span>
-        <span>👥 {job.applicants}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("📍", 12, MUTED)} {job.location}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("⏱", 12, MUTED)} {job.type}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("👥", 12, MUTED)} {job.applicants}</span>
       </div>
 
       {/* Match bar */}
@@ -1004,7 +1058,7 @@ function JobsSection() {
         </div>
         {jobs.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>💼</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("💼", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('jobs.empty_title', 'Aucune offre disponible')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('jobs.empty_desc', "Il n'y a pas de postes vacants pour le moment. Veuillez revenir plus tard ou publier une nouvelle offre.")}
@@ -1034,7 +1088,7 @@ function CategoryCard({ cat, delay }) {
       onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
     >
-      <span style={{ fontSize:26, display:"block", marginBottom:10 }}>{cat.icon}</span>
+      <span style={{ display:"block", marginBottom:10 }}>{renderIcon(cat.icon, 26, G)}</span>
       <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
       <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
       <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
@@ -1076,7 +1130,7 @@ function CategoriesSection() {
         </div>
         {categories.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>📊</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("📊", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('categories.empty_title', 'Aucun secteur trouvé')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('categories.empty_desc', "Les secteurs d'activité seront affichés dès qu'ils seront disponibles dans le système.")}
@@ -1162,7 +1216,7 @@ function CompaniesSection() {
         </div>
         {companies.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ fontSize:48, display:"block", marginBottom:12 }}>🏢</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("🏢", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('companies.empty_title', 'Aucune entreprise trouvée')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('companies.empty_desc', "Les entreprises partenaires apparaîtront ici dès leur inscription.")}
