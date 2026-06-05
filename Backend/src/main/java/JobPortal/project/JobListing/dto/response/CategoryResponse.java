@@ -14,5 +14,8 @@ public record CategoryResponse(
     String name,
     String slug,
     String iconUrl,
-    String description
+    String description,
+    Long   jobCount,
+    Double avgSalaryMin,
+    Double avgSalaryMax
 ) {}

@@ -98,7 +98,23 @@ public class JobListingMapper {
             cat.getName(),
             cat.getSlug(),
             cat.getIconUrl(),
-            cat.getDescription()
+            cat.getDescription(),
+            0L,
+            0.0,
+            0.0
+        );
+    }
+
+    public CategoryResponse toCategoryResponse(JobCategory cat, Long jobCount, Double avgSalaryMin, Double avgSalaryMax) {
+        return new CategoryResponse(
+            cat.getId(),
+            cat.getName(),
+            cat.getSlug(),
+            cat.getIconUrl(),
+            cat.getDescription(),
+            jobCount != null ? jobCount : 0L,
+            avgSalaryMin != null ? avgSalaryMin : 0.0,
+            avgSalaryMax != null ? avgSalaryMax : 0.0
         );
     }
 }

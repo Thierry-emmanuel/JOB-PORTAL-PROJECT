@@ -1078,20 +1078,25 @@ function JobsSection() {
 function CategoryCard({ cat, delay }) {
   const navigate = useNavigate();
   const [ref, style] = useReveal(delay);
+  const [hovered, setHovered] = useState(false);
   return (
     <div ref={ref} style={{
       ...style,
-      background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
+      background:"#fff", border:`1.5px solid ${hovered ? G : BORDER}`, borderRadius:14, padding:"clamp(16px,3vw,24px) clamp(14px,2.5vw,20px)",
       cursor:"pointer", transition:"all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+      transform: hovered ? "translateY(-5px)" : "none",
+      boxShadow: hovered ? "0 10px 28px rgba(26,92,46,0.1)" : "none"
     }}
       onClick={() => navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)}
-      onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.boxShadow="0 10px 28px rgba(26,92,46,0.1)"; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor=BORDER; e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <span style={{ display:"block", marginBottom:10 }}>{renderIcon(cat.icon, 26, G)}</span>
       <div style={{ fontWeight:700, fontSize:"clamp(13px,2.5vw,15px)", color:INK, marginBottom:4 }}>{cat.name}</div>
       <div style={{ fontSize:12, color:MUTED, fontWeight:300 }}>{cat.count} offres</div>
-      <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color:"#22C55E", fontWeight:700 }}>↑ {cat.trend} ce mois</div>
+      <div style={{ marginTop:10, borderTop:`1px dashed ${BORDER}`, paddingTop:8, fontSize:11, color: hovered ? O : "#22C55E", fontWeight:700, transition: "color 0.2s" }}>
+        {hovered ? `Salaire: ${cat.avgSalary}` : `↑ +${Math.round(cat.count * 0.12) || 4}% ce mois`}
+      </div>
     </div>
   );
 }
@@ -1106,12 +1111,20 @@ function CategoriesSection() {
   useEffect(() => {
     getCategories().then(data => {
       if (data && data.length > 0) {
-        setCategories(data.slice(0, 8).map((cat, i) => ({
-          name: cat.name,
-          count: Math.floor(Math.random() * 300) + 50,
-          trend: `+${Math.floor(Math.random() * 30) + 5}%`,
-          icon: cat.iconUrl || getCategoryIcon(cat.name)
-        })));
+        setCategories(data.slice(0, 8).map((cat, i) => {
+          const count = cat.jobCount !== undefined ? cat.jobCount : 0;
+          const avgSalaryMin = cat.avgSalaryMin || 0;
+          const avgSalaryMax = cat.avgSalaryMax || 0;
+          const salaryText = avgSalaryMin > 0
+            ? `${Math.round(avgSalaryMin/1000)}k${avgSalaryMax > 0 ? ' - ' + Math.round(avgSalaryMax/1000) + 'k' : ''} XAF`
+            : "Non spécifié";
+          return {
+            name: cat.name,
+            count: count,
+            avgSalary: salaryText,
+            icon: cat.iconUrl || getCategoryIcon(cat.name)
+          };
+        }));
       } else {
         setCategories([]);
       }

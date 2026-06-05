@@ -239,8 +239,23 @@ public class JobListingServiceImpl implements JobListingService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
+        List<JobPortal.project.JobListing.dto.response.SalaryAggregationResponse> stats = listingRepository.getAverageSalaryByCategory();
+        java.util.Map<String, JobPortal.project.JobListing.dto.response.SalaryAggregationResponse> statsMap = stats.stream()
+            .collect(Collectors.toMap(
+                s -> s.getCategory().toLowerCase(),
+                s -> s,
+                (s1, s2) -> s1
+            ));
+
         return categoryRepository.findAll().stream()
-            .map(mapper::toCategoryResponse)
+            .map(cat -> {
+                JobPortal.project.JobListing.dto.response.SalaryAggregationResponse agg = statsMap.get(cat.getName().toLowerCase());
+                if (agg != null) {
+                    return mapper.toCategoryResponse(cat, agg.getJobCount(), agg.getAvgSalaryMin(), agg.getAvgSalaryMax());
+                } else {
+                    return mapper.toCategoryResponse(cat, 0L, 0.0, 0.0);
+                }
+            })
             .collect(Collectors.toList());
     }
 
