@@ -53,6 +53,11 @@ public interface ApplicationService {
      * Exactly one of jobPostingId / seekerId must be non-null.
      */
     ApplicationStatsResponse getStats(Long jobPostingId, Long seekerId);
+
+    /**
+     * Update employer review notes on a job application.
+     */
+    ApplicationResponse updateReview(Long applicationId, JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest request);
 }
 
 

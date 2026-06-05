@@ -8,7 +8,8 @@ import {
   getEmployerApplications,
   updateApplicationStatus as apiUpdateStatus,
   changeJobStatus as apiChangeJobStatus,
-  deleteJob as apiDeleteJob
+  deleteJob as apiDeleteJob,
+  updateApplicationReview as apiUpdateReview
 } from "../api/jobs";
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -179,6 +180,10 @@ export function useEmployerDashboard() {
           cvFileName:     seekerFull?.cvFileName || null,
           skills:         seekerFull?.skills || [],
           experiences:    seekerFull?.experiences || [],
+          education:      seekerFull?.education || [],
+          linkedInUrl:    seekerFull?.linkedInUrl || null,
+          portfolioUrl:   seekerFull?.portfolioUrl || null,
+          employerReview: app.employerReview || null,
         };
       });
 
@@ -293,6 +298,17 @@ export function useEmployerDashboard() {
     }
   }, [applications]);
 
+  const updateApplicationReview = useCallback(async (appId, reviewText) => {
+    try {
+      await apiUpdateReview(appId, reviewText);
+      setApplications(prev =>
+        prev.map(a => a.id === appId ? { ...a, employerReview: reviewText } : a)
+      );
+    } catch (err) {
+      throw err;
+    }
+  }, []);
+
   // ── Change Job Posting Status ──
   const updateJobPostingStatus = useCallback(async (jobId, newStatus) => {
     try {
@@ -356,5 +372,6 @@ export function useEmployerDashboard() {
     updateApplicationStatus,
     updateJobPostingStatus,
     deleteJobPosting,
+    updateApplicationReview,
   };
 }

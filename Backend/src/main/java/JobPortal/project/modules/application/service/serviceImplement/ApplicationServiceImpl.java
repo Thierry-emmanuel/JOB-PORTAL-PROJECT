@@ -26,6 +26,15 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
+import JobPortal.project.JobListing.entity.JobListing;
+import JobPortal.project.JobListing.repository.JobListingRepository;
+import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
+import JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest;
+import java.util.UUID;
 
 
 @Slf4j
@@ -36,6 +45,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final InterviewRepository   interviewRepository;
     private final ApplicationMapper     applicationMapper;
+    private final JobListingRepository  jobListingRepository;
+    private final UserRepository        userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ------------------------------------------------------------------ //
     //  Apply                                                               //
@@ -56,6 +68,33 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         log.info("New application created: id={}, seekerId={}, jobPostingId={}",
                 saved.getId(), seekerId, request.jobPostingId());
+
+        // Increment view count of the job listing and notify employer
+        try {
+            String uuidStr = jobListingRepository.findIdByNumericalId(request.jobPostingId());
+            if (uuidStr != null) {
+                JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
+                if (job != null) {
+                    job.incrementViewCount();
+                    jobListingRepository.save(job);
+
+                    // Notify employer
+                    User employer = userRepository.findById(job.getEmployerId()).orElse(null);
+                    User seeker = userRepository.findById(seekerId).orElse(null);
+                    if (employer != null && seeker != null) {
+                        eventPublisher.publishEvent(new NotificationEvent(
+                                this,
+                                employer,
+                                "New Application Received",
+                                "A new application has been submitted by " + seeker.getFullName() + " for the position of " + job.getTitle() + ".",
+                                NotificationType.NEW_APPLICATION
+                        ));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to increment view count or notify employer: {}", e.getMessage());
+        }
 
         return applicationMapper.toResponse(saved);
     }
@@ -145,6 +184,31 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application refreshed = findByIdWithInterview(applicationId);
         log.info("Application {} status updated: {} → {}", applicationId, request.expectedStatus(), request.newStatus());
+
+        // Notify seeker
+        try {
+            User seeker = userRepository.findById(refreshed.getSeekerId()).orElse(null);
+            if (seeker != null) {
+                String jobTitle = "your applied job";
+                String uuidStr = jobListingRepository.findIdByNumericalId(refreshed.getJobPostingId());
+                if (uuidStr != null) {
+                    JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
+                    if (job != null) {
+                        jobTitle = job.getTitle();
+                    }
+                }
+                eventPublisher.publishEvent(new NotificationEvent(
+                        this,
+                        seeker,
+                        "Application Status Update",
+                        "Your application for the position of " + jobTitle + " has been updated to: " + request.newStatus() + ".",
+                        NotificationType.APPLICATION_STATUS
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to notify seeker of status update: {}", e.getMessage());
+        }
+
         return applicationMapper.toResponse(refreshed);
     }
 
@@ -258,6 +322,17 @@ public class ApplicationServiceImpl implements ApplicationService {
                 null, seekerId,
                 total, applied, shortlisted, rejected, hired,
                 interviewsScheduled, passed, failed, noShow);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = {"seekerApplications", "applicationStats"}, allEntries = true)
+    public ApplicationResponse updateReview(Long applicationId, UpdateApplicationReviewRequest request) {
+        Application application = findById(applicationId);
+        application.setEmployerReview(request.review());
+        Application saved = applicationRepository.save(application);
+        log.info("Application {} review updated by employer", applicationId);
+        return applicationMapper.toResponse(saved);
     }
 }
 

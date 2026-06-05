@@ -30,6 +30,14 @@ import org.springframework.cache.annotation.CacheEvict;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
+import JobPortal.project.JobListing.entity.JobListing;
+import JobPortal.project.JobListing.repository.JobListingRepository;
+import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
+import java.util.UUID;
 
 
 @Slf4j
@@ -42,6 +50,9 @@ public class InterviewServiceImpl implements InterviewService {
     private final InterviewMapper       interviewMapper;
     private final ApplicationMapper     applicationMapper;
     private final GoogleCalendarService  googleCalendarService;
+    private final JobListingRepository  jobListingRepository;
+    private final UserRepository        userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ------------------------------------------------------------------ //
     //  Schedule                                                            //
@@ -82,6 +93,7 @@ public class InterviewServiceImpl implements InterviewService {
         log.info("Interview scheduled: id={}, applicationId={}, type={}, scheduledAt={}",
                 saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
+        sendInterviewNotification(application, saved);
         return interviewMapper.toResponse(saved);
     }
 
@@ -125,6 +137,7 @@ public class InterviewServiceImpl implements InterviewService {
         log.info("Interview scheduled by employer {}: id={}, applicationId={}, type={}, scheduledAt={}",
                 employerId, saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
+        sendInterviewNotification(application, saved);
         return interviewMapper.toResponse(saved);
     }
 
@@ -459,6 +472,35 @@ public class InterviewServiceImpl implements InterviewService {
         sb.append('-');
         for (int i = 0; i < 3; i++)  sb.append(CHARS.charAt(rng.nextInt(CHARS.length())));
         return sb.toString();
+    }
+
+    private void sendInterviewNotification(Application application, Interview interview) {
+        try {
+            User seeker = userRepository.findById(application.getSeekerId()).orElse(null);
+            if (seeker != null) {
+                String jobTitle = "your applied job";
+                String uuidStr = jobListingRepository.findIdByNumericalId(application.getJobPostingId());
+                if (uuidStr != null) {
+                    JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
+                    if (job != null) {
+                        jobTitle = job.getTitle();
+                    }
+                }
+                String message = "Your interview for the position of " + jobTitle + " has been scheduled on " +
+                        interview.getScheduledAt() + ". Format: " + interview.getType() + ". " +
+                        (interview.getMeetingLink() != null ? "Meeting link: " + interview.getMeetingLink() : "");
+
+                eventPublisher.publishEvent(new NotificationEvent(
+                        this,
+                        seeker,
+                        "Interview Scheduled",
+                        message,
+                        NotificationType.APPLICATION_STATUS
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to notify seeker of scheduled interview: {}", e.getMessage());
+        }
     }
 }
 

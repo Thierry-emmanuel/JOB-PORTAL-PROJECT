@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Briefcase, Users, Eye, Star, Bell, X,
@@ -118,6 +118,8 @@ export default function EmployerDashboard() {
 
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [savingReview, setSavingReview] = useState(false);
 
   const {
     employer, stats, applications, jobPostings,
@@ -125,7 +127,14 @@ export default function EmployerDashboard() {
     loading, error, refreshing,
     refresh, markNotificationRead, markAllRead,
     updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
+    updateApplicationReview,
   } = useEmployerDashboard();
+
+  useEffect(() => {
+    if (selectedApplication) {
+      setReviewNotes(selectedApplication.employerReview || '');
+    }
+  }, [selectedApplication]);
 
   const filteredApplicants = applications.filter(
     app => selectedJobForApplicants && app.jobPostingId === selectedJobForApplicants.id
@@ -518,10 +527,20 @@ export default function EmployerDashboard() {
                     </div>
                     <div>
                       <h3 className="mj-app-name" style={{ fontSize: 16 }}>{selectedApplication.applicant}</h3>
-                      <div className="mj-app-meta-row">
+                      <div className="mj-app-meta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px' }}>
                         <span className="mj-app-meta-item"><Mail size={12} /> {selectedApplication.email || "No email"}</span>
                         {selectedApplication.phone && <span className="mj-app-meta-item"><Phone size={12} /> {selectedApplication.phone}</span>}
                         {selectedApplication.city && <span className="mj-app-meta-item"><MapPin size={12} /> {selectedApplication.city}</span>}
+                        {selectedApplication.linkedInUrl && (
+                          <span className="mj-app-meta-item">
+                            <ExternalLink size={12} /> <a href={selectedApplication.linkedInUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>LinkedIn</a>
+                          </span>
+                        )}
+                        {selectedApplication.portfolioUrl && (
+                          <span className="mj-app-meta-item">
+                            <ExternalLink size={12} /> <a href={selectedApplication.portfolioUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Portfolio</a>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -567,18 +586,93 @@ export default function EmployerDashboard() {
                   </div>
                 )}
 
+                {selectedApplication.experiences?.length > 0 && (
+                  <div style={{ marginTop: 16 }}>
+                    <div className="mj-app-section-title">Work Experience</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                      {selectedApplication.experiences.map((exp, index) => (
+                        <div key={index} style={{ borderLeft: '2px solid #E5E7EB', paddingLeft: 12, position: 'relative' }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--kora-primary)', position: 'absolute', left: -5, top: 6 }} />
+                          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{exp.jobTitle || exp.position}</h4>
+                          <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: '#4B5563' }}>{exp.companyName || exp.company}</p>
+                          {(exp.startDate || exp.endDate) && (
+                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{exp.startDate} – {exp.endDate || 'Present'}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedApplication.education?.length > 0 && (
+                  <div style={{ marginTop: 16 }}>
+                    <div className="mj-app-section-title">Education</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                      {selectedApplication.education.map((edu, index) => (
+                        <div key={index} style={{ borderLeft: '2px solid #E5E7EB', paddingLeft: 12, position: 'relative' }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6', position: 'absolute', left: -5, top: 6 }} />
+                          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{edu.degree || edu.fieldOfStudy}</h4>
+                          <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: '#4B5563' }}>{edu.school || edu.institution}</p>
+                          {(edu.startDate || edu.endDate) && (
+                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{edu.startDate} – {edu.endDate || 'Present'}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 20, borderTop: '1px solid #E5E7EB', paddingTop: 16 }}>
+                  <div className="mj-app-section-title" style={{ marginBottom: 8 }}>Recruiter Review Notes</div>
+                  <textarea
+                    style={{ width: '100%', minHeight: 80, border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }}
+                    placeholder="Add notes, evaluations or summary reviews about this candidate..."
+                    value={reviewNotes}
+                    onChange={e => setReviewNotes(e.target.value)}
+                  />
+                  <button
+                    disabled={savingReview}
+                    onClick={async () => {
+                      setSavingReview(true);
+                      try {
+                        await updateApplicationReview(selectedApplication.id, reviewNotes);
+                        setSelectedApplication(prev => ({ ...prev, employerReview: reviewNotes }));
+                        addToast('Review Saved', 'Recruiter notes have been saved successfully.', 'success');
+                      } catch {
+                        addToast('Save Failed', 'Could not save recruiter notes.', 'error');
+                      } finally {
+                        setSavingReview(false);
+                      }
+                    }}
+                    style={{ marginTop: 8, background: '#1A5C2E', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    {savingReview ? 'Saving...' : 'Save Notes'}
+                  </button>
+                </div>
+
                 <div className="mj-app-actions" style={{ marginTop: 20 }}>
                   {/* View CV Resume */}
                   {selectedApplication.cvUrl ? (
-                    <a
-                      href={selectedApplication.cvUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mj-drawer-btn secondary"
-                      title="View resume in new tab"
-                    >
-                      <FileText size={14} /> Resume <ExternalLink size={11} />
-                    </a>
+                    <>
+                      <a
+                        href={selectedApplication.cvUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mj-drawer-btn secondary"
+                        title="View resume in new tab"
+                      >
+                        <FileText size={14} /> Resume <ExternalLink size={11} />
+                      </a>
+                      <a
+                        href={selectedApplication.cvUrl.includes('cloudinary.com') ? selectedApplication.cvUrl.replace('/upload/', '/upload/fl_attachment/') : selectedApplication.cvUrl}
+                        download={selectedApplication.cvFileName || 'resume.pdf'}
+                        className="mj-drawer-btn success"
+                        title="Download CV"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+                      >
+                        <ArrowDown size={14} /> Download CV
+                      </a>
+                    </>
                   ) : (
                     <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
                       <FileText size={14} /> No Resume

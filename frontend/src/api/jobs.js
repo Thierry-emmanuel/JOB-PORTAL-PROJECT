@@ -80,6 +80,7 @@ const mapJobDetail = (job) => ({
   website:     job.company?.website || null,
   deadline:    job.deadline || null,
   experienceLevel: job.experienceLevel || null,
+  companyId:   job.company?.id || null,
 });
 
 /* ─── Applications (Job Seeker) ──────────────────────────── */
@@ -204,6 +205,25 @@ export const rateJob = async (id, rating) => {
   return data;
 };
 
+export const updateApplicationReview = async (applicationId, reviewText) => {
+  const { data } = await apiClient.put(`/api/v1/applications/${applicationId}/review`, {
+    review: reviewText,
+  });
+  return data;
+};
+
+export const toggleCompanyLike = async (companyId, seekerId) => {
+  const { data } = await apiClient.post(`/api/v1/companies/${companyId}/like/${seekerId}`);
+  return data;
+};
+
+export const getCompanyStats = async (companyId, seekerId) => {
+  const params = {};
+  if (seekerId) params.seekerId = seekerId;
+  const { data } = await apiClient.get(`/api/v1/companies/${companyId}/stats`, { params });
+  return data;
+};
+
 const jobsService = {
   getJobs, getJob, getJobDetail,
   applyToJob, getUserApplications, getUserInterviews,
@@ -212,6 +232,7 @@ const jobsService = {
   getEmployerJobs, changeJobStatus, deleteJob,
   getEmployerCompanies, getCompanies, getCategories,
   saveJob, rateJob,
+  updateApplicationReview, toggleCompanyLike, getCompanyStats,
 };
 
 export default jobsService;

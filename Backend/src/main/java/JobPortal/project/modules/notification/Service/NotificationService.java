@@ -23,7 +23,7 @@ import java.util.Set;
 public class NotificationService {
 
     private static final Set<NotificationType> EMAIL_TYPES =
-            EnumSet.of(NotificationType.JOB_ALERT, NotificationType.WELCOME, NotificationType.NEW_APPLICATION);
+            EnumSet.of(NotificationType.JOB_ALERT, NotificationType.WELCOME, NotificationType.NEW_APPLICATION, NotificationType.APPLICATION_STATUS, NotificationType.SYSTEM);
 
     private final NotificationRepository notificationRepository;
     private final MailService mailService;

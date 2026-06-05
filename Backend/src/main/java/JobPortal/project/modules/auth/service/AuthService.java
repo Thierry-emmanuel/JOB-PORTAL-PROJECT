@@ -25,6 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.context.ApplicationEventPublisher;
+import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.enums.NotificationType;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public User registerUser(RegisterRequest request) {
@@ -77,7 +81,17 @@ public class AuthService {
         roles.add(roleEntity);
         user.setRoles(roles);
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                saved,
+                "Welcome to Kora Job Portal",
+                "Hello " + saved.getFullName() + ",\n\nWelcome to Kora Job Portal! Your account has been successfully created as a " + request.getRole() + ".",
+                NotificationType.WELCOME
+        ));
+
+        return saved;
     }
 
     public AuthResponse authenticateUser(LoginRequest request) {
@@ -92,6 +106,14 @@ public class AuthService {
 
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
+
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                user,
+                "Security Alert: New Login",
+                "Hello " + user.getFullName() + ",\n\nYou have successfully logged into your account. If this wasn't you, please secure your account immediately.",
+                NotificationType.SYSTEM
+        ));
 
         return new AuthResponse(jwt, userDetails.getUsername(), role, user.getId(), user.getFullName());
     }

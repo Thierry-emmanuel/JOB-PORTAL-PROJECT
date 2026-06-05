@@ -9,6 +9,10 @@ import JobPortal.project.modules.userprofile.Model.JobSeeker;
 import JobPortal.project.modules.userprofile.Repository.JobSeekerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import JobPortal.project.modules.company.Model.CompanyLike;
+import JobPortal.project.modules.company.dto.CompanyStatsResponse;
+import JobPortal.project.modules.application.repository.ApplicationRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +28,9 @@ public class CompanyService {
 
     @Autowired
     private JobSeekerRepository jobSeekerRepository;
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
 
     // Get all companies
     public List<Company> getAllCompanies() {
@@ -133,6 +140,75 @@ public class CompanyService {
             throw new RuntimeException("Company not found with id: " + id);
         }
         companyRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Company toggleLike(Long companyId, Long jobSeekerId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found with id: " + companyId));
+
+        JobSeeker jobSeeker = jobSeekerRepository.findById(jobSeekerId)
+                .orElseThrow(() -> new RuntimeException("JobSeeker not found with id: " + jobSeekerId));
+
+        Optional<CompanyLike> existingLike = company.getLikes().stream()
+                .filter(l -> l.getJobSeeker().getId().equals(jobSeekerId))
+                .findFirst();
+
+        if (existingLike.isPresent()) {
+            company.getLikes().remove(existingLike.get());
+        } else {
+            CompanyLike newLike = CompanyLike.builder()
+                    .company(company)
+                    .jobSeeker(jobSeeker)
+                    .build();
+            company.getLikes().add(newLike);
+        }
+
+        company.setLikesCount(company.getLikes().size());
+        return companyRepository.save(company);
+    }
+
+    @Transactional(readOnly = true)
+    public CompanyStatsResponse getCompanyStats(Long companyId, Long seekerId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found with id: " + companyId));
+
+        long totalApplications = applicationRepository.countByCompanyId(companyId);
+        long totalHired = applicationRepository.countByCompanyIdAndStatus(companyId, "HIRED");
+
+        double recruitmentRate = 0.0;
+        if (totalApplications > 0) {
+            recruitmentRate = ((double) totalHired / totalApplications) * 100.0;
+        }
+
+        boolean hasLiked = false;
+        if (seekerId != null) {
+            hasLiked = company.getLikes().stream()
+                    .anyMatch(l -> l.getJobSeeker().getId().equals(seekerId));
+        }
+
+        String recommendationMessage;
+        if (recruitmentRate >= 70.0) {
+            recommendationMessage = String.format("This company recruits %.0f%% of its applicants. You have a very high chance of getting hired if you apply here!", recruitmentRate);
+        } else if (recruitmentRate >= 45.0) {
+            recommendationMessage = String.format("This company recruits %.0f%% of its applicants. You have a solid chance if you apply here.", recruitmentRate);
+        } else if (totalApplications == 0) {
+            recommendationMessage = "Be among the first applicants for this company's postings!";
+        } else {
+            recommendationMessage = String.format("This company recruits %.0f%% of its applicants. Competition is high, so make your application stand out!", recruitmentRate);
+        }
+
+        return new CompanyStatsResponse(
+                companyId,
+                recruitmentRate,
+                totalApplications,
+                totalHired,
+                hasLiked,
+                company.getLikesCount() == null ? 0 : company.getLikesCount(),
+                company.getAverageRating() == null ? 0.0 : company.getAverageRating(),
+                company.getRatingCount() == null ? 0 : company.getRatingCount(),
+                recommendationMessage
+        );
     }
 }
 

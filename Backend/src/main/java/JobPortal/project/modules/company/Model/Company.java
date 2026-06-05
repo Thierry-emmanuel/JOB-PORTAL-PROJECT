@@ -61,6 +61,9 @@ public class Company {
     @Column
     private Integer ratingCount = 0;
 
+    @Column(name = "likes_count")
+    private Integer likesCount = 0;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 
@@ -77,6 +80,10 @@ public class Company {
     // One Company can have multiple ratings
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyRating> ratings = new ArrayList<>();
+
+    // One Company can have multiple likes
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CompanyLike> likes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

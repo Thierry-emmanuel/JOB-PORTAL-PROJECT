@@ -47,6 +47,9 @@ public class Application {
     @Column(name = "expected_salary", precision = 12, scale = 2)
     private BigDecimal expectedSalary;
 
+    @Column(name = "employer_review", length = 2000)
+    private String employerReview;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default

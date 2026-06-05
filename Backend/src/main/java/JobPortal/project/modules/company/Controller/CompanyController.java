@@ -3,6 +3,7 @@ package JobPortal.project.modules.company.Controller;
 import JobPortal.project.modules.company.Model.Company;
 import JobPortal.project.modules.company.Service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import JobPortal.project.modules.company.dto.CompanyStatsResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -125,6 +126,34 @@ public class CompanyController {
         try {
             companyService.deleteCompany(id);
             return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // POST /api/v1/companies/{companyId}/like/{jobSeekerId}
+    // Toggles a like for a company from a JobSeeker
+    @PostMapping("/{companyId}/like/{jobSeekerId}")
+    public ResponseEntity<Company> toggleLike(
+            @PathVariable Long companyId,
+            @PathVariable Long jobSeekerId) {
+        try {
+            Company liked = companyService.toggleLike(companyId, jobSeekerId);
+            return ResponseEntity.ok(liked);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+    }
+
+    // GET /api/v1/companies/{id}/stats
+    // Returns recruitment stats and liking status for a company
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<CompanyStatsResponse> getCompanyStats(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long seekerId) {
+        try {
+            CompanyStatsResponse stats = companyService.getCompanyStats(id, seekerId);
+            return ResponseEntity.ok(stats);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

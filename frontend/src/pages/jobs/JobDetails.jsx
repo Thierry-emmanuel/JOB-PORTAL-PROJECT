@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { getJob, getJobDetail, saveJob, getUserApplications } from '../../api/jobs';
+import { getJob, getJobDetail, saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
 import KoraNav from '../../components/KoraNav';
 import '../../styles/job-list.css';
 
@@ -29,6 +29,10 @@ export default function JobDetails() {
   const [saved,   setSaved]   = useState(false);
   const [saving,  setSaving]  = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+
+  const [companyStats, setCompanyStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [togglingLike, setTogglingLike] = useState(false);
 
   const isViewOnly = searchParams.get('viewOnly') === 'true';
 
@@ -65,6 +69,23 @@ export default function JobDetails() {
     load();
     return () => { cancelled = true; };
   }, [id, t, isAuthenticated, isEmployee, user?.id, isViewOnly]);
+
+  useEffect(() => {
+    if (job?.companyId) {
+      async function fetchStats() {
+        setLoadingStats(true);
+        try {
+          const statsData = await getCompanyStats(job.companyId, user?.id);
+          setCompanyStats(statsData);
+        } catch (err) {
+          console.error("Failed to load company stats", err);
+        } finally {
+          setLoadingStats(false);
+        }
+      }
+      fetchStats();
+    }
+  }, [job?.companyId, user?.id]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -242,6 +263,82 @@ export default function JobDetails() {
                 </div>
               )}
             </div>
+
+            {/* Company Insights Card */}
+            {job?.companyId && companyStats && (
+              <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:20, marginTop:16, boxShadow:'0 4px 12px rgba(0,0,0,0.03)' }}>
+                <h3 style={{ fontSize:14, fontWeight:700, color:'#111827', margin:'0 0 12px', display:'flex', alignItems:'center', gap:6 }}>
+                  🏢 Company Insights
+                </h3>
+
+                {/* Recruitment Rate section */}
+                <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:10, padding:12, marginBottom:16 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                    <span style={{ fontSize:12, fontWeight:600, color:'#1E40AF' }}>Recruitment Likelihood</span>
+                    <span style={{ fontSize:14, fontWeight:800, color:'#1D4ED8' }}>{companyStats.recruitmentRate.toFixed(0)}%</span>
+                  </div>
+                  <div style={{ width:'100%', height:6, background:'#DBEAFE', borderRadius:3, overflow:'hidden', marginBottom:8 }}>
+                    <div style={{ width:`${companyStats.recruitmentRate}%`, height:'100%', background:'#2563EB', borderRadius:3 }} />
+                  </div>
+                  <p style={{ fontSize:11, color:'#1E3A8A', margin:0, lineHeight:1.4, fontWeight: 500 }}>
+                    {companyStats.recommendationMessage}
+                  </p>
+                </div>
+
+                {/* Likes section */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #F3F4F6', paddingBottom:12, marginBottom:12 }}>
+                  <div>
+                    <span style={{ fontSize:12, fontWeight:600, color:'#4B5563' }}>Company Rating</span>
+                    <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:2 }}>
+                      <span style={{ color:'#F59E0B', fontSize:14 }}>★</span>
+                      <span style={{ fontSize:12, fontWeight:700, color:'#111827' }}>
+                        {companyStats.averageRating > 0 ? `${companyStats.averageRating.toFixed(1)}/5` : 'No reviews'}
+                      </span>
+                      {companyStats.ratingCount > 0 && (
+                        <span style={{ fontSize:11, color:'#9CA3AF' }}>({companyStats.ratingCount} reviews)</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    disabled={togglingLike || !isAuthenticated}
+                    onClick={async () => {
+                      if (!isEmployee) return;
+                      setTogglingLike(true);
+                      try {
+                        await toggleCompanyLike(job.companyId, user.id);
+                        setCompanyStats(prev => ({
+                          ...prev,
+                          hasLiked: !prev.hasLiked,
+                          likesCount: prev.hasLiked ? prev.likesCount - 1 : prev.likesCount + 1
+                        }));
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setTogglingLike(false);
+                      }
+                    }}
+                    style={{
+                      background: companyStats.hasLiked ? '#FEE2E2' : '#F3F4F6',
+                      color: companyStats.hasLiked ? '#EF4444' : '#4B5563',
+                      border: 'none', borderRadius:10, padding:'8px 12px',
+                      fontSize:12, fontWeight:700, cursor: isEmployee ? 'pointer' : 'default',
+                      display:'flex', alignItems:'center', gap:6
+                    }}
+                  >
+                    <span>{companyStats.hasLiked ? '❤️' : '🤍'}</span>
+                    <span>{companyStats.likesCount} {companyStats.likesCount === 1 ? 'Like' : 'Likes'}</span>
+                  </button>
+                </div>
+
+                {/* Tip */}
+                <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:14 }}>💡</span>
+                  <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.4 }}>
+                    Liking companies helps other job seekers find top-rated workplaces!
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

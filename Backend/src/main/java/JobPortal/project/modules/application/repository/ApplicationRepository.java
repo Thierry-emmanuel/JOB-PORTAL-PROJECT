@@ -130,6 +130,20 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findShortlistedByJobPostingId(
             @Param("jobPostingId") Long jobPostingId,
             @Param("status") ApplicationStatus status);
+
+    @Query(value = """
+        SELECT COUNT(*) FROM applications a
+        JOIN job_listings jp ON CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) = a.job_posting_id
+        WHERE jp.company_id = :companyId
+        """, nativeQuery = true)
+    long countByCompanyId(@Param("companyId") Long companyId);
+
+    @Query(value = """
+        SELECT COUNT(*) FROM applications a
+        JOIN job_listings jp ON CAST(SUBSTRING_INDEX(BIN_TO_UUID(jp.id), '-', 1) AS SIGNED) = a.job_posting_id
+        WHERE jp.company_id = :companyId AND a.status = :status
+        """, nativeQuery = true)
+    long countByCompanyIdAndStatus(@Param("companyId") Long companyId, @Param("status") String status);
 }
 
 

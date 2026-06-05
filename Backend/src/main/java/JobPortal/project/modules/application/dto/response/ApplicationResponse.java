@@ -18,6 +18,8 @@ public record ApplicationResponse(
 
         InterviewSummaryResponse interview,
 
+        String employerReview,
+
         boolean terminal,
         boolean withdrawable,
         boolean hasInterview,

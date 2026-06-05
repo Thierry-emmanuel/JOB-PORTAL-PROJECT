@@ -3,6 +3,7 @@ package JobPortal.project.modules.application.controller.rest;
 import JobPortal.project.modules.application.dto.request.ApplicationFilterRequest;
 import JobPortal.project.modules.application.dto.request.CreateApplicationRequest;
 import JobPortal.project.modules.application.dto.request.UpdateApplicationStatusRequest;
+import JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest;
 import JobPortal.project.modules.application.dto.response.ApplicationPageResponse;
 import JobPortal.project.modules.application.dto.response.ApplicationResponse;
 import JobPortal.project.modules.application.dto.response.ApplicationStatsResponse;
@@ -98,6 +99,20 @@ public class ApplicationController {
             @Valid @RequestBody UpdateApplicationStatusRequest request) {
 
         ApplicationResponse response = applicationService.updateStatus(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    // ------------------------------------------------------------------ //
+    //  PUT /api/v1/applications/{id}/review                              //
+    //  Update the employer review notes on an application                //
+    // ------------------------------------------------------------------ //
+
+    @PutMapping("/{id}/review")
+    public ResponseEntity<ApplicationResponse> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateApplicationReviewRequest request) {
+
+        ApplicationResponse response = applicationService.updateReview(id, request);
         return ResponseEntity.ok(response);
     }
 

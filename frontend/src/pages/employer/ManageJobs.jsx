@@ -8,7 +8,7 @@
  * • Schedule interview (opens InterviewScheduler modal)
  * • Status tabs, search, sort
  */
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Briefcase, Users, Eye, Clock, Plus, Search,
@@ -17,7 +17,7 @@ import {
   ArrowRight, FileText, Phone, MapPin, Mail,
   Banknote, ExternalLink, X, AlertCircle,
   RefreshCw, Filter, SortDesc, TrendingUp,
-  UserCheck, UserX, Star,
+  UserCheck, UserX, Star, ArrowDown,
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
 import InterviewScheduler from '../../components/employer/InterviewScheduler';
@@ -81,9 +81,15 @@ function Avatar({ name, size = 36, color = '#1A5C2E' }) {
 }
 
 /* ─── Applicant drawer ───────────────────────────────────── */
-function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule }) {
+function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule, updateApplicationReview }) {
   const [scheduling, setScheduling] = useState(false);
   const [acting, setActing]         = useState(null);
+  const [reviewNotes, setReviewNotes] = useState(app?.employerReview || '');
+  const [savingReview, setSavingReview] = useState(false);
+
+  useEffect(() => {
+    setReviewNotes(app?.employerReview || '');
+  }, [app]);
 
   if (!app) return null;
 
@@ -140,6 +146,18 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule }) {
                   <span>{app.city}</span>
                 </div>
               )}
+              {app.linkedInUrl && (
+                <div className="mj-drawer-info-row">
+                  <ExternalLink size={13} className="mj-drawer-info-icon"/>
+                  <a href={app.linkedInUrl} target="_blank" rel="noreferrer" className="mj-drawer-link">LinkedIn</a>
+                </div>
+              )}
+              {app.portfolioUrl && (
+                <div className="mj-drawer-info-row">
+                  <ExternalLink size={13} className="mj-drawer-info-icon"/>
+                  <a href={app.portfolioUrl} target="_blank" rel="noreferrer" className="mj-drawer-link">Portfolio</a>
+                </div>
+              )}
               {app.expectedSalary && (
                 <div className="mj-drawer-info-row">
                   <Banknote size={13} className="mj-drawer-info-icon"/>
@@ -187,6 +205,24 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule }) {
             </section>
           )}
 
+          {/* Education */}
+          {app.education?.length > 0 && (
+            <section className="mj-drawer-section">
+              <h4 className="mj-drawer-section-title">Education</h4>
+              {app.education.map((edu, i) => (
+                <div key={i} className="mj-drawer-exp-item">
+                  <div className="mj-drawer-exp-title">{edu.degree || edu.fieldOfStudy}</div>
+                  <div className="mj-drawer-exp-company">{edu.school || edu.institution}</div>
+                  {(edu.startDate || edu.endDate) && (
+                    <div className="mj-drawer-exp-date">
+                      {edu.startDate} — {edu.endDate || 'Present'}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
+
           {/* Cover letter */}
           {app.coverLetter && (
             <section className="mj-drawer-section">
@@ -197,10 +233,48 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule }) {
 
           {/* CV link */}
           {app.cvUrl && (
-            <a href={app.cvUrl} target="_blank" rel="noreferrer" className="mj-cv-link">
-              <FileText size={14}/> View Resume / CV <ExternalLink size={12}/>
-            </a>
+            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+              <a href={app.cvUrl} target="_blank" rel="noreferrer" className="mj-cv-link" style={{ flex: 1, margin: 0, textAlign: 'center' }}>
+                <FileText size={14}/> View Resume <ExternalLink size={12}/>
+              </a>
+              <a
+                href={app.cvUrl.includes('cloudinary.com') ? app.cvUrl.replace('/upload/', '/upload/fl_attachment/') : app.cvUrl}
+                download={app.cvFileName || 'resume.pdf'}
+                className="mj-cv-link"
+                style={{ flex: 1, margin: 0, textAlign: 'center', background: '#E8F5EE', color: '#1A5C2E', border: '1.5px solid #1A5C2E' }}
+              >
+                <ArrowDown size={14}/> Download CV
+              </a>
+            </div>
           )}
+
+          {/* Recruiter review notes */}
+          <section className="mj-drawer-section" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 16, marginTop: 16 }}>
+            <h4 className="mj-drawer-section-title">Recruiter Review Notes</h4>
+            <textarea
+              style={{ width: '100%', minHeight: 80, border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }}
+              placeholder="Add notes, evaluations or summary reviews about this candidate..."
+              value={reviewNotes}
+              onChange={e => setReviewNotes(e.target.value)}
+            />
+            <button
+              disabled={savingReview}
+              onClick={async () => {
+                setSavingReview(true);
+                try {
+                  await updateApplicationReview(app.id, reviewNotes);
+                  app.employerReview = reviewNotes;
+                } catch (err) {
+                  console.error(err);
+                } finally {
+                  setSavingReview(false);
+                }
+              }}
+              style={{ marginTop: 8, background: '#1A5C2E', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              {savingReview ? 'Saving...' : 'Save Notes'}
+            </button>
+          </section>
         </div>
 
         {/* Actions footer */}
@@ -288,9 +362,11 @@ export default function ManageJobs() {
   const { user } = useAuth();
 
   const {
-    employer, stats, loading, error, refreshing, refresh,
-    jobPostings, applications,
+    employer, stats, applications, jobPostings,
+    loading, error,
+    refresh,
     updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
+    updateApplicationReview,
   } = useEmployerDashboard();
 
   /* ── UI state ─────────────────────────────────────────── */
@@ -302,6 +378,7 @@ export default function ManageJobs() {
   const [selectedApp,  setSelectedApp]  = useState(null); // applicant drawer
   const [expandedJob,  setExpandedJob]  = useState(null); // accordion on mobile
   const [toast, setToast]               = useState(null);
+  const [scheduling, setScheduling] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -635,7 +712,8 @@ export default function ManageJobs() {
         app={selectedApp}
         onClose={() => setSelectedApp(null)}
         onUpdateStatus={handleStatusChange}
-        onSchedule={handleScheduled}
+        onSchedule={(app) => setScheduling(app)}
+        updateApplicationReview={updateApplicationReview}
       />
     </div>
   );
