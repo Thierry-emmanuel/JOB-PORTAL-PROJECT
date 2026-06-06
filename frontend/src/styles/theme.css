@@ -686,3 +686,45 @@
   background: #fef2f2;
   color: #b91c1c;
 }
+
+/* ── Contextual active states for spaces ── */
+.kn-nav--employee .kn-link--active {
+  color: var(--kora-green) !important;
+}
+.kn-nav--employee .kn-link-bar {
+  background: var(--kora-green) !important;
+}
+.kn-nav--employee .kn-link:hover {
+  color: var(--kora-green) !important;
+}
+
+.kn-nav--employer .kn-link--active {
+  color: var(--kora-orange) !important;
+}
+.kn-nav--employer .kn-link-bar {
+  background: var(--kora-orange) !important;
+}
+.kn-nav--employer .kn-link:hover {
+  color: var(--kora-orange) !important;
+}
+
+.kn-nav--admin .kn-link--active {
+  color: var(--kora-green) !important;
+}
+.kn-nav--admin .kn-link-bar {
+  background: var(--kora-green) !important;
+}
+.kn-nav--admin .kn-link:hover {
+  color: var(--kora-green) !important;
+}
+
+/* ── Mobile responsiveness for User Trigger ── */
+@media (max-width: 640px) {
+  .kn-user-name,
+  .kn-user-arrow {
+    display: none !important;
+  }
+  .kn-user-trigger {
+    padding: 4px !important;
+  }
+}

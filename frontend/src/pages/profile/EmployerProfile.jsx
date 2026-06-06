@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Building2, Globe, MapPin, Mail, Phone, Edit2, Plus,
   Trash2, Camera, Briefcase, Users, CheckCircle,
-  ExternalLink, KeyRound, X, Save, AlertTriangle
+  ExternalLink, KeyRound, X, Save, AlertTriangle, Menu
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import koraLogo from "../../assets/absolute-size-logo.png";
@@ -81,6 +81,7 @@ export default function EmployerProfile() {
   const [activeTab, setActiveTab] = useState("overview");
   const [resetModal, setResetModal] = useState(false);
   const [toast, setToast] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const logoRef = useRef();
 
   useEffect(() => {
@@ -208,11 +209,20 @@ export default function EmployerProfile() {
     <div className="ds-root employer">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
       <ConfirmModal open={!!removeJobId} title="Remove Job Posting" body="Remove this job posting from your profile?" onConfirm={confirmRemoveJob} onCancel={() => setRemoveJobId(null)} />
+      
+      {/* Mobile */}
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+
       <div className="ds-body">
-        <aside className="ds-sidebar">
+        <aside className={`ds-sidebar${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16} /></button>
           <EmployerSidebar employer={{ companyName: profile.companyName, contactName: profile.contactName, logo: profile.logo, isApproved: true }} loading={false} stats={null} />
         </aside>
         <main className="ds-main">
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
           <div className="kora-profile-header">
             <div className="kora-header-banner employer-banner">
               <div className="kora-banner-pattern" />

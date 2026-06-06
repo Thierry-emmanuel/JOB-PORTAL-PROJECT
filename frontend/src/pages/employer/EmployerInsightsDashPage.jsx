@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import {
   TrendingUp, BarChart3, AlertCircle, RefreshCw, X,
-  CheckCircle
+  CheckCircle, Menu
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
 import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
@@ -124,6 +124,10 @@ export default function EmployerInsightsDashPage() {
 
         {/* ════ MAIN ════ */}
         <main className="ds-main">
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
 
           {/* ── Page Header ── */}
           <div className="ds-page-header">

@@ -1302,27 +1302,8 @@ function CtaSection() {
 
 /* ─── CONTACTEZ-NOUS ────────────────────────────────────────── */
 function ContactUs() {
+  const navigate = useNavigate();
   const [ref, style] = useReveal(0);
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('questions');
-  const [message, setMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !message) {
-      alert("Veuillez remplir tous les champs requis.");
-      return;
-    }
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmitted(true);
-      setEmail('');
-      setMessage('');
-    }, 1200);
-  };
 
   return (
     <section id="contact-us" style={{ background:"#fff", padding:"clamp(48px,7vw,72px) clamp(16px,4vw,48px)", borderTop:`1px solid ${BORDER}` }}>
@@ -1332,75 +1313,12 @@ function ContactUs() {
         <p style={{ fontSize:14, color:MUTED, marginBottom:24, fontWeight:300, lineHeight:1.65 }}>
           Sponsoring, questions ou suggestions ? Envoyez une demande de contact aux administrateurs.
         </p>
-
-        {submitted ? (
-          <div style={{ background:"#ECFDF5", border:`1.5px solid #6EE7B7`, borderRadius:12, padding:"20px", color:"#065F46", textAlign:"center" }}>
-            <div style={{ fontSize:28, marginBottom:8 }}>✓</div>
-            <h4 style={{ fontWeight:700, fontSize:15, margin:"0 0 6px" }}>Message Envoyé !</h4>
-            <p style={{ fontSize:13, margin:0, lineHeight:1.5 }}>
-              Votre demande de contact a été transmise avec succès aux administrateurs de Kora. Nous reviendrons vers vous dans les plus brefs délais.
-            </p>
-            <button 
-              type="button"
-              onClick={() => setSubmitted(false)}
-              style={{ marginTop:14, background:"none", border:"none", color:"#047857", fontWeight:700, fontSize:12.5, cursor:"pointer", textDecoration:"underline" }}
-            >
-              Envoyer un autre message
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14, textAlign:"left" }}>
-            <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-              <label style={{ fontSize:12, fontWeight:700, color:INK, textTransform:"uppercase" }} htmlFor="contact-email">Votre Adresse E-mail *</label>
-              <input 
-                id="contact-email"
-                type="email" 
-                placeholder="votre@email.com" 
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                style={{ width:"100%", border:`2px solid ${BORDER}`, borderRadius:10, fontSize:14, color:INK, padding:"12px 14px", fontFamily:"inherit", outline:"none", background:"white", transition:"border-color 0.15s" }}
-              />
-            </div>
-
-            <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-              <label style={{ fontSize:12, fontWeight:700, color:INK, textTransform:"uppercase" }} htmlFor="contact-subject">Sujet de la demande *</label>
-              <select
-                id="contact-subject"
-                value={subject}
-                onChange={e => setSubject(e.target.value)}
-                style={{ width:"100%", border:`2px solid ${BORDER}`, borderRadius:10, fontSize:14, color:INK, padding:"12px 14px", fontFamily:"inherit", outline:"none", background:"white", cursor:"pointer", transition:"border-color 0.15s" }}
-              >
-                <option value="sponsoring">Sponsoring / Partenariat publicitaire</option>
-                <option value="questions">Question générale / FAQ</option>
-                <option value="partnership">Partenariat entreprise / Intégration</option>
-                <option value="support">Support technique / Bug report</option>
-                <option value="autre">Autre demande</option>
-              </select>
-            </div>
-
-            <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-              <label style={{ fontSize:12, fontWeight:700, color:INK, textTransform:"uppercase" }} htmlFor="contact-message">Votre Message *</label>
-              <textarea 
-                id="contact-message"
-                placeholder="Comment pouvons-nous vous aider ? Décrivez votre projet de sponsoring ou posez votre question..." 
-                required
-                rows={4}
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                style={{ width:"100%", border:`2px solid ${BORDER}`, borderRadius:10, fontSize:14, color:INK, padding:"12px 14px", fontFamily:"inherit", outline:"none", resize:"vertical", background:"white", transition:"border-color 0.15s" }}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={submitting}
-              style={{ background:G, color:"white", border:"none", borderRadius:10, padding:"14px 20px", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8, transition:"opacity 0.15s" }}
-            >
-              {submitting ? "Envoi en cours..." : "Envoyer le message"}
-            </button>
-          </form>
-        )}
+        <button 
+          onClick={() => navigate('/contact')}
+          style={{ background:G, color:"white", border:"none", borderRadius:10, padding:"14px 28px", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", display:"inline-flex", alignItems:"center", gap:8, transition:"opacity 0.15s" }}
+        >
+          Envoyer un message
+        </button>
       </div>
     </section>
   );

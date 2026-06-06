@@ -37,6 +37,7 @@ const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagem
 const EmployerInsightsDashPage = lazy(() => import('./pages/employer/EmployerInsightsDashPage'));
 const InsightsPage     = lazy(() => import('./pages/shared/InsightsPage'));
 const ApplicationDetailPage = lazy(() => import('./pages/shared/ApplicationDetailPage'));
+const ContactPage          = lazy(() => import('./pages/shared/ContactPage'));
 
 // ── Employer combined view ─────────────────────────────────
 function EmployerJobsManager() {
@@ -174,6 +175,7 @@ function AnimatedRoutes() {
         <Route path="/jobs/:id/apply"  element={wrap(<ApplyPage />)} />
         <Route path="/insights"        element={wrap(<InsightsPage />)} />
         <Route path="/applications/:id" element={wrap(<ApplicationDetailPage />)} />
+        <Route path="/contact"         element={wrap(<ContactPage />)} />
       </Routes>
     </AnimatePresence>
   );

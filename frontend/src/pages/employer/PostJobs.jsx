@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
   Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
-  Eye, Lightbulb, Save, XCircle
+  Eye, Lightbulb, Save, XCircle, Menu
 } from "lucide-react";
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
@@ -269,6 +269,7 @@ function Step4({ form, dbCategories, dbLocations }) {
 /* ── Main component ─────────────────────────────────────────── */
 export default function PostJob({ onBack, onSuccess }) {
   const [step,        setStep]        = useState(1);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
   const [form,        setForm]        = useState(INITIAL_FORM);
   const [errors,      setErrors]      = useState({});
   const [submitted,   setSubmitted]   = useState(false);
@@ -441,11 +442,21 @@ export default function PostJob({ onBack, onSuccess }) {
   /* Shared shell wrapper */
   const Shell = ({ children }) => (
     <div className="ds-root employer">
+      {/* Mobile */}
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+
       <div className="ds-body">
-        <aside className="ds-sidebar">
+        <aside className={`ds-sidebar${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16} /></button>
           <EmployerSidebar employer={employer} loading={loading} stats={stats} />
         </aside>
-        <main className="ds-main">{children}</main>
+        <main className="ds-main">
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
+          {children}
+        </main>
       </div>
     </div>
   );

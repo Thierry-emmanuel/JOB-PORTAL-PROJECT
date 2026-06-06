@@ -92,9 +92,11 @@ export default function KoraNav() {
   const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
   const isTransparentHeaderPage = true;
 
+  const spaceClass = isEmployeeSpace ? ' kn-nav--employee' : isEmployerSpace ? ' kn-nav--employer' : isAdminSpace ? ' kn-nav--admin' : ' kn-nav--public';
+
   return (
     <nav
-      className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}`}
+      className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}`}
       aria-label="Main navigation"
     >
       <div className="kn-inner">
@@ -147,7 +149,7 @@ export default function KoraNav() {
                   {user?.fullName ? user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
                 </div>
                 <span className="kn-user-name">{user?.fullName || 'User'}</span>
-                <span style={{ fontSize: '9px', color: 'var(--kora-muted)' }}>▼</span>
+                <span className="kn-user-arrow" style={{ fontSize: '9px', color: 'var(--kora-muted)' }}>▼</span>
               </button>
               
               {dropdownOpen && (

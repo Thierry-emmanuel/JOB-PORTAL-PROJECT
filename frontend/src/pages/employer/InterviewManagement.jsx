@@ -6,7 +6,7 @@ import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 import {
   Calendar, Filter, Search, Video, Phone, MapPin,
   Clock, CheckCircle, XCircle, AlertCircle, RefreshCw,
-  User, Briefcase, ChevronDown, X, Check,
+  User, Briefcase, ChevronDown, X, Check, Menu,
 } from 'lucide-react';
 import "../../styles/dashboard-shell.css";
 
@@ -227,6 +227,7 @@ export default function InterviewManagement() {
   const [filter,       setFilter]       = useState('ALL');
   const [cancelTarget, setCancelTarget] = useState(null);
   const [resultTarget, setResultTarget] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const fetchInterviews = useCallback(async () => {
     if (!user?.id) return;
@@ -279,12 +280,20 @@ export default function InterviewManagement() {
       <ConfirmModal open={!!cancelTarget} title="Cancel Interview" body="Are you sure you want to cancel this interview? The candidate will be notified." onConfirm={handleCancel} onCancel={() => setCancelTarget(null)} danger />
       {resultTarget && <ResultModal interview={resultTarget} onSave={handleRecordResult} onClose={() => setResultTarget(null)} />}
 
+      {/* Mobile */}
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+
       <div className="ds-body">
-        <aside className="ds-sidebar">
+        <aside className={`ds-sidebar${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16} /></button>
           <EmployerSidebar employer={employer} loading={loading} stats={stats} />
         </aside>
 
         <main className="ds-main">
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
           {/* Hero */}
           <div className="ds-hero">
             <div className="ds-hero-text">

@@ -339,7 +339,7 @@ export default function InterviewScheduler({ application, existingInterview, onC
                         style={{ paddingLeft: 36 }}
                         value={form.scheduledAt}
                         onChange={e => { upd('scheduledAt', e.target.value); setErrors(er=>({...er,scheduledAt:undefined})); }}
-                        min={new Date(Date.now()+30*60*1000).toISOString().slice(0,16)}
+                        min={new Date(Date.now() + 30 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                       />
                     </div>
                     {errors.scheduledAt && <p className="is-error-msg">{errors.scheduledAt}</p>}

@@ -133,3 +133,23 @@
   transition: all 0.18s;
 }
 .kora-meta-link:hover { background: var(--kora-primary); color: white; }
+
+/* ── Mobile responsiveness for Employer Job Row ── */
+@media (max-width: 640px) {
+  .kora-job-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .kora-job-row-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .kora-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+    border-top: 1px solid var(--kora-border);
+    padding-top: 8px;
+  }
+}

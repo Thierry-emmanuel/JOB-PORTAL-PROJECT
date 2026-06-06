@@ -6,7 +6,7 @@ import {
   AlertTriangle, AlertCircle, Search, TrendingUp, Edit2,
   RefreshCw, Video, MapPin, CheckCircle,
   Mail, Phone, ExternalLink, FileText, Check, Calendar as CalendarIcon, ClipboardList,
-  Home, Globe, BarChart2
+  Home, Globe, BarChart2, Menu, ArrowUpRight
 } from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';
 import InterviewScheduler from '../components/employer/InterviewScheduler';
@@ -235,6 +235,7 @@ export default function EmployerDashboard() {
       {schedulerTarget && (
         <InterviewScheduler
           application={schedulerTarget}
+          existingInterview={schedulerTarget.interview}
           onClose={() => setSchedulerTarget(null)}
           onScheduled={() => {
             handleUpdateStatus(schedulerTarget.id, 'SHORTLISTED');
@@ -256,6 +257,10 @@ export default function EmployerDashboard() {
 
         {/* ════ MAIN ════ */}
         <main className="ds-main">
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
 
           {/* ── Hero ── */}
           <div className="ds-hero">

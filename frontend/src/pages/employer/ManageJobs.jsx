@@ -17,7 +17,7 @@ import {
   ArrowRight, FileText, Phone, MapPin, Mail,
   Banknote, ExternalLink, X, AlertCircle,
   RefreshCw, Filter, SortDesc, TrendingUp,
-  UserCheck, UserX, Star, ArrowDown, Video, ArrowUpRight,
+  UserCheck, UserX, Star, ArrowDown, Video, ArrowUpRight, Menu,
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
 import InterviewScheduler from '../../components/employer/InterviewScheduler';
@@ -105,6 +105,7 @@ export default function ManageJobs() {
   const [expandedJob,  setExpandedJob]  = useState(null); // accordion on mobile
   const [toast, setToast]               = useState(null);
   const [scheduling, setScheduling] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -186,8 +187,12 @@ export default function ManageJobs() {
   /* ── Render ───────────────────────────────────────────── */
   return (
     <div className="ds-root employer">
+      {/* Mobile */}
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+
       <div className="ds-body">
-        <aside className="ds-sidebar">
+        <aside className={`ds-sidebar${mobileOpen ? ' ds-sidebar--mobile-open' : ''}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16} /></button>
           <EmployerSidebar employer={employer} loading={false} stats={stats}/>
         </aside>
 
@@ -199,6 +204,11 @@ export default function ManageJobs() {
               {toast.msg}
             </div>
           )}
+
+          {/* FAB trigger (mobile) */}
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
 
           {/* Top bar */}
           <div className="mj-topbar">

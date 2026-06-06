@@ -261,8 +261,20 @@ public class InterviewServiceImpl implements InterviewService {
 
         interviewMapper.applyReschedule(request, interview);
 
-        if (request.meetingLink() != null) {
+        // Update or clear the meeting link based on what was provided
+        if (request.meetingLink() != null && !request.meetingLink().isBlank()) {
             interview.setMeetingLink(request.meetingLink());
+        } else {
+            // If a blank/empty string was sent, clear the stored link so we can regenerate
+            interview.setMeetingLink(null);
+        }
+
+        // For VIDEO interviews with no meeting link, auto-generate a fallback Meet link
+        if (interview.getType() == InterviewType.VIDEO
+                && (interview.getMeetingLink() == null || interview.getMeetingLink().isBlank())) {
+            interview.setMeetingLink(generateRandomMeetLink());
+            interview.setPlatform("Google Meet");
+            log.info("Auto-generated fallback Meet link for rescheduled interview {}", interviewId);
         }
 
         Interview saved = interviewRepository.save(interview);

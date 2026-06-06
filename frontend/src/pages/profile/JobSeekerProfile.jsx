@@ -238,7 +238,7 @@ export default function JobSeekerProfile() {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ display:'flex', gap:4, background:'#F9FAFB', borderRadius:12, padding:4 }}>
+      <div style={{ display:'flex', gap:4, background:'#F9FAFB', borderRadius:12, padding:4, flexWrap:'wrap' }}>
         {TABS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setActiveTab(key)} style={{
             flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
