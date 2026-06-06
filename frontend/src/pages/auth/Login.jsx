@@ -189,7 +189,7 @@ export default function Login() {
             </div>
 
             <a
-              href={`${import.meta.env.VITE_API_BASE_URL || ''}/oauth2/authorization/google?role=${selectedRole}`}
+              href={`${import.meta.env.VITE_API_BASE_URL || ''}/oauth2/authorization/google?role=${selectedRole}&origin=${encodeURIComponent(window.location.origin)}`}
               className="kora-auth-social-btn"
               style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >

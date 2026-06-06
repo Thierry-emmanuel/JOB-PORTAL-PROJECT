@@ -68,7 +68,16 @@ public class SecurityConfig {
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler((request, response, exception) -> {
                     org.slf4j.LoggerFactory.getLogger(SecurityConfig.class).error("OAuth2 Login Failed: ", exception);
-                    String targetUrl = frontendUrl + "/login?error=" + java.net.URLEncoder.encode(exception.getLocalizedMessage(), java.nio.charset.StandardCharsets.UTF_8);
+                    // Resolve the frontend URL from session (set by OAuth2RoleRequestFilter) or fall back to config
+                    String resolvedFrontend = frontendUrl;
+                    jakarta.servlet.http.HttpSession sess = request.getSession(false);
+                    if (sess != null) {
+                        String storedOrigin = (String) sess.getAttribute("oauth2_origin");
+                        if (storedOrigin != null && !storedOrigin.isBlank()) {
+                            resolvedFrontend = storedOrigin;
+                        }
+                    }
+                    String targetUrl = resolvedFrontend + "/login?error=" + java.net.URLEncoder.encode(exception.getLocalizedMessage(), java.nio.charset.StandardCharsets.UTF_8);
                     response.sendRedirect(targetUrl);
                 })
             )
