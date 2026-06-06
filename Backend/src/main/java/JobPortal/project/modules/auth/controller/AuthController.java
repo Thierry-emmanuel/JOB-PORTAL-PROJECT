@@ -45,7 +45,9 @@ public class AuthController {
         try {
             org.springframework.security.core.context.SecurityContext context = org.springframework.security.core.context.SecurityContextHolder.getContext();
             org.springframework.security.core.Authentication authentication = context.getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
+            if (authentication == null
+                    || !authentication.isAuthenticated()
+                    || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
                 return ResponseEntity.status(401).body("Error: Not authenticated");
             }
 
@@ -60,6 +62,7 @@ public class AuthController {
             AuthResponse response = authService.getCurrentUser(email);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            log.error("[Auth] /me failed: {}", e.getMessage());
             return ResponseEntity.status(401).body(e.getMessage());
         }
     }

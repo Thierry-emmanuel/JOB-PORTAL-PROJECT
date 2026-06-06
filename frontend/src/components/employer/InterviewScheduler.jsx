@@ -16,7 +16,7 @@ import {
   CheckCircle2, Copy, Check, Send, Zap, User,
   ArrowRight, AlertCircle, Briefcase, CalendarClock,
 } from 'lucide-react';
-import { scheduleInterview } from '../../api/interviews';
+import { scheduleInterview, rescheduleInterview } from '../../api/interviews';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/interview-scheduler.css';
 
@@ -109,7 +109,7 @@ const slideIn = {
 };
 
 /* ═══════════════════════════════════════════════════════════ */
-export default function InterviewScheduler({ application, onClose, onScheduled }) {
+export default function InterviewScheduler({ application, existingInterview, onClose, onScheduled }) {
   const { user } = useAuth();
 
   const [phase, setPhase]   = useState('form');  // 'form' | 'review' | 'success'
@@ -118,15 +118,30 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
   const [copied, setCopied] = useState(false);
   const [result, setResult] = useState(null);
 
-  const [form, setForm] = useState({
-    type:        'VIDEO',
-    platform:    'Google Meet',
-    scheduledAt: '',
-    meetingLink: '',
-    location:    '',   // for IN_PERSON
-    phone:       '',   // for PHONE
-    notes:       '',
-    generateMeet: true,  // auto-generate Google Meet link
+  const [form, setForm] = useState(() => {
+    if (existingInterview) {
+      const isVideo = existingInterview.type === 'VIDEO';
+      return {
+        type:         existingInterview.type || 'VIDEO',
+        platform:     existingInterview.platform || 'Google Meet',
+        scheduledAt:  existingInterview.scheduledAt ? existingInterview.scheduledAt.slice(0, 16) : '',
+        meetingLink:  existingInterview.meetingLink || '',
+        location:     existingInterview.type === 'IN_PERSON' ? (existingInterview.platform || '') : '',
+        phone:        existingInterview.type === 'PHONE' ? (existingInterview.platform || '') : '',
+        notes:        existingInterview.notes || '',
+        generateMeet: isVideo && !existingInterview.meetingLink,
+      };
+    }
+    return {
+      type:        'VIDEO',
+      platform:    'Google Meet',
+      scheduledAt: '',
+      meetingLink: '',
+      location:    '',   // for IN_PERSON
+      phone:       '',   // for PHONE
+      notes:       '',
+      generateMeet: true,  // auto-generate Google Meet link
+    };
   });
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -182,28 +197,40 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
   const handleSubmit = useCallback(async () => {
     setSaving(true); setError(null);
     try {
-      const payload = {
-        scheduledAt:  form.scheduledAt,
-        type:         form.type,
-        platform:     form.type === 'IN_PERSON'
-          ? form.location
-          : form.type === 'PHONE'
-            ? (form.phone || 'Phone')
-            : form.platform,
-        meetingLink:  form.type === 'VIDEO' && !form.generateMeet
-          ? form.meetingLink
-          : '',   // backend generates Meet link when blank + type=VIDEO
-        notes:        form.notes,
-      };
-      const iv = await scheduleInterview(application.id, payload);
-      setResult(iv);
-      setPhase('success');
+      if (existingInterview) {
+        const payload = {
+          newScheduledAt: form.scheduledAt,
+          meetingLink: form.type === 'VIDEO' && !form.generateMeet
+            ? form.meetingLink
+            : '',
+        };
+        const iv = await rescheduleInterview(existingInterview.id, payload);
+        setResult(iv);
+        setPhase('success');
+      } else {
+        const payload = {
+          scheduledAt:  form.scheduledAt,
+          type:         form.type,
+          platform:     form.type === 'IN_PERSON'
+            ? form.location
+            : form.type === 'PHONE'
+              ? (form.phone || 'Phone')
+              : form.platform,
+          meetingLink:  form.type === 'VIDEO' && !form.generateMeet
+            ? form.meetingLink
+            : '',   // backend generates Meet link when blank + type=VIDEO
+          notes:        form.notes,
+        };
+        const iv = await scheduleInterview(application.id, payload);
+        setResult(iv);
+        setPhase('success');
+      }
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || 'Scheduling failed. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [form, application.id]);
+  }, [form, application.id, existingInterview]);
 
   /* ── Copy link ──────────────────────────────────────────── */
   const copyLink = async (link) => {

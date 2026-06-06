@@ -778,6 +778,7 @@ export default function ApplicationDetailPage() {
             applicant: profile?.fullName || app.applicantName || `Candidate #${app.seekerId}`,
             job: job?.title || displayJobTitle,
           }}
+          existingInterview={app.interview}
           onClose={() => setShowScheduler(false)}
           onScheduled={(newIv) => {
             setShowScheduler(false);

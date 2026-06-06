@@ -26,9 +26,13 @@ apiClient.interceptors.response.use(
   (error) => {
     // 1. Handle Authentication Errors (401)
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login?expired=true';
+      // Don't interfere with OAuth2 redirect flow — loginWithToken handles its own errors
+      const isOAuth2Flow = window.location.pathname.includes('/oauth2/redirect');
+      if (!isOAuth2Flow) {
+        localStorage.removeItem('token');
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login?expired=true';
+        }
       }
     }
 

@@ -458,51 +458,9 @@ export default function EmployerDashboard() {
                         <div className="ds-job-stats" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Users size={11} /> {job.applications} applicants
-                            <button
-                              onClick={(e) => { e.stopPropagation(); incrementJobApps(job.id); }}
-                              className="ds-btn ds-btn-ghost"
-                              style={{
-                                padding: '2px 6px',
-                                fontSize: '10px',
-                                height: '20px',
-                                minWidth: 'auto',
-                                background: '#f3f4f6',
-                                borderRadius: '4px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '1px solid #e5e7eb',
-                                color: '#374151',
-                                fontWeight: 700,
-                              }}
-                              title="Simulate/Increment applications (+1)"
-                            >
-                              +1 App
-                            </button>
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Eye size={11} /> {job.views} views
-                            <button
-                              onClick={(e) => { e.stopPropagation(); incrementJobViews(job.id); }}
-                              className="ds-btn ds-btn-ghost"
-                              style={{
-                                padding: '2px 6px',
-                                fontSize: '10px',
-                                height: '20px',
-                                minWidth: 'auto',
-                                background: '#f3f4f6',
-                                borderRadius: '4px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '1px solid #e5e7eb',
-                                color: '#374151',
-                                fontWeight: 700,
-                              }}
-                              title="Increment views (+1)"
-                            >
-                              +1 View
-                            </button>
                           </span>
                         </div>
                         <div className="ds-job-progress">
