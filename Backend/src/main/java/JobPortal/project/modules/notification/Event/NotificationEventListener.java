@@ -1,6 +1,6 @@
-package JobPortal.project.modules.notification.Event;
+package JobPortal.project.modules.notification.event;
 
-import JobPortal.project.modules.notification.Service.NotificationService;
+import JobPortal.project.modules.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;

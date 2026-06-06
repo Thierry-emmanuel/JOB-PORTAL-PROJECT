@@ -1,17 +1,17 @@
 package JobPortal.project.modules.auth.service;
 
 import JobPortal.project.enums.Role;
-import JobPortal.project.modules.auth.Model.User;
-import JobPortal.project.modules.auth.Model.RoleEntity;
+import JobPortal.project.modules.auth.model.User;
+import JobPortal.project.modules.auth.model.RoleEntity;
 import JobPortal.project.modules.auth.dto.LoginRequest;
 import JobPortal.project.modules.auth.dto.RegisterRequest;
 import JobPortal.project.modules.auth.dto.AuthResponse;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import JobPortal.project.modules.auth.repository.RoleRepository;
 import JobPortal.project.security.jwt.JwtUtils;
-import JobPortal.project.modules.userprofile.Model.Employer;
-import JobPortal.project.modules.userprofile.Model.JobSeeker;
-import JobPortal.project.modules.userprofile.Model.Admin;
+import JobPortal.project.modules.userprofile.model.Employer;
+import JobPortal.project.modules.userprofile.model.JobSeeker;
+import JobPortal.project.modules.userprofile.model.Admin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.context.ApplicationEventPublisher;
-import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.modules.notification.event.NotificationEvent;
 import JobPortal.project.enums.NotificationType;
 
 @Service

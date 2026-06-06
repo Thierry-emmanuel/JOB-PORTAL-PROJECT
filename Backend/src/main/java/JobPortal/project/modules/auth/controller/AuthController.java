@@ -3,7 +3,7 @@ package JobPortal.project.modules.auth.controller;
 import JobPortal.project.modules.auth.dto.LoginRequest;
 import JobPortal.project.modules.auth.dto.RegisterRequest;
 import JobPortal.project.modules.auth.dto.AuthResponse;
-import JobPortal.project.modules.notification.Service.MailService;
+import JobPortal.project.modules.notification.service.MailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

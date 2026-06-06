@@ -1,9 +1,9 @@
-package JobPortal.project.modules.notification.Controller;
+package JobPortal.project.modules.notification.controller;
 
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.modules.auth.repository.UserRepository;
-import JobPortal.project.modules.notification.Model.Notification;
-import JobPortal.project.modules.notification.Service.NotificationService;
+import JobPortal.project.modules.notification.model.Notification;
+import JobPortal.project.modules.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

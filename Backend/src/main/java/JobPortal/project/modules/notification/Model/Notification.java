@@ -1,6 +1,6 @@
-package JobPortal.project.modules.notification.Model;
+package JobPortal.project.modules.notification.model;
 
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

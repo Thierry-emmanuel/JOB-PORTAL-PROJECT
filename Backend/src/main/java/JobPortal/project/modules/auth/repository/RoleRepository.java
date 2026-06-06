@@ -1,6 +1,6 @@
 package JobPortal.project.modules.auth.repository;
 
-import JobPortal.project.modules.auth.Model.RoleEntity;
+import JobPortal.project.modules.auth.model.RoleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

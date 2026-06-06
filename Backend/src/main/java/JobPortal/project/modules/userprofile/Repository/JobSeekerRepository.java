@@ -1,6 +1,6 @@
-package JobPortal.project.modules.userprofile.Repository;
+package JobPortal.project.modules.userprofile.repository;
 
-import JobPortal.project.modules.userprofile.Model.JobSeeker;
+import JobPortal.project.modules.userprofile.model.JobSeeker;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

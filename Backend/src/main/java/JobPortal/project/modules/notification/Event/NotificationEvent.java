@@ -1,6 +1,6 @@
-package JobPortal.project.modules.notification.Event;
+package JobPortal.project.modules.notification.event;
 
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.enums.NotificationType;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;

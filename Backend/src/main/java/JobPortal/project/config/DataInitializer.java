@@ -1,13 +1,13 @@
 package JobPortal.project.config;
 
-import JobPortal.project.modules.auth.Model.Permission;
-import JobPortal.project.modules.auth.Model.RoleEntity;
+import JobPortal.project.modules.auth.model.Permission;
+import JobPortal.project.modules.auth.model.RoleEntity;
 import JobPortal.project.modules.auth.repository.RoleRepository;
 import JobPortal.project.modules.auth.repository.PermissionRepository;
 import JobPortal.project.modules.auth.repository.UserRepository;
-import JobPortal.project.modules.userprofile.Model.Employer;
-import JobPortal.project.modules.userprofile.Model.JobSeeker;
-import JobPortal.project.modules.userprofile.Model.Admin;
+import JobPortal.project.modules.userprofile.model.Employer;
+import JobPortal.project.modules.userprofile.model.JobSeeker;
+import JobPortal.project.modules.userprofile.model.Admin;
 import JobPortal.project.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +64,7 @@ public class DataInitializer implements CommandLineRunner {
         });
     }
 
-    private <T extends JobPortal.project.modules.auth.Model.User> void createTestUserIfNotFound(
+    private <T extends JobPortal.project.modules.auth.model.User> void createTestUserIfNotFound(
             String email, String fullName, Role role, RoleEntity roleEntity, Class<T> type) {
         if (userRepository.existsByEmail(email)) {
             return; // already exists — skip

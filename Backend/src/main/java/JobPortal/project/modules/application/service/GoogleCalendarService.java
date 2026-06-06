@@ -2,7 +2,7 @@ package JobPortal.project.modules.application.service;
 
 import JobPortal.project.modules.application.model.Interview;
 import JobPortal.project.modules.auth.repository.UserRepository;
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;

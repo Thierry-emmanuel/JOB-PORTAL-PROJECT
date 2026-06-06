@@ -1,7 +1,7 @@
-package JobPortal.project.modules.notification.Repository;
+package JobPortal.project.modules.notification.repository;
 
-import JobPortal.project.modules.auth.Model.User;
-import JobPortal.project.modules.notification.Model.Notification;
+import JobPortal.project.modules.auth.model.User;
+import JobPortal.project.modules.notification.model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

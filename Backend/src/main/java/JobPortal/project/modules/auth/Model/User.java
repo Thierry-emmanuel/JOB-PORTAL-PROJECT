@@ -1,4 +1,4 @@
-package JobPortal.project.modules.auth.Model;
+package JobPortal.project.modules.auth.model;
 
 import JobPortal.project.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -26,12 +26,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
-import JobPortal.project.JobListing.entity.JobListing;
-import JobPortal.project.JobListing.repository.JobListingRepository;
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.joblisting.entity.JobListing;
+import JobPortal.project.modules.joblisting.repository.JobListingRepository;
+import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
-import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.modules.notification.event.NotificationEvent;
 import JobPortal.project.enums.NotificationType;
 import JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest;
 import java.util.UUID;

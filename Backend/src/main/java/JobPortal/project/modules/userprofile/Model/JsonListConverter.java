@@ -1,4 +1,4 @@
-package JobPortal.project.modules.userprofile.Model;
+package JobPortal.project.modules.userprofile.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

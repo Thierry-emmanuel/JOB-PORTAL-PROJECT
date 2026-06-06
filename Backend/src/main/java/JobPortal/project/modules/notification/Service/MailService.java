@@ -1,4 +1,4 @@
-package JobPortal.project.modules.notification.Service;
+package JobPortal.project.modules.notification.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

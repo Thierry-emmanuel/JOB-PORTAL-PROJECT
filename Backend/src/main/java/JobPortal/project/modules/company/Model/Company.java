@@ -1,7 +1,7 @@
-package JobPortal.project.modules.company.Model;
+package JobPortal.project.modules.company.model;
 
-import JobPortal.project.modules.company.Enum.CompanySize;
-import JobPortal.project.modules.userprofile.Model.Employer;
+import JobPortal.project.modules.company.enums.CompanySize;
+import JobPortal.project.modules.userprofile.model.Employer;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,8 +1,8 @@
-package JobPortal.project.modules.userprofile.Service;
+package JobPortal.project.modules.userprofile.service;
 
-import JobPortal.project.modules.userprofile.Model.Employer;
-import JobPortal.project.modules.userprofile.Repository.EmployerRepository;
-import JobPortal.project.modules.notification.Event.NotificationEvent;
+import JobPortal.project.modules.userprofile.model.Employer;
+import JobPortal.project.modules.userprofile.repository.EmployerRepository;
+import JobPortal.project.modules.notification.event.NotificationEvent;
 import JobPortal.project.enums.NotificationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;

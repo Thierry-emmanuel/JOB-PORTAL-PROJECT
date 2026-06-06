@@ -1,7 +1,7 @@
-package JobPortal.project.modules.userprofile.Controller;
+package JobPortal.project.modules.userprofile.controller;
 
-import JobPortal.project.modules.userprofile.Model.Admin;
-import JobPortal.project.modules.userprofile.Service.AdminService;
+import JobPortal.project.modules.userprofile.model.Admin;
+import JobPortal.project.modules.userprofile.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

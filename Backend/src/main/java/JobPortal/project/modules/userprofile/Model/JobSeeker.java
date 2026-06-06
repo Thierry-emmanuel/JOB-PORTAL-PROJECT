@@ -1,7 +1,7 @@
-package JobPortal.project.modules.userprofile.Model;
+package JobPortal.project.modules.userprofile.model;
 
 import JobPortal.project.enums.Role;
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

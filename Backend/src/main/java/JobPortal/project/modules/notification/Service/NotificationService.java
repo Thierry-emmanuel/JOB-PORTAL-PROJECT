@@ -1,9 +1,9 @@
-package JobPortal.project.modules.notification.Service;
+package JobPortal.project.modules.notification.service;
 
-import JobPortal.project.modules.auth.Model.User;
+import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.enums.NotificationType;
-import JobPortal.project.modules.notification.Model.Notification;
-import JobPortal.project.modules.notification.Repository.NotificationRepository;
+import JobPortal.project.modules.notification.model.Notification;
+import JobPortal.project.modules.notification.repository.NotificationRepository;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import JobPortal.project.enums.Role;
 import lombok.RequiredArgsConstructor;
