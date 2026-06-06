@@ -8,17 +8,12 @@ import { useTranslation } from 'react-i18next';
 export default function KoraNav() {
   const { user, logout, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
-  const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
+  // Nav is always transparent — no scroll listener needed
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -107,19 +102,9 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
-  // Blur page content under nav when any link is active (pro frosted-glass effect)
   const hasActive = navLinks.some(({ to }) => isActive(to));
-  useEffect(() => {
-    if (hasActive) {
-      document.body.classList.add('kn-page-active');
-    } else {
-      document.body.classList.remove('kn-page-active');
-    }
-    return () => document.body.classList.remove('kn-page-active');
-  }, [hasActive]);
 
   const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
-  const isTransparentHeaderPage = true;
 
   const spaceClass = isEmployeeSpace ? ' kn-nav--employee' : isEmployerSpace ? ' kn-nav--employer' : isAdminSpace ? ' kn-nav--admin' : ' kn-nav--public';
 
@@ -134,7 +119,7 @@ export default function KoraNav() {
   return (
     <>
       <nav
-        className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}${hasActive ? ' kn-nav--has-active' : ''}`}
+        className={`kn-nav${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}${hasActive ? ' kn-nav--has-active' : ''}`}
         aria-label="Main navigation"
       >
         <div className="kn-inner">

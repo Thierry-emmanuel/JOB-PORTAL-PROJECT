@@ -119,25 +119,42 @@
 /* ══════════════════════════════════════════════════════════════════════════════
    KoraNav — shared sticky top navigation bar
    ══════════════════════════════════════════════════════════════════════════════ */
+/* ── Navbar — always fixed, always frosted glass ───────────────── */
 .kn-nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  width: 100%;
   z-index: 999;
-  background: transparent;
   padding: 0 48px;
-  border-bottom: 1px solid transparent;
-  transition: all 0.3s ease;
   font-family: var(--kora-font);
+
+  /* Default: fully transparent so hero pages bleed through */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  /* backdrop-filter off by default — content NOT blurred on hero */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  transition:
+    background      0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow      0.4s ease,
+    border-color    0.4s ease,
+    backdrop-filter 0.4s ease;
 }
-.kn-nav--scrolled {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-bottom-color: transparent !important;
-  box-shadow: none !important;
-}
+
+/* Scrolled: frosted glass panel appears */
+/* .kn-nav--scrolled removed — nav is always transparent, no scroll state */
+
+/* Non-hero pages (dashboards, auth, detail pages):
+   glass is immediate, no need to scroll for it */
+/* All spaces start transparent — glass appears on scroll via .kn-nav--scrolled */
+
+/* No whitespace gap — hero pages start at top:0 and slide
+   under the transparent nav.  Dashboards/forms/detail pages
+   handle their own top padding locally via var(--kora-nav-h). */
 
 /* ── Pro active-state frosted glass nav ────────────────────────────
    When any nav link is active (.kn-nav--has-active):
@@ -184,43 +201,29 @@
   to   { transform: scaleX(1); opacity: 1; }
 }
 
-/* 2 ▸ Soft depth-blur on page content below the nav */
-body.kn-page-active > *:not(.kn-nav):not(#root) {
-  /* blur only the background — not the nav itself */
-}
-
-/* Target the app root so React portal siblings are unaffected */
-body.kn-page-active #root > *:not(nav):not([aria-label="Main navigation"]) {
-  filter: blur(0px);
-  transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* The blur only activates when the mouse leaves the nav area –
-   we achieve this with a subtle always-on effect scoped to the
-   page hero / top section, not the full document (which would
-   be jarring). We use a ::before overlay on the html element
-   that blurs the area behind the nav. */
-body.kn-page-active::before {
+/* Nav blur strip — ::after pseudo sits behind nav content and blurs
+   the page content visible through the transparent navbar.
+   Works on hero pages where the nav is transparent.            */
+.kn-nav::after {
   content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--kora-nav-h, 72px);
-  /* Isolate blurring to a thin strip just behind the nav bar */
-  backdrop-filter: blur(0px);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   pointer-events: none;
-  z-index: 998; /* just under the nav at 999 */
+  /* Default: no blur on transparent hero nav */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: backdrop-filter 0.4s ease;
 }
 
-/* Blurred zone: thin strip of page content immediately below the
-   nav bar — gives a "depth plane" feeling without blurring the
-   whole page. */
-body.kn-page-active .kn-hero-blur-target,
-body.kn-page-active [data-nav-blur="true"] {
-  transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: blur(2px) brightness(0.97);
+/* On scroll: the ::after provides the blur, the nav bg provides
+   the frosted tint */
+.kn-nav--scrolled::after {
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
 }
+
+
 
 /* ── Scroll-aware refinement: once scrolled, deepen the glass ──── */
 .kn-nav--has-active.kn-nav--scrolled {
@@ -233,20 +236,18 @@ body.kn-page-active [data-nav-blur="true"] {
     0 2px 12px 0 rgba(0, 0, 0, 0.07) !important;
 }
 
-/* ── Employer space: tinted warm glass ─────────────────────────── */
-.kn-nav--employer.kn-nav--has-active {
-  background: rgba(255, 248, 240, 0.80) !important;
-  border-bottom-color: rgba(234, 110, 15, 0.18) !important;
-}
-
-/* ── Employee / public space: cool green-tinted glass ──────────── */
-.kn-nav--employee.kn-nav--has-active,
-.kn-nav--public.kn-nav--has-active {
-  background: rgba(240, 253, 244, 0.78) !important;
-  border-bottom-color: rgba(26, 92, 46, 0.14) !important;
-}
-
+/* No tinted backgrounds — transparent everywhere */
 /* ── Light text variant on dark hero (transparent overlay pages) ─ */
+.kn-nav--light-text:not(.kn-nav--scrolled) {
+  /* On dark hero: stay fully transparent so the hero image shows.
+     Only text color adjustments apply (handled further below). */
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+
 .kn-nav--light-text.kn-nav--has-active:not(.kn-nav--scrolled) {
   background: rgba(0, 0, 0, 0.38) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
@@ -266,8 +267,9 @@ body.kn-page-active [data-nav-blur="true"] {
   background: #fff;
   box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.55);
 }
+/* padding-top handled globally by #root — no per-page override needed */
 .ap-page, .jd-page, .insights-root {
-  padding-top: var(--kora-nav-h, 72px);
+  padding-top: 0;
 }
 .kn-lang-btn {
   background: rgba(0, 0, 0, 0.05);
