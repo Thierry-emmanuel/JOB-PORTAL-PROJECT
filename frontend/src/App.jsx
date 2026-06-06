@@ -52,15 +52,15 @@ function EmployerJobsManager() {
 }
 
 // ── ProtectedRoute ─────────────────────────────────────────
-// ✅ FIX 4: Unified prop — always use `role` (string).
+// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 4: Unified prop — always use `role` (string).
 //    The AdminDashboard route was accidentally using `allowedRoles` (an array)
 //    which this component never read, so the role check was silently skipped
 //    and any authenticated user could access /admin/dashboard.
 //
-// ✅ FIX 5: The backend returns role as "ROLE_ADMIN" in AuthResponse.role.
+// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 5: The backend returns role as "ROLE_ADMIN" in AuthResponse.role.
 //    Normalise both sides before comparing so "ROLE_ADMIN" === "ADMIN" works.
 //
-// ✅ FIX 6: Don't render {!loading && children} at the provider level —
+// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 6: Don't render {!loading && children} at the provider level —
 //    the loading flag is only true during a login() call, not on mount,
 //    so wrapping children caused a blank screen on every page load.
 //    (Fixed in AuthContext — loading is always false outside login()).
@@ -182,6 +182,7 @@ function AnimatedRoutes() {
 }
 
 import KoraNav from "./components/KoraNav";
+import { CheckCircle2 } from 'lucide-react';
 
 // ── App Content ────────────────────────────────────────────
 function AppContent() {

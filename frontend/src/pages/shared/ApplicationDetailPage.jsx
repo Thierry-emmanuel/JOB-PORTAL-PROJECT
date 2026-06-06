@@ -1,13 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  ArrowLeft, Calendar, Clock, MapPin, Mail, Phone,
-  ExternalLink, FileText, Check, CalendarClock, Award,
-  Briefcase, Users, DollarSign, Globe, Building2,
-  ClipboardList, Download, BookOpen, Trash2, Video,
-  X, AlertCircle, ShieldAlert, CheckCircle2, MessageSquare,
-  ArrowUpRight, User, Star
-} from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowUpRight, Award, BookOpen, Briefcase, Building2, Calendar, CalendarClock, Check, CheckCircle2, ClipboardList, Clock, DollarSign, Download, ExternalLink, FileText, Globe, Mail, MapPin, MessageSquare, PartyPopper, Phone, ShieldAlert, Star, Trash2, User, Users, Video, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
   getApplication,
@@ -25,7 +18,7 @@ const STATUS = {
   APPLIED:             { bg: '#EFF6FF', color: '#1E40AF', dot: '#3B82F6', label: 'Applied',            icon: <FileText size={12}/> },
   SHORTLISTED:         { bg: '#FAF5FF', color: '#6B21A8', dot: '#A855F7', label: 'Shortlisted',        icon: <Star size={12}/> },
   INTERVIEW_SCHEDULED: { bg: '#FFF7ED', color: '#C2410C', dot: '#F97316', label: 'Interview Scheduled', icon: <CalendarClock size={12}/> },
-  HIRED:               { bg: '#ECFDF5', color: '#065F46', dot: '#10B981', label: 'Hired 🎉',           icon: <CheckCircle2 size={12}/> },
+  HIRED:               { bg: '#ECFDF5', color: '#065F46', dot: '#10B981', label: 'Hired <PartyPopper size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',           icon: <CheckCircle2 size={12}/> },
   REJECTED:            { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444', label: 'Not Selected',       icon: <X size={12}/> },
 };
 const DEFAULT_STATUS = { bg: '#F3F4F6', color: '#374151', dot: '#9CA3AF', label: 'Pending', icon: <Clock size={12}/> };

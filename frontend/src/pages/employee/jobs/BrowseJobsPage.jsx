@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, Briefcase, SlidersHorizontal, ChevronRight, Clock, X, ChevronDown } from "lucide-react";
+import { Briefcase, ChevronDown, ChevronRight, Clock, DollarSign, GraduationCap, MapPin, Search, SlidersHorizontal, Tag, X } from 'lucide-react';
 import EmployeeLayout from "../../../layouts/EmployeeLayout";
 import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
 import { getJobs, getCategories } from "../../../api/jobs";
@@ -141,11 +141,11 @@ export default function BrowseJobsPage() {
         <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
           {[
             search    && { label: `"${search}"`,  clear: () => { setSearch('');    fetchJobs(1, { search:'', location, type, category, experienceLevel: expLevel, salaryMin }); } },
-            location  && { label: `📍 ${location}`, clear: () => { setLocation(''); fetchJobs(1, { search, location:'', type, category, experienceLevel: expLevel, salaryMin }); } },
+            location  && { label: `<MapPin size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> ${location}`, clear: () => { setLocation(''); fetchJobs(1, { search, location:'', type, category, experienceLevel: expLevel, salaryMin }); } },
             type      && { label: type.replace('_',' '), clear: () => { setType('');   fetchJobs(1, { search, location, type:'', category, experienceLevel: expLevel, salaryMin }); } },
-            category  && { label: `🏷 ${categories.find(c => c.id === category)?.name || category}`, clear: () => { setCategory(''); fetchJobs(1, { search, location, type, category:'', experienceLevel: expLevel, salaryMin }); } },
-            expLevel  && { label: `🎓 ${expLevel}`, clear: () => { setExpLevel(''); fetchJobs(1, { search, location, type, category, experienceLevel:'', salaryMin }); } },
-            salaryMin && { label: `💰 ≥ ${Number(salaryMin).toLocaleString()} XAF`, clear: () => { setSalaryMin(''); fetchJobs(1, { search, location, type, category, experienceLevel: expLevel, salaryMin:'' }); } },
+            category  && { label: `<Tag size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> ${categories.find(c => c.id === category)?.name || category}`, clear: () => { setCategory(''); fetchJobs(1, { search, location, type, category:'', experienceLevel: expLevel, salaryMin }); } },
+            expLevel  && { label: `<GraduationCap size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> ${expLevel}`, clear: () => { setExpLevel(''); fetchJobs(1, { search, location, type, category, experienceLevel:'', salaryMin }); } },
+            salaryMin && { label: `<DollarSign size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> ≥ ${Number(salaryMin).toLocaleString()} XAF`, clear: () => { setSalaryMin(''); fetchJobs(1, { search, location, type, category, experienceLevel: expLevel, salaryMin:'' }); } },
           ].filter(Boolean).map(chip => (
             <span key={chip.label} style={{ display:'flex', alignItems:'center', gap:5, background:'#E8F5EE', color:'#1A5C2E', border:'1px solid rgba(26,92,46,0.25)', borderRadius:20, padding:'4px 10px', fontSize:12, fontWeight:600 }}>
               {chip.label}

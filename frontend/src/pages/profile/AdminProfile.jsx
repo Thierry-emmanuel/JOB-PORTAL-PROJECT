@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  Shield, Users, Briefcase, BarChart2, Bell, Settings,
-  LogOut, Edit2, CheckCircle, XCircle, AlertCircle,
-  TrendingUp, Eye, Trash2, UserCheck, Search, KeyRound, PieChart, X, Camera
-} from "lucide-react";
+import { AlertCircle, AlertTriangle, BarChart2, Bell, Briefcase, Camera, CheckCircle, Edit2, Eye, KeyRound, LogOut, PieChart, Search, Settings, Shield, Trash2, TrendingUp, UserCheck, Users, X, XCircle } from 'lucide-react';
 import koraLogo from "../../assets/absolute-size-logo.png";
 import ResetPasswordModal from "../../components/profile/ResetPasswordModal";
 import "../../styles/profile.css";
@@ -21,7 +17,7 @@ function ConfirmModal({ open, title, body, onConfirm, onCancel }) {
       <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"#fff", borderRadius:16, padding:24, width:"min(360px,90vw)", zIndex:2001, boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
           <div style={{ width:40, height:40, borderRadius:10, background:"#FEF2F2", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <span style={{ fontSize:18 }}>⚠️</span>
+            <span style={{ fontSize:18 }}><AlertTriangle size={16} style={{display:"inline-block",verticalAlign:"middle"}} />️</span>
           </div>
           <h3 style={{ fontSize:15, fontWeight:700, margin:0, color:"#111827" }}>{title}</h3>
         </div>

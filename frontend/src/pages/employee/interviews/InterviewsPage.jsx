@@ -43,7 +43,7 @@ function typeConfig(type) {
 
 function statusConfig(iv) {
   const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
-  if (iv.result === 'PASSED')  return { bg:'#ecfdf5', color:'#065f46', label:'Passed ✓',   ring:'#86efac' };
+  if (iv.result === 'PASSED')  return { bg:'#ecfdf5', color:'#065f46', label:'Passed <Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',   ring:'#86efac' };
   if (iv.result === 'FAILED')  return { bg:'#fef2f2', color:'#991b1b', label:'Not Passed', ring:'#fca5a5' };
   if (iv.result === 'NO_SHOW') return { bg:'#fff7ed', color:'#c2410c', label:'No Show',    ring:'#fed7aa' };
   if (!isPast)                 return { bg:'#eff6ff', color:'#1e40af', label:'Upcoming',   ring:'#bfdbfe' };

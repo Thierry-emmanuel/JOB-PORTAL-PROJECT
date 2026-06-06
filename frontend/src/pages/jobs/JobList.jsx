@@ -8,6 +8,7 @@ import JobFilters from '../../components/jobs/JobFilters';
 import Pagination from '../../components/jobs/Pagination';
 import CompanyModal from '../../components/jobs/CompanyModal';
 import '../../styles/job-list.css';
+import { AlertTriangle, Search } from 'lucide-react';
 
 const PAGE_SIZE = 6;
 
@@ -142,7 +143,7 @@ export default function JobList() {
         {/* Error */}
         {error && (
           <div className="jl-error" role="alert">
-            <span aria-hidden="true">⚠️</span>
+            <span aria-hidden="true"><AlertTriangle size={16} style={{display:"inline-block",verticalAlign:"middle"}} />️</span>
             {error}
             <button className="jl-retry-btn" onClick={handleRetry}>
               {t('common.retry')}
@@ -173,7 +174,7 @@ export default function JobList() {
         {/* Empty state */}
         {!loading && !error && jobs.length === 0 && (
           <div className="jl-empty" role="status">
-            <span className="jl-empty-icon" aria-hidden="true">🔍</span>
+            <span className="jl-empty-icon" aria-hidden="true"><Search size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
             <h2>{t('jobs.no_jobs_match')}</h2>
             <p>{t('jobs.adjust_filters')}</p>
             <button

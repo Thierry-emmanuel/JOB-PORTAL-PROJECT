@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import {
-  MapPin, Briefcase, DollarSign, Clock, Bookmark, BookmarkCheck,
-  ArrowRight, Star, Zap,
-} from 'lucide-react';
+import { ArrowRight, Bookmark, BookmarkCheck, Briefcase, Check, Clock, DollarSign, MapPin, Star, Zap } from 'lucide-react';
 import { saveJob } from '../../api/jobs';
 
 /**
@@ -257,7 +254,7 @@ export default function JobCard({
             disabled={job.applied}
             aria-label={job.applied ? `Already applied to ${job.title}` : `Apply to ${job.title}`}
           >
-            {job.applied ? '✓ Applied' : 'Apply Now'}
+            {job.applied ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Applied' : 'Apply Now'}
           </button>
         </div>
       </div>

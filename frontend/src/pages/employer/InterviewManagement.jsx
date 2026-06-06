@@ -103,7 +103,7 @@ function ResultModal({ interview, onSave, onClose }) {
                 color: result === r ? (r === 'PASSED' ? '#065F46' : '#991B1B') : '#6B7280',
                 fontSize:14, fontWeight:700, cursor:'pointer',
               }}>
-                {r === 'PASSED' ? '✓ Passed' : '✗ Failed'}
+                {r === 'PASSED' ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Passed' : '<X size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Failed'}
               </button>
             ))}
           </div>

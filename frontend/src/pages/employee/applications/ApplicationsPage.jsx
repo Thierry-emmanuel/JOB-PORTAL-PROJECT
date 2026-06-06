@@ -5,13 +5,7 @@
  */
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  Briefcase, Clock, ChevronRight, AlertCircle, RefreshCw, Eye,
-  CheckCircle2, XCircle, Star, FileText, Video, Phone, MapPin,
-  CalendarCheck, ArrowUpRight, Inbox, Search, X, ClipboardList,
-  DollarSign, User, Building2, CalendarDays, MessageSquare,
-  Mail, Download, Globe
-} from 'lucide-react';
+import { AlertCircle, ArrowUpRight, Briefcase, Building2, CalendarCheck, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Clock, DollarSign, Download, Eye, FileText, Globe, Inbox, Mail, MapPin, MessageSquare, PartyPopper, Phone, RefreshCw, Search, Star, User, Video, X, XCircle } from 'lucide-react';
 import EmployeeLayout from '../../../layouts/EmployeeLayout';
 import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
 import { useAuth } from '../../../context/AuthContext';
@@ -24,7 +18,7 @@ const STATUS = {
   APPLIED:             { bg:'#EFF6FF', color:'#1E40AF', dot:'#3B82F6', label:'Applied',            icon:<FileText size={12}/> },
   SHORTLISTED:         { bg:'#FAF5FF', color:'#6B21A8', dot:'#A855F7', label:'Shortlisted',        icon:<Star size={12}/> },
   INTERVIEW_SCHEDULED: { bg:'#FFF7ED', color:'#C2410C', dot:'#F97316', label:'Interview Scheduled', icon:<CalendarCheck size={12}/> },
-  HIRED:               { bg:'#ECFDF5', color:'#065F46', dot:'#10B981', label:'Hired 🎉',           icon:<CheckCircle2 size={12}/> },
+  HIRED:               { bg:'#ECFDF5', color:'#065F46', dot:'#10B981', label:'Hired <PartyPopper size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',           icon:<CheckCircle2 size={12}/> },
   REJECTED:            { bg:'#FEF2F2', color:'#991B1B', dot:'#EF4444', label:'Not Selected',       icon:<XCircle size={12}/> },
 };
 const DEFAULT_STATUS = { bg:'#F3F4F6', color:'#374151', dot:'#9CA3AF', label:'Pending', icon:<Clock size={12}/> };
@@ -261,7 +255,7 @@ export default function ApplicationsPage() {
                   {/* Hired congratulation */}
                   {app.status === 'HIRED' && (
                     <div className="apps-hired-banner">
-                      🎉 Congratulations! You were hired for this position.
+                      <PartyPopper size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Congratulations! You were hired for this position.
                     </div>
                   )}
                 </div>

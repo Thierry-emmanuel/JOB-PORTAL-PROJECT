@@ -1,13 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import {
-  Briefcase, Bookmark, CalendarCheck, Star,
-  ArrowRight, Zap, FileText, AlertCircle,
-  RefreshCw, CheckCircle2, XCircle, Clock,
-  TrendingUp, Search, BarChart2, CheckCircle, X, Eye,
-  Home, User
-} from 'lucide-react';
+import { AlertCircle, ArrowRight, BarChart2, Bookmark, Briefcase, CalendarCheck, Check, CheckCircle, CheckCircle2, Clock, Eye, FileText, Hand, Home, RefreshCw, Search, Star, TrendingUp, User, X, XCircle, Zap } from 'lucide-react';
 import EmployeeLayout from '../../layouts/EmployeeLayout';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import JobCard from '../../components/jobs/JobCard';
@@ -206,7 +200,7 @@ export default function EmployeeDashboard() {
       <div className="ds-hero">
         <div className="ds-hero-text">
           <h1 className="ds-hero-title">
-            {getGreeting()}, <span className="ds-hero-name">{firstName}</span> 👋
+            {getGreeting()}, <span className="ds-hero-name">{firstName}</span> <Hand size={16} style={{display:"inline-block",verticalAlign:"middle"}} />
           </h1>
           <p className="ds-hero-sub">
             {completion < 60
@@ -262,7 +256,7 @@ export default function EmployeeDashboard() {
         <StatCard icon={FileText}     value={applications.length} label="Applications" sub={pendingApps > 0 ? `${pendingApps} under review` : 'None pending'} accent="#1A5C2E" to="/employee/applications" />
         <StatCard icon={Bookmark}     value={5}                   label="Saved Jobs"   sub="View your wishlist"  accent="#F97316" to="/employee/saved" />
         <StatCard icon={CalendarCheck} value={upcomingInter}      label="Interviews"   sub={upcomingInter > 0 ? 'Scheduled upcoming' : 'None yet'} accent="#3B82F6" to="/employee/interviews" />
-        <StatCard icon={Star}         value={`${completion}%`}   label="Profile Score" sub={completion < 100 ? `${missing.length} items missing` : '✓ Complete!'} accent="#8B5CF6" to="/profile/job-seeker" />
+        <StatCard icon={Star}         value={`${completion}%`}   label="Profile Score" sub={completion < 100 ? `${missing.length} items missing` : '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Complete!'} accent="#8B5CF6" to="/profile/job-seeker" />
       </div>
 
       {/* ═══ PROFILE NUDGE ══════════════════════════════════ */}

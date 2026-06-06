@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Briefcase, Calendar, Check, DollarSign, MapPin, X } from 'lucide-react';
 
 /**
  * CompanyModal
@@ -74,7 +75,7 @@ export default function CompanyModal({ job, onClose, onApply }) {
           onClick={onClose}
           aria-label="Close job details"
         >
-          ✕
+          <X size={16} style={{display:"inline-block",verticalAlign:"middle"}} />
         </button>
 
         {/* Company header */}
@@ -93,10 +94,10 @@ export default function CompanyModal({ job, onClose, onApply }) {
 
         {/* Quick facts */}
         <div className="cm-facts">
-          <div className="cm-fact"><span aria-hidden="true">📍</span> {job.location}</div>
-          <div className="cm-fact"><span aria-hidden="true">💼</span> {job.type}</div>
-          {job.salary && <div className="cm-fact"><span aria-hidden="true">💰</span> {job.salary}</div>}
-          <div className="cm-fact"><span aria-hidden="true">📅</span> Posted {new Date(job.postedAt).toLocaleDateString()}</div>
+          <div className="cm-fact"><span aria-hidden="true"><MapPin size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span> {job.location}</div>
+          <div className="cm-fact"><span aria-hidden="true"><Briefcase size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span> {job.type}</div>
+          {job.salary && <div className="cm-fact"><span aria-hidden="true"><DollarSign size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span> {job.salary}</div>}
+          <div className="cm-fact"><span aria-hidden="true"><Calendar size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span> Posted {new Date(job.postedAt).toLocaleDateString()}</div>
         </div>
 
         {/* Tags */}
@@ -153,7 +154,7 @@ export default function CompanyModal({ job, onClose, onApply }) {
             disabled={job.applied}
             aria-label={job.applied ? 'Already applied' : `Apply to ${job.title}`}
           >
-            {job.applied ? '✓ Already Applied' : 'Apply Now'}
+            {job.applied ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Already Applied' : 'Apply Now'}
           </button>
         </div>
       </div>

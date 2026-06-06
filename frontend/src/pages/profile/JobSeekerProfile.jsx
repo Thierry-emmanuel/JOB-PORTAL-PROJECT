@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { KeyRound, Camera, User, Briefcase, GraduationCap, Code2, Languages, FileText, Edit3, CheckCircle, AlertCircle, X } from "lucide-react";
+import { AlertCircle, Briefcase, Camera, CheckCircle, Code2, Edit3, FileText, GraduationCap, KeyRound, Languages, Lightbulb, MapPin, Phone, User, X } from 'lucide-react';
 import EmployeeLayout from "../../layouts/EmployeeLayout";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import ExperienceSection from "../../components/profile/ExperienceSection";
@@ -214,8 +214,8 @@ export default function JobSeekerProfile() {
             {profile.summary && <p className="kora-header-summary">{profile.summary}</p>}
             <div className="kora-header-meta">
               <span className="kora-meta-chip">{profile.email}</span>
-              {profile.phone && <span className="kora-meta-chip">📞 {profile.phone}</span>}
-              {profile.city && <span className="kora-meta-chip">📍 {profile.city}{profile.region ? `, ${profile.region}` : ''}</span>}
+              {profile.phone && <span className="kora-meta-chip"><Phone size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> {profile.phone}</span>}
+              {profile.city && <span className="kora-meta-chip"><MapPin size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> {profile.city}{profile.region ? `, ${profile.region}` : ''}</span>}
             </div>
           </div>
 
@@ -227,7 +227,7 @@ export default function JobSeekerProfile() {
         {/* Completion nudge */}
         {completion < 100 && missing.length > 0 && (
           <div style={{ margin: '0 32px 24px', background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 18 }}>💡</span>
+            <span style={{ fontSize: 18 }}><Lightbulb size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#92400E', margin: '0 0 2px' }}>Complete your profile to boost visibility</p>
               <p style={{ fontSize: 12, color: '#B45309', margin: 0 }}>Missing: {missing.slice(0, 3).map(i => i.label).join(', ')}{missing.length > 3 ? ` +${missing.length - 3} more` : ''}</p>

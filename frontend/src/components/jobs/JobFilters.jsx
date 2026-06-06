@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Search } from 'lucide-react';
 
 const JOB_TYPES = [
   { label: 'Full-time (CDI)', value: 'CDI' },
@@ -29,7 +30,7 @@ export default function JobFilters({ filters, onChange, onReset }) {
       {/* Search */}
       <div className="jf-search-wrap">
         <label htmlFor="jf-search" className="sr-only">Search jobs</label>
-        <span className="jf-search-icon" aria-hidden="true">🔍</span>
+        <span className="jf-search-icon" aria-hidden="true"><Search size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
         <input
           id="jf-search"
           ref={searchRef}

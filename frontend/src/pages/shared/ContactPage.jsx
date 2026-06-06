@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Check, Lightbulb, Mail, MapPin, Phone, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function ContactPage() {
@@ -46,7 +46,7 @@ export default function ContactPage() {
           <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E5E7EB' }}>
             {submitted ? (
               <div style={{ background: '#ECFDF5', border: '1.5px solid #6EE7B7', borderRadius: '12px', padding: '24px', color: '#065F46', textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', marginBottom: '12px' }}>✓</div>
+                <div style={{ fontSize: '36px', marginBottom: '12px' }}><Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></div>
                 <h3 style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>Message Envoyé !</h3>
                 <p style={{ fontSize: '13.5px', lineHeight: 1.5, margin: 0 }}>
                   Votre demande de contact a été transmise avec succès aux administrateurs de Kora. Nous reviendrons vers vous dans les plus brefs délais.
@@ -150,7 +150,7 @@ export default function ContactPage() {
 
             <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                💡 FAQ & Support
+                <Lightbulb size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FAQ & Support
               </h4>
               <p style={{ fontSize: '13px', color: '#6B7280', lineHeight: 1.6, margin: 0 }}>
                 Avant d'envoyer un message pour des questions techniques, vous pouvez vérifier vos alertes ou vos insights de marché dans votre tableau de bord.

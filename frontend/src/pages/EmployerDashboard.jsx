@@ -1,13 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Briefcase, Users, Eye, Star, Bell, X,
-  Plus, ChevronRight, Clock, ArrowUp, ArrowDown,
-  AlertTriangle, AlertCircle, Search, TrendingUp, Edit2,
-  RefreshCw, Video, MapPin, CheckCircle,
-  Mail, Phone, ExternalLink, FileText, Check, Calendar as CalendarIcon, ClipboardList,
-  Home, Globe, BarChart2, Menu, ArrowUpRight
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BarChart2, Bell, Briefcase, Calendar as CalendarIcon, Check, CheckCircle, ChevronRight, ClipboardList, Clock, Edit2, ExternalLink, Eye, FileText, Globe, Hand, Home, Mail, MapPin, Menu, Phone, Plus, RefreshCw, Search, Star, TrendingUp, Users, Video, X } from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';
 import InterviewScheduler from '../components/employer/InterviewScheduler';
 import EmployerSidebar from '../components/employer/EmployerSidebar';
@@ -265,7 +258,7 @@ export default function EmployerDashboard() {
           {/* ── Hero ── */}
           <div className="ds-hero">
             <div className="ds-hero-text">
-              <h1 className="ds-hero-title">Welcome back, {loading ? '…' : firstName} 👋</h1>
+              <h1 className="ds-hero-title">Welcome back, {loading ? '…' : firstName} <Hand size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></h1>
               <p className="ds-hero-sub">Here's what's happening with your job postings today.</p>
             </div>
             <div className="ds-hero-cta" style={{ display: 'flex', gap: 8 }}>

@@ -8,14 +8,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Save, RotateCcw, Plus, Trash2, GripVertical, Eye, EyeOff,
-  Image, Layers, Type, AlignLeft, BarChart3, Palette, Sliders,
-  ChevronDown, ChevronUp, AlertCircle, CheckCircle, Upload,
-  ArrowLeft, ArrowRight, Monitor, Smartphone, RefreshCw,
-  ToggleLeft, ToggleRight, Link, Clock, Zap, Info, Wind,
-  Sparkles, Play, Pause, Camera,
-} from 'lucide-react';
+import { AlertCircle, AlignLeft, ArrowLeft, ArrowRight, BarChart3, Camera, CheckCircle, ChevronDown, ChevronUp, Clock, Eye, EyeOff, GripVertical, Image, Info, Layers, Link, Monitor, Palette, Pause, Play, Plus, RefreshCw, RotateCcw, Save, Sliders, Smartphone, Sparkles, ToggleLeft, ToggleRight, Trash2, Type, Upload, Wind, X, Zap } from 'lucide-react';
 import { fetchAdminHero, saveHeroConfig, resetHeroConfig } from '../../api/hero';
 import '../../styles/hero-editor.css';
 
@@ -644,7 +637,7 @@ export default function HeroEditor({ showToast }) {
           >
             <div className="he-fullpreview-inner" onClick={e => e.stopPropagation()}>
               <button className="he-fullpreview-close" onClick={() => setPreviewFull(false)}>
-                Close Preview ✕
+                Close Preview <X size={16} style={{display:"inline-block",verticalAlign:"middle"}} />
               </button>
               <MiniPreview config={config} viewMode={viewMode} />
             </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Globe, Menu, X } from 'lucide-react';
 import koraLogo from '../assets/absolute-size-logo.png';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -8,12 +8,17 @@ import { useTranslation } from 'react-i18next';
 export default function KoraNav() {
   const { user, logout, isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
+  const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Nav is always transparent — no scroll listener needed
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -102,9 +107,8 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
-  const hasActive = navLinks.some(({ to }) => isActive(to));
-
   const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
+  const isTransparentHeaderPage = true;
 
   const spaceClass = isEmployeeSpace ? ' kn-nav--employee' : isEmployerSpace ? ' kn-nav--employer' : isAdminSpace ? ' kn-nav--admin' : ' kn-nav--public';
 
@@ -119,7 +123,7 @@ export default function KoraNav() {
   return (
     <>
       <nav
-        className={`kn-nav${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}${hasActive ? ' kn-nav--has-active' : ''}`}
+        className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}`}
         aria-label="Main navigation"
       >
         <div className="kn-inner">
@@ -327,7 +331,7 @@ export default function KoraNav() {
             }}
             className="kn-mobile-lang-btn"
           >
-            🌐 {i18n.language === 'en' ? 'Switch to French (FR)' : 'Passer en Anglais (EN)'}
+            <Globe size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> {i18n.language === 'en' ? 'Switch to French (FR)' : 'Passer en Anglais (EN)'}
           </button>
 
           {isAuthenticated ? (
