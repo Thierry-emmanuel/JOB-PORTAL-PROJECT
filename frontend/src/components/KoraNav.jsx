@@ -57,11 +57,12 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
-  const isDarkHeaderPage = location.pathname === '/jobs';
+  const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
+  const isTransparentHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
 
   return (
     <nav
-      className={`kn-nav${scrolled ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}`}
+      className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}`}
       aria-label="Main navigation"
     >
       <div className="kn-inner">

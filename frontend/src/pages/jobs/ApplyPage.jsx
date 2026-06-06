@@ -22,7 +22,7 @@ import {
 import { getJob, applyToJob } from '../../api/jobs';
 import { getJobSeekerProfile } from '../../api/profiles';
 import { useAuth } from '../../context/AuthContext';
-import KoraNav from '../../components/KoraNav';
+
 import '../../styles/apply-page.css';
 
 /* ─── Constants ─────────────────────────────────────────── */
@@ -310,19 +310,19 @@ export default function ApplyPage() {
 
   /* ── Early returns ────────────────────────────────────── */
   if (jobLoading) return (
-    <div className="ap-page"><KoraNav />
+    <div className="ap-page">
       <div className="ap-loading"><div className="ap-spinner" /><p>Loading job details…</p></div>
     </div>
   );
   if (jobError) return (
-    <div className="ap-page"><KoraNav />
+    <div className="ap-page">
       <div className="ap-error" role="alert"><AlertCircle size={24}/><p>{jobError}</p>
         <Link to="/jobs" className="ap-btn ap-btn--primary">Back to jobs</Link>
       </div>
     </div>
   );
   if (job?.applied && !submitted) return (
-    <div className="ap-page"><KoraNav />
+    <div className="ap-page">
       <div className="ap-container ap-container--narrow">
         <div className="ap-state-card">
           <span className="ap-state-icon">✅</span>
@@ -337,7 +337,7 @@ export default function ApplyPage() {
     </div>
   );
   if (submitted) return (
-    <div className="ap-page"><KoraNav />
+    <div className="ap-page">
       <div className="ap-container ap-container--narrow">
         <div className="ap-state-card ap-state-card--success">
           <div className="ap-success-anim">
@@ -649,7 +649,6 @@ export default function ApplyPage() {
   /* ── Main render ──────────────────────────────────────── */
   return (
     <div className="ap-page">
-      <KoraNav />
       <div className="ap-container ap-container--wide">
 
         {/* Back */}

@@ -10,11 +10,12 @@ import {
   CheckCircle2, XCircle, Star, FileText, Video, Phone, MapPin,
   CalendarCheck, ArrowUpRight, Inbox, Search, X, ClipboardList,
   DollarSign, User, Building2, CalendarDays, MessageSquare,
+  Mail, Download, Globe
 } from 'lucide-react';
 import EmployeeLayout from '../../../layouts/EmployeeLayout';
 import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
 import { useAuth } from '../../../context/AuthContext';
-import { getUserApplications } from '../../../api/jobs';
+import { getUserApplications, getJobDetail } from '../../../api/jobs';
 import '../../../styles/employee-dashboard.css';
 import '../../../styles/applications.css';
 
@@ -76,7 +77,7 @@ const TAB_LABELS = {
 };
 
 /* ─── Application Detail Modal ───────────────────────────── */
-function ApplicationDetailModal({ app, onClose }) {
+function ApplicationDetailModal({ app, profile, onClose }) {
   if (!app) return null;
   const s       = STATUS[app.status] || DEFAULT_STATUS;
   const iv      = app.interview;
@@ -102,7 +103,7 @@ function ApplicationDetailModal({ app, onClose }) {
 
   return (
     <div className="appd-backdrop" onClick={handleBackdrop}>
-      <div className="appd-modal" role="dialog" aria-modal="true" aria-label="Application Details">
+      <div className="appd-modal appd-modal--wide" role="dialog" aria-modal="true" aria-label="Application Details">
 
         {/* Header */}
         <div className="appd-header" style={{ borderTop: `4px solid ${s.dot}` }}>
@@ -139,75 +140,176 @@ function ApplicationDetailModal({ app, onClose }) {
 
         {/* Body */}
         <div className="appd-body">
+          <div className="appd-grid">
 
-          {/* Expected Salary */}
-          {app.expectedSalary && (
-            <div className="appd-section">
-              <p className="appd-section-label"><DollarSign size={13}/> Expected Salary</p>
-              <p className="appd-section-value appd-salary">
-                {Number(app.expectedSalary).toLocaleString()} XAF
-              </p>
-            </div>
-          )}
-
-          {/* Cover Letter */}
-          <div className="appd-section">
-            <p className="appd-section-label"><MessageSquare size={13}/> Cover Letter</p>
-            {app.coverLetter ? (
-              <div className="appd-cover-letter">{app.coverLetter}</div>
-            ) : (
-              <p className="appd-empty-field">No cover letter was provided.</p>
-            )}
-          </div>
-
-          {/* Interview info */}
-          {iv && (
-            <div className="appd-section">
-              <p className="appd-section-label"><CalendarCheck size={13}/> Interview Details</p>
-              <div className="appd-iv-card" style={{ borderLeft: `3px solid ${ivType?.color}` }}>
-                <div className="appd-iv-type" style={{ background: ivType?.bg, color: ivType?.color }}>
-                  {ivType?.icon} {ivType?.label}
+            {/* Left Column - Application Info */}
+            <div className="appd-col-left">
+              {/* Expected Salary */}
+              {app.expectedSalary && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><DollarSign size={13}/> Expected Salary</p>
+                  <p className="appd-section-value appd-salary">
+                    {Number(app.expectedSalary).toLocaleString()} XAF
+                  </p>
                 </div>
-                {iv.scheduledAt && (
-                  <div className="appd-iv-row">
-                    <CalendarDays size={12}/>
-                    <span>{fmtDate(iv.scheduledAt)} at {fmtTime(iv.scheduledAt)}</span>
-                  </div>
-                )}
-                {iv.platform && (
-                  <div className="appd-iv-row">
-                    <Building2 size={12}/>
-                    <span>{iv.platform}</span>
-                  </div>
-                )}
-                {iv.meetingLink && (
-                  <a href={iv.meetingLink} target="_blank" rel="noreferrer" className="appd-iv-join">
-                    <Video size={12}/> Join Meeting <ArrowUpRight size={11}/>
-                  </a>
-                )}
-                {iv.feedback && (
-                  <div className="appd-iv-feedback">
-                    <p className="appd-iv-feedback-label">Feedback</p>
-                    <p>{iv.feedback}</p>
-                  </div>
+              )}
+
+              {/* Cover Letter */}
+              <div className="appd-section">
+                <p className="appd-section-label"><MessageSquare size={13}/> Cover Letter</p>
+                {app.coverLetter ? (
+                  <div className="appd-cover-letter">{app.coverLetter}</div>
+                ) : (
+                  <p className="appd-empty-field">No cover letter was provided.</p>
                 )}
               </div>
-            </div>
-          )}
 
-          {/* Hired message */}
-          {app.status === 'HIRED' && (
-            <div className="appd-hired-banner">
-              🎉 Congratulations! You were hired for this position.
-            </div>
-          )}
+              {/* Recruiter Review Notes */}
+              {app.employerReview && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><ClipboardList size={13}/> Recruiter Evaluation Notes</p>
+                  <div className="appd-review-card">
+                    <p className="appd-review-title">Employer Notes</p>
+                    <p className="appd-review-text">{app.employerReview}</p>
+                  </div>
+                </div>
+              )}
 
-          {/* Rejected message */}
-          {app.status === 'REJECTED' && (
-            <div className="appd-rejected-banner">
-              Thank you for applying. Unfortunately, this application was not selected to move forward.
+              {/* Interview info */}
+              {iv && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><CalendarCheck size={13}/> Interview Details</p>
+                  <div className="appd-iv-card" style={{ borderLeft: `3px solid ${ivType?.color}` }}>
+                    <div className="appd-iv-type" style={{ background: ivType?.bg, color: ivType?.color }}>
+                      {ivType?.icon} {ivType?.label}
+                    </div>
+                    {iv.scheduledAt && (
+                      <div className="appd-iv-row">
+                        <CalendarDays size={12}/>
+                        <span>{fmtDate(iv.scheduledAt)} at {fmtTime(iv.scheduledAt)}</span>
+                      </div>
+                    )}
+                    {iv.platform && (
+                      <div className="appd-iv-row">
+                        <Building2 size={12}/>
+                        <span>{iv.platform}</span>
+                      </div>
+                    )}
+                    {iv.meetingLink && (
+                      <a href={iv.meetingLink} target="_blank" rel="noreferrer" className="appd-iv-join">
+                        <Video size={12}/> Join Meeting <ArrowUpRight size={11}/>
+                      </a>
+                    )}
+                    {iv.feedback && (
+                      <div className="appd-iv-feedback">
+                        <p className="appd-iv-feedback-label">Feedback</p>
+                        <p>{iv.feedback}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Hired message */}
+              {app.status === 'HIRED' && (
+                <div className="appd-hired-banner">
+                  🎉 Congratulations! You were hired for this position.
+                </div>
+              )}
+
+              {/* Rejected message */}
+              {app.status === 'REJECTED' && (
+                <div className="appd-rejected-banner">
+                  Thank you for applying. Unfortunately, this application was not selected to move forward.
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Right Column - Seeker Profile & CV */}
+            <div className="appd-col-right">
+              {/* Seeker Info Card */}
+              <div className="appd-section">
+                <p className="appd-section-label"><User size={13}/> Seeker Profile</p>
+                <div className="appd-profile-card">
+                  <div className="appd-profile-header">
+                    <div className="appd-profile-avatar">
+                      {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : (profile?.email ? profile.email.charAt(0).toUpperCase() : '?')}
+                    </div>
+                    <div>
+                      <h4 className="appd-profile-name">{profile?.fullName || 'Candidate'}</h4>
+                      <p className="appd-profile-title">Job Seeker</p>
+                    </div>
+                  </div>
+                  <div className="appd-profile-info">
+                    {profile?.email && (
+                      <div className="appd-info-item">
+                        <Mail size={13}/>
+                        <span>{profile.email}</span>
+                      </div>
+                    )}
+                    {profile?.phone && (
+                      <div className="appd-info-item">
+                        <Phone size={13}/>
+                        <span>{profile.phone}</span>
+                      </div>
+                    )}
+                    {profile?.city && (
+                      <div className="appd-info-item">
+                        <MapPin size={13}/>
+                        <span>{profile.city}{profile.region ? `, ${profile.region}` : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Resume / CV Section */}
+              {profile?.cvUrl && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><FileText size={13}/> Submitted Resume</p>
+                  <div className="appd-cv-card">
+                    <div className="appd-cv-info">
+                      <FileText size={20} className="appd-cv-icon"/>
+                      <span className="appd-cv-name">{profile.cvFileName || 'resume.pdf'}</span>
+                    </div>
+                    <a href={profile.cvUrl} target="_blank" rel="noreferrer" className="appd-cv-btn">
+                      <Download size={12}/> View / Download
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Bio Summary */}
+              {profile?.summary && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><Briefcase size={13}/> Profile Summary</p>
+                  <p className="appd-section-value" style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.6', background: '#f9fafb', padding: '12px', borderRadius: '10px', border: '1px solid #e5e7eb' }}>
+                    {profile.summary}
+                  </p>
+                </div>
+              )}
+
+              {/* Professional links */}
+              {(profile?.linkedInUrl || profile?.portfolioUrl) && (
+                <div className="appd-section">
+                  <p className="appd-section-label"><Globe size={13}/> Professional Links</p>
+                  <div className="appd-links-row">
+                    {profile.linkedInUrl && (
+                      <a href={profile.linkedInUrl} target="_blank" rel="noreferrer" className="appd-link-badge appd-link-badge--linkedin">
+                        LinkedIn <ArrowUpRight size={11}/>
+                      </a>
+                    )}
+                    {profile.portfolioUrl && (
+                      <a href={profile.portfolioUrl} target="_blank" rel="noreferrer" className="appd-link-badge">
+                        Portfolio / Website <ArrowUpRight size={11}/>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
 
         {/* Footer actions */}
@@ -245,7 +347,25 @@ export default function ApplicationsPage() {
     if (!user?.id) return;
     setLoading(true); setError(null);
     getUserApplications(user.id)
-      .then(res => setApps(Array.isArray(res) ? res : res?.content || []))
+      .then(async (res) => {
+        const appsList = Array.isArray(res) ? res : res?.content || [];
+        const enriched = await Promise.all(
+          appsList.map(async (app) => {
+            try {
+              const jobDetail = await getJobDetail(app.jobPostingId);
+              return {
+                ...app,
+                jobTitle: jobDetail.title,
+                companyName: jobDetail.company,
+              };
+            } catch (err) {
+              console.warn(`Could not fetch details for job ${app.jobPostingId}`, err);
+              return app;
+            }
+          })
+        );
+        setApps(enriched);
+      })
       .catch(() => setError('Could not load your applications. Please retry.'))
       .finally(() => setLoading(false));
   }, [user?.id]);
@@ -423,6 +543,7 @@ export default function ApplicationsPage() {
       {selectedApp && (
         <ApplicationDetailModal
           app={selectedApp}
+          profile={profile}
           onClose={() => setSelectedApp(null)}
         />
       )}

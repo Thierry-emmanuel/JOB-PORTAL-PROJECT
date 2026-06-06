@@ -177,6 +177,23 @@ function AnimatedRoutes() {
   );
 }
 
+import KoraNav from "./components/KoraNav";
+
+// ── App Content ────────────────────────────────────────────
+function AppContent() {
+  const location = useLocation();
+  const showNav = !["/login", "/register", "/oauth2/redirect"].includes(location.pathname);
+
+  return (
+    <div className="app-container">
+      {showNav && <KoraNav />}
+      <Suspense fallback={<GlobalLoader />}>
+        <AnimatedRoutes />
+      </Suspense>
+    </div>
+  );
+}
+
 // ── App ────────────────────────────────────────────────────
 export default function App() {
   return (
@@ -184,9 +201,7 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
           <BrowserRouter>
-            <Suspense fallback={<GlobalLoader />}>
-              <AnimatedRoutes />
-            </Suspense>
+            <AppContent />
           </BrowserRouter>
         </NotificationProvider>
       </AuthProvider>

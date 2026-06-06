@@ -171,6 +171,7 @@ export function useEmployerDashboard() {
           avatar:         avatar,
           expectedSalary: app.expectedSalary,
           coverLetter:    app.coverLetter,
+          interview:      app.interview || null,
           // Enriched candidate profile fields for the employer review drawer
           phone:          seekerFull?.phone || null,
           email:          seekerFull?.email || null,

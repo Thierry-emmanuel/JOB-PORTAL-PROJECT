@@ -39,13 +39,15 @@
   background: var(--adm-bg);
   font-family: var(--adm-font);
   color: var(--adm-ink);
+  padding-top: var(--kora-nav-h, 72px);
+  box-sizing: border-box;
 }
 
 /* ── 1. Sidebar Shell ────────────────────────────────────────────────────── */
 .adm-sidebar {
   width: var(--adm-sidebar-w);
   flex-shrink: 0;
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--adm-white);

@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   AreaChart, Area
 } from 'recharts';
-import KoraNav from '../../components/KoraNav';
+
 import { getSalaryByCategory, getDemandTrends } from '../../api/insights';
 import '../../styles/insights.css';
 
@@ -59,7 +59,6 @@ export default function InsightsPage() {
 
   return (
     <div className="insights-root" style={{ minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
-      <KoraNav />
       <div className="insights-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 20px' }}>
         <div style={{ marginBottom: '40px', borderBottom: '1px solid #E5E7EB', paddingBottom: '24px' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '8px', color: '#111827', letterSpacing: '-0.02em' }}>

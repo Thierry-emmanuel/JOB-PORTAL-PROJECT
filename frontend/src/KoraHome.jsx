@@ -1505,7 +1505,6 @@ export default function KoraHome() {
         /* Prevent horizontal overflow on all sections */
         section, div, nav, footer { max-width: 100vw; }
       `}</style>
-      <Navbar logoSrc={logoSrc} onLogoUpload={handleLogoUpload} />
       <Hero />
       <Ticker />
       <SearchSection />

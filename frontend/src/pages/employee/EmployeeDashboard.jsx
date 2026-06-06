@@ -359,7 +359,7 @@ export default function EmployeeDashboard() {
           ? <EmptyState icon={Briefcase} title="No recommendations yet" sub="Complete your profile to unlock personalised matches." cta="Browse jobs" ctaTo="/employee/jobs" />
           : (
             <div className="ds-mini-jobs-grid">
-              {recJobs.slice(0, 3).map(job => (
+              {recJobs.map(job => (
                 <JobCard key={job.id} job={job} variant="compact" />
               ))}
             </div>

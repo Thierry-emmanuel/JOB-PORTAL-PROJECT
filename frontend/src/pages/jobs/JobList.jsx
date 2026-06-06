@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getJobs } from '../../api/jobs';
-import KoraNav from '../../components/KoraNav';          // ← added
+
 import JobCard from '../../components/jobs/JobCard';
 import JobFilters from '../../components/jobs/JobFilters';
 import Pagination from '../../components/jobs/Pagination';
@@ -83,9 +83,6 @@ export default function JobList() {
   /* ── Render ─────────────────────────────────────────────── */
   return (
     <div className="jl-page">
-      {/* ── Top nav (mirrors KoraHome navbar exactly) ── */}
-      <KoraNav />
-
       {/* ── Green gradient header ───────────────────── */}
       <header className="jl-header">
         <div className="jl-header-inner">

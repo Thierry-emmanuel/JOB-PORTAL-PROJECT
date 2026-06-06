@@ -682,3 +682,208 @@
     border-radius: 16px;
   }
 }
+
+/* ─── Premium Wide Modal & Column Grid Layouts ─── */
+.appd-modal--wide {
+  max-width: 880px;
+}
+
+.appd-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+.appd-col-left,
+.appd-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Seeker Profile Card styling */
+.appd-profile-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appd-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appd-profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #4b5563;
+  font-size: 16px;
+}
+
+.appd-profile-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.appd-profile-title {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.appd-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.appd-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #4b5563;
+}
+
+.appd-info-item svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* CV Download Card styling */
+.appd-cv-card {
+  background: #f0fdf4;
+  border: 1.5px dashed #86efac;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.appd-cv-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.appd-cv-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.appd-cv-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #166534;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appd-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.appd-cv-btn:hover {
+  background: #15803d;
+}
+
+/* Links badge row styling */
+.appd-links-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.appd-link-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.appd-link-badge:hover {
+  background: #e5e7eb;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.appd-link-badge--linkedin {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.appd-link-badge--linkedin:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Recruiter Review Note card styling */
+.appd-review-card {
+  background: #fffbeb;
+  border-left: 4px solid #d97706;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.appd-review-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #b45309;
+  margin: 0 0 6px;
+}
+
+.appd-review-text {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .appd-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

@@ -17,13 +17,13 @@ import {
   ArrowRight, FileText, Phone, MapPin, Mail,
   Banknote, ExternalLink, X, AlertCircle,
   RefreshCw, Filter, SortDesc, TrendingUp,
-  UserCheck, UserX, Star, ArrowDown,
+  UserCheck, UserX, Star, ArrowDown, Video, ArrowUpRight,
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
 import InterviewScheduler from '../../components/employer/InterviewScheduler';
 import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
 import { useAuth } from '../../context/AuthContext';
-import { scheduleInterview } from '../../api/interviews';
+import { scheduleInterview, addInterviewFeedback } from '../../api/interviews';
 import '../../styles/dashboard-shell.css';
 import '../../styles/ManageJobs.css';
 
@@ -86,9 +86,12 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule, updateAppli
   const [acting, setActing]         = useState(null);
   const [reviewNotes, setReviewNotes] = useState(app?.employerReview || '');
   const [savingReview, setSavingReview] = useState(false);
+  const [ivFeedback, setIvFeedback] = useState(app?.interview?.feedback || '');
+  const [savingIvFeedback, setSavingIvFeedback] = useState(false);
 
   useEffect(() => {
     setReviewNotes(app?.employerReview || '');
+    setIvFeedback(app?.interview?.feedback || '');
   }, [app]);
 
   if (!app) return null;
@@ -248,6 +251,63 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule, updateAppli
             </div>
           )}
 
+          {/* Interview Details */}
+          {app.interview && (
+            <section className="mj-drawer-section" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 16, marginTop: 16 }}>
+              <h4 className="mj-drawer-section-title">Interview Details</h4>
+              <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#1d4ed8', background: '#eff6ff', padding: '3px 8px', borderRadius: 20 }}>
+                    {app.interview.type} Interview
+                  </span>
+                  <span style={{ fontSize: 11.5, color: '#6B7280' }}>
+                    {fmtDate(app.interview.scheduledAt)} · {new Date(app.interview.scheduledAt).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })}
+                  </span>
+                </div>
+                {app.interview.platform && (
+                  <div style={{ fontSize: 13, color: '#374151' }}>
+                    <strong>Platform:</strong> {app.interview.platform}
+                  </div>
+                )}
+                {app.interview.meetingLink && (
+                  <a href={app.interview.meetingLink} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#1D4ED8', fontWeight: 600, fontSize: 12.5, textDecoration: 'none' }}>
+                    <Video size={13}/> Join Interview Link <ArrowUpRight size={11}/>
+                  </a>
+                )}
+                
+                {/* Interview Feedback Text Area */}
+                <div style={{ marginTop: 8, borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#9CA3AF', display: 'block', marginBottom: 4 }}>
+                    Interview Evaluation Feedback
+                  </label>
+                  <textarea
+                    style={{ width: '100%', minHeight: 60, border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '6px 10px', fontSize: 12.5, fontFamily: 'inherit', resize: 'vertical' }}
+                    placeholder="Enter post-interview feedback or notes..."
+                    value={ivFeedback}
+                    onChange={e => setIvFeedback(e.target.value)}
+                  />
+                  <button
+                    disabled={savingIvFeedback}
+                    onClick={async () => {
+                      setSavingIvFeedback(true);
+                      try {
+                        await addInterviewFeedback(app.interview.id, ivFeedback);
+                        app.interview.feedback = ivFeedback;
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setSavingIvFeedback(false);
+                      }
+                    }}
+                    style={{ marginTop: 6, background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {savingIvFeedback ? 'Saving...' : 'Save Feedback'}
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Recruiter review notes */}
           <section className="mj-drawer-section" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 16, marginTop: 16 }}>
             <h4 className="mj-drawer-section-title">Recruiter Review Notes</h4>
@@ -319,6 +379,34 @@ function ApplicantDrawer({ app, onClose, onUpdateStatus, onSchedule, updateAppli
                 disabled={!!acting}
               >
                 <CalendarClock size={14}/> Schedule Interview
+              </button>
+              <button
+                className="mj-action-btn mj-action-btn--reject"
+                onClick={() => handleAction('REJECTED')}
+                disabled={!!acting}
+              >
+                <UserX size={14}/> Reject
+              </button>
+            </>
+          )}
+
+          {app.status === 'INTERVIEW_SCHEDULED' && (
+            <>
+              <button
+                className="mj-action-btn mj-action-btn--hire"
+                onClick={() => handleAction('HIRED')}
+                disabled={!!acting}
+              >
+                {acting === 'HIRED'
+                  ? <><span className="mj-btn-spin"/> Hiring…</>
+                  : <><Award size={14}/> Hire Candidate</>}
+              </button>
+              <button
+                className="mj-action-btn mj-action-btn--schedule"
+                onClick={() => setScheduling(true)}
+                disabled={!!acting}
+              >
+                <CalendarClock size={14}/> Reschedule Interview
               </button>
               <button
                 className="mj-action-btn mj-action-btn--reject"
