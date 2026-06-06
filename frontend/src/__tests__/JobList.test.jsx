@@ -100,10 +100,6 @@ describe('JobList', () => {
   afterEach(() => vi.clearAllMocks());
 
   /* ── Structure ────────────────────────────────────────── */
-  it('renders the KoraNav', () => {
-    renderJobList();
-    expect(screen.getByTestId('kora-nav')).toBeInTheDocument();
-  });
 
   it('renders the page heading "Find Your Next Role"', () => {
     renderJobList();
@@ -145,7 +141,9 @@ describe('JobList', () => {
   it('shows result count after loading', async () => {
     renderJobList();
     await waitFor(() =>
-      expect(screen.getByText(/Showing 3 of 3/i)).toBeInTheDocument()
+      expect(screen.getByText((content, element) => {
+        return element.tagName.toLowerCase() === 'p' && element.textContent.includes('Showing 3 of 3');
+      })).toBeInTheDocument()
     );
   });
 

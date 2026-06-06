@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bookmark, MapPin, Clock, ChevronRight, Briefcase } from "lucide-react";
+import { Bookmark, ChevronRight, Briefcase } from "lucide-react";
 import EmployeeLayout from "../../../layouts/EmployeeLayout";
 import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
 import { getJobs } from "../../../api/jobs";
-
-function formatSalary(min, max, currency = "XAF") {
-  if (!min && !max) return null;
-  if (min && max) return `${Number(min).toLocaleString()} – ${Number(max).toLocaleString()} ${currency}`;
-  return `${Number(min || max).toLocaleString()} ${currency}`;
-}
+import JobCard from "../../../components/jobs/JobCard";
 
 export default function SavedJobsPage() {
   const { profile, completion, handlePhotoChange } = useEmployeeDashboard();
@@ -50,24 +45,7 @@ export default function SavedJobsPage() {
       ) : (
         <div className="ds-mini-jobs-grid">
           {jobs.map(job => (
-            <Link key={job.id} to={`/jobs/${job.id}`} className="ds-mini-job-card">
-              <div className="ds-mini-job-header">
-                <div className="ds-mini-job-logo">
-                  {job.logo ? <img src={job.logo} alt="" /> : <span>{job.company?.charAt(0) || "K"}</span>}
-                </div>
-                <span className="ds-job-type">{job.type}</span>
-              </div>
-              <h3 style={{ fontSize:14, fontWeight:700, color:"#111827", margin:"8px 0 3px" }}>{job.title}</h3>
-              <p style={{ fontSize:12, color:"#6B7280", margin:"0 0 8px" }}>{job.company}</p>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:8, fontSize:11, color:"#6B7280" }}>
-                {job.location && <span style={{ display:"flex", alignItems:"center", gap:3 }}><MapPin size={10} />{job.location}</span>}
-                {formatSalary(job.salaryMin, job.salaryMax) && <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>}
-              </div>
-              <div className="ds-mini-job-footer" style={{ marginTop:10 }}>
-                <Bookmark size={13} color="var(--ds-accent)" fill="var(--ds-accent)" />
-                <span style={{ fontSize:11, fontWeight:700, color:"var(--ds-accent)" }}>View <ChevronRight size={11} /></span>
-              </div>
-            </Link>
+            <JobCard key={job.id} job={job} variant="compact" />
           ))}
         </div>
       )}

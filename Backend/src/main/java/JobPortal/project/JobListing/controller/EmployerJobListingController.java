@@ -121,6 +121,9 @@ public class EmployerJobListingController {
         }
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
+        if (!"id".equals(sortBy)) {
+            sort = sort.and(Sort.by(Sort.Direction.DESC, "id"));
+        }
         Page<JobListingSummary> result =
             jobListingService.getEmployerListings(employerId, PageRequest.of(page, size, sort));
         return ResponseEntity.ok(ApiResponse.ok("Listings retrieved", result));

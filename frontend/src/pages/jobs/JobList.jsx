@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getJobs } from '../../api/jobs';
@@ -33,14 +33,25 @@ export default function JobList() {
     type:     getQueryParam('type'),
   });
 
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
   // Sync filters if URL changes (e.g. user navigates here with new query params)
   useEffect(() => {
-    setFilters({
-      search:   getQueryParam('search'),
-      location: getQueryParam('location'),
-      type:     getQueryParam('type'),
-    });
-    setPage(1);
+    const nextSearch = getQueryParam('search');
+    const nextLoc = getQueryParam('location');
+    const nextType = getQueryParam('type');
+    const current = filtersRef.current;
+    if (nextSearch !== current.search || nextLoc !== current.location || nextType !== current.type) {
+      setFilters({
+        search:   nextSearch,
+        location: nextLoc,
+        type:     nextType,
+      });
+      setPage(1);
+    }
   }, [location.search]);
 
   const [selectedCompany, setSelectedCompany] = useState(null);

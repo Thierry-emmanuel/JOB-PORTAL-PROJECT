@@ -70,8 +70,11 @@ public class AdminJobListingController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC")      String direction) {
 
-        PageRequest pageable = PageRequest.of(page, size,
-            Sort.by(Sort.Direction.fromString(direction), sortBy));
+        Sort compositeSort = Sort.by(Sort.Direction.fromString(direction), sortBy);
+        if (!"id".equals(sortBy)) {
+            compositeSort = compositeSort.and(Sort.by(Sort.Direction.DESC, "id"));
+        }
+        PageRequest pageable = PageRequest.of(page, size, compositeSort);
 
         Page<JobListingSummary> result =
             jobListingService.adminGetAllListings(status, employerId, pageable);

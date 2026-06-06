@@ -451,7 +451,7 @@ export default function ManageJobs() {
 
   const {
     employer, stats, applications, jobPostings,
-    loading, error,
+    loading, error, refreshing,
     refresh,
     updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
     updateApplicationReview,

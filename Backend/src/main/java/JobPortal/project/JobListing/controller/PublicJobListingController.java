@@ -71,8 +71,11 @@ public class PublicJobListingController {
             @RequestParam(defaultValue = "DESC") String direction) {
 
         int clampedSize = Math.min(size, 50);
-        PageRequest pageable = PageRequest.of(page, clampedSize,
-            Sort.by(Sort.Direction.fromString(direction), sort));
+        Sort compositeSort = Sort.by(Sort.Direction.fromString(direction), sort);
+        if (!"id".equals(sort)) {
+            compositeSort = compositeSort.and(Sort.by(Sort.Direction.DESC, "id"));
+        }
+        PageRequest pageable = PageRequest.of(page, clampedSize, compositeSort);
 
         Page<JobListingSummary> result = jobListingService.getActiveListings(pageable);
         return ResponseEntity.ok(ApiResponse.ok("Active listings retrieved", result));
@@ -189,8 +192,11 @@ public class PublicJobListingController {
         String effectiveKeyword = (keyword != null) ? keyword : title;
 
         int clampedSize = Math.min(size, 50);
-        PageRequest pageable = PageRequest.of(page, clampedSize,
-            Sort.by(Sort.Direction.fromString(direction), sort));
+        Sort compositeSort = Sort.by(Sort.Direction.fromString(direction), sort);
+        if (!"id".equals(sort)) {
+            compositeSort = compositeSort.and(Sort.by(Sort.Direction.DESC, "id"));
+        }
+        PageRequest pageable = PageRequest.of(page, clampedSize, compositeSort);
 
         Page<JobListingSummary> result = jobListingService.searchListings(
             effectiveKeyword, category, jobType, location,

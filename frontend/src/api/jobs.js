@@ -3,17 +3,21 @@ import apiClient from './client';
 /* ─── Job Listings ───────────────────────────────────────── */
 
 export const getJobs = async (params = {}) => {
-  const { page = 1, limit, size, search, location, type, ...rest } = params;
+  const { page = 1, limit, size, search, location, type, category, experienceLevel, salaryMin, salaryMax, ...rest } = params;
   const backendParams = {
     page: Math.max(0, page - 1),
     size: limit || size || 10,
     ...rest,
   };
-  if (search)   backendParams.keyword  = search;
-  if (location) backendParams.location = location;
-  if (type)     backendParams.jobType  = type;
+  if (search)          backendParams.keyword  = search;
+  if (location)        backendParams.location = location;
+  if (type)            backendParams.jobType  = type;
+  if (category)        backendParams.category = category;
+  if (experienceLevel) backendParams.experienceLevel = experienceLevel;
+  if (salaryMin)       backendParams.salaryMin = salaryMin;
+  if (salaryMax)       backendParams.salaryMax = salaryMax;
 
-  const hasFilters = search || location || type;
+  const hasFilters = search || location || type || category || experienceLevel || salaryMin || salaryMax;
   const url = hasFilters ? '/api/jobs/search' : '/api/jobs';
   const { data: apiResp } = await apiClient.get(url, { params: backendParams });
   const pageData = apiResp?.data ?? apiResp;
@@ -57,7 +61,7 @@ const mapJobSummary = (job) => ({
   saved:      false,
   applied:    false,
   description:'',
-  tags:       [],
+  tags:       job.categoryName ? [job.categoryName] : [],
 });
 
 const mapJobDetail = (job) => ({
