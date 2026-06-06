@@ -9,7 +9,8 @@ import {
   updateApplicationStatus as apiUpdateStatus,
   changeJobStatus as apiChangeJobStatus,
   deleteJob as apiDeleteJob,
-  updateApplicationReview as apiUpdateReview
+  updateApplicationReview as apiUpdateReview,
+  getJob
 } from "../api/jobs";
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -354,6 +355,64 @@ export function useEmployerDashboard() {
     }
   }, [jobPostings]);
 
+  // ── Increment job views ──
+  const incrementJobViews = useCallback(async (jobId) => {
+    try {
+      // 1. Update local state
+      setJobPostings(prev => prev.map(job => 
+        job.id === jobId ? { ...job, views: (job.views || 0) + 1 } : job
+      ));
+      setStats(prev => ({ ...prev, totalViews: prev.totalViews + 1 }));
+
+      // 2. Persist in database
+      await getJob(jobId);
+    } catch (err) {
+      console.warn("Failed to persist view increment in backend:", err);
+    }
+  }, []);
+
+  // ── Increment job applications (mock insertion) ──
+  const incrementJobApps = useCallback((jobId) => {
+    // 1. Update local state counters
+    setJobPostings(prev => prev.map(job => 
+      job.id === jobId ? { ...job, applications: (job.applications || 0) + 1 } : job
+    ));
+    setStats(prev => ({ ...prev, totalApplications: prev.totalApplications + 1 }));
+
+    // 2. Insert a simulated application so that the recruiter can view details & download mock documents
+    const randomId = Math.floor(Math.random() * 900000) + 100000;
+    const mockApp = {
+      id: `mock-app-${Date.now()}`,
+      seekerId: randomId,
+      applicant: `Simulated Candidate #${randomId}`,
+      job: jobPostings.find(j => j.id === jobId)?.title || "Software Developer",
+      jobPostingId: jobId,
+      status: "APPLIED",
+      date: new Date().toISOString().split('T')[0],
+      avatar: null,
+      expectedSalary: 750000,
+      coverLetter: "Hello, I am interested in this position. Please find my simulated details attached.",
+      skills: ["React", "Spring Boot", "REST APIs", "Tailwind CSS"],
+      experiences: [
+        { jobTitle: "Junior Fullstack Developer", companyName: "InnovateTech", startDate: "2024-02", endDate: "2025-05" }
+      ],
+      education: [
+        { degree: "B.S. Computer Engineering", school: "National Polytechnic of Yaounde", startDate: "2020", endDate: "2024" }
+      ],
+      email: `candidate.${randomId}@kora.com`,
+      phone: "+237 677 889 900",
+      city: "Yaounde",
+      profileSummary: "Passionate developer specialized in modern JavaScript frameworks and Java backend services.",
+      cvUrl: "https://res.cloudinary.com/demo/image/upload/v1580693684/sample.pdf",
+      cvFileName: "sample_resume.pdf",
+      linkedInUrl: "https://linkedin.com",
+      portfolioUrl: "https://github.com",
+      employerReview: "",
+    };
+
+    setApplications(prev => [mockApp, ...prev]);
+  }, [jobPostings]);
+
   // ── Derived values ──
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -374,5 +433,7 @@ export function useEmployerDashboard() {
     updateJobPostingStatus,
     deleteJobPosting,
     updateApplicationReview,
+    incrementJobViews,
+    incrementJobApps,
   };
 }

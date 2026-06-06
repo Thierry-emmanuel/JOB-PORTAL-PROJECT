@@ -5,13 +5,14 @@ import {
   Plus, ChevronRight, Clock, ArrowUp, ArrowDown,
   AlertTriangle, AlertCircle, Search, TrendingUp, Edit2,
   RefreshCw, Video, MapPin, CheckCircle,
-  Mail, Phone, ExternalLink, FileText, Check, Calendar as CalendarIcon,
+  Mail, Phone, ExternalLink, FileText, Check, Calendar as CalendarIcon, ClipboardList,
   Home, Globe, BarChart2
 } from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';
 import InterviewScheduler from '../components/employer/InterviewScheduler';
 import EmployerSidebar from '../components/employer/EmployerSidebar';
 import '../styles/dashboard-shell.css';
+import '../styles/ManageJobs.css';
 
 /* ─── Toast notification ──────────────────────────────────── */
 function Toast({ toasts, remove }) {
@@ -106,6 +107,36 @@ function StatCard({ icon, label, value, change, color }) {
   );
 }
 
+const STATUS_STYLE = {
+  APPLIED:              { bg: '#EFF6FF', color: '#1E40AF', dot: '#3B82F6' },
+  SHORTLISTED:          { bg: '#FAF5FF', color: '#6B21A8', dot: '#A855F7' },
+  INTERVIEW_SCHEDULED:  { bg: '#FFF7ED', color: '#C2410C', dot: '#F97316' },
+  HIRED:                { bg: '#ECFDF5', color: '#065F46', dot: '#10B981' },
+  REJECTED:             { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444' },
+};
+
+function StatusBadge({ status, map = STATUS_STYLE }) {
+  const s = map[status] || { bg:'#F3F4F6', color:'#374151', dot:'#9CA3AF' };
+  return (
+    <span className="mj-badge" style={{ background: s.bg, color: s.color }}>
+      <span className="mj-badge-dot" style={{ background: s.dot }}/>
+      {status?.replace(/_/g,' ')}
+    </span>
+  );
+}
+
+function Avatar({ name, size = 36, color = '#1A5C2E' }) {
+  const initials = (name||'?').split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');
+  return (
+    <div className="mj-avatar" style={{ width:size, height:size, fontSize:size*0.36, background:`${color}18`, color }}>
+      {initials}
+    </div>
+  );
+}
+
+const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { day:'2-digit', month:'short', year:'numeric' });
+const fmtSalary = v => v ? `${Number(v).toLocaleString()} XAF` : '—';
+
 /* ════════════════════════════════════════════════════════
    EmployerDashboard
    ════════════════════════════════════════════════════════ */
@@ -117,9 +148,6 @@ export default function EmployerDashboard() {
   const [schedulerTarget, setSchedulerTarget] = useState(null);
 
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
-  const [selectedApplication, setSelectedApplication] = useState(null);
-  const [reviewNotes, setReviewNotes] = useState('');
-  const [savingReview, setSavingReview] = useState(false);
 
   const {
     employer, stats, applications, jobPostings,
@@ -128,13 +156,11 @@ export default function EmployerDashboard() {
     refresh, markNotificationRead, markAllRead,
     updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
     updateApplicationReview,
+    incrementJobViews,
+    incrementJobApps,
   } = useEmployerDashboard();
 
-  useEffect(() => {
-    if (selectedApplication) {
-      setReviewNotes(selectedApplication.employerReview || '');
-    }
-  }, [selectedApplication]);
+
 
   const filteredApplicants = applications.filter(
     app => selectedJobForApplicants && app.jobPostingId === selectedJobForApplicants.id
@@ -353,7 +379,7 @@ export default function EmployerDashboard() {
                         key={app.id} 
                         className="ds-app-row" 
                         style={{ cursor: 'pointer', hover: { background: '#f8fafc' } }}
-                        onClick={() => setSelectedApplication(app)}
+                        onClick={() => navigate(`/applications/${app.id}`)}
                       >
                         <div className="ds-app-avatar">{av}</div>
                         <div className="ds-app-info">
@@ -429,9 +455,55 @@ export default function EmployerDashboard() {
                           </div>
                           <span className={`ds-badge ${job.status === 'ACTIVE' ? 'active' : ''}`}>{job.status}</span>
                         </div>
-                        <div className="ds-job-stats">
-                          <span><Users size={11} /> {job.applications} applicants</span>
-                          <span><Eye   size={11} /> {job.views} views</span>
+                        <div className="ds-job-stats" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Users size={11} /> {job.applications} applicants
+                            <button
+                              onClick={(e) => { e.stopPropagation(); incrementJobApps(job.id); }}
+                              className="ds-btn ds-btn-ghost"
+                              style={{
+                                padding: '2px 6px',
+                                fontSize: '10px',
+                                height: '20px',
+                                minWidth: 'auto',
+                                background: '#f3f4f6',
+                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid #e5e7eb',
+                                color: '#374151',
+                                fontWeight: 700,
+                              }}
+                              title="Simulate/Increment applications (+1)"
+                            >
+                              +1 App
+                            </button>
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Eye size={11} /> {job.views} views
+                            <button
+                              onClick={(e) => { e.stopPropagation(); incrementJobViews(job.id); }}
+                              className="ds-btn ds-btn-ghost"
+                              style={{
+                                padding: '2px 6px',
+                                fontSize: '10px',
+                                height: '20px',
+                                minWidth: 'auto',
+                                background: '#f3f4f6',
+                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid #e5e7eb',
+                                color: '#374151',
+                                fontWeight: 700,
+                              }}
+                              title="Increment views (+1)"
+                            >
+                              +1 View
+                            </button>
+                          </span>
                         </div>
                         <div className="ds-job-progress">
                           <div className="ds-job-progress-fill" style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }} />
@@ -499,247 +571,6 @@ export default function EmployerDashboard() {
         </main>
       </div>
 
-      {/* ── Candidate Details Sliding Drawer ── */}
-      {selectedApplication && (
-        <>
-          <div className="mj-drawer-overlay" onClick={() => setSelectedApplication(null)} />
-          <div className="mj-drawer">
-            <div className="mj-drawer-header">
-              <div className="mj-drawer-title-area">
-                <h2>Candidate Application</h2>
-                <p>{selectedApplication.job} · Applied {selectedApplication.date}</p>
-              </div>
-              <button className="mj-drawer-close" onClick={() => setSelectedApplication(null)}>
-                <X size={16} />
-              </button>
-            </div>
-            
-            <div className="mj-drawer-body">
-              <div className="mj-app-card" style={{ border: 'none', padding: 0 }}>
-                <div className="mj-app-card-header" style={{ marginBottom: 10 }}>
-                  <div className="mj-app-candidate-info">
-                    <div className="mj-app-avatar" style={{ width: 50, height: 50, fontSize: 18 }}>
-                      {selectedApplication.avatar ? (
-                        <img src={selectedApplication.avatar} alt={selectedApplication.applicant} />
-                      ) : (
-                        selectedApplication.applicant.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="mj-app-name" style={{ fontSize: 16 }}>{selectedApplication.applicant}</h3>
-                      <div className="mj-app-meta-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px' }}>
-                        <span className="mj-app-meta-item"><Mail size={12} /> {selectedApplication.email || "No email"}</span>
-                        {selectedApplication.phone && <span className="mj-app-meta-item"><Phone size={12} /> {selectedApplication.phone}</span>}
-                        {selectedApplication.city && <span className="mj-app-meta-item"><MapPin size={12} /> {selectedApplication.city}</span>}
-                        {selectedApplication.linkedInUrl && (
-                          <span className="mj-app-meta-item">
-                            <ExternalLink size={12} /> <a href={selectedApplication.linkedInUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>LinkedIn</a>
-                          </span>
-                        )}
-                        {selectedApplication.portfolioUrl && (
-                          <span className="mj-app-meta-item">
-                            <ExternalLink size={12} /> <a href={selectedApplication.portfolioUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Portfolio</a>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <span className={`mj-app-badge ${selectedApplication.status.toLowerCase()}`}>
-                    {selectedApplication.status}
-                  </span>
-                </div>
-
-                {selectedApplication.expectedSalary && (
-                  <div style={{ marginTop: 12 }}>
-                    <div className="mj-app-section-title">Expected Salary</div>
-                    <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--kora-primary)" }}>
-                      ${selectedApplication.expectedSalary.toLocaleString()} USD
-                    </div>
-                  </div>
-                )}
-
-                {selectedApplication.profileSummary && (
-                  <div style={{ marginTop: 12 }}>
-                    <div className="mj-app-section-title">Candidate Summary</div>
-                    <div className="mj-app-detail-block">{selectedApplication.profileSummary}</div>
-                  </div>
-                )}
-
-                {selectedApplication.coverLetter && (
-                  <div style={{ marginTop: 12 }}>
-                    <div className="mj-app-section-title">Cover Letter</div>
-                    <div className="mj-app-detail-block" style={{ fontStyle: "italic", whiteSpace: "pre-wrap" }}>
-                      "{selectedApplication.coverLetter}"
-                    </div>
-                  </div>
-                )}
-
-                {selectedApplication.skills?.length > 0 && (
-                  <div style={{ marginTop: 12 }}>
-                    <div className="mj-app-section-title">Skills</div>
-                    <div className="mj-app-skills">
-                      {selectedApplication.skills.map((skill) => (
-                        <span key={skill} className="mj-app-skill-tag">{skill}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedApplication.experiences?.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div className="mj-app-section-title">Work Experience</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-                      {selectedApplication.experiences.map((exp, index) => (
-                        <div key={index} style={{ borderLeft: '2px solid #E5E7EB', paddingLeft: 12, position: 'relative' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--kora-primary)', position: 'absolute', left: -5, top: 6 }} />
-                          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{exp.jobTitle || exp.position}</h4>
-                          <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: '#4B5563' }}>{exp.companyName || exp.company}</p>
-                          {(exp.startDate || exp.endDate) && (
-                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{exp.startDate} – {exp.endDate || 'Present'}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedApplication.education?.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div className="mj-app-section-title">Education</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-                      {selectedApplication.education.map((edu, index) => (
-                        <div key={index} style={{ borderLeft: '2px solid #E5E7EB', paddingLeft: 12, position: 'relative' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6', position: 'absolute', left: -5, top: 6 }} />
-                          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{edu.degree || edu.fieldOfStudy}</h4>
-                          <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: '#4B5563' }}>{edu.school || edu.institution}</p>
-                          {(edu.startDate || edu.endDate) && (
-                            <span style={{ fontSize: 11, color: '#9CA3AF' }}>{edu.startDate} – {edu.endDate || 'Present'}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ marginTop: 20, borderTop: '1px solid #E5E7EB', paddingTop: 16 }}>
-                  <div className="mj-app-section-title" style={{ marginBottom: 8 }}>Recruiter Review Notes</div>
-                  <textarea
-                    style={{ width: '100%', minHeight: 80, border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }}
-                    placeholder="Add notes, evaluations or summary reviews about this candidate..."
-                    value={reviewNotes}
-                    onChange={e => setReviewNotes(e.target.value)}
-                  />
-                  <button
-                    disabled={savingReview}
-                    onClick={async () => {
-                      setSavingReview(true);
-                      try {
-                        await updateApplicationReview(selectedApplication.id, reviewNotes);
-                        setSelectedApplication(prev => ({ ...prev, employerReview: reviewNotes }));
-                        addToast('Review Saved', 'Recruiter notes have been saved successfully.', 'success');
-                      } catch {
-                        addToast('Save Failed', 'Could not save recruiter notes.', 'error');
-                      } finally {
-                        setSavingReview(false);
-                      }
-                    }}
-                    style={{ marginTop: 8, background: '#1A5C2E', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                  >
-                    {savingReview ? 'Saving...' : 'Save Notes'}
-                  </button>
-                </div>
-
-                <div className="mj-app-actions" style={{ marginTop: 20 }}>
-                  {/* View CV Resume */}
-                  {selectedApplication.cvUrl ? (
-                    <>
-                      <a
-                        href={selectedApplication.cvUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mj-drawer-btn secondary"
-                        title="View resume in new tab"
-                      >
-                        <FileText size={14} /> Resume <ExternalLink size={11} />
-                      </a>
-                      <a
-                        href={selectedApplication.cvUrl.includes('cloudinary.com') ? selectedApplication.cvUrl.replace('/upload/', '/upload/fl_attachment/') : selectedApplication.cvUrl}
-                        download={selectedApplication.cvFileName || 'resume.pdf'}
-                        className="mj-drawer-btn success"
-                        title="Download CV"
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
-                      >
-                        <ArrowDown size={14} /> Download CV
-                      </a>
-                    </>
-                  ) : (
-                    <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                      <FileText size={14} /> No Resume
-                    </button>
-                  )}
-
-                  {/* Status transitions */}
-                  {selectedApplication.status === "APPLIED" && (
-                    <>
-                      <button
-                        className="mj-drawer-btn success"
-                        onClick={() => {
-                          updateApplicationStatus(selectedApplication.id, "SHORTLISTED");
-                          setSelectedApplication(prev => ({ ...prev, status: "SHORTLISTED" }));
-                        }}
-                      >
-                        <Check size={14} /> Shortlist
-                      </button>
-                      <button
-                        className="mj-drawer-btn danger"
-                        onClick={() => {
-                          updateApplicationStatus(selectedApplication.id, "REJECTED");
-                          setSelectedApplication(prev => ({ ...prev, status: "REJECTED" }));
-                        }}
-                      >
-                        <X size={14} /> Reject
-                      </button>
-                    </>
-                  )}
-
-                  {selectedApplication.status === "SHORTLISTED" && (
-                    <>
-                      <button
-                        className="mj-drawer-btn primary"
-                        onClick={() => setSchedulerTarget(selectedApplication)}
-                      >
-                        <CalendarIcon size={14} /> Schedule Interview
-                      </button>
-                      <button
-                        className="mj-drawer-btn danger"
-                        onClick={() => {
-                          updateApplicationStatus(selectedApplication.id, "REJECTED");
-                          setSelectedApplication(prev => ({ ...prev, status: "REJECTED" }));
-                        }}
-                      >
-                        <X size={14} /> Reject
-                      </button>
-                    </>
-                  )}
-
-                  {selectedApplication.status === "REJECTED" && (
-                    <button
-                      className="mj-drawer-btn neutral"
-                      onClick={() => {
-                        updateApplicationStatus(selectedApplication.id, "APPLIED");
-                        setSelectedApplication(prev => ({ ...prev, status: "APPLIED" }));
-                      }}
-                    >
-                      Reconsider
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* ── Candidates list drawer for specific active job ── */}
       {selectedJobForApplicants && (
@@ -829,6 +660,18 @@ export default function EmployerDashboard() {
                     )}
 
                     <div className="mj-app-actions">
+                      {/* View complete application page */}
+                      <button
+                        className="mj-drawer-btn primary"
+                        onClick={() => {
+                          setSelectedJobForApplicants(null);
+                          navigate(`/applications/${app.id}`);
+                        }}
+                        title="View complete application details page"
+                      >
+                        <ClipboardList size={14} /> View Details <ArrowUpRight size={11} />
+                      </button>
+
                       {/* View CV Resume */}
                       {app.cvUrl ? (
                         <a

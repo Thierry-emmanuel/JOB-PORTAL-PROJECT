@@ -1,0 +1,874 @@
+/* ═══════════════════════════════════════════════════════════
+   application-detail.css — Unified Application Detail Page
+   ═══════════════════════════════════════════════════════════ */
+
+.app-detail-root {
+  background: var(--ds-bg, #f8fafc);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.app-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Breadcrumbs & Navigation ── */
+.app-detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.app-detail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.app-detail-back-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.app-detail-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.app-detail-breadcrumbs a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-detail-breadcrumbs a:hover {
+  color: var(--ds-accent, #1a5c2e);
+}
+
+/* ── Header Card ── */
+.app-detail-header-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-detail-header-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--status-dot, var(--ds-accent, #1a5c2e));
+}
+
+.app-detail-header-left {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.app-detail-company-logo {
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 24px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.app-detail-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.app-detail-header-info h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.app-detail-company-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px;
+}
+
+.app-detail-meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.app-detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-detail-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ── Columns Grid ── */
+.app-detail-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 24px;
+}
+
+.app-detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Card Styles ── */
+.app-detail-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-detail-card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-detail-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.app-detail-card-title svg {
+  color: var(--ds-accent, #1a5c2e);
+}
+
+.app-detail-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Specific Section Cards ── */
+
+/* Cover Letter Box */
+.app-detail-cover-letter {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* Company Description */
+.app-detail-company-desc {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.app-detail-company-website {
+  margin-top: 10px;
+}
+
+/* Candidate Profile Header */
+.app-detail-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-detail-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--ds-accent, #1a5c2e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+.app-detail-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.app-detail-profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.app-detail-profile-title {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.app-detail-profile-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.app-detail-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #334155;
+}
+
+.app-detail-info-item svg {
+  color: #94a3b8;
+}
+
+.app-detail-info-item a {
+  color: var(--ds-accent, #1a5c2e);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.app-detail-info-item a:hover {
+  text-decoration: underline;
+}
+
+/* Skills Pills */
+.app-detail-skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.app-detail-skill-tag {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Resume CV Download Card */
+.app-detail-cv-card {
+  background: #f0fdf4;
+  border: 1.5px dashed #86efac;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-detail-cv-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.app-detail-cv-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.app-detail-cv-text {
+  overflow: hidden;
+}
+
+.app-detail-cv-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #166534;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-detail-cv-lbl {
+  font-size: 11px;
+  color: #15803d;
+  margin: 2px 0 0;
+}
+
+.app-detail-cv-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.app-detail-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.app-detail-cv-btn:hover {
+  background: #15803d;
+}
+
+.app-detail-cv-btn.secondary {
+  background: #fff;
+  border: 1.5px solid #86efac;
+  color: #15803d;
+}
+
+.app-detail-cv-btn.secondary:hover {
+  background: #f0fdf4;
+}
+
+/* Work / Education Timeline */
+.app-detail-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.app-detail-timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.app-detail-timeline-item {
+  position: relative;
+}
+
+.app-detail-timeline-dot {
+  position: absolute;
+  left: -20px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ds-accent, #1a5c2e);
+}
+
+.app-detail-timeline-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.app-detail-timeline-company {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  margin: 2px 0;
+}
+
+.app-detail-timeline-date {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.app-detail-timeline-desc {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 6px 0 0;
+}
+
+/* Timeline Empty States */
+.app-detail-timeline-empty {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Interview Card ── */
+.app-detail-iv-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-detail-iv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.app-detail-iv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #334155;
+}
+
+.app-detail-iv-row svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.app-detail-iv-join-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: fit-content;
+}
+
+.app-detail-iv-join-btn:hover {
+  background: #1557b0;
+}
+
+.app-detail-iv-feedback-box {
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.app-detail-iv-feedback-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0 0 6px;
+}
+
+.app-detail-iv-feedback-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Interactive Recruiter Actions Panel ── */
+.app-detail-action-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.app-detail-action-btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.app-detail-status-btn {
+  flex: 1;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.app-detail-status-btn.shortlist {
+  background: #faf5ff;
+  border: 1px solid #d8b4fe;
+  color: #6b21a8;
+}
+
+.app-detail-status-btn.shortlist:hover {
+  background: #f3e8ff;
+}
+
+.app-detail-status-btn.hire {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+}
+
+.app-detail-status-btn.hire:hover {
+  background: #d1fae5;
+}
+
+.app-detail-status-btn.reject {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.app-detail-status-btn.reject:hover {
+  background: #fee2e2;
+}
+
+.app-detail-status-btn.schedule {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+}
+
+.app-detail-status-btn.schedule:hover {
+  background: #dbeafe;
+}
+
+/* Status Select Dropdown */
+.app-detail-dropdown-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.app-detail-dropdown-wrapper label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.app-detail-select {
+  width: 100%;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #0f172a;
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.app-detail-select:focus {
+  border-color: var(--ds-accent, #1a5c2e);
+}
+
+/* Textarea styling */
+.app-detail-textarea-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-detail-textarea-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+
+.app-detail-textarea {
+  width: 100%;
+  min-height: 90px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #334155;
+  outline: none;
+  resize: vertical;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.app-detail-textarea:focus {
+  border-color: var(--ds-accent, #1a5c2e);
+}
+
+.app-detail-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--ds-accent, #1a5c2e);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: fit-content;
+  align-self: flex-end;
+}
+
+.app-detail-save-btn:hover {
+  opacity: 0.9;
+}
+
+.app-detail-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Candidate Actions */
+.app-detail-withdraw-card {
+  background: #fff;
+  border: 1px solid #fca5a5;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-detail-withdraw-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #991b1b;
+  margin: 0 0 4px;
+}
+
+.app-detail-withdraw-info p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.app-detail-withdraw-btn {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.app-detail-withdraw-btn:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+/* Terminal banners */
+.app-detail-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.app-detail-banner.hired {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #065f46;
+}
+
+.app-detail-banner.rejected {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+/* ── Spinner & Skeleton ── */
+.app-detail-loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: #64748b;
+  gap: 12px;
+}
+
+.app-detail-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #cbd5e1;
+  border-top-color: var(--ds-accent, #1a5c2e);
+  border-radius: 50%;
+  animation: app-detail-spin 0.8s linear infinite;
+}
+
+@keyframes app-detail-spin {
+  to { transform: rotate(360deg); }
+}
+
+.app-detail-error-card {
+  background: #fff;
+  border: 1px solid #fca5a5;
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  max-width: 500px;
+  margin: 80px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.app-detail-error-card h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #991b1b;
+  margin: 0;
+}
+
+.app-detail-error-card p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 900px) {
+  .app-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-detail-header-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-detail-header-right {
+    align-items: flex-start;
+    width: 100%;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+  }
+
+  .app-detail-cv-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-detail-cv-btn-group {
+    width: 100%;
+  }
+
+  .app-detail-cv-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

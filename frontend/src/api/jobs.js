@@ -102,6 +102,11 @@ export const applyToJob = async (seekerId, requestBody) => {
   return data;
 };
 
+export const getApplication = async (id) => {
+  const { data } = await apiClient.get(`/api/v1/applications/${id}`);
+  return data?.data ?? data;
+};
+
 /**
  * Get all applications for a seeker with embedded interview data.
  * Returns plain array (content already extracted).
@@ -249,7 +254,7 @@ export const getSkills = async () => {
 };
 
 const jobsService = {
-  getJobs, getJob, getJobDetail,
+  getJobs, getJob, getJobDetail, getApplication,
   applyToJob, getUserApplications, getUserInterviews,
   getEmployerApplications, updateApplicationStatus,
   withdrawApplication, getApplicationStats,

@@ -33,21 +33,53 @@ export default function KoraNav() {
   const isEmployer = getRole().includes("EMPLOYER");
   const isAdmin = getRole().includes("ADMIN");
 
-  const navLinks = [
-    { label: t('nav.home'), to: '/' },
-    { label: t('nav.jobs'), to: '/jobs' },
-    { label: t('nav.insights'), to: '/insights' },
-  ];
+  const isEmployeeSpace = location.pathname.startsWith('/employee') || location.pathname === '/profile/job-seeker';
+  const isEmployerSpace = location.pathname.startsWith('/employer') || location.pathname.startsWith('/dashboard/employer') || location.pathname === '/profile/employer';
+  const isAdminSpace = location.pathname.startsWith('/admin') || location.pathname === '/profile/admin';
 
-  if (isEmployer) {
-    navLinks.push({ label: t('nav.dashboard'), to: '/dashboard/employer' });
-    navLinks.push({ label: t('nav.interviews'), to: '/employer/interviews' });
-    navLinks.push({ label: t('nav.post_job'), to: '/employer/post-job' });
-  } else if (isAdmin) {
-    navLinks.push({ label: t('nav.dashboard'), to: '/profile/admin' });
+  let navLinks = [];
+
+  if (isEmployeeSpace && isAuthenticated) {
+    navLinks = [
+      { label: t('nav.home'), to: '/' },
+      { label: t('nav.dashboard'), to: '/employee/dashboard' },
+      { label: t('employee.my_applications', 'Applications'), to: '/employee/applications' },
+      { label: t('employee.saved_jobs', 'Saved Jobs'), to: '/employee/saved' },
+      { label: t('nav.interviews'), to: '/employee/interviews' },
+      { label: t('employee.browse_jobs', 'Browse Jobs'), to: '/employee/jobs' },
+      { label: t('nav.insights'), to: '/employee/insights' },
+    ];
+  } else if (isEmployerSpace && isEmployer) {
+    navLinks = [
+      { label: t('nav.home'), to: '/' },
+      { label: t('nav.dashboard'), to: '/dashboard/employer' },
+      { label: t('employer.manage_jobs', 'Manage Jobs'), to: '/employer/jobs' },
+      { label: t('nav.post_job'), to: '/employer/post-job' },
+      { label: t('nav.interviews'), to: '/employer/interviews' },
+      { label: t('nav.insights'), to: '/employer/insights' },
+    ];
+  } else if (isAdminSpace && isAdmin) {
+    navLinks = [
+      { label: t('nav.home'), to: '/' },
+      { label: t('admin.dashboard_title', 'Dashboard'), to: '/admin/dashboard' },
+    ];
   } else {
-    navLinks.push({ label: t('nav.dashboard'), to: '/employee/dashboard' });
-    navLinks.push({ label: t('nav.my_profile'), to: '/profile/job-seeker' });
+    // Public Space
+    navLinks = [
+      { label: t('nav.home'), to: '/' },
+      { label: t('nav.jobs'), to: '/jobs' },
+      { label: t('nav.insights'), to: '/insights' },
+    ];
+
+    if (isAuthenticated) {
+      if (isEmployer) {
+        navLinks.push({ label: t('nav.dashboard'), to: '/dashboard/employer' });
+      } else if (isAdmin) {
+        navLinks.push({ label: t('nav.dashboard'), to: '/profile/admin' });
+      } else {
+        navLinks.push({ label: t('nav.dashboard'), to: '/employee/dashboard' });
+      }
+    }
   }
 
   const handleLogout = () => {
@@ -58,7 +90,7 @@ export default function KoraNav() {
   const isActive = (to) => location.pathname === to;
 
   const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
-  const isTransparentHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
+  const isTransparentHeaderPage = true;
 
   return (
     <nav
