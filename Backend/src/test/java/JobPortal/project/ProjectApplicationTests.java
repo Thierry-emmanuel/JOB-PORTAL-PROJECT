@@ -1,6 +1,6 @@
 package JobPortal.project;
 
-import JobPortal.project.modules.notification.Service.MailService;
+import JobPortal.project.modules.notification.service.MailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
