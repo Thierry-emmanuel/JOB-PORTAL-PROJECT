@@ -1,3 +1,7 @@
+/* ══════════════════════════════════════════
+   KORA AUTH STYLES (base + employer extensions)
+   ══════════════════════════════════════════ */
+
 .kora-auth-root {
   min-height: 100vh;
   display: flex;
@@ -6,8 +10,7 @@
   background: var(--kora-bg, #F4F6F9);
   font-family: var(--kora-font, 'Poppins', sans-serif);
   padding: 20px;
-  
-  /* Fallback defaults */
+
   --kora-primary: var(--kora-green, #1A5C2E);
   --kora-primary-light: var(--kora-green-dark, #0D3D1F);
   --kora-accent: var(--kora-orange, #F97316);
@@ -16,17 +19,18 @@
   --kora-text-dark: var(--kora-ink, #111827);
   --kora-text-muted: var(--kora-muted, #6B7280);
   --kora-white: #ffffff;
-  
+
   transition: all 0.3s ease;
 }
 
-/* Dynamic Employer Theme Swapper */
+/* Employer theme override */
 .kora-auth-root.employer {
   --kora-primary: var(--kora-orange, #F97316);
   --kora-primary-light: #ea6e0f;
   --kora-bg-light: var(--kora-orange-light, #FFF3EA);
 }
 
+/* ── Container ────────────────────────────── */
 .kora-auth-container {
   width: 100%;
   max-width: 960px;
@@ -34,11 +38,11 @@
   background: var(--kora-white);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: var(--kora-shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.1));
+  box-shadow: 0 20px 40px rgba(0,0,0,0.10);
   transition: box-shadow 0.3s ease;
 }
 
-/* Left Side - Branding & Patterns */
+/* ── Left Side ────────────────────────────── */
 .kora-auth-left {
   flex: 1;
   background: linear-gradient(135deg, var(--kora-primary) 0%, var(--kora-primary-light) 100%);
@@ -54,40 +58,31 @@
   transition: background 0.3s ease;
 }
 
-/* Abstract Patterns */
 .kora-auth-left::before {
   content: '';
   position: absolute;
-  top: 10%;
-  right: 10%;
-  width: 60px;
-  height: 60px;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.2) 20%, transparent 20%);
+  top: 10%; right: 10%;
+  width: 60px; height: 60px;
+  background-image: radial-gradient(rgba(255,255,255,0.2) 20%, transparent 20%);
   background-size: 15px 15px;
   opacity: 0.5;
 }
-
 .kora-auth-left::after {
   content: '';
   position: absolute;
-  bottom: -50px;
-  left: -50px;
-  width: 200px;
-  height: 200px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  bottom: -50px; left: -50px;
+  width: 200px; height: 200px;
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 50%;
   pointer-events: none;
 }
-
 .kora-auth-left-wave {
   position: absolute;
-  width: 150%;
-  height: 100%;
-  top: 0;
-  left: -25%;
+  width: 150%; height: 100%;
+  top: 0; left: -25%;
   background-image:
-    radial-gradient(circle at 20% 30%, transparent 40%, rgba(255, 255, 255, 0.03) 41%, transparent 42%),
-    radial-gradient(circle at 80% 70%, transparent 40%, rgba(255, 255, 255, 0.03) 41%, transparent 42%);
+    radial-gradient(circle at 20% 30%, transparent 40%, rgba(255,255,255,0.03) 41%, transparent 42%),
+    radial-gradient(circle at 80% 70%, transparent 40%, rgba(255,255,255,0.03) 41%, transparent 42%);
   pointer-events: none;
 }
 
@@ -98,29 +93,48 @@
   align-items: center;
   margin-bottom: 32px;
 }
-
 .kora-auth-logo {
-  max-width: 180px; /* Adjust size for a transparent logo */
+  max-width: 180px;
   height: auto;
   object-fit: contain;
 }
-
 .kora-auth-left-title {
   font-size: 38px;
   font-weight: 800;
   margin-bottom: 20px;
   letter-spacing: -0.5px;
-  color: #ffffff; /* Explicitly white */
+  color: #ffffff;
 }
-
 .kora-auth-left-subtitle {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.6;
   opacity: 0.9;
-  max-width: 320px;
+  max-width: 300px;
 }
 
-/* Right Side - Form */
+/* Left side employer badges */
+.kora-auth-left-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 260px;
+}
+.kora-auth-left-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.1);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+/* ── Right Side ───────────────────────────── */
 .kora-auth-right {
   flex: 1;
   padding: 60px 50px;
@@ -128,80 +142,82 @@
   flex-direction: column;
   justify-content: center;
   background: var(--kora-white);
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .kora-auth-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   color: var(--kora-text-dark);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-family: var(--kora-font);
 }
-
 .kora-auth-subtitle {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--kora-text-muted);
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
+/* ── Form ─────────────────────────────────── */
 .kora-auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
-
 .kora-auth-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.kora-auth-field label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--kora-text-dark);
-  display: none; /* In the mockup, labels are usually inside or implicit */
-}
-
+/* ── Input ────────────────────────────────── */
 .kora-auth-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
-
+.kora-auth-input-wrapper--textarea { align-items: flex-start; }
 .kora-auth-input-icon {
   position: absolute;
   left: 16px;
   color: var(--kora-text-muted);
   opacity: 0.6;
 }
+.kora-auth-input-icon--top { top: 14px; }
 
 .kora-auth-input {
   width: 100%;
-  padding: 14px 16px 14px 48px;
+  padding: 13px 16px 13px 48px;
   background: var(--kora-input-bg);
-  border: 1px solid transparent;
-  border-radius: 100px; /* Fully rounded as in mockup */
-  font-size: 15px;
+  border: 1.5px solid transparent;
+  border-radius: 100px;
+  font-size: 14px;
   color: var(--kora-text-dark);
   transition: all 0.2s ease;
-  appearance: none; /* For custom chevron */
+  appearance: none;
+  font-family: inherit;
+}
+.kora-auth-textarea {
+  border-radius: 16px !important;
+  resize: vertical;
+  min-height: 88px;
+  line-height: 1.5;
+  padding-top: 13px !important;
 }
 
-/* Custom chevron for select */
 select.kora-auth-input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 20px center;
   padding-right: 40px;
 }
-
 .kora-auth-input:focus {
   background: var(--kora-white);
   border-color: var(--kora-primary);
-  box-shadow: 0 0 0 4px rgba(11, 43, 38, 0.05);
+  box-shadow: 0 0 0 4px rgba(11,43,38,0.05);
   outline: none;
 }
-
 .kora-auth-input-right-icon {
   position: absolute;
   right: 16px;
@@ -214,14 +230,24 @@ select.kora-auth-input {
   align-items: center;
 }
 
+/* ── Error banner ─────────────────────────── */
+.kora-auth-error {
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #fca5a5;
+  font-size: 13px;
+}
+
+/* ── Options / Checkbox ───────────────────── */
 .kora-auth-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 13.5px;
-  margin-top: -10px;
+  margin-top: -6px;
 }
-
 .kora-auth-checkbox {
   display: flex;
   align-items: center;
@@ -229,110 +255,246 @@ select.kora-auth-input {
   cursor: pointer;
   color: var(--kora-text-muted);
 }
-
 .kora-auth-checkbox input {
   accent-color: var(--kora-primary);
-  width: 16px;
-  height: 16px;
+  width: 16px; height: 16px;
 }
 
-.kora-auth-link {
-  color: var(--kora-text-dark);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.kora-auth-link:hover {
-  text-decoration: underline;
-}
-
+/* ── Buttons ──────────────────────────────── */
 .kora-auth-btn {
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   background: var(--kora-primary);
   color: white;
   border: none;
   border-radius: 100px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
 }
-
-.kora-auth-btn:hover {
+.kora-auth-btn:hover:not(:disabled) {
   background: var(--kora-primary-light);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(11, 43, 38, 0.2);
+  box-shadow: 0 8px 20px rgba(11,43,38,0.2);
+}
+.kora-auth-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.kora-auth-btn--employer {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+.kora-auth-btn--employer:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: 0 8px 20px rgba(249,115,22,0.3);
 }
 
+/* ── Divider ──────────────────────────────── */
 .kora-auth-divider {
   display: flex;
   align-items: center;
   text-align: center;
   color: #ccc;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin: 10px 0;
+  margin: 4px 0;
 }
-
-.kora-auth-divider::before,
-.kora-auth-divider::after {
+.kora-auth-divider::before, .kora-auth-divider::after {
   content: '';
   flex: 1;
   border-bottom: 1px solid #eee;
 }
-
 .kora-auth-divider::before { margin-right: 1.5em; }
-.kora-auth-divider::after { margin-left: 1.5em; }
+.kora-auth-divider::after  { margin-left:  1.5em; }
 
+/* ── Social button ────────────────────────── */
 .kora-auth-social-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 11px;
   background: white;
   color: var(--kora-text-dark);
-  border: 1px solid #eee;
+  border: 1.5px solid #e5e7eb;
   border-radius: 100px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
-
 .kora-auth-social-btn:hover {
-  background: #fcfcfc;
-  border-color: #ddd;
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
+/* ── Footer ───────────────────────────────── */
 .kora-auth-footer {
-  margin-top: 32px;
+  margin-top: 24px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--kora-text-muted);
 }
-
-.kora-auth-footer .kora-auth-link {
+.kora-auth-link {
   color: var(--kora-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.kora-auth-link:hover { text-decoration: underline; }
+
+/* ════════════════════════════════════════════
+   ROLE PICKER
+   ════════════════════════════════════════════ */
+.kora-role-picker-container { max-width: 860px; }
+.kora-role-picker { justify-content: center; }
+
+.kora-role-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+.kora-role-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.22s ease;
+  width: 100%;
+  font-family: inherit;
+}
+.kora-role-card:hover {
+  border-color: var(--kora-primary);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.kora-role-card-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.kora-role-card-icon--seeker   { background: #eff6ff; color: #2563eb; }
+.kora-role-card-icon--employer { background: #fff7ed; color: #f97316; }
+.kora-role-card-content { flex: 1; }
+.kora-role-card-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kora-text-dark);
+  margin-bottom: 3px;
+}
+.kora-role-card-sub {
+  display: block;
+  font-size: 12.5px;
+  color: var(--kora-text-muted);
+}
+.kora-role-card-arrow { color: #d1d5db; flex-shrink: 0; }
+.kora-role-card:hover .kora-role-card-arrow { color: var(--kora-primary); }
+
+/* ════════════════════════════════════════════
+   EMPLOYER 2-STEP PROGRESS
+   ════════════════════════════════════════════ */
+.kora-emp-steps {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 0;
+}
+.kora-emp-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kora-emp-step-circle {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: all 0.25s;
+}
+.kora-emp-step.active .kora-emp-step-circle {
+  background: var(--kora-primary);
+  border-color: var(--kora-primary);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(249,115,22,0.12);
+}
+.kora-emp-step.done .kora-emp-step-circle {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: white;
+}
+.kora-emp-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+.kora-emp-step.active .kora-emp-step-label { color: var(--kora-primary); }
+.kora-emp-step.done   .kora-emp-step-label { color: #16a34a; }
+.kora-emp-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 10px;
+  min-width: 30px;
+  transition: background 0.3s;
+}
+.kora-emp-step-line.done { background: #16a34a; }
+
+/* Row layout for paired fields */
+.kora-emp-row {
+  display: flex;
+  gap: 12px;
 }
 
-/* Responsiveness */
+/* Verification banner */
+.kora-emp-verify-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+}
+.kora-emp-verify-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ════════════════════════════
+   RESPONSIVE
+   ════════════════════════════ */
 @media (max-width: 900px) {
-  .kora-auth-container {
-    flex-direction: column;
-    max-width: 500px;
-  }
-  .kora-auth-left {
-    padding: 40px 20px;
-  }
-  .kora-auth-right {
-    padding: 40px 30px;
-  }
-  .kora-auth-left-title {
-    font-size: 28px;
-  }
+  .kora-auth-container { flex-direction: column; max-width: 500px; }
+  .kora-auth-left { padding: 36px 24px; }
+  .kora-auth-left-title { font-size: 28px; }
+  .kora-auth-right { padding: 36px 28px !important; max-height: none; }
+}
+
+@media (max-width: 480px) {
+  .kora-emp-row { flex-direction: column; gap: 14px; }
+  .kora-auth-right { padding: 28px 20px !important; }
 }

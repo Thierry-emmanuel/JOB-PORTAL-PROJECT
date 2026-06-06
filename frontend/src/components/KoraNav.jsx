@@ -107,6 +107,17 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
+  // Blur page content under nav when any link is active (pro frosted-glass effect)
+  const hasActive = navLinks.some(({ to }) => isActive(to));
+  useEffect(() => {
+    if (hasActive) {
+      document.body.classList.add('kn-page-active');
+    } else {
+      document.body.classList.remove('kn-page-active');
+    }
+    return () => document.body.classList.remove('kn-page-active');
+  }, [hasActive]);
+
   const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
   const isTransparentHeaderPage = true;
 
@@ -123,7 +134,7 @@ export default function KoraNav() {
   return (
     <>
       <nav
-        className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}`}
+        className={`kn-nav${(scrolled || !isTransparentHeaderPage) ? ' kn-nav--scrolled' : ''}${isDarkHeaderPage ? ' kn-nav--light-text' : ''}${spaceClass}${hasActive ? ' kn-nav--has-active' : ''}`}
         aria-label="Main navigation"
       >
         <div className="kn-inner">
