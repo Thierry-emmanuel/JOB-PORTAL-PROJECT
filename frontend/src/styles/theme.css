@@ -127,16 +127,21 @@
   z-index: 999;
   background: transparent;
   padding: 0 48px;
-  border-bottom: 1px solid transparent;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--kora-font);
 }
 .kn-nav--scrolled {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom-color: var(--kora-border) !important;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07) !important;
+  top: 10px !important;
+  left: 24px !important;
+  right: 24px !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 99px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+  padding: 0 24px !important;
 }
 .ap-page, .jd-page, .insights-root {
   padding-top: var(--kora-nav-h, 72px);
@@ -314,6 +319,12 @@
 /* ── Responsive nav ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .kn-nav    { padding: 0 20px; }
+  .kn-nav--scrolled {
+    top: 8px !important;
+    left: 12px !important;
+    right: 12px !important;
+    padding: 0 16px !important;
+  }
   .kn-links  { display: none; }
   .kn-logo img { width: 56px; height: 40px; }
 }

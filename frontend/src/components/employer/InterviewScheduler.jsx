@@ -33,6 +33,47 @@ const MeetIcon = () => (
 /* ─── Constants ───────────────────────────────────────────── */
 const PLATFORMS = ['Google Meet','Zoom','Microsoft Teams','Other'];
 
+const formatGoogleMeetLink = (input) => {
+  if (!input) return input;
+  let str = input.trim();
+
+  // If they entered just a 10-character code (possibly with dashes) e.g., "lgkouszeur" or "lgk-ousz-eur"
+  const cleanCode = str.replace(/-/g, '');
+  const isPlainCode = /^[a-zA-Z]{10}$/.test(cleanCode);
+
+  if (isPlainCode) {
+    const formattedCode = `${cleanCode.slice(0, 3)}-${cleanCode.slice(3, 7)}-${cleanCode.slice(7, 10)}`.toLowerCase();
+    return `https://meet.google.com/${formattedCode}`;
+  }
+
+  // Prepend https:// if it starts with meet.google.com
+  if (str.toLowerCase().startsWith('meet.google.com')) {
+    str = 'https://' + str;
+  }
+
+  try {
+    const url = new URL(str);
+    if (url.hostname === 'meet.google.com') {
+      const pathCode = url.pathname.replace(/^\//, '').replace(/-/g, '');
+      if (/^[a-zA-Z]{10}$/.test(pathCode)) {
+        const formattedCode = `${pathCode.slice(0, 3)}-${pathCode.slice(3, 7)}-${pathCode.slice(7, 10)}`.toLowerCase();
+        return `https://meet.google.com/${formattedCode}`;
+      }
+    }
+  } catch (err) {
+    const meetMatch = str.match(/meet\.google\.com\/([a-zA-Z-]{10,12})/i);
+    if (meetMatch) {
+      const pathCode = meetMatch[1].replace(/-/g, '');
+      if (/^[a-zA-Z]{10}$/.test(pathCode)) {
+        const formattedCode = `${pathCode.slice(0, 3)}-${pathCode.slice(3, 7)}-${pathCode.slice(7, 10)}`.toLowerCase();
+        return `https://meet.google.com/${formattedCode}`;
+      }
+    }
+  }
+
+  return str;
+};
+
 const TYPE_OPTIONS = [
   {
     value: 'VIDEO',
@@ -92,20 +133,46 @@ export default function InterviewScheduler({ application, onClose, onScheduled }
 
   /* ── Validate ───────────────────────────────────────────── */
   const [errors, setErrors] = useState({});
-  const validate = () => {
+  const validate = (f = form) => {
     const e = {};
-    if (!form.scheduledAt) e.scheduledAt = 'Date & time is required';
-    else if (new Date(form.scheduledAt) <= new Date()) e.scheduledAt = 'Must be a future date';
-    if (form.type === 'VIDEO' && !form.generateMeet && !form.meetingLink)
-      e.meetingLink = 'Provide a meeting link or enable auto-generate';
-    if (form.type === 'IN_PERSON' && !form.location.trim())
+    if (!f.scheduledAt) e.scheduledAt = 'Date & time is required';
+    else if (new Date(f.scheduledAt) <= new Date()) e.scheduledAt = 'Must be a future date';
+    
+    if (f.type === 'VIDEO' && !f.generateMeet) {
+      if (!f.meetingLink) {
+        e.meetingLink = 'Provide a meeting link or enable auto-generate';
+      } else {
+        const isGoogleMeet = f.platform === 'Google Meet' || f.meetingLink.includes('meet.google.com');
+        if (isGoogleMeet) {
+          const meetRegex = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/i;
+          if (!meetRegex.test(f.meetingLink)) {
+            e.meetingLink = 'Invalid Google Meet format. Expected: meet.google.com/abc-defg-hij';
+          }
+        } else {
+          try {
+            new URL(f.meetingLink);
+          } catch (err) {
+            if (!/^https?:\/\//i.test(f.meetingLink)) {
+              e.meetingLink = 'Please enter a valid URL starting with http:// or https://';
+            }
+          }
+        }
+      }
+    }
+    
+    if (f.type === 'IN_PERSON' && !f.location.trim())
       e.location = 'Location is required for on-site interviews';
     return e;
   };
 
   /* ── Go to review ───────────────────────────────────────── */
   const handleReview = () => {
-    const e = validate();
+    let updatedLink = form.meetingLink;
+    if (form.type === 'VIDEO' && !form.generateMeet) {
+      updatedLink = formatGoogleMeetLink(form.meetingLink);
+      upd('meetingLink', updatedLink);
+    }
+    const e = validate({ ...form, meetingLink: updatedLink });
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     setPhase('review');
