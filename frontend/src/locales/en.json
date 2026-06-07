@@ -97,7 +97,21 @@
     "job_summary_aria": "Job summary",
     "applying_for_aria": "Applying for {{title}}",
     "application_reviewed_note": "Your application will be reviewed within 48 hours.",
-    "application_summary": "Application Summary"
+    "application_summary": "Application Summary",
+    "adjust_filters": "Try adjusting your filters",
+    "clear_filters": "Clear Filters",
+    "empty_title": "No jobs found",
+    "empty_desc": "Try different keywords or broaden your search.",
+    "error_load_jobs": "Failed to load jobs. Please try again.",
+    "find_next_role": "Find Your Next Role",
+    "job_listings": "Job Listings",
+    "jobs": "Jobs",
+    "jobs_available": "jobs available",
+    "jobs_for_search": "jobs for",
+    "loading_jobs": "Loading jobs…",
+    "loading_opportunities": "Loading opportunities…",
+    "no_jobs_match": "No jobs match your search",
+    "showing": "Showing"
   },
   "home": {
     "hero_title": "Unlock Your Career Potential",
@@ -123,7 +137,8 @@
     "type": "Type",
     "salary": "Salary",
     "website": "Website",
-    "search": "Search"
+    "search": "Search",
+    "of": "of"
   },
   "auth": {
     "welcome_back": "Welcome back!",
@@ -313,12 +328,16 @@
   },
   "categories": {
     "explore": "EXPLORE BY FIELD",
-    "title": "Browse by Category"
+    "title": "Browse by Category",
+    "empty_title": "No categories found",
+    "empty_desc": "Categories will appear here once added."
   },
   "companies": {
     "top": "TOP EMPLOYERS",
     "title": "Companies Hiring Now",
-    "see_all": "See all companies"
+    "see_all": "See all companies",
+    "empty_title": "No companies found",
+    "empty_desc": "Companies will appear here once they are listed."
   },
   "cta": {
     "seekers_title": "Find Your Dream Job Today",

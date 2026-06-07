@@ -97,7 +97,21 @@
     "job_summary_aria": "Résumé du poste",
     "applying_for_aria": "Postuler pour {{title}}",
     "application_reviewed_note": "Votre candidature sera examinée dans les 48 heures.",
-    "application_summary": "Résumé de la Candidature"
+    "application_summary": "Résumé de la Candidature",
+    "adjust_filters": "Essayez d'ajuster vos filtres",
+    "clear_filters": "Effacer les filtres",
+    "empty_title": "Aucun emploi trouvé",
+    "empty_desc": "Essayez d'autres mots-clés ou élargissez votre recherche.",
+    "error_load_jobs": "Impossible de charger les offres. Veuillez réessayer.",
+    "find_next_role": "Trouvez votre prochain poste",
+    "job_listings": "Offres d'emploi",
+    "jobs": "Emplois",
+    "jobs_available": "offres disponibles",
+    "jobs_for_search": "offres pour",
+    "loading_jobs": "Chargement des offres…",
+    "loading_opportunities": "Chargement des opportunités…",
+    "no_jobs_match": "Aucune offre ne correspond à votre recherche",
+    "showing": "Affichage"
   },
   "home": {
     "hero_title": "Libérez Votre Potentiel de Carrière",
@@ -123,7 +137,8 @@
     "type": "Type",
     "salary": "Salaire",
     "website": "Site web",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "of": "sur"
   },
   "auth": {
     "welcome_back": "Bon retour !",
@@ -313,12 +328,16 @@
   },
   "categories": {
     "explore": "EXPLORER PAR DOMAINE",
-    "title": "Parcourir par Catégorie"
+    "title": "Parcourir par Catégorie",
+    "empty_title": "Aucune catégorie trouvée",
+    "empty_desc": "Les catégories apparaîtront ici une fois ajoutées."
   },
   "companies": {
     "top": "TOP EMPLOYEURS",
     "title": "Entreprises qui Recrutent",
-    "see_all": "Voir toutes les entreprises"
+    "see_all": "Voir toutes les entreprises",
+    "empty_title": "Aucune entreprise trouvée",
+    "empty_desc": "Les entreprises apparaîtront ici une fois répertoriées."
   },
   "cta": {
     "seekers_title": "Trouvez l'Emploi de Vos Rêves",
