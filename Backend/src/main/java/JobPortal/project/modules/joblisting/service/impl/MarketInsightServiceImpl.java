@@ -30,12 +30,12 @@ public class MarketInsightServiceImpl implements MarketInsightService {
     @Cacheable(value = "marketInsights", key = "'demandTrends'")
     public List<DemandTrendResponse> getDemandTrends() {
         List<Object[]> rawTrends = jobListingRepository.getDemandTrendsRaw();
-        
+
         return rawTrends.stream().map(row -> {
             Integer year = (Integer) row[0];
             Integer month = (Integer) row[1];
             Long count = (Long) row[2];
-            
+
             String period = year + "-" + String.format("%02d", month);
             return new DemandTrendResponse(period, count);
         }).collect(Collectors.toList());

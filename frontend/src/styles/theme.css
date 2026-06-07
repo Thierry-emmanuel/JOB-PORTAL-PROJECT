@@ -124,16 +124,34 @@
   top: 0;
   left: 0;
   right: 0;
+  width: 100%;
   z-index: 999;
-  /* Dark semi-transparent — readable on ANY background */
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* ── Blur effect — production-safe approach ──────────────────
+     backdrop-filter directly on the element is the most
+     cross-browser reliable method. No parent transforms.      */
+  background: rgba(0, 0, 0, 0.40);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   padding: 0 48px;
   transition: background 0.3s ease, box-shadow 0.3s ease;
   font-family: var(--kora-font);
+
+  /* Force GPU layer — ensures backdrop-filter works in production */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  isolation: isolate;
 }
+/* Fallback for Safari < 9 and old browsers without backdrop-filter */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .kn-nav {
+    background: rgba(15, 23, 42, 0.95) !important;
+  }
+}
+
 .kn-nav--scrolled {
   /* Slightly deeper on scroll for more separation */
   background: rgba(0, 0, 0, 0.60) !important;
@@ -949,12 +967,5 @@
 }
 
 /* Blur strip behind the nav bar */
-.kn-nav::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-}
+/* ::before removed — backdrop-filter applied directly on .kn-nav
+   for maximum browser compatibility in production */

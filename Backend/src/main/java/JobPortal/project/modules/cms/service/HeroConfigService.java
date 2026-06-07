@@ -8,6 +8,8 @@ import JobPortal.project.modules.joblisting.repository.JobListingRepository;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import JobPortal.project.enums.Role;
 import JobPortal.project.modules.company.repository.CompanyRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class HeroConfigService {
 
     /* ─── Public: get live hero (used by homepage, no auth required) ── */
     @Transactional(readOnly = true)
+    @Cacheable(value = "heroConfig", key = "'live'")
     public HeroConfigDTO.Response getLiveHero() {
         HeroConfig cfg = heroConfigRepository.findFirstByIsActiveTrue()
                 .orElseGet(this::buildDefault);
@@ -42,6 +45,7 @@ public class HeroConfigService {
 
     /* ─── Admin: save / upsert (always id=1) ─────────────────────── */
     @Transactional
+    @CacheEvict(value = "heroConfig", allEntries = true)
     public HeroConfigDTO.Response saveHero(HeroConfigDTO.Request req, String editorEmail) {
         HeroConfig cfg = heroConfigRepository.findById(1L)
                 .orElse(HeroConfig.builder().id(1L).build());
@@ -55,6 +59,7 @@ public class HeroConfigService {
 
     /* ─── Admin: reset to defaults ────────────────────────────────── */
     @Transactional
+    @CacheEvict(value = "heroConfig", allEntries = true)
     public HeroConfigDTO.Response resetToDefaults(String editorEmail) {
         HeroConfig defaults = buildDefault();
         defaults.setId(1L);

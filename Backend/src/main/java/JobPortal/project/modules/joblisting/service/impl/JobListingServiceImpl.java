@@ -19,6 +19,9 @@ import JobPortal.project.modules.joblisting.repository.*;
 import JobPortal.project.modules.joblisting.service.JobListingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -70,10 +73,14 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListings",   allEntries = true),
+            @CacheEvict(value = "jobCategories", allEntries = true)   // category counts change
+    })
     public JobListingResponse createListing(Long employerId, JobListingCreateRequest req) {
 
         JobCategory category = categoryRepository.findById(req.categoryId())
-            .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId()));
 
         // Build the location FK reference without loading the full entity
         JobLocation location = null;
@@ -85,23 +92,23 @@ public class JobListingServiceImpl implements JobListingService {
         Set<ListingSkill> skills = resolveSkills(req.skillIds());
 
         JobListing listing = JobListing.builder()
-            .employerId(employerId)
-            .companyId(req.companyId())
-            .category(category)
-            .location(location)
-            .title(req.title())
-            .description(req.description())
-            .jobType(req.jobType())
-            .salaryMin(req.salaryMin())
-            .salaryMax(req.salaryMax())
-            .experienceLevel(req.experienceLevel())
-            .deadline(req.deadline())
-            .skills(skills)
-            .qualificationNeeded(req.qualificationNeeded())
-            .requiresInterview(req.requiresInterview() != null ? req.requiresInterview() : false)
-            .status(PostingStatus.DRAFT)
-            .viewCount(0)
-            .build();
+                .employerId(employerId)
+                .companyId(req.companyId())
+                .category(category)
+                .location(location)
+                .title(req.title())
+                .description(req.description())
+                .jobType(req.jobType())
+                .salaryMin(req.salaryMin())
+                .salaryMax(req.salaryMax())
+                .experienceLevel(req.experienceLevel())
+                .deadline(req.deadline())
+                .skills(skills)
+                .qualificationNeeded(req.qualificationNeeded())
+                .requiresInterview(req.requiresInterview() != null ? req.requiresInterview() : false)
+                .status(PostingStatus.DRAFT)
+                .viewCount(0)
+                .build();
 
         if (req.publishImmediately()) {
             listing.publish();
@@ -109,7 +116,7 @@ public class JobListingServiceImpl implements JobListingService {
 
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Employer {} created listing {} (status={})",
-                 employerId, saved.getId(), saved.getStatus());
+                employerId, saved.getId(), saved.getStatus());
 
         if (saved.getStatus() == PostingStatus.ACTIVE) {
             notifyEmployerOfPublication(employerId, saved);
@@ -120,6 +127,10 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListingDetail", key = "#listingId"),
+            @CacheEvict(value = "jobListings",      allEntries = true)
+    })
     public JobListingResponse updateListing(Long employerId, UUID listingId,
                                             JobListingUpdateRequest req) {
 
@@ -139,7 +150,7 @@ public class JobListingServiceImpl implements JobListingService {
 
         if (req.categoryId() != null) {
             listing.setCategory(categoryRepository.findById(req.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId())));
+                    .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId())));
         }
         if (req.locationId() != null) {
             JobLocation loc = new JobLocation();
@@ -157,6 +168,11 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListingDetail", key = "#listingId"),
+            @CacheEvict(value = "jobListings",      allEntries = true),
+            @CacheEvict(value = "jobCategories",    allEntries = true)
+    })
     public void deleteListing(Long employerId, UUID listingId) {
         JobListing listing = findOwnedListing(employerId, listingId);
         listing.softDelete();
@@ -165,29 +181,33 @@ public class JobListingServiceImpl implements JobListingService {
 
         // Notify Application + Notification modules (loose coupling via Spring Events)
         eventPublisher.publishEvent(
-            new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
+                new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<JobListingSummary> getEmployerListings(Long employerId, Pageable pageable) {
         return listingRepository.findAllByEmployerId(employerId, pageable)
-                                .map(mapper::toSummary);
+                .map(mapper::toSummary);
     }
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListingDetail", key = "#listingId"),
+            @CacheEvict(value = "jobListings",      allEntries = true)
+    })
     public JobListingResponse changeListingStatus(Long employerId, UUID listingId,
                                                   JobListingStatusRequest req) {
         JobListing listing = findOwnedListing(employerId, listingId);
         applyStatusTransition(listing, req.status());
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Employer {} changed listing {} → {}", employerId, listingId, req.status());
-        
+
         if (saved.getStatus() == PostingStatus.ACTIVE) {
             notifyEmployerOfPublication(employerId, saved);
         }
-        
+
         return mapper.toResponse(saved);
     }
 
@@ -197,18 +217,20 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobListings", key = "'active:p'+#pageable.pageNumber+':s'+#pageable.pageSize")
     public Page<JobListingSummary> getActiveListings(Pageable pageable) {
         // Use the specification with no filters — status=ACTIVE is always applied
         Specification<JobListing> spec = JobListingSpecification.buildFilter(
-            JobListingSpecification.SearchParams.builder().build());
+                JobListingSpecification.SearchParams.builder().build());
         return listingRepository.findAll(spec, pageable).map(mapper::toSummary);
     }
 
     @Override
     @Transactional
+    @Cacheable(value = "jobListingDetail", key = "#listingId")
     public JobListingResponse getPublicListingById(UUID listingId) {
         JobListing listing = listingRepository.findActiveById(listingId)
-            .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
+                .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
 
         listing.incrementViewCount();
         listingRepository.save(listing);
@@ -220,7 +242,7 @@ public class JobListingServiceImpl implements JobListingService {
     @Transactional(readOnly = true)
     public JobListingResponse getAnyListingById(UUID listingId) {
         JobListing listing = listingRepository.findAnyById(listingId)
-            .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
+                .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
         return mapper.toResponse(listing);
     }
 
@@ -233,40 +255,41 @@ public class JobListingServiceImpl implements JobListingService {
             Pageable pageable) {
 
         Specification<JobListing> spec = JobListingSpecification.buildFilter(
-            JobListingSpecification.SearchParams.builder()
-                .keyword(keyword)
-                .categoryId(categoryId)
-                .jobType(jobType)
-                .city(city)
-                .experienceLevel(experienceLevel)
-                .salaryMin(salaryMin)
-                .salaryMax(salaryMax)
-                .build());
+                JobListingSpecification.SearchParams.builder()
+                        .keyword(keyword)
+                        .categoryId(categoryId)
+                        .jobType(jobType)
+                        .city(city)
+                        .experienceLevel(experienceLevel)
+                        .salaryMin(salaryMin)
+                        .salaryMax(salaryMax)
+                        .build());
 
         return listingRepository.findAll(spec, pageable).map(mapper::toSummary);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobCategories", key = "'all'")
     public List<CategoryResponse> getAllCategories() {
         List<JobPortal.project.modules.joblisting.dto.response.SalaryAggregationResponse> stats = listingRepository.getAverageSalaryByCategory();
         java.util.Map<String, JobPortal.project.modules.joblisting.dto.response.SalaryAggregationResponse> statsMap = stats.stream()
-            .collect(Collectors.toMap(
-                s -> s.getCategory().toLowerCase(),
-                s -> s,
-                (s1, s2) -> s1
-            ));
+                .collect(Collectors.toMap(
+                        s -> s.getCategory().toLowerCase(),
+                        s -> s,
+                        (s1, s2) -> s1
+                ));
 
         return categoryRepository.findAll().stream()
-            .map(cat -> {
-                JobPortal.project.modules.joblisting.dto.response.SalaryAggregationResponse agg = statsMap.get(cat.getName().toLowerCase());
-                if (agg != null) {
-                    return mapper.toCategoryResponse(cat, agg.getJobCount(), agg.getAvgSalaryMin(), agg.getAvgSalaryMax());
-                } else {
-                    return mapper.toCategoryResponse(cat, 0L, 0.0, 0.0);
-                }
-            })
-            .collect(Collectors.toList());
+                .map(cat -> {
+                    JobPortal.project.modules.joblisting.dto.response.SalaryAggregationResponse agg = statsMap.get(cat.getName().toLowerCase());
+                    if (agg != null) {
+                        return mapper.toCategoryResponse(cat, agg.getJobCount(), agg.getAvgSalaryMin(), agg.getAvgSalaryMax());
+                    } else {
+                        return mapper.toCategoryResponse(cat, 0L, 0.0, 0.0);
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -278,26 +301,31 @@ public class JobListingServiceImpl implements JobListingService {
     public Page<JobListingSummary> adminGetAllListings(PostingStatus status, Long employerId,
                                                        Pageable pageable) {
         return listingRepository.findAllForAdmin(status, employerId, pageable)
-                                .map(mapper::toSummary);
+                .map(mapper::toSummary);
     }
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListingDetail", key = "#listingId"),
+            @CacheEvict(value = "jobListings",      allEntries = true),
+            @CacheEvict(value = "jobCategories",    allEntries = true)
+    })
     public JobListingResponse adminModerate(Long adminId, UUID listingId,
                                             AdminJobModerationRequest req) {
 
         JobListing listing = listingRepository.findById(listingId)
-            .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
+                .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
 
         PostingStatus oldStatus = listing.getStatus();
         applyAdminTransition(listing, req.status(), req.reason());
         JobListing saved = listingRepository.save(listing);
         log.info("[JobListing] Admin {} moderated listing {} → {} (reason={})",
-                 adminId, listingId, req.status(), req.reason());
+                adminId, listingId, req.status(), req.reason());
 
         if (req.status() == PostingStatus.DELETED) {
             eventPublisher.publishEvent(
-                new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
+                    new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
         } else if (saved.getStatus() == PostingStatus.ACTIVE && oldStatus != PostingStatus.ACTIVE) {
             notifyEmployerOfPublication(saved.getEmployerId(), saved);
         }
@@ -307,9 +335,14 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "jobListingDetail", key = "#listingId"),
+            @CacheEvict(value = "jobListings",      allEntries = true),
+            @CacheEvict(value = "jobCategories",    allEntries = true)
+    })
     public void adminDeleteListing(Long adminId, UUID listingId) {
         JobListing listing = listingRepository.findById(listingId)
-            .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
+                .orElseThrow(() -> new ResourceNotFoundException("JobListing", listingId));
 
         listing.softDelete();
         listing.setModerationNote("Force-removed by admin " + adminId);
@@ -317,7 +350,7 @@ public class JobListingServiceImpl implements JobListingService {
         log.info("[JobListing] Admin {} force-deleted listing {}", adminId, listingId);
 
         eventPublisher.publishEvent(
-            new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
+                new JobPortal.project.modules.joblisting.config.JobListingDeletedEvent(this, listingId));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -330,8 +363,8 @@ public class JobListingServiceImpl implements JobListingService {
      */
     private JobListing findOwnedListing(Long employerId, UUID listingId) {
         return listingRepository.findByIdAndEmployerId(listingId, employerId)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "Job listing not found or you do not have permission to access it."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Job listing not found or you do not have permission to access it."));
     }
 
     /**
@@ -340,9 +373,9 @@ public class JobListingServiceImpl implements JobListingService {
      */
     private void assertEditable(JobListing listing) {
         if (listing.getStatus() == PostingStatus.EXPIRED ||
-            listing.getStatus() == PostingStatus.DELETED) {
+                listing.getStatus() == PostingStatus.DELETED) {
             throw new InvalidListingStateException(
-                "Cannot edit a listing with status: " + listing.getStatus());
+                    "Cannot edit a listing with status: " + listing.getStatus());
         }
     }
 
@@ -361,23 +394,23 @@ public class JobListingServiceImpl implements JobListingService {
             case ACTIVE -> {
                 if (current != PostingStatus.DRAFT)
                     throw new InvalidListingStateException(
-                        "Only DRAFT listings can be published. Current: " + current);
+                            "Only DRAFT listings can be published. Current: " + current);
                 listing.publish();
             }
             case DRAFT -> {
                 if (current != PostingStatus.ACTIVE)
                     throw new InvalidListingStateException(
-                        "Only ACTIVE listings can be moved back to DRAFT. Current: " + current);
+                            "Only ACTIVE listings can be moved back to DRAFT. Current: " + current);
                 listing.setStatus(PostingStatus.DRAFT);
             }
             case DELETED -> {
                 if (current == PostingStatus.EXPIRED || current == PostingStatus.DELETED)
                     throw new InvalidListingStateException(
-                        "Listing is already in terminal state: " + current);
+                            "Listing is already in terminal state: " + current);
                 listing.softDelete();
             }
             default -> throw new InvalidListingStateException(
-                "Status " + target + " cannot be set manually.");
+                    "Status " + target + " cannot be set manually.");
         }
     }
 
@@ -390,7 +423,7 @@ public class JobListingServiceImpl implements JobListingService {
             case DRAFT   -> listing.setStatus(PostingStatus.DRAFT);
             case DELETED -> listing.softDelete();
             default -> throw new InvalidListingStateException(
-                "Admin cannot set status to: " + target);
+                    "Admin cannot set status to: " + target);
         }
         listing.setModerationNote(reason);
     }
@@ -404,7 +437,7 @@ public class JobListingServiceImpl implements JobListingService {
         Set<ListingSkill> found = skillRepository.findByIdIn(skillIds);
         if (found.size() != skillIds.size()) {
             log.warn("[JobListing] Some skill IDs were not found in the database; "
-                   + "posting will include only matched skills.");
+                    + "posting will include only matched skills.");
         }
         return found;
     }
@@ -421,12 +454,14 @@ public class JobListingServiceImpl implements JobListingService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobLocations", key = "'all'")
     public List<JobLocation> getAllLocations() {
         return locationRepository.findAll();
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobSkills", key = "'all'")
     public List<ListingSkill> getAllSkills() {
         return skillRepository.findAll();
     }
@@ -435,11 +470,11 @@ public class JobListingServiceImpl implements JobListingService {
         try {
             userRepository.findById(employerId).ifPresent(employer -> {
                 eventPublisher.publishEvent(new JobPortal.project.modules.notification.event.NotificationEvent(
-                    this,
-                    employer,
-                    "Job Posting Published Successfully",
-                    "Hello " + employer.getFullName() + ",\n\nYour job listing '" + listing.getTitle() + "' has been successfully published on Kora and is now live for candidates to view and apply.",
-                    JobPortal.project.enums.NotificationType.JOB_ALERT
+                        this,
+                        employer,
+                        "Job Posting Published Successfully",
+                        "Hello " + employer.getFullName() + ",\n\nYour job listing '" + listing.getTitle() + "' has been successfully published on Kora and is now live for candidates to view and apply.",
+                        JobPortal.project.enums.NotificationType.JOB_ALERT
                 ));
             });
         } catch (Exception e) {
