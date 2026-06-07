@@ -12,34 +12,31 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Full detail response for a single job listing.
- * Returned by create, get-by-id, and update endpoints.
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Full detail view of a job listing")
 public record JobListingResponse(
 
-    UUID            id,
-    String          title,
-    String          description,
-    PostingStatus   status,
-    JobType         jobType,
-    BigDecimal      salaryMin,
-    BigDecimal      salaryMax,
-    ExperienceLevel experienceLevel,
-    LocalDate       deadline,
-    int             viewCount,
-    String          qualificationNeeded,
-    Boolean         requiresInterview,
+        UUID            id,
+        Long            numericId,       // ✅ numeric version of UUID first segment — used by Application.jobPostingId
+        String          title,
+        String          description,
+        PostingStatus   status,
+        JobType         jobType,
+        BigDecimal      salaryMin,
+        BigDecimal      salaryMax,
+        ExperienceLevel experienceLevel,
+        LocalDate       deadline,
+        int             viewCount,
+        String          qualificationNeeded,
+        Boolean         requiresInterview,
 
-    CategorySummary  category,
-    CompanySummary   company,
-    LocationSummary  location,
-    Set<SkillSummary> skills,
+        CategorySummary  category,
+        CompanySummary   company,
+        LocationSummary  location,
+        Set<SkillSummary> skills,
 
-    LocalDateTime   createdAt,
-    LocalDateTime   updatedAt
+        LocalDateTime   createdAt,
+        LocalDateTime   updatedAt
 
 ) {
 

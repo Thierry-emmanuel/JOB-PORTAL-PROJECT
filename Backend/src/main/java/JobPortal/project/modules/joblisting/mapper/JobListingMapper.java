@@ -22,6 +22,21 @@ public class JobListingMapper {
     private final CompanyRepository companyRepository;
 
     /**
+     * Derives a stable numeric ID from the UUID's first hex segment.
+     * Must match the logic in JobListingRepository.findIdByNumericalId:
+     *   CAST(SUBSTRING_INDEX(BIN_TO_UUID(id), '-', 1) AS SIGNED)
+     *
+     * BIN_TO_UUID outputs a standard UUID string like:
+     *   xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+     * The first segment is 8 hex chars → parsed as a long.
+     */
+    private static long toNumericId(java.util.UUID uuid) {
+        // Take the first 8 hex characters of the UUID string (before the first '-')
+        String firstSegment = uuid.toString().split("-")[0]; // e.g. "10000000"
+        return Long.parseLong(firstSegment, 16);
+    }
+
+    /**
      * Maps to the full detail response.
      * Call only after the entity's associations (category, location, skills) are loaded.
      */
@@ -29,39 +44,40 @@ public class JobListingMapper {
         Company company = jl.getCompanyId() == null ? null : companyRepository.findById(jl.getCompanyId()).orElse(null);
 
         return new JobListingResponse(
-            jl.getId(),
-            jl.getTitle(),
-            jl.getDescription(),
-            jl.getStatus(),
-            jl.getJobType(),
-            jl.getSalaryMin(),
-            jl.getSalaryMax(),
-            jl.getExperienceLevel(),
-            jl.getDeadline(),
-            jl.getViewCount() == null ? 0 : jl.getViewCount(),
-            jl.getQualificationNeeded(),
-            jl.getRequiresInterview(),
-            jl.getCategory() == null ? null : new JobListingResponse.CategorySummary(
-                jl.getCategory().getId(),
-                jl.getCategory().getName(),
-                jl.getCategory().getSlug()
-            ),
-            company == null ? null : new JobListingResponse.CompanySummary(
-                company.getId(),
-                company.getName(),
-                company.getLogoUrl()
-            ),
-            jl.getLocation() == null ? null : new JobListingResponse.LocationSummary(
-                jl.getLocation().getId(),
-                jl.getLocation().getCity(),
-                jl.getLocation().getState(),
-                jl.getLocation().getCountry()
-            ),
-            jl.getSkills() == null ? null : jl.getSkills().stream()
-                .map(s -> new JobListingResponse.SkillSummary(s.getId(), s.getName()))
-                .collect(Collectors.toSet()),
-            jl.getCreatedAt(),
-            jl.getUpdatedAt()
+                jl.getId(),
+                toNumericId(jl.getId()),                          // ✅ numericId
+                jl.getTitle(),
+                jl.getDescription(),
+                jl.getStatus(),
+                jl.getJobType(),
+                jl.getSalaryMin(),
+                jl.getSalaryMax(),
+                jl.getExperienceLevel(),
+                jl.getDeadline(),
+                jl.getViewCount() == null ? 0 : jl.getViewCount(),
+                jl.getQualificationNeeded(),
+                jl.getRequiresInterview(),
+                jl.getCategory() == null ? null : new JobListingResponse.CategorySummary(
+                        jl.getCategory().getId(),
+                        jl.getCategory().getName(),
+                        jl.getCategory().getSlug()
+                ),
+                company == null ? null : new JobListingResponse.CompanySummary(
+                        company.getId(),
+                        company.getName(),
+                        company.getLogoUrl()
+                ),
+                jl.getLocation() == null ? null : new JobListingResponse.LocationSummary(
+                        jl.getLocation().getId(),
+                        jl.getLocation().getCity(),
+                        jl.getLocation().getState(),
+                        jl.getLocation().getCountry()
+                ),
+                jl.getSkills() == null ? null : jl.getSkills().stream()
+                        .map(s -> new JobListingResponse.SkillSummary(s.getId(), s.getName()))
+                        .collect(Collectors.toSet()),
+                jl.getCreatedAt(),
+                jl.getUpdatedAt()
         );
     }
 
@@ -73,48 +89,49 @@ public class JobListingMapper {
         Company company = jl.getCompanyId() == null ? null : companyRepository.findById(jl.getCompanyId()).orElse(null);
 
         return new JobListingSummary(
-            jl.getId(),
-            jl.getTitle(),
-            jl.getStatus(),
-            jl.getJobType(),
-            jl.getSalaryMin(),
-            jl.getSalaryMax(),
-            jl.getExperienceLevel(),
-            jl.getDeadline(),
-            jl.getViewCount() == null ? 0 : jl.getViewCount(),
-            jl.getCategory()  == null ? null : jl.getCategory().getName(),
-            company == null ? null : company.getName(),
-            company == null ? null : company.getLogoUrl(),
-            jl.getLocation()  == null ? null : jl.getLocation().getCity(),
-            jl.getLocation()  == null ? null : jl.getLocation().getCountry(),
-            jl.getCreatedAt()
+                jl.getId(),
+                toNumericId(jl.getId()),                          // ✅ numericId
+                jl.getTitle(),
+                jl.getStatus(),
+                jl.getJobType(),
+                jl.getSalaryMin(),
+                jl.getSalaryMax(),
+                jl.getExperienceLevel(),
+                jl.getDeadline(),
+                jl.getViewCount() == null ? 0 : jl.getViewCount(),
+                jl.getCategory()  == null ? null : jl.getCategory().getName(),
+                company == null ? null : company.getName(),
+                company == null ? null : company.getLogoUrl(),
+                jl.getLocation()  == null ? null : jl.getLocation().getCity(),
+                jl.getLocation()  == null ? null : jl.getLocation().getCountry(),
+                jl.getCreatedAt()
         );
     }
 
     /** Maps a JobCategory to its reference response DTO. */
     public CategoryResponse toCategoryResponse(JobCategory cat) {
         return new CategoryResponse(
-            cat.getId(),
-            cat.getName(),
-            cat.getSlug(),
-            cat.getIconUrl(),
-            cat.getDescription(),
-            0L,
-            0.0,
-            0.0
+                cat.getId(),
+                cat.getName(),
+                cat.getSlug(),
+                cat.getIconUrl(),
+                cat.getDescription(),
+                0L,
+                0.0,
+                0.0
         );
     }
 
     public CategoryResponse toCategoryResponse(JobCategory cat, Long jobCount, Double avgSalaryMin, Double avgSalaryMax) {
         return new CategoryResponse(
-            cat.getId(),
-            cat.getName(),
-            cat.getSlug(),
-            cat.getIconUrl(),
-            cat.getDescription(),
-            jobCount != null ? jobCount : 0L,
-            avgSalaryMin != null ? avgSalaryMin : 0.0,
-            avgSalaryMax != null ? avgSalaryMax : 0.0
+                cat.getId(),
+                cat.getName(),
+                cat.getSlug(),
+                cat.getIconUrl(),
+                cat.getDescription(),
+                jobCount != null ? jobCount : 0L,
+                avgSalaryMin != null ? avgSalaryMin : 0.0,
+                avgSalaryMax != null ? avgSalaryMax : 0.0
         );
     }
 }

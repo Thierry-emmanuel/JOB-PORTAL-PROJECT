@@ -10,29 +10,26 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Lightweight summary used in paginated list responses.
- * Does not include description or skills to reduce payload size.
- */
 @Schema(description = "Lightweight summary of a job listing for list views")
 public record JobListingSummary(
 
-    UUID            id,
-    String          title,
-    PostingStatus   status,
-    JobType         jobType,
-    BigDecimal      salaryMin,
-    BigDecimal      salaryMax,
-    ExperienceLevel experienceLevel,
-    LocalDate       deadline,
-    int             viewCount,
+        UUID            id,
+        Long            numericId,       // ✅ numeric version of UUID first segment — used by Application.jobPostingId
+        String          title,
+        PostingStatus   status,
+        JobType         jobType,
+        BigDecimal      salaryMin,
+        BigDecimal      salaryMax,
+        ExperienceLevel experienceLevel,
+        LocalDate       deadline,
+        int             viewCount,
 
-    String          categoryName,
-    String          companyName,
-    String          companyLogoUrl,
-    String          locationCity,
-    String          locationCountry,
+        String          categoryName,
+        String          companyName,
+        String          companyLogoUrl,
+        String          locationCity,
+        String          locationCountry,
 
-    LocalDateTime   createdAt
+        LocalDateTime   createdAt
 
 ) {}
