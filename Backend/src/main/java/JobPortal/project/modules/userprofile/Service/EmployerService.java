@@ -3,6 +3,7 @@ package JobPortal.project.modules.userprofile.service;
 import JobPortal.project.modules.userprofile.model.Employer;
 import JobPortal.project.modules.userprofile.repository.EmployerRepository;
 import JobPortal.project.modules.notification.event.NotificationEvent;
+import JobPortal.project.modules.notification.service.MailService;
 import JobPortal.project.enums.NotificationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,6 +20,9 @@ public class EmployerService {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private MailService mailService;
 
     // Get all Employers
     public List<Employer> getAllEmployers() {
@@ -75,15 +79,15 @@ public class EmployerService {
         boolean wasApproved = employer.getIsApproved();
         employer.setIsApproved(true);
         Employer saved = employerRepository.save(employer);
-        
+
         if (!wasApproved) {
             try {
                 eventPublisher.publishEvent(new NotificationEvent(
-                    this,
-                    saved,
-                    "Employer Profile Verified & Approved",
-                    "Hello " + saved.getFullName() + ",\n\nCongratulations! Your employer profile has been successfully verified and approved by the Kora administration. You can now publish job listings and schedule interviews.",
-                    NotificationType.WELCOME
+                        this,
+                        saved,
+                        "Employer Profile Verified & Approved",
+                        "Hello " + saved.getFullName() + ",\n\nCongratulations! Your employer profile has been successfully verified and approved by the Kora administration. You can now publish job listings and schedule interviews.",
+                        NotificationType.WELCOME
                 ));
             } catch (Exception e) {
                 // Silently ignore or log notification publish errors
@@ -117,7 +121,28 @@ public class EmployerService {
         }
         employerRepository.deleteById(id);
     }
+
+    // ─── Save (used by EmployerProfileController) ─────────────────
+    public Employer saveEmployer(Employer employer) {
+        return employerRepository.save(employer);
+    }
+
+    // ─── Notify admin when documents are submitted ─────────────────
+    public void notifyAdminDocumentsSubmitted(Employer employer) {
+        // Fetch all admin emails and send notification
+        // (Implementation depends on your admin user query — adapt as needed)
+        String body = "New employer registration documents submitted.\n\n"
+                + "Company: " + employer.getCompanyName() + "\n"
+                + "Contact: " + employer.getContactName() + " <" + employer.getEmail() + ">\n"
+                + "RCCM No: " + employer.getRegistrationNumber() + "\n"
+                + "NIU: " + employer.getTaxIdentificationNumber() + "\n\n"
+                + "Please log in to the admin panel to review and approve.";
+
+        mailService.sendEmail(
+                "admin@kora.cm",
+                "[KORA] New Employer Verification Request — " + employer.getCompanyName(),
+                body
+        );
+    }
+
 }
-
-
-
