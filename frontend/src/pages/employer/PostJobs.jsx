@@ -580,7 +580,7 @@ export default function PostJob({ onBack, onSuccess }) {
       title: form.title,
       description: form.description,
       categoryId: form.categoryId,
-      companyId: employer?.companyId || 1,
+      companyId: employer?.companyId,           // ✅ no fallback to 1
       locationId: form.locationId || null,
       jobType: form.type || "FULL_TIME",
       salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
@@ -594,9 +594,19 @@ export default function PostJob({ onBack, onSuccess }) {
     };
   };
 
+  // ✅ Guard: employer must have a company before posting
+  const checkCompany = () => {
+    if (!employer?.companyId) {
+      setErrors({ api: "You must create a company profile before posting a job. Go to Company Settings first." });
+      return false;
+    }
+    return true;
+  };
+
   const handlePublish = async () => {
     const validateStep = isEditMode ? 1 : 5;
     if (!validate(validateStep)) return;
+    if (!checkCompany()) return;               // ✅ guard
     try {
       if (isEditMode) {
         await updateJob(editId, buildPayload(true));
@@ -616,6 +626,7 @@ export default function PostJob({ onBack, onSuccess }) {
       setErrors({ title: "Job title is required to save draft." });
       return;
     }
+    if (!checkCompany()) return;               // ✅ guard
     setSavingDraft(true);
     try {
       if (isEditMode) {

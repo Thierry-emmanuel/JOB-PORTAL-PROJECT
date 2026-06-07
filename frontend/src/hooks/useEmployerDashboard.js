@@ -101,6 +101,7 @@ export function useEmployerDashboard() {
 
         empDetails = {
           id: user.id,
+          companyId: company?.id ?? company?.companyId ?? null, // ✅ needed for job posting
           companyName: company?.name || profileRes?.bio || "Kora Corporate Partner",
           contactName: profileRes?.fullName || user.fullName || user.email?.split('@')[0] || "Recruiter",
           logo: company?.logoUrl || profileRes?.avatarUrl || null,
@@ -113,6 +114,7 @@ export function useEmployerDashboard() {
         console.warn("Gracefully falling back for company/employer profile:", err);
         empDetails = {
           id: user.id,
+          companyId: null, // ✅ null so PostJobs shows a clear error
           companyName: "Kora Corporate Partner",
           contactName: user.fullName || user.email?.split('@')[0] || "Recruiter",
           logo: null,
