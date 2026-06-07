@@ -6,7 +6,24 @@ import { useAuth } from "./context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { getJobs, getCategories, getCompanies } from "./api/jobs";
 import { fetchLiveHero } from "./api/hero";
-import { BarChart3, BookOpen, Briefcase, Building2, Calendar, CheckCircle, Clock, DollarSign, Handshake, Heart, HeartPulse, Laptop, Mail, MapPin, Megaphone, Palette, Search, Settings, Star, Users } from 'lucide-react';
+import {
+  Laptop,
+  BarChart3,
+  Settings,
+  Palette,
+  Megaphone,
+  HeartPulse,
+  Handshake,
+  BookOpen,
+  Briefcase,
+  Building2,
+  MapPin,
+  DollarSign,
+  Search,
+  Users,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 
 const G    = "#1A5C2E";
 const G2   = "#0D3D1F";
@@ -43,23 +60,23 @@ function renderIcon(IconOrEmojiOrUrl, size = 26, color = G) {
       return <img src={IconOrEmojiOrUrl} alt="icon" style={{ width: size, height: size, objectFit: "contain" }} />;
     }
     const emojiMap = {
-      Laptop: Laptop,
-      BarChart3: BarChart3,
-      "Settings": Settings,
-      Settings: Settings,
-      Palette: Palette,
-      Megaphone: Megaphone,
-      HeartPulse: HeartPulse,
+      "💻": Laptop,
+      "📊": BarChart3,
+      "⚙️": Settings,
+      "⚙": Settings,
+      "🎨": Palette,
+      "📣": Megaphone,
+      "🏥": HeartPulse,
       "Healthcare": HeartPulse,
-      Handshake: Handshake,
-      BookOpen: BookOpen,
-      Briefcase: Briefcase,
-      Building2: Building2,
-      MapPin: MapPin,
-      DollarSign: DollarSign,
-      Search: Search,
-      Users: Users,
-      CheckCircle: CheckCircle,
+      "🤝": Handshake,
+      "📚": BookOpen,
+      "💼": Briefcase,
+      "🏢": Building2,
+      "📍": MapPin,
+      "💰": DollarSign,
+      "🔍": Search,
+      "👥": Users,
+      "✓": CheckCircle,
       "⏱": Clock
     };
     const MappedIcon = emojiMap[IconOrEmojiOrUrl];
@@ -592,7 +609,7 @@ function Hero() {
             </motion.h1>
 
             <motion.div variants={contentItem} style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
-              {[{ icon: Building2, val:s.company },{ icon: MapPin, val:s.location },{ icon: DollarSign, val:s.salary }].map(chip => (
+              {[{ icon:"🏢", val:s.company },{ icon:"📍", val:s.location },{ icon:"💰", val:s.salary }].map(chip => (
                 <div key={chip.val} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"5px 12px", fontSize:"clamp(11px,2.5vw,13px)", color:"rgba(255,255,255,0.9)" }}>
                   <span style={{ display:"flex", alignItems:"center" }}>{renderIcon(chip.icon, 14, "#fff")}</span>{chip.val}
                 </div>
@@ -785,11 +802,11 @@ function SearchSection() {
         {/* Search inputs */}
         <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
           <div style={{ flex:"1 1 200px", minWidth:0, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8, boxShadow:"0 2px 8px rgba(0,0,0,0.04)" }}>
-            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon(Search, 16, "#9CA3AF")}</span>
+            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon("🔍", 16, "#9CA3AF")}</span>
             <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Titre de poste, compétence…" aria-label="Rechercher un poste" value={searchKw} onChange={e => setSearchKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
           <div style={{ flex:"0 1 180px", minWidth:120, border:`2px solid ${BORDER}`, borderRadius:12, display:"flex", alignItems:"center", background:"#fff", padding:"8px 14px", gap:8 }}>
-            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon(MapPin, 16, "#9CA3AF")}</span>
+            <span style={{ color:"#9CA3AF", display:"flex", alignItems:"center", flexShrink:0 }}>{renderIcon("📍", 16, "#9CA3AF")}</span>
             <input style={{ border:"none", background:"none", fontSize:14, flex:1, minWidth:0, color:INK, fontFamily:"inherit", outline:"none" }} placeholder="Ville ou Remote" aria-label="Localisation" value={locationKw} onChange={e => setLocationKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} />
           </div>
           <button onClick={handleSearch} style={{ background:G, color:"white", border:"none", padding:"0 22px", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", minHeight:48, flexShrink:0, whiteSpace:"nowrap" }}>
@@ -873,10 +890,10 @@ function StatsBand() {
   }, []);
 
   const stats = [
-    { icon: Briefcase, val: counts.jobs.toLocaleString(),       suf:"+", label: t('stats.active_jobs') },
-    { icon: Building2, val: counts.companies,                   suf:"+", label: t('stats.companies') },
-    { icon: Users, val: counts.candidates.toLocaleString(), suf:"+", label: t('stats.candidates') },
-    { icon: CheckCircle,  val: counts.rate,                        suf:"%", label: t('stats.placement_rate') },
+    { icon:"💼", val: counts.jobs.toLocaleString(),       suf:"+", label: t('stats.active_jobs') },
+    { icon:"🏢", val: counts.companies,                   suf:"+", label: t('stats.companies') },
+    { icon:"👥", val: counts.candidates.toLocaleString(), suf:"+", label: t('stats.candidates') },
+    { icon:"✓",  val: counts.rate,                        suf:"%", label: t('stats.placement_rate') },
   ];
 
   return (
@@ -965,15 +982,15 @@ function JobCard({ job, delay }) {
           </div>
         </div>
         <button onClick={handleSaveClick} style={{ background: saved ? O_L : "none", border:"none", cursor:"pointer", color: saved ? O : "#D1D5DB", fontSize:18, padding:4, borderRadius:6, lineHeight:1, transition:"all 0.2s", flexShrink:0 }} aria-label="Sauvegarder">
-          {saved ? Heart : Heart}
+          {saved ? "♥" : "♡"}
         </button>
       </div>
 
       <h3 style={{ fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, color:INK, marginBottom:8, lineHeight:1.35 }}>{job.title}</h3>
       <div style={{ display:"flex", gap:10, flexWrap:"wrap", fontSize:12, color:MUTED, marginBottom:10 }}>
-        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon(MapPin, 12, MUTED)} {job.location}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("📍", 12, MUTED)} {job.location}</span>
         <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("⏱", 12, MUTED)} {job.type}</span>
-        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon(Users, 12, MUTED)} {job.applicants}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:4 }}>{renderIcon("👥", 12, MUTED)} {job.applicants}</span>
       </div>
 
       {/* Match bar */}
@@ -1045,7 +1062,7 @@ function JobsSection() {
         </div>
         {jobs.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon(Briefcase, 44, MUTED)}</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("💼", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('jobs.empty_title', 'Aucune offre disponible')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('jobs.empty_desc', "Il n'y a pas de postes vacants pour le moment. Veuillez revenir plus tard ou publier une nouvelle offre.")}
@@ -1130,7 +1147,7 @@ function CategoriesSection() {
         </div>
         {categories.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon(BarChart3, 44, MUTED)}</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("📊", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('categories.empty_title', 'Aucun secteur trouvé')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('categories.empty_desc', "Les secteurs d'activité seront affichés dès qu'ils seront disponibles dans le système.")}
@@ -1216,7 +1233,7 @@ function CompaniesSection() {
         </div>
         {companies.length === 0 ? (
           <div style={{ textAlign:"center", padding:"48px 0", background:"#fff", border:`1.5px solid ${BORDER}`, borderRadius:14 }}>
-            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon(Building2, 44, MUTED)}</span>
+            <span style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>{renderIcon("🏢", 44, MUTED)}</span>
             <h3 style={{ fontSize:18, fontWeight:700, color:INK, marginBottom:6 }}>{t('companies.empty_title', 'Aucune entreprise trouvée')}</h3>
             <p style={{ fontSize:14, color:MUTED, maxWidth:400, margin:"0 auto" }}>
               {t('companies.empty_desc', "Les entreprises partenaires apparaîtront ici dès leur inscription.")}
@@ -1266,7 +1283,7 @@ function CtaSection() {
           </div>
           <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
             {["Sans carte bancaire","1er post gratuit","Annulez à tout moment"].map(p => (
-              <span key={p} style={{ fontSize:12, color:"rgba(255,255,255,0.8)", display:"flex", alignItems:"center", gap:5 }}><strong><CheckCircle size={20} /></strong> {p}</span>
+              <span key={p} style={{ fontSize:12, color:"rgba(255,255,255,0.8)", display:"flex", alignItems:"center", gap:5 }}><strong>✓</strong> {p}</span>
             ))}
           </div>
         </div>
@@ -1291,7 +1308,7 @@ function ContactUs() {
   return (
     <section id="contact-us" style={{ background:"#fff", padding:"clamp(48px,7vw,72px) clamp(16px,4vw,48px)", borderTop:`1px solid ${BORDER}` }}>
       <div ref={ref} style={{ ...style, maxWidth:560, margin:"0 auto", textAlign:"center" }}>
-        <div style={{ fontSize:32, marginBottom:14 }}><Mail size={20} />️</div>
+        <div style={{ fontSize:32, marginBottom:14 }}>✉️</div>
         <h3 style={{ fontSize:"clamp(22px,4vw,28px)", fontWeight:800, color:INK, letterSpacing:"-0.5px", marginBottom:10 }}>Contactez-nous</h3>
         <p style={{ fontSize:14, color:MUTED, marginBottom:24, fontWeight:300, lineHeight:1.65 }}>
           Sponsoring, questions ou suggestions ? Envoyez une demande de contact aux administrateurs.
@@ -1347,7 +1364,7 @@ function Footer({ logoSrc }) {
         </div>
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
           <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>© 2025 KORA · Tous droits réservés</span>
-          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>Fait avec <span style={{ color:O }}><Heart size={20} /></span> pour l'Afrique</span>
+          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>Fait avec <span style={{ color:O }}>♥</span> pour l'Afrique</span>
         </div>
       </div>
     </footer>

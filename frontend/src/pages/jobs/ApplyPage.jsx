@@ -325,7 +325,7 @@ export default function ApplyPage() {
     <div className="ap-page">
       <div className="ap-container ap-container--narrow">
         <div className="ap-state-card">
-          <span className="ap-state-icon"><CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
+          <span className="ap-state-icon">✅</span>
           <h1>Already Applied</h1>
           <p>You have already applied for <strong>{job.title}</strong> at <strong>{job.company}</strong>.</p>
           <div className="ap-state-actions">

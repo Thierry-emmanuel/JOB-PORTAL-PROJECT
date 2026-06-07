@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { getJob, getJobDetail, saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
 
 import '../../styles/job-list.css';
-import { Bookmark, Briefcase, Building2, Check, DollarSign, Frown, Globe, Heart, Lightbulb, MapPin, Star, Users } from 'lucide-react';
 
 function DetailRow({ label, value }) {
   if (!value) return null;
@@ -111,7 +110,7 @@ export default function JobDetails() {
     return (
       <div className="jd-page">
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16, padding:24 }}>
-          <div style={{ fontSize:48 }}><Frown size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></div>
+          <div style={{ fontSize:48 }}>😕</div>
           <h2 style={{ fontSize:20, fontWeight:700, color:'#111827', margin:0 }}>Job Not Found</h2>
           <p style={{ fontSize:14, color:'#6B7280', textAlign:'center' }}>{error || 'This job posting may have been removed or is no longer available.'}</p>
           <button onClick={() => navigate(-1)} style={{ background:'#1A5C2E', color:'#fff', border:'none', padding:'10px 22px', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }}>
@@ -151,18 +150,18 @@ export default function JobDetails() {
                   border: `1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`, borderRadius:10, padding:'8px 16px',
                   fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0,
                 }}>
-                  {saving ? '…' : saved ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Saved' : '<Bookmark size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Save'}
+                  {saving ? '…' : saved ? '✓ Saved' : '🔖 Save'}
                 </button>
               </div>
 
             {/* Quick facts */}
             <div className="jd-facts" aria-label={t('jobs.job_details_aria')}>
               {[
-                { icon: '<MapPin size={16} style={{display:"inline-block",verticalAlign:"middle"}} />', val: job.location },
-                { icon: '<Briefcase size={16} style={{display:"inline-block",verticalAlign:"middle"}} />', val: job.type },
-                job.salary  && { icon: '<DollarSign size={16} style={{display:"inline-block",verticalAlign:"middle"}} />', val: job.salary },
-                job.remote  && { icon: '<Globe size={16} style={{display:"inline-block",verticalAlign:"middle"}} />', val: t('jobs.remote_ok') },
-                job.applicants != null && { icon: '<Users size={16} style={{display:"inline-block",verticalAlign:"middle"}} />', val: t('jobs.applicants_count', { count: job.applicants }) },
+                { icon: '📍', val: job.location },
+                { icon: '💼', val: job.type },
+                job.salary  && { icon: '💰', val: job.salary },
+                job.remote  && { icon: '🌐', val: t('jobs.remote_ok') },
+                job.applicants != null && { icon: '👥', val: t('jobs.applicants_count', { count: job.applicants }) },
               ]
                 .filter(Boolean)
                 .map((f) => (
@@ -214,7 +213,7 @@ export default function JobDetails() {
                 <>
                   {hasApplied ? (
                     <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46', marginBottom:12 }}>
-                      <Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Application submitted
+                      ✓ Application submitted
                     </div>
                   ) : (
                     <>
@@ -238,13 +237,13 @@ export default function JobDetails() {
                       border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
                       borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
                     }}>
-                      {saving ? 'Saving…' : saved ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Saved for Later' : '<Bookmark size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Save for Later'}
+                      {saving ? 'Saving…' : saved ? '✓ Saved for Later' : '🔖 Save for Later'}
                     </button>
                   )}
 
                   <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
                     <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6 }}>
-                      <Lightbulb size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Tip: Complete your profile to increase your chances of being shortlisted.
+                      💡 Tip: Complete your profile to increase your chances of being shortlisted.
                     </p>
                   </div>
                 </>
@@ -266,7 +265,7 @@ export default function JobDetails() {
             {job?.companyId && companyStats && (
               <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:20, marginTop:16, boxShadow:'0 4px 12px rgba(0,0,0,0.03)' }}>
                 <h3 style={{ fontSize:14, fontWeight:700, color:'#111827', margin:'0 0 12px', display:'flex', alignItems:'center', gap:6 }}>
-                  <Building2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Company Insights
+                  🏢 Company Insights
                 </h3>
 
                 {/* Recruitment Rate section */}
@@ -288,7 +287,7 @@ export default function JobDetails() {
                   <div>
                     <span style={{ fontSize:12, fontWeight:600, color:'#4B5563' }}>Company Rating</span>
                     <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:2 }}>
-                      <span style={{ color:'#F59E0B', fontSize:14 }}><Star size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
+                      <span style={{ color:'#F59E0B', fontSize:14 }}>★</span>
                       <span style={{ fontSize:12, fontWeight:700, color:'#111827' }}>
                         {companyStats.averageRating > 0 ? `${companyStats.averageRating.toFixed(1)}/5` : 'No reviews'}
                       </span>
@@ -323,14 +322,14 @@ export default function JobDetails() {
                       display:'flex', alignItems:'center', gap:6
                     }}
                   >
-                    <span>{companyStats.hasLiked ? '<Heart size={16} style={{display:"inline-block",verticalAlign:"middle"}} />️' : '<Heart size={16} style={{display:"inline-block",verticalAlign:"middle"}} />'}</span>
+                    <span>{companyStats.hasLiked ? '❤️' : '🤍'}</span>
                     <span>{companyStats.likesCount} {companyStats.likesCount === 1 ? 'Like' : 'Likes'}</span>
                   </button>
                 </div>
 
                 {/* Tip */}
                 <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:14 }}><Lightbulb size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></span>
+                  <span style={{ fontSize:14 }}>💡</span>
                   <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.4 }}>
                     Liking companies helps other job seekers find top-rated workplaces!
                   </p>

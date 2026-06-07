@@ -13,6 +13,10 @@ export default function OAuth2RedirectHandler() {
     const token = params.get("token");
 
     if (token) {
+      // ✅ Store the token FIRST so axios interceptor includes it in the
+      // /api/auth/me call that loginWithToken() makes internally
+      localStorage.setItem("token", token);
+
       loginWithToken(token)
         .then((userData) => {
           const rawRole = (userData.role || '').toUpperCase().replace('ROLE_', '');
@@ -26,6 +30,8 @@ export default function OAuth2RedirectHandler() {
         })
         .catch((err) => {
           console.error("OAuth2 session initialization failed:", err);
+          // ✅ Clean up the token if verification fails — don't leave a bad token stored
+          localStorage.removeItem("token");
           setError("Session verification failed. Redirecting to login...");
           setTimeout(() => {
             navigate("/login", { replace: true });

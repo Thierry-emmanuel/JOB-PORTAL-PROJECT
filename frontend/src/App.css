@@ -46,3 +46,13 @@
   .kora-categories-grid  { grid-template-columns: repeat(4, 1fr); }
   .kora-companies-grid   { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* ── Fixed nav offset ─────────────────────────────────────────────────────
+   KoraNav is position:fixed — page content starts below it.
+   Dashboard roots (.ds-root) already have their own padding-top.   */
+.app-container {
+  padding-top: var(--kora-nav-h, 72px);
+}
+.app-container .ds-root {
+  padding-top: 0;
+}

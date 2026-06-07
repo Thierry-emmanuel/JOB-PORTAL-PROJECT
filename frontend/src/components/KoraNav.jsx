@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Globe, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import koraLogo from '../assets/absolute-size-logo.png';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ export default function KoraNav() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
+    const handler = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
@@ -107,8 +107,9 @@ export default function KoraNav() {
 
   const isActive = (to) => location.pathname === to;
 
-  const isDarkHeaderPage = location.pathname === '/' || location.pathname === '/jobs';
-  const isTransparentHeaderPage = true;
+  // Nav is always transparent — all pages need white text
+  const isDarkHeaderPage = true;
+  const isTransparentHeaderPage = true; // always transparent
 
   const spaceClass = isEmployeeSpace ? ' kn-nav--employee' : isEmployerSpace ? ' kn-nav--employer' : isAdminSpace ? ' kn-nav--admin' : ' kn-nav--public';
 
@@ -331,7 +332,7 @@ export default function KoraNav() {
             }}
             className="kn-mobile-lang-btn"
           >
-            <Globe size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> {i18n.language === 'en' ? 'Switch to French (FR)' : 'Passer en Anglais (EN)'}
+            🌐 {i18n.language === 'en' ? 'Switch to French (FR)' : 'Passer en Anglais (EN)'}
           </button>
 
           {isAuthenticated ? (
