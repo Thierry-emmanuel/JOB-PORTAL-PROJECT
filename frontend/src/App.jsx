@@ -52,15 +52,15 @@ function EmployerJobsManager() {
 }
 
 // ── ProtectedRoute ─────────────────────────────────────────
-// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 4: Unified prop — always use `role` (string).
+// ✅ FIX 4: Unified prop — always use `role` (string).
 //    The AdminDashboard route was accidentally using `allowedRoles` (an array)
 //    which this component never read, so the role check was silently skipped
 //    and any authenticated user could access /admin/dashboard.
 //
-// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 5: The backend returns role as "ROLE_ADMIN" in AuthResponse.role.
+// ✅ FIX 5: The backend returns role as "ROLE_ADMIN" in AuthResponse.role.
 //    Normalise both sides before comparing so "ROLE_ADMIN" === "ADMIN" works.
 //
-// <CheckCircle2 size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> FIX 6: Don't render {!loading && children} at the provider level —
+// ✅ FIX 6: Don't render {!loading && children} at the provider level —
 //    the loading flag is only true during a login() call, not on mount,
 //    so wrapping children caused a blank screen on every page load.
 //    (Fixed in AuthContext — loading is always false outside login()).
@@ -182,12 +182,18 @@ function AnimatedRoutes() {
 }
 
 import KoraNav from "./components/KoraNav";
-import { CheckCircle2 } from 'lucide-react';
 
 // ── App Content ────────────────────────────────────────────
 function AppContent() {
   const location = useLocation();
-  const showNav = !["/login", "/register", "/oauth2/redirect"].includes(location.pathname);
+  // Hide nav on auth pages AND all dashboard/profile pages (they have sidebar)
+  const DASHBOARD_PREFIXES = [
+    '/employee', '/employer', '/admin',
+    '/dashboard', '/profile',
+  ];
+  const NO_NAV_EXACT = ['/login', '/register', '/oauth2/redirect'];
+  const showNav = !NO_NAV_EXACT.includes(location.pathname) &&
+                  !DASHBOARD_PREFIXES.some(p => location.pathname.startsWith(p));
 
   return (
     <div className="app-container">
