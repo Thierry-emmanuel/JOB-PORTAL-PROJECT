@@ -46,7 +46,8 @@ export const getJobDetail = async (id) => {
 /* ─── Mappers ────────────────────────────────────────────── */
 
 const mapJobSummary = (job) => ({
-  id:       job.id,
+  id:        job.id,
+  numericId: job.numericId ?? null,  // ✅ used as Application.jobPostingId when applying
   title:    job.title,
   company:  job.companyName || 'Unknown Company',
   logo:     job.companyLogoUrl || null,
@@ -65,7 +66,8 @@ const mapJobSummary = (job) => ({
 });
 
 const mapJobDetail = (job) => ({
-  id:       job.id,
+  id:        job.id,
+  numericId: job.numericId ?? null,  // ✅ used as Application.jobPostingId when applying
   title:    job.title,
   company:  job.company?.name || job.companyName || 'Unknown Company',
   logo:     job.company?.logoUrl || job.companyLogoUrl || null,

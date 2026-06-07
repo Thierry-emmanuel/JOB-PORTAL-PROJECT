@@ -284,8 +284,8 @@ export default function ApplyPage() {
     setSub(true); setSErr(null);
     try {
       const payload = {
-        jobPostingId:   parseInt(id, 10),
-        coverLetter:    form.coverLetter,
+        jobPostingId:   job?.numericId ?? null,        // 2705 numeric ID that matches Application.jobPostingId (Long)
+        coverLetter:    form.coverLetter?.slice(0, 1000) || null,  // 2705 backend enforces max 1000 chars
         expectedSalary: parseFloat(form.expectedSalary),
         // Extra metadata — backend ApplicationResponse stores these in the notes/description fields
         // which map to optional request properties when your backend supports them.
@@ -467,10 +467,10 @@ export default function ApplyPage() {
               rows={12}
               value={form.coverLetter}
               onChange={e => upd('coverLetter', e.target.value)}
-              maxLength={2000}
+              maxLength={1000}
               placeholder={`Dear Hiring Manager,\n\nI am excited to apply for the ${job?.title || 'position'} role at ${job?.company || 'your company'}…\n\nYours sincerely,\n${form.fullName}`}
             />
-            <p className="ap-char-count">{form.coverLetter.length}/2000</p>
+            <p className="ap-char-count">{form.coverLetter.length}/1000</p>
           </div>
           <div className="ap-letter-prompts">
             <p className="ap-prompts-title">Need inspiration? Cover these points:</p>
