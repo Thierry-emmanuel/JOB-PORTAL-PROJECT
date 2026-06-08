@@ -284,21 +284,33 @@ export default function ApplyPage() {
     if (!user?.id) { setSErr('You must be logged in to apply.'); return; }
     setSub(true); setSErr(null);
     try {
+      // Resolve the numeric job posting ID.
+      // Priority: numericId from mapper → job.id if it's a plain integer → URL param id if numeric
+      const resolvedJobId =
+        job?.numericId ??
+        (Number.isInteger(job?.id) ? job.id : null) ??
+        (Number.isFinite(Number(id)) && Number(id) > 0 ? Number(id) : null);
+
+      if (!resolvedJobId) {
+        setSErr('Could not determine job ID. Please go back and try again.');
+        setSub(false);
+        return;
+      }
+
+      // Backend CreateApplicationRequest only accepts these three fields.
+      // Sending unknown fields causes a 400 when Spring is configured with
+      // DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES = true.
+      const parsedSalary = parseFloat(form.expectedSalary);
+      if (!Number.isFinite(parsedSalary) || parsedSalary <= 0) {
+        setSErr('Please enter a valid expected salary before submitting.');
+        setSub(false);
+        return;
+      }
+
       const payload = {
-        jobPostingId:   job?.numericId ?? null,        // 2705 numeric ID that matches Application.jobPostingId (Long)
-        coverLetter:    form.coverLetter?.slice(0, 1000) || null,  // 2705 backend enforces max 1000 chars
-        expectedSalary: parseFloat(form.expectedSalary),
-        // Extra metadata — backend ApplicationResponse stores these in the notes/description fields
-        // which map to optional request properties when your backend supports them.
-        // If your CreateApplicationRequest only has jobPostingId + coverLetter + expectedSalary,
-        // the additional fields below are gracefully ignored by Spring's @RequestBody binding.
-        notes:          form.notes,
-        applicantName:  form.fullName,
-        applicantPhone: form.phone,
-        applicantCity:  form.city,
-        description:    form.description,
-        linkedInUrl:    form.linkedin,
-        portfolioUrl:   form.portfolio,
+        jobPostingId:   resolvedJobId,
+        coverLetter:    form.coverLetter?.trim().slice(0, 1000) || null,
+        expectedSalary: parsedSalary,
       };
       await applyToJob(user.id, payload);
       setDone(true);
