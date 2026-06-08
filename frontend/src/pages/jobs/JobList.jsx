@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getJobs } from '../../api/jobs';
+import { Search } from 'lucide-react';
 
 import JobCard from '../../components/jobs/JobCard';
 import JobFilters from '../../components/jobs/JobFilters';
@@ -173,7 +174,7 @@ export default function JobList() {
         {/* Empty state */}
         {!loading && !error && jobs.length === 0 && (
           <div className="jl-empty" role="status">
-            <span className="jl-empty-icon" aria-hidden="true">🔍</span>
+            <span className="jl-empty-icon" aria-hidden="true"><Search size={40} strokeWidth={1.5} /></span>
             <h2>{t('jobs.no_jobs_match')}</h2>
             <p>{t('jobs.adjust_filters')}</p>
             <button

@@ -196,7 +196,7 @@ function AppContent() {
                   !DASHBOARD_PREFIXES.some(p => location.pathname.startsWith(p));
 
   return (
-    <div className="app-container">
+    <div className={`app-container${showNav ? '' : ' app-container--no-nav'}`}>
       {showNav && <KoraNav />}
       <Suspense fallback={<GlobalLoader />}>
         <AnimatedRoutes />

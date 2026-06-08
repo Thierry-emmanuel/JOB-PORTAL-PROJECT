@@ -404,13 +404,21 @@
 @media (max-width: 900px) {
   .ed-sidebar { display: none; }
   .ed-body    { padding: 16px 16px 40px; }
+  .ed-two-col { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 640px) {
   .ed-stats-row    { grid-template-columns: 1fr 1fr; gap: 10px; }
   .ed-app-thead    { display: none; }
   .ed-app-row      { grid-template-columns: 1fr 1fr; row-gap: 6px; }
   .ed-welcome-title { font-size: 20px; }
-  .ed-section      { padding: 16px; }
+  .ed-section      { padding: 16px; border-radius: 14px; }
   .ed-nudge        { flex-direction: column; align-items: flex-start; }
   .ed-nudge-btn    { width: 100%; text-align: center; }
+  .ed-section-header { flex-wrap: wrap; gap: 8px; }
+}
+@media (max-width: 440px) {
+  .ed-stats-row   { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ed-stat-card   { padding: 12px; border-radius: 12px; }
+  .ed-stat-value  { font-size: 20px; }
+  .ed-body        { padding: 10px 10px 32px; }
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
 import { cachedGetJob, cachedGetJobDetail } from '../../api/cachedApi';
+import { Bookmark, Check, MapPin, Briefcase, DollarSign, Globe, Users, Lightbulb, Building2, Heart } from 'lucide-react';
 
 import '../../styles/job-list.css';
 
@@ -151,23 +152,23 @@ export default function JobDetails() {
                   border: `1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`, borderRadius:10, padding:'8px 16px',
                   fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0,
                 }}>
-                  {saving ? '…' : saved ? '✓ Saved' : '🔖 Save'}
+                  {saving ? '…' : saved ? <><Check size={13} style={{display:'inline',marginRight:4}}/>Saved</> : <><Bookmark size={13} style={{display:'inline',marginRight:4}}/>Save</>}
                 </button>
               </div>
 
             {/* Quick facts */}
             <div className="jd-facts" aria-label={t('jobs.job_details_aria')}>
               {[
-                { icon: '📍', val: job.location },
-                { icon: '💼', val: job.type },
-                job.salary  && { icon: '💰', val: job.salary },
-                job.remote  && { icon: '🌐', val: t('jobs.remote_ok') },
-                job.applicants != null && { icon: '👥', val: t('jobs.applicants_count', { count: job.applicants }) },
+                { icon: <MapPin size={13}/>, val: job.location },
+                { icon: <Briefcase size={13}/>, val: job.type },
+                job.salary  && { icon: <DollarSign size={13}/>, val: job.salary },
+                job.remote  && { icon: <Globe size={13}/>, val: t('jobs.remote_ok') },
+                job.applicants != null && { icon: <Users size={13}/>, val: t('jobs.applicants_count', { count: job.applicants }) },
               ]
                 .filter(Boolean)
                 .map((f) => (
                   <span key={f.val} className="ujc-detail-item">
-                    <span aria-hidden="true">{f.icon}</span> {f.val}
+                    <span aria-hidden="true" style={{display:'flex',alignItems:'center'}}>{f.icon}</span> {f.val}
                   </span>
                 ))}
               </div>
@@ -213,8 +214,8 @@ export default function JobDetails() {
               {(isEmployee || !isAuthenticated) ? (
                 <>
                   {hasApplied ? (
-                    <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46', marginBottom:12 }}>
-                      ✓ Application submitted
+                    <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46', marginBottom:12, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                      <Check size={14}/> Application submitted
                     </div>
                   ) : (
                     <>
@@ -238,13 +239,13 @@ export default function JobDetails() {
                       border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
                       borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
                     }}>
-                      {saving ? 'Saving…' : saved ? '✓ Saved for Later' : '🔖 Save for Later'}
+                      {saving ? 'Saving…' : saved ? <><Check size={13} style={{display:'inline',marginRight:4}}/>Saved for Later</> : <><Bookmark size={13} style={{display:'inline',marginRight:4}}/>Save for Later</>}
                     </button>
                   )}
 
                   <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
-                    <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6 }}>
-                      💡 Tip: Complete your profile to increase your chances of being shortlisted.
+                    <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6, display:'flex', alignItems:'flex-start', gap:6 }}>
+                      <Lightbulb size={13} style={{flexShrink:0,marginTop:1,color:'#F59E0B'}}/> Tip: Complete your profile to increase your chances of being shortlisted.
                     </p>
                   </div>
                 </>
@@ -266,7 +267,7 @@ export default function JobDetails() {
             {job?.companyId && companyStats && (
               <div style={{ background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:16, padding:20, marginTop:16, boxShadow:'0 4px 12px rgba(0,0,0,0.03)' }}>
                 <h3 style={{ fontSize:14, fontWeight:700, color:'#111827', margin:'0 0 12px', display:'flex', alignItems:'center', gap:6 }}>
-                  🏢 Company Insights
+                  <Building2 size={15} style={{color:'#6B7280'}}/> Company Insights
                 </h3>
 
                 {/* Recruitment Rate section */}
@@ -323,14 +324,14 @@ export default function JobDetails() {
                       display:'flex', alignItems:'center', gap:6
                     }}
                   >
-                    <span>{companyStats.hasLiked ? '❤️' : '🤍'}</span>
+                    <span style={{display:'flex',alignItems:'center'}}>{companyStats.hasLiked ? <Heart size={14} fill="#EF4444" color="#EF4444"/> : <Heart size={14} color="#4B5563"/>}</span>
                     <span>{companyStats.likesCount} {companyStats.likesCount === 1 ? 'Like' : 'Likes'}</span>
                   </button>
                 </div>
 
                 {/* Tip */}
                 <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:14 }}>💡</span>
+                  <Lightbulb size={14} style={{color:'#F59E0B',flexShrink:0,marginTop:1}}/>
                   <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.4 }}>
                     Liking companies helps other job seekers find top-rated workplaces!
                   </p>

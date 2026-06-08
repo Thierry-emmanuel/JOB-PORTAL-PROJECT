@@ -49,10 +49,59 @@
 
 /* ── Fixed nav offset ─────────────────────────────────────────────────────
    KoraNav is position:fixed — page content starts below it.
-   Dashboard roots (.ds-root) already have their own padding-top.   */
+   Dashboard routes don't show the nav, so they get no padding-top.   */
 .app-container {
   padding-top: var(--kora-nav-h, 72px);
 }
+.app-container--no-nav {
+  padding-top: 0;
+}
 .app-container .ds-root {
   padding-top: 0;
+}
+/* ── Global responsive utilities ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* KoraHome mobile improvements */
+@media (max-width: 640px) {
+  .kora-home-hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+  .kora-home-hero-cta > * {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ── PostJob wizard responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pj-wizard { padding: 16px; }
+  .pj-steps  { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .pj-step   { flex-shrink: 0; }
+  .pj-grid-2 { grid-template-columns: 1fr !important; }
+  .pj-card   { padding: 20px 16px; }
+}
+@media (max-width: 480px) {
+  .pj-step-label { display: none; }
+  .pj-footer { flex-direction: column; gap: 8px; }
+  .pj-footer .pj-btn { width: 100%; justify-content: center; }
+}
+
+/* ── Profile pages responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .profile-layout    { grid-template-columns: 1fr !important; }
+  .profile-sidebar   { position: static !important; }
+}
+
+/* ── Auth pages responsive ────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .auth-card { padding: 24px 20px; margin: 16px; border-radius: 16px; }
+  .auth-social-row { flex-direction: column; }
 }

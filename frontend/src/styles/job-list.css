@@ -822,11 +822,23 @@
   .jd-sidebar  { position: static; }
   .jl-container,
   .jd-container { padding: 24px 20px 40px; }
-  .jl-header    { padding: calc(var(--kora-nav-h, 72px) + 16px) 20px 28px; }
+  .jl-header    { padding: 88px 20px 28px; }
+  .jl-filters   { flex-wrap: wrap; }
 }
 @media (max-width: 640px) {
   .jl-grid      { grid-template-columns: 1fr; }
   .jf-controls  { flex-direction: column; }
   .jd-header    { flex-wrap: wrap; }
   .jd-layout    { margin-top: 12px; }
+  .jl-header    { padding: 80px 16px 24px; }
+  .jl-container { padding: 16px 16px 40px; }
+  .jd-container { padding: 16px 16px 40px; }
+  .jd-facts     { flex-wrap: wrap; gap: 8px; }
+  .ujc-detail-item { font-size: 12px; }
+  .jl-card      { border-radius: 12px; }
+}
+@media (max-width: 440px) {
+  .jl-search-bar { flex-direction: column; }
+  .jl-search-bar input { width: 100%; }
+  .jl-search-bar button { width: 100%; justify-content: center; }
 }

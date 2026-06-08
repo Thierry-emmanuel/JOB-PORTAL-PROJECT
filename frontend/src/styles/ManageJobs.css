@@ -623,12 +623,26 @@
 }
 @media (max-width: 900px) {
   .mj-main-layout { grid-template-columns: 1fr; }
-  .mj-drawer { width: 100%; }
+  .mj-drawer { width: 100%; max-width: 100vw; }
   .iv-grid { grid-template-columns: 1fr; }
+  .mj-job-row { flex-wrap: wrap; gap: 10px; }
+  .mj-job-actions { flex-wrap: wrap; }
 }
 @media (max-width: 600px) {
   .mj-stats-row { grid-template-columns: repeat(2, 1fr); }
   .apps-filter-bar { flex-direction: column; align-items: flex-start; }
   .apps-search { width: 100%; }
   .apps-search input { width: 100%; }
+  .mj-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .mj-tab { white-space: nowrap; flex-shrink: 0; }
+  .mj-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .mj-header-actions { width: 100%; }
+  .mj-header-actions .mj-btn { flex: 1; justify-content: center; }
+  .mj-job-card { padding: 14px 16px; }
+  .mj-stat-card { padding: 14px 16px; }
+}
+@media (max-width: 440px) {
+  .mj-stats-row { grid-template-columns: 1fr 1fr; }
+  .mj-app-actions { flex-direction: column; }
+  .mj-drawer-btn { width: 100%; justify-content: center; }
 }

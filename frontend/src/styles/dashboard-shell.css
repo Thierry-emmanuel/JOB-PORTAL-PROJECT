@@ -43,7 +43,7 @@
   color: #111827;
   display: flex;
   flex-direction: column;
-  padding-top: var(--kora-nav-h, 72px);
+  padding-top: 0;
   box-sizing: border-box;
 }
 
@@ -68,8 +68,8 @@
   width: 248px;
   flex-shrink: 0;
   position: sticky;
-  top: calc(var(--kora-nav-h, 72px) + 20px);
-  height: calc(100vh - var(--kora-nav-h, 72px) - 40px);
+  top: 20px;
+  height: calc(100vh - 40px);
   background: #ffffff;
   border-radius: 20px;
   border: 1px solid #E5E7EB;
@@ -1084,6 +1084,7 @@
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .ds-two-col { grid-template-columns: 1fr; }
+  .ds-quick-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 960px) {
   .ds-body { padding: 12px 12px 32px; gap: 0; }
@@ -1103,15 +1104,41 @@
   .ds-mobile-close   { display: flex; }
   .ds-sb-collapse { display: none; }
   .ds-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .ds-quick-grid { grid-template-columns: repeat(3, 1fr); }
+  .ds-card { border-radius: 14px; }
+  .ds-hero { padding: 20px; border-radius: 14px; }
+  .ds-hero-title { font-size: 20px; }
 }
 @media (max-width: 640px) {
   .ds-stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .ds-hero { flex-direction: column; align-items: flex-start; }
-  .ds-hero-cta { width: 100%; }
-  .ds-page-header { flex-direction: column; align-items: flex-start; }
+  .ds-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ds-hero-cta { width: 100%; justify-content: flex-start; }
+  .ds-hero-cta .ds-btn { flex: 1; justify-content: center; }
+  .ds-page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .ds-quick-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ds-quick-btn { padding: 10px 6px; border-radius: 10px; }
+  .ds-quick-icon { width: 36px; height: 36px; border-radius: 10px; }
+  .ds-quick-label { font-size: 10px; }
+  .ds-stat-card { padding: 14px; gap: 10px; }
+  .ds-stat-value { font-size: 22px; }
+  .ds-app-row { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  .ds-app-actions { flex-wrap: wrap; }
+  .ds-card-header { padding: 14px 16px; }
+  .ds-body { padding: 8px 8px 24px; }
+  .ds-search input { font-size: 13px; }
+  .ds-job-card { padding: 14px 16px; }
+  .ds-job-actions { flex-wrap: wrap; gap: 6px; }
 }
 @media (max-width: 440px) {
-  .ds-stats-grid { grid-template-columns: 1fr; }
+  .ds-stats-grid { grid-template-columns: 1fr 1fr; }
+  .ds-quick-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .ds-quick-label { font-size: 9px; }
+  .ds-hero-title { font-size: 17px; }
+  .ds-hero-sub { font-size: 12px; }
+  .ds-stat-icon { width: 36px; height: 36px; border-radius: 10px; }
+  .ds-stat-value { font-size: 20px; }
+  .ds-app-name { font-size: 13px; }
+  .ds-app-job { font-size: 11px; }
 }
 
 /* ── Spin animation ────────────────────────────────────── */

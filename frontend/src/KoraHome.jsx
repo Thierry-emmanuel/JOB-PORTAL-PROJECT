@@ -93,13 +93,13 @@ function renderIcon(IconOrEmojiOrUrl, size = 26, color = G) {
   return <IconComponent size={size} style={{ color }} />;
 }
 
-const FILTERS = ["Tous","Remote","Full-time","Stage","Tech","Finance","Design"];
+const FILTERS = ["All","Remote","Full-time","Internship","Tech","Finance","Design"];
 
 /* ─── HELPERS ───────────────────────────────────────────────── */
 function freshnessLabel(d) {
-  if (d === 0) return { label:"Aujourd'hui", color:"#22C55E" };
-  if (d === 1) return { label:"Hier",        color:"#84CC16" };
-  return { label:`Il y a ${d}j`, color: d > 5 ? "#EF4444" : "#F59E0B" };
+  if (d === 0) return { label:"Today",     color:"#22C55E" };
+  if (d === 1) return { label:"Yesterday", color:"#84CC16" };
+  return { label:`${d}d ago`, color: d > 5 ? "#EF4444" : "#F59E0B" };
 }
 
 /* ─── KORA SVG LOGO ─────────────────────────────────────────── */
@@ -289,13 +289,13 @@ function Navbar({ logoSrc, onLogoUpload }) {
               to="/register"
               style={{ background:O, color:"white", border:"none", padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit", textDecoration: "none" }}
             >
-              S'inscrire
+              {t('nav.register')}
             </Link>
           )}
           {/* Hamburger button */}
           <button
             onClick={() => setMenuOpen(o => !o)}
-            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             style={{
               width:40, height:40, borderRadius:8,
@@ -360,14 +360,14 @@ function Navbar({ logoSrc, onLogoUpload }) {
                 onClick={() => setMenuOpen(false)}
                 style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color: scrolled ? INK : "#fff", cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
               >
-                Connexion
+                {t('nav.sign_in')}
               </Link>
               <Link 
                 to="/register"
                 onClick={() => setMenuOpen(false)}
                 style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", fontSize:15, fontWeight:500, color:O, cursor:"pointer", padding:"12px 8px", fontFamily:"inherit", textDecoration: "none" }}
               >
-                S'inscrire
+                {t('nav.register')}
               </Link>
             </>
           )}
@@ -624,7 +624,7 @@ function Hero() {
               {isAuthenticated ? (
                 <>
                   <Link to={getDashboardPath()} style={{ background:G, color:"white", textDecoration:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, boxShadow:"0 4px 20px rgba(26,92,46,0.4)" }}>
-                    Mon Tableau de Bord →
+                    {t('nav.dashboard')} →
                   </Link>
                   <button onClick={handleAction} style={{ background:"rgba(255,255,255,0.15)", color:"white", border:"1px solid rgba(255,255,255,0.3)", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", backdropFilter:"blur(8px)" }}>
                     {t('hero.view_job')}
@@ -632,7 +632,7 @@ function Hero() {
                 </>
               ) : (
                 <button onClick={handleAction} style={{ background:O, color:"white", border:"none", padding:"12px 26px", borderRadius:10, fontSize:"clamp(13px,3vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(249,115,22,0.4)" }}>
-                  Voir l'offre →
+                  {t('hero.view_job')} →
                 </button>
               )}
               <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"8px 14px", fontSize:"clamp(11px,2.5vw,13px)", fontWeight:600, color:"white" }}>
@@ -652,9 +652,9 @@ function Hero() {
           style={{ position:"absolute", bottom:56, left:"clamp(20px,5vw,80px)", zIndex:8, display:"flex", background:"rgba(255,255,255,0.10)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1px solid rgba(255,255,255,0.18)", borderRadius:14, overflow:"hidden" }}
         >
           {[
-            { val:liveJobs,      label: heroConfig?.statJobsLabel      ?? "Offres actives" },
-            { val:liveCompanies, label: heroConfig?.statCompaniesLabel ?? "Entreprises"    },
-            { val:liveSeekers,   label: heroConfig?.statSeekersLabel   ?? "Candidats"      },
+            { val:liveJobs,      label: heroConfig?.statJobsLabel      ?? t('stats.active_jobs') },
+            { val:liveCompanies, label: heroConfig?.statCompaniesLabel ?? t('stats.companies')   },
+            { val:liveSeekers,   label: heroConfig?.statSeekersLabel   ?? t('stats.candidates')  },
           ].filter(x => x.val != null).map((stat, i, arr) => (
             <div key={i} style={{ padding:"10px 20px", textAlign:"center", borderRight: i < arr.length-1 ? "1px solid rgba(255,255,255,0.15)" : "none" }}>
               <div style={{ fontSize:18, fontWeight:800, color:"#fff", lineHeight:1 }}>{Number(stat.val).toLocaleString()}+</div>
@@ -780,7 +780,7 @@ function Ticker() {
 function SearchSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState("Tous");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [searchKw, setSearchKw] = useState("");
   const [locationKw, setLocationKw] = useState("");
 
@@ -796,8 +796,8 @@ function SearchSection() {
     const params = new URLSearchParams();
     if (f === "Remote") params.append("location", "Remote");
     else if (f === "Full-time") params.append("type", "CDI");
-    else if (f === "Stage") params.append("type", "INTERNSHIP");
-    else if (f !== "Tous") params.append("search", f);
+    else if (f === "Internship") params.append("type", "INTERNSHIP");
+    else if (f !== "All") params.append("search", f);
     navigate(`/jobs?${params.toString()}`);
   };
   return (
@@ -1061,7 +1061,7 @@ function JobsSection() {
             <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>{t('jobs.subtitle')}</p>
           </div>
           <Link to="/jobs" style={{ fontSize:14, fontWeight:600, color:G, textDecoration:"none", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap" }}>
-            Voir toutes les offres →
+            {t('jobs.see_all')} →
           </Link>
         </div>
         {jobs.length === 0 ? (
@@ -1228,8 +1228,8 @@ function CompaniesSection() {
     <section id="companies-section" style={{ background:"#F9FAFB", padding:"clamp(48px,7vw,80px) clamp(16px,4vw,48px)" }}>
       <div style={{ maxWidth:1300, margin:"0 auto" }}>
         <div ref={hRef} style={{ ...hStyle, textAlign:"center", marginBottom:40 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:O, letterSpacing:"2.5px", marginBottom:6 }}>RECRUTEURS</div>
-          <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>Entreprises qui recrutent</h2>
+          <div style={{ fontSize:11, fontWeight:700, color:O, letterSpacing:"2.5px", marginBottom:6 }}>RECRUITERS</div>
+          <h2 style={{ fontSize:"clamp(24px,4vw,34px)", fontWeight:800, color:INK, letterSpacing:"-0.5px" }}>Companies Hiring Now</h2>
           <p style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, color:MUTED, fontSize:14, fontWeight:300, marginTop:8 }}>
             <span style={{ width:7, height:7, borderRadius:"50%", background:"#22C55E", display:"inline-block", animation:"blink 1.3s infinite" }}/>
             Pulse vert = postes ouverts en ce moment
@@ -1272,14 +1272,14 @@ function CtaSection() {
       <div style={{ position:"absolute", bottom:-100, left:-60, width:320, height:320, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }}/>
       <div ref={ref} style={{ ...style, maxWidth:1300, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr", gap:40, alignItems:"center", position:"relative", zIndex:1 }} className="kora-cta-grid">
         <div>
-          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"2.5px", color:"rgba(255,255,255,0.8)", marginBottom:16 }}>POUR LES RECRUTEURS</div>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"2.5px", color:"rgba(255,255,255,0.8)", marginBottom:16 }}>FOR RECRUITERS</div>
           <h2 style={{ fontSize:"clamp(28px,5vw,44px)", fontWeight:800, color:"white", letterSpacing:"-1px", lineHeight:1.1, marginBottom:20 }}>Recrutez les meilleurs<br/>talents d'Afrique</h2>
           <p style={{ fontSize:"clamp(13px,2.5vw,15px)", color:"rgba(255,255,255,0.85)", lineHeight:1.75, fontWeight:300, marginBottom:32, maxWidth:420 }}>
             Publiez une offre en moins de 5 minutes. Atteignez 50 000+ candidats qualifiés au Cameroun et au-delà. Matching IA inclus.
           </p>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:24 }}>
             <button onClick={handleAction} style={{ background:"white", color:O, border:"none", padding:"13px 26px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(0,0,0,0.15)" }}>
-              Publier une offre →
+              {t('home.post_job')} →
             </button>
             <button onClick={() => navigate("/insights")} style={{ background:"transparent", color:"white", border:"2px solid rgba(255,255,255,0.5)", padding:"13px 22px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
               Voir les tarifs
@@ -1354,8 +1354,8 @@ function Footer({ logoSrc }) {
             </div>
           </div>
           {[
-            { title:"CANDIDATS", links:["Offres d'emploi","Entreprises","Offres sauvegardées","Conseils carrière","Salaires"] },
-            { title:"RECRUTEURS", links:["Publier une offre","Tarifs","Recherche talents","Analytiques"] },
+            { title:"JOB SEEKERS", links:["Job Listings","Companies","Saved Jobs","Career Tips","Salaries"] },
+            { title:"RECRUITERS", links:["Post a Job","Pricing","Talent Search","Analytics"] },
             { title:"KORA", links:["À propos","Blog","Carrières","Contact","Confidentialité"] },
           ].map(col => (
             <div key={col.title}>
@@ -1367,8 +1367,8 @@ function Footer({ logoSrc }) {
           ))}
         </div>
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
-          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>© 2025 KORA · Tous droits réservés</span>
-          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>Fait avec <span style={{ color:O }}>♥</span> pour l'Afrique</span>
+          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>© 2025 KORA · All rights reserved</span>
+          <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300 }}>Made with <span style={{ color:O }}>♥</span> for Africa</span>
         </div>
       </div>
     </footer>

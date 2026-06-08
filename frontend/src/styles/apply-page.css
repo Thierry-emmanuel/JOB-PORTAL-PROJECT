@@ -420,4 +420,12 @@
   .ap-job-banner { flex-direction: column; align-items: flex-start; }
   .ap-form-nav { flex-wrap: wrap; }
   .ap-state-card { padding: 40px 20px; }
+  .ap-page { padding: 16px; }
+  .ap-container--narrow { padding: 16px; }
+  .ap-form-nav .ap-btn { flex: 1; justify-content: center; }
+}
+@media (max-width: 440px) {
+  .ap-steps { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .ap-step { flex-shrink: 0; }
+  .ap-form-section { padding: 16px; border-radius: 12px; }
 }
