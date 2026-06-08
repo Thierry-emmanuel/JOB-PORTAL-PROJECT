@@ -19,7 +19,8 @@ import {
   AlertCircle, Paperclip, Eye, Send, Building2,
   MapPin, Clock, Banknote,
 } from 'lucide-react';
-import { getJob, applyToJob } from '../../api/jobs';
+import { applyToJob } from '../../api/jobs';
+import { cachedGetJob } from '../../api/cachedApi';
 import { getJobSeekerProfile } from '../../api/profiles';
 import { useAuth } from '../../context/AuthContext';
 
@@ -179,7 +180,7 @@ export default function ApplyPage() {
     async function load() {
       try {
         const [jobData, profileData] = await Promise.allSettled([
-          getJob(id),
+          cachedGetJob(id),
           user?.id ? getJobSeekerProfile(user.id) : Promise.resolve(null),
         ]);
         if (jobData.status === 'fulfilled')     setJob(jobData.value);

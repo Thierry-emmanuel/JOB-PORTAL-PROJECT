@@ -15,7 +15,8 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getUserApplications, getJobs } from '../api/jobs';
+import { getUserApplications } from '../api/jobs';
+import { cachedGetJobs } from '../api/cachedApi';
 import { getInterviewsBySeeker, cancelInterview } from '../api/interviews';
 import { getJobSeekerProfile, updateJobSeekerProfile } from '../api/profiles';
 import { Client } from '@stomp/stompjs';
@@ -146,8 +147,8 @@ export default function useEmployeeDashboard() {
       .catch((err) => { console.error('[Dashboard] interviews:', err.message); setInterviews([]); })
       .finally(() => setInterLoading(false));
 
-    // Recommended jobs
-    getJobs({ limit: 6 })
+    // Recommended jobs — cached so re-mounting the dashboard doesn't re-fetch
+    cachedGetJobs({ limit: 6 })
       .then((res) => setRecJobs(res.data || []))
       .catch(() => {})
       .finally(() => setJobsLoading(false));

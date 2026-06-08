@@ -4,8 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Kora_Logo from './assets/absolute-size-logo.png'
 import { useAuth } from "./context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { getJobs, getCategories, getCompanies } from "./api/jobs";
-import { fetchLiveHero } from "./api/hero";
+import {
+  cachedGetJobs,
+  cachedFetchLiveHero,
+  cachedGetCategories,
+  cachedGetCompanies,
+} from "./api/cachedApi";
 import {
   Laptop,
   BarChart3,
@@ -24,57 +28,6 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-
-/* ─── LIGHTWEIGHT IN-MEMORY CACHE ──────────────────────────── */
-// TTL-based cache shared across all homepage sections for the lifetime
-// of the browser tab. Avoids duplicate network calls (Hero + Ticker +
-// StatsBand all previously fetched jobs independently).
-const _cache = new Map();
-function cacheGet(key) {
-  const hit = _cache.get(key);
-  if (!hit) return null;
-  if (Date.now() > hit.expiresAt) { _cache.delete(key); return null; }
-  return hit.value;
-}
-function cacheSet(key, value, ttlMs = 60_000) {
-  _cache.set(key, { value, expiresAt: Date.now() + ttlMs });
-}
-
-async function cachedGetJobs(params, ttlMs = 60_000) {
-  const key = "jobs:" + JSON.stringify(params);
-  const cached = cacheGet(key);
-  if (cached) return cached;
-  const result = await getJobs(params);
-  cacheSet(key, result, ttlMs);
-  return result;
-}
-
-async function cachedFetchLiveHero(ttlMs = 120_000) {
-  const key = "hero";
-  const cached = cacheGet(key);
-  if (cached) return cached;
-  const result = await fetchLiveHero();
-  cacheSet(key, result, ttlMs);
-  return result;
-}
-
-async function cachedGetCategories(ttlMs = 120_000) {
-  const key = "categories";
-  const cached = cacheGet(key);
-  if (cached) return cached;
-  const result = await getCategories();
-  cacheSet(key, result, ttlMs);
-  return result;
-}
-
-async function cachedGetCompanies(ttlMs = 120_000) {
-  const key = "companies";
-  const cached = cacheGet(key);
-  if (cached) return cached;
-  const result = await getCompanies();
-  cacheSet(key, result, ttlMs);
-  return result;
-}
 
 const G    = "#1A5C2E";
 const G2   = "#0D3D1F";

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { getJob, getJobDetail, saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
+import { saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
+import { cachedGetJob, cachedGetJobDetail } from '../../api/cachedApi';
 
 import '../../styles/job-list.css';
 
@@ -45,7 +46,7 @@ export default function JobDetails() {
       try {
         // When viewOnly=true (from application history), use the /detail endpoint
         // which returns any non-deleted job regardless of status (ACTIVE/DRAFT/EXPIRED).
-        const data = isViewOnly ? await getJobDetail(id) : await getJob(id);
+        const data = isViewOnly ? await cachedGetJobDetail(id) : await cachedGetJob(id);
         if (!cancelled) {
           setJob(data);
           setSaved(data.saved ?? false);

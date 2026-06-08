@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
 import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
-import { getSalaryByCategory, getDemandTrends } from '../../api/insights';
+import { cachedGetSalaryByCategory, cachedGetDemandTrends } from '../../api/cachedApi';
 import '../../styles/dashboard-shell.css';
 
 /* ─── Premium Glassmorphic Tooltip ─── */
@@ -101,7 +101,7 @@ export default function EmployerInsightsDashPage() {
   const fetchInsights = useCallback(() => {
     setLoading(true);
     setError(null);
-    Promise.all([getSalaryByCategory(), getDemandTrends()])
+    Promise.all([cachedGetSalaryByCategory(), cachedGetDemandTrends()])
       .then(([s, t]) => { setSalaries(s || []); setTrends(t || []); })
       .catch(() => setError('Could not load market insights. Please try again.'))
       .finally(() => setLoading(false));

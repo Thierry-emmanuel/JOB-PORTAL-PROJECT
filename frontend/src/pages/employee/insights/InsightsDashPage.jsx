@@ -6,7 +6,7 @@ import {
 import { TrendingUp, BarChart3, AlertCircle } from "lucide-react";
 import EmployeeLayout from "../../../layouts/EmployeeLayout";
 import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
-import { getSalaryByCategory, getDemandTrends } from "../../../api/insights";
+import { cachedGetSalaryByCategory, cachedGetDemandTrends } from '../../../api/cachedApi';
 
 /* ─── Premium Glassmorphic Tooltip ─── */
 const CustomTooltip = ({ active, payload, label, formatter }) => {
@@ -48,7 +48,7 @@ export default function InsightsDashPage() {
   const [error,    setError]    = useState(null);
 
   useEffect(() => {
-    Promise.all([getSalaryByCategory(), getDemandTrends()])
+    Promise.all([cachedGetSalaryByCategory(), cachedGetDemandTrends()])
       .then(([s, t]) => { setSalaries(s || []); setTrends(t || []); })
       .catch(() => setError("Could not load market insights."))
       .finally(() => setLoading(false));
