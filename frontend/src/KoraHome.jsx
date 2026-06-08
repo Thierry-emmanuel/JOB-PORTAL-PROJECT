@@ -25,6 +25,57 @@ import {
   Clock
 } from 'lucide-react';
 
+/* ─── LIGHTWEIGHT IN-MEMORY CACHE ──────────────────────────── */
+// TTL-based cache shared across all homepage sections for the lifetime
+// of the browser tab. Avoids duplicate network calls (Hero + Ticker +
+// StatsBand all previously fetched jobs independently).
+const _cache = new Map();
+function cacheGet(key) {
+  const hit = _cache.get(key);
+  if (!hit) return null;
+  if (Date.now() > hit.expiresAt) { _cache.delete(key); return null; }
+  return hit.value;
+}
+function cacheSet(key, value, ttlMs = 60_000) {
+  _cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+}
+
+async function cachedGetJobs(params, ttlMs = 60_000) {
+  const key = "jobs:" + JSON.stringify(params);
+  const cached = cacheGet(key);
+  if (cached) return cached;
+  const result = await getJobs(params);
+  cacheSet(key, result, ttlMs);
+  return result;
+}
+
+async function cachedFetchLiveHero(ttlMs = 120_000) {
+  const key = "hero";
+  const cached = cacheGet(key);
+  if (cached) return cached;
+  const result = await fetchLiveHero();
+  cacheSet(key, result, ttlMs);
+  return result;
+}
+
+async function cachedGetCategories(ttlMs = 120_000) {
+  const key = "categories";
+  const cached = cacheGet(key);
+  if (cached) return cached;
+  const result = await getCategories();
+  cacheSet(key, result, ttlMs);
+  return result;
+}
+
+async function cachedGetCompanies(ttlMs = 120_000) {
+  const key = "companies";
+  const cached = cacheGet(key);
+  if (cached) return cached;
+  const result = await getCompanies();
+  cacheSet(key, result, ttlMs);
+  return result;
+}
+
 const G    = "#1A5C2E";
 const G2   = "#0D3D1F";
 const G_L  = "#E8F5EE";
@@ -439,12 +490,12 @@ function Hero() {
 
   /* Fetch hero config */
   useEffect(() => {
-    fetchLiveHero().then(cfg => setHeroConfig(cfg)).catch(() => {});
+    cachedFetchLiveHero().then(cfg => setHeroConfig(cfg)).catch(() => {});
   }, []);
 
   /* Fetch real job slides */
   useEffect(() => {
-    getJobs({ page: 1, limit: 3 }).then(res => {
+    cachedGetJobs({ page: 1, limit: 3 }).then(res => {
       if (res.data && res.data.length > 0) {
         setSlides(res.data.slice(0, 3).map((job, i) => ({
           eyebrow: i === 0 ? "POSTE VEDETTE" : i === 1 ? "OPPORTUNITÉ FINANCE" : "RÔLE CRÉATIF",
@@ -724,7 +775,7 @@ function Ticker() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    getJobs({ page: 1, limit: 10 }).then(res => {
+    cachedGetJobs({ page: 1, limit: 10 }).then(res => {
       if (res.data && res.data.length > 0) {
         const msgs = res.data.map(job => {
           const compName = job.company || "Une entreprise partenaire";
@@ -845,7 +896,7 @@ function StatsBand() {
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !counted.current) {
         counted.current = true;
-        fetchLiveHero().then(cfg => {
+        cachedFetchLiveHero().then(cfg => {
           const targets = {
             jobs:       cfg?.liveJobCount || 10,
             companies:  cfg?.liveCompanyCount || 5,
@@ -1031,7 +1082,7 @@ function JobsSection() {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    getJobs({ page: 1, limit: 6 }).then(res => {
+    cachedGetJobs({ page: 1, limit: 6 }).then(res => {
       if (res.data && res.data.length > 0) {
         setJobs(res.data.map(job => ({
           ...job,
@@ -1057,7 +1108,7 @@ function JobsSection() {
             <p style={{ fontSize:14, color:MUTED, marginTop:4, fontWeight:300 }}>{t('jobs.subtitle')}</p>
           </div>
           <Link to="/jobs" style={{ fontSize:14, fontWeight:600, color:G, textDecoration:"none", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap" }}>
-            {t('jobs.view_all', { count: 10000 })} →
+            Voir toutes les offres →
           </Link>
         </div>
         {jobs.length === 0 ? (
@@ -1113,7 +1164,7 @@ function CategoriesSection() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    getCategories().then(data => {
+    cachedGetCategories().then(data => {
       if (data && data.length > 0) {
         setCategories(data.slice(0, 8).map((cat, i) => {
           const count = cat.jobCount !== undefined ? cat.jobCount : 0;
@@ -1203,7 +1254,7 @@ function CompaniesSection() {
   const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
-    getCompanies().then(data => {
+    cachedGetCompanies().then(data => {
       if (data && data.length > 0) {
         setCompanies(data.slice(0, 8).map((co, i) => ({
           name: co.name,
@@ -1277,7 +1328,7 @@ function CtaSection() {
             <button onClick={handleAction} style={{ background:"white", color:O, border:"none", padding:"13px 26px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 20px rgba(0,0,0,0.15)" }}>
               Publier une offre →
             </button>
-            <button style={{ background:"transparent", color:"white", border:"2px solid rgba(255,255,255,0.5)", padding:"13px 22px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+            <button onClick={() => navigate("/insights")} style={{ background:"transparent", color:"white", border:"2px solid rgba(255,255,255,0.5)", padding:"13px 22px", borderRadius:10, fontSize:"clamp(13px,2.5vw,15px)", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
               Voir les tarifs
             </button>
           </div>
@@ -1373,19 +1424,30 @@ function Footer({ logoSrc }) {
 
 /* ─── SCROLL TO TOP ─────────────────────────────────────────── */
 function ScrollToTop() {
-  const [visible, setVisible] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const handler = () => setVisible(window.scrollY > 500);
+    const handler = () => setScrolled(window.scrollY > 100);
     window.addEventListener("scroll", handler, { passive: true });
+    handler(); // check on mount
     return () => window.removeEventListener("scroll", handler);
   }, []);
-  if (!visible) return null;
   return (
-    <button onClick={() => window.scrollTo({ top:0, behavior:"smooth" })} style={{
-      position:"fixed", bottom:20, right:20, zIndex:300, width:44, height:44, borderRadius:12,
-      border:`2px solid rgba(26,92,46,0.2)`, background:"white", color:G, cursor:"pointer", fontSize:16,
-      display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 16px rgba(0,0,0,0.12)",
-    }} aria-label="Retour en haut">
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Retour en haut"
+      style={{
+        position: "fixed", bottom: 20, right: 20, zIndex: 300,
+        width: 44, height: 44, borderRadius: 12,
+        border: `2px solid rgba(26,92,46,0.2)`,
+        background: "white", color: G, cursor: "pointer", fontSize: 18,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+        opacity: scrolled ? 1 : 0,
+        transform: scrolled ? "translateY(0)" : "translateY(8px)",
+        transition: "opacity 0.3s ease, transform 0.3s ease",
+        pointerEvents: scrolled ? "auto" : "none",
+      }}
+    >
       ↑
     </button>
   );
