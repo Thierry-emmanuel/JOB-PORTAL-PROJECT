@@ -282,18 +282,25 @@
   scrollbar-color: var(--adm-border) transparent;
   min-height: 0;
 }
-/* When content area hosts the CMS (Hero/FAQ editor), switch to flex so
-   cms-hero-root can fill full height without a fixed max-height hack */
-.adm-content--cms {
-  overflow: hidden;
-  padding: 20px 28px;
-  display: flex;
-  flex-direction: column;
-}
-.adm-content--cms .cms-hero-root,
-.adm-content--cms .cms-tab-root {
+/* CMS mode: become flex column so children fill height.
+   Use .adm-content.adm-content--cms for higher specificity over .adm-content */
+.adm-content.adm-content--cms {
+  /* Switch to a positioning context so cms-hero-root (position:absolute) anchors here */
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 20px 28px 20px !important;
+  /* Keep flex column so cms-tab-root (FAQs) still fills height */
+  display: flex !important;
+  flex-direction: column !important;
   flex: 1;
   min-height: 0;
+}
+/* cms-hero-root uses position:absolute so no flex rules needed for it.
+   cms-tab-root (FAQs/Categories/Skills) still uses flex layout. */
+.adm-content.adm-content--cms .cms-tab-root {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 0;
 }
 .adm-content::-webkit-scrollbar { width: 5px; }
 .adm-content::-webkit-scrollbar-thumb { background: var(--adm-border); border-radius: 99px; }
@@ -1332,23 +1339,21 @@
 }
 
 /* ── CMS full-height: compact page header, tighter padding ─────────── */
-.adm-content--cms + * { display: none; } /* safety */
+/* Compact the page header when in CMS mode to reclaim vertical space */
 .adm-main:has(.adm-content--cms) .adm-page-head {
+  padding-top: 16px;
   padding-bottom: 10px;
   flex-wrap: wrap;
   gap: 8px;
 }
+/* On mobile, adjust cms-cols height to account for 56px mob-bar */
 @media (max-width: 768px) {
-  .adm-content--cms {
-    padding: 10px 12px;
-    overflow: hidden;
-  }
-  .adm-content--cms .cms-hero-cols {
-    border-radius: 0 0 var(--cms-radius-lg, 14px) var(--cms-radius-lg, 14px);
+  .adm-content.adm-content--cms {
+    padding: 10px 12px !important;
   }
 }
 @media (max-width: 480px) {
-  .adm-content--cms {
-    padding: 8px;
+  .adm-content.adm-content--cms {
+    padding: 8px !important;
   }
 }

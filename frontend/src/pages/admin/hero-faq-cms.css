@@ -621,30 +621,43 @@
    HERO EDITOR LAYOUT  — full-height split, proper scrollbars
    ══════════════════════════════════════════════════════════════════ */
 
-/* The root fills whatever space .adm-content gives it */
+/* ═══════════════════════════════════════════════════════════════════
+   HERO EDITOR — DEFINITIVE LAYOUT
+   The only approach that reliably scrolls in nested flex:
+   • cms-hero-root  → flex column, position:absolute filling parent
+   • cms-save-bar   → flex-shrink:0 (fixed height)
+   • cms-hero-cols  → flex row, flex:1, overflow:hidden
+   • cms-hero-config / preview → flex:1 / fixed-width, overflow-y:auto
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Root: use position absolute so it is 100% independent of parent flex bugs */
 .cms-hero-root {
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;           /* critical: allows flex children to shrink */
   overflow: hidden;
+  background: var(--cms-bg);
+  border-radius: var(--cms-radius-lg);
+  border: 1px solid var(--cms-border);
+  box-shadow: var(--cms-shadow-sm);
 }
 
-/* Sticky save bar — never scrolls away */
+/* adm-content--cms must be position:relative so absolute child anchors to it */
+/* (set via admin-dashboard.css) */
+
+/* ── Save bar — fixed height, never scrolls ─────────────────────── */
 .cms-save-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 11px 20px;
   background: var(--cms-surface);
-  border: 1px solid var(--cms-border);
+  border-bottom: 1px solid var(--cms-border);
   border-radius: var(--cms-radius-lg) var(--cms-radius-lg) 0 0;
   flex-shrink: 0;
   gap: 12px;
   flex-wrap: wrap;
-  box-shadow: 0 1px 0 var(--cms-border);
-  position: sticky;
-  top: 0;
   z-index: 20;
 }
 .cms-save-bar-left {
@@ -660,42 +673,44 @@
 }
 .cms-save-bar-right { display: flex; gap: 8px; }
 
-/* Two-column split: config scrolls independently, preview scrolls independently */
+/* ── Two-column body: FLEX not grid, so children can be overflow:auto ── */
 .cms-hero-cols {
-  display: grid;
-  grid-template-columns: 1fr 380px;
+  display: flex;
+  flex-direction: row;
   flex: 1;
-  min-height: 0;
+  min-height: 0;          /* lets flex child shrink below content size */
   overflow: hidden;
-  border: 1px solid var(--cms-border);
-  border-top: none;
   border-radius: 0 0 var(--cms-radius-lg) var(--cms-radius-lg);
-  background: var(--cms-bg);
 }
 
-/* Left column — config panels, scrollable */
+/* ── Left column: config panels, scrollable ──────────────────────── */
 .cms-hero-config {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
   padding: 14px;
-  overflow-y: auto;
+  overflow-y: scroll;     /* always show scrollbar track */
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: var(--cms-purple) transparent;
-  min-height: 0;
+  scrollbar-color: var(--cms-purple) rgba(0,0,0,0.05);
+  background: var(--cms-bg);
 }
-.cms-hero-config::-webkit-scrollbar        { width: 5px; }
-.cms-hero-config::-webkit-scrollbar-track  { background: transparent; }
-.cms-hero-config::-webkit-scrollbar-thumb  { background: var(--cms-purple); border-radius: 99px; }
+.cms-hero-config::-webkit-scrollbar         { width: 6px; }
+.cms-hero-config::-webkit-scrollbar-track   { background: rgba(0,0,0,0.04); border-radius: 99px; }
+.cms-hero-config::-webkit-scrollbar-thumb   { background: var(--cms-purple); border-radius: 99px; }
+.cms-hero-config::-webkit-scrollbar-thumb:hover { background: var(--adm-purple-dk, #6d28d9); }
 
-/* Right column — preview */
+/* ── Right column: preview pane, fixed 380px ────────────────────── */
 .cms-hero-preview-pane {
+  width: 380px;
+  flex-shrink: 0;
   border-left: 1px solid var(--cms-border);
   display: flex;
   flex-direction: column;
-  background: var(--cms-bg);
-  min-height: 0;
+  background: var(--cms-surface);
   overflow: hidden;
 }
 
@@ -727,17 +742,21 @@
 }
 .cms-preview-tab.active { background: var(--cms-purple); border-color: var(--cms-purple); color: #fff; }
 
-/* Hero preview frame — scrollable, centered */
+/* Hero preview frame — flex:1 + min-height:0 so it scrolls when preview > pane height */
 .cms-hero-preview-frame {
   flex: 1;
+  min-height: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px 16px;
+  padding: 16px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--cms-border) transparent;
+  scrollbar-color: var(--cms-purple) rgba(0,0,0,0.04);
 }
+.cms-hero-preview-frame::-webkit-scrollbar        { width: 4px; }
+.cms-hero-preview-frame::-webkit-scrollbar-track  { background: rgba(0,0,0,0.04); border-radius: 99px; }
+.cms-hero-preview-frame::-webkit-scrollbar-thumb  { background: var(--cms-purple); border-radius: 99px; }
 .cms-hero-preview-frame.desktop .cms-hero-preview-bg {
   width: 100%; max-width: 340px; min-height: 200px;
   border-radius: 12px;
@@ -751,25 +770,33 @@
   box-shadow: 0 0 0 2px var(--cms-border), 0 8px 28px rgba(0,0,0,.15);
 }
 
-/* Stack on smaller screens */
+/* ── Responsive breakpoints ─────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .cms-hero-cols { grid-template-columns: 1fr 320px; }
+  .cms-hero-preview-pane { width: 320px; }
 }
 @media (max-width: 900px) {
+  /* Stack vertically on tablet */
   .cms-hero-cols {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-    overflow-y: auto;
+    flex-direction: column;
   }
   .cms-hero-config {
-    max-height: none;
-    overflow: visible;
+    flex: none;
+    min-height: 420px;
+    max-height: 60vh;
+    overflow-y: scroll;
   }
   .cms-hero-preview-pane {
+    width: 100%;
     border-left: none;
     border-top: 1px solid var(--cms-border);
-    min-height: 340px;
+    flex: 1;
+    min-height: 300px;
   }
+}
+@media (max-width: 600px) {
+  .cms-hero-config  { min-height: 360px; max-height: 55vh; }
+  .cms-save-bar     { padding: 9px 14px; gap: 8px; }
+  .cms-save-bar-left span:not(.cms-unsaved-pill) { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════
