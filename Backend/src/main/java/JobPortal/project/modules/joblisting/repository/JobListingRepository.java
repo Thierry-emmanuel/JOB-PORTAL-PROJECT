@@ -92,11 +92,19 @@ public interface JobListingRepository
     Optional<JobListing> findAnyById(@Param("id") UUID id);
 
     /**
-     * Resolves a legacy numerical prefix ID to its full UUID string.
+     * Resolves a numerical prefix ID back to its full UUID string.
+     *
+     * The job_listings.id column is stored as varchar(36) by Hibernate
+     * (standard "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" format).
+     * BIN_TO_UUID() does NOT apply here — the first 8 characters of the
+     * stored string are already the hex first segment of the UUID.
+     *
+     * Java equivalent: Long.parseLong(uuid.toString().split("-")[0], 16)
+     * Must stay in sync with JobListingMapper.toNumericId().
      */
     @Query(value = """
-        SELECT BIN_TO_UUID(jl.id) FROM job_listings jl
-        WHERE CAST(SUBSTRING_INDEX(BIN_TO_UUID(jl.id), '-', 1) AS SIGNED) = :numericalId
+        SELECT jl.id FROM job_listings jl
+        WHERE CONV(SUBSTRING(jl.id, 1, 8), 16, 10) = :numericalId
         LIMIT 1
         """, nativeQuery = true)
     String findIdByNumericalId(@Param("numericalId") Long numericalId);

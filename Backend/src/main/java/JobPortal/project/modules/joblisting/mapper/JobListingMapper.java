@@ -23,16 +23,20 @@ public class JobListingMapper {
 
     /**
      * Derives a stable numeric ID from the UUID's first hex segment.
-     * Must match the logic in JobListingRepository.findIdByNumericalId:
-     *   CAST(SUBSTRING_INDEX(BIN_TO_UUID(id), '-', 1) AS SIGNED)
+     * Must match the SQL in JobListingRepository.findIdByNumericalId:
+     *   CONV(SUBSTRING(jl.id, 1, 8), 16, 10)
      *
-     * BIN_TO_UUID outputs a standard UUID string like:
-     *   xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-     * The first segment is 8 hex chars → parsed as a long.
+     * job_listings.id is stored as varchar(36) by Hibernate, so the first
+     * 8 characters of the stored string are already the lowercase hex
+     * first segment — no BIN_TO_UUID() conversion needed in SQL.
+     *
+     * Example: UUID "40000000-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+     *   → firstSegment = "40000000"
+     *   → numericId    = 1073741824
      */
     private static long toNumericId(java.util.UUID uuid) {
         // Take the first 8 hex characters of the UUID string (before the first '-')
-        String firstSegment = uuid.toString().split("-")[0]; // e.g. "10000000"
+        String firstSegment = uuid.toString().split("-")[0]; // e.g. "40000000"
         return Long.parseLong(firstSegment, 16);
     }
 
