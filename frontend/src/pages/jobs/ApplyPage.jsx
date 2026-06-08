@@ -282,28 +282,38 @@ export default function ApplyPage() {
   /* ── Submit ───────────────────────────────────────────── */
   const handleSubmit = async () => {
     if (!user?.id) { setSErr('You must be logged in to apply.'); return; }
+
+    // Validate the final step before submitting (goNext skips this for the last step)
+    const errs = validateStep(step);
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    // Guard: numericId must be present — it's the backend's jobPostingId (Long FK)
+    if (!job?.numericId) {
+      setSErr('Unable to identify job posting. Please refresh the page and try again.');
+      return;
+    }
+
     setSub(true); setSErr(null);
     try {
       const payload = {
-        jobPostingId:   job?.numericId ?? null,        // 2705 numeric ID that matches Application.jobPostingId (Long)
-        coverLetter:    form.coverLetter?.slice(0, 1000) || null,  // 2705 backend enforces max 1000 chars
+        jobPostingId:   job.numericId,
+        coverLetter:    form.coverLetter?.slice(0, 1000) || null,
         expectedSalary: parseFloat(form.expectedSalary),
-        // Extra metadata — backend ApplicationResponse stores these in the notes/description fields
-        // which map to optional request properties when your backend supports them.
-        // If your CreateApplicationRequest only has jobPostingId + coverLetter + expectedSalary,
-        // the additional fields below are gracefully ignored by Spring's @RequestBody binding.
-        notes:          form.notes,
-        applicantName:  form.fullName,
-        applicantPhone: form.phone,
-        applicantCity:  form.city,
-        description:    form.description,
-        linkedInUrl:    form.linkedin,
-        portfolioUrl:   form.portfolio,
       };
       await applyToJob(user.id, payload);
       setDone(true);
     } catch (err) {
-      setSErr(err.response?.data?.message || 'Application failed. Please try again.');
+      // Backend returns Spring ProblemDetail: { detail, title, status, ... }
+      // NOT a plain { message } envelope — read `detail` first, then fall back
+      const detail = err.response?.data?.detail
+        || err.response?.data?.message
+        || err.response?.data?.error
+        || null;
+      if (err.response?.status === 400 && detail?.toLowerCase().includes('already applied')) {
+        setSErr('You have already applied to this job.');
+      } else {
+        setSErr(detail || 'Application failed. Please try again.');
+      }
     } finally {
       setSub(false);
     }
