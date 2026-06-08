@@ -1258,6 +1258,7 @@ function CompaniesSection() {
 /* ─── EMPLOYER CTA ──────────────────────────────────────────── */
 function CtaSection() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [ref, style] = useReveal(0);
 
