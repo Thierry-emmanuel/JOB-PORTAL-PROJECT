@@ -8,7 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -40,6 +39,16 @@ public class Application {
 
     @Column(name = "job_posting_id", nullable = false, updatable = false)
     private Long jobPostingId;
+
+    /**
+     * UUID string of the corresponding JobListing row (varchar 36).
+     * Stored at application time so the frontend can call
+     * GET /api/jobs/{jobListingId}/detail without a reverse numericId lookup,
+     * which was fragile when the job listing UUID is stored as binary(16) in MySQL.
+     * Nullable to remain backward-compatible with rows created before this column existed.
+     */
+    @Column(name = "job_listing_id", length = 36, updatable = false)
+    private String jobListingId;
 
     @Column(name = "cover_letter", length = 1000)
     private String coverLetter;
@@ -81,5 +90,3 @@ public class Application {
         return interview != null;
     }
 }
-
-

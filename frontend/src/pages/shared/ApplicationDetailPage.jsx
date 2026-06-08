@@ -66,7 +66,7 @@ export default function ApplicationDetailPage() {
 
       // 2. Fetch Job posting and Seeker Profile in parallel
       const [jobData, profileData] = await Promise.all([
-        getJobDetail(appData.jobPostingId).catch(err => {
+        getJobDetail(appData.jobListingId || appData.jobPostingId).catch(err => {
           console.warn('Failed to load job details', err);
           return null;
         }),

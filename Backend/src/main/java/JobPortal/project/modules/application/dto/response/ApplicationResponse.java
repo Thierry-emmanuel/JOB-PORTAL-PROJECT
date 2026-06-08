@@ -6,12 +6,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
-
 public record ApplicationResponse(
 
         Long id,
         Long seekerId,
         Long jobPostingId,
+
+        /**
+         * UUID string of the JobListing — use this for GET /api/jobs/{jobListingId}/detail.
+         * Null for applications created before this field was added; fall back to jobPostingId in that case.
+         */
+        String jobListingId,
+
         String coverLetter,
         BigDecimal expectedSalary,
         ApplicationStatus status,
@@ -27,5 +33,3 @@ public record ApplicationResponse(
         LocalDateTime appliedAt,
         LocalDateTime lastUpdatedAt
 ) {}
-
-

@@ -63,15 +63,25 @@ public class ApplicationServiceImpl implements ApplicationService {
                     "Seeker " + seekerId + " has already applied to job posting " + request.jobPostingId());
         }
 
+        // Resolve UUID now — used both to populate jobListingId on the entity
+        // and later for view-count increment + notifications.
+        String resolvedUuid = null;
+        try {
+            resolvedUuid = jobListingRepository.findIdByNumericalId(request.jobPostingId());
+        } catch (Exception e) {
+            log.warn("Could not resolve numericId {} to UUID: {}", request.jobPostingId(), e.getMessage());
+        }
+
         Application application = applicationMapper.toEntity(request, seekerId);
+        application.setJobListingId(resolvedUuid);   // store UUID so frontend can fetch job detail directly
         Application saved = applicationRepository.save(application);
 
-        log.info("New application created: id={}, seekerId={}, jobPostingId={}",
-                saved.getId(), seekerId, request.jobPostingId());
+        log.info("New application created: id={}, seekerId={}, jobPostingId={}, jobListingId={}",
+                saved.getId(), seekerId, request.jobPostingId(), resolvedUuid);
 
         // Increment view count of the job listing and notify employer
         try {
-            String uuidStr = jobListingRepository.findIdByNumericalId(request.jobPostingId());
+            String uuidStr = resolvedUuid;
             if (uuidStr != null) {
                 JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
                 if (job != null) {
@@ -343,5 +353,3 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applicationMapper.toResponse(saved);
     }
 }
-
-

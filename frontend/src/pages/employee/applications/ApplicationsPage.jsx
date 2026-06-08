@@ -91,7 +91,8 @@ export default function ApplicationsPage() {
         const enriched = await Promise.all(
           appsList.map(async (app) => {
             try {
-              const jobDetail = await getJobDetail(app.jobPostingId);
+              const jobId = app.jobListingId || app.jobPostingId;
+              const jobDetail = await getJobDetail(jobId);
               return {
                 ...app,
                 jobTitle: jobDetail.title,
@@ -268,7 +269,7 @@ export default function ApplicationsPage() {
                   >
                     <ClipboardList size={12}/> View Application
                   </button>
-                  <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
+                  <Link to={`/jobs/${app.jobListingId || app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
                     <Eye size={12}/> View Job
                   </Link>
                 </div>
