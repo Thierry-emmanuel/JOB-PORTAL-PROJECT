@@ -360,7 +360,7 @@ export default function AdminDashboard() {
           badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
         />
 
-        <div className={`adm-content ${tab === 'hero' ? 'hero-tab' : ''}`}>
+        <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
           {tab === 'overview'     && <OverviewTab />}
           {tab === 'users'        && <UsersTab showToast={showToast}/>}
           {tab === 'reports'      && <ReportsTab />}

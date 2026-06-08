@@ -39,7 +39,7 @@
   background: var(--adm-bg);
   font-family: var(--adm-font);
   color: var(--adm-ink);
-  padding-top: var(--kora-nav-h, 72px);
+  padding-top: 0;
   box-sizing: border-box;
 }
 
@@ -280,6 +280,20 @@
   padding: 20px 28px 40px;
   scrollbar-width: thin;
   scrollbar-color: var(--adm-border) transparent;
+  min-height: 0;
+}
+/* When content area hosts the CMS (Hero/FAQ editor), switch to flex so
+   cms-hero-root can fill full height without a fixed max-height hack */
+.adm-content--cms {
+  overflow: hidden;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+}
+.adm-content--cms .cms-hero-root,
+.adm-content--cms .cms-tab-root {
+  flex: 1;
+  min-height: 0;
 }
 .adm-content::-webkit-scrollbar { width: 5px; }
 .adm-content::-webkit-scrollbar-thumb { background: var(--adm-border); border-radius: 99px; }
@@ -1286,7 +1300,7 @@
   }
   .adm-root {
     padding-top: 56px;
-    height: calc(100vh - 56px);
+    height: 100vh;
   }
   .adm-sidebar {
     position: fixed; top: 0; left: 0; bottom: 0;
@@ -1316,4 +1330,25 @@
   .adm-filter-tabs { flex-wrap: wrap; }
   .adm-search { min-width: 0; width: 100%; }
 }
-
+
+/* ── CMS full-height: compact page header, tighter padding ─────────── */
+.adm-content--cms + * { display: none; } /* safety */
+.adm-main:has(.adm-content--cms) .adm-page-head {
+  padding-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 768px) {
+  .adm-content--cms {
+    padding: 10px 12px;
+    overflow: hidden;
+  }
+  .adm-content--cms .cms-hero-cols {
+    border-radius: 0 0 var(--cms-radius-lg, 14px) var(--cms-radius-lg, 14px);
+  }
+}
+@media (max-width: 480px) {
+  .adm-content--cms {
+    padding: 8px;
+  }
+}
