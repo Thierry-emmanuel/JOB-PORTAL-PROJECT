@@ -116,3 +116,19 @@ export const fetchMarketInsights = async () => {
   try { const { data } = await apiClient.get('/api/v1/insights'); return data; }
   catch { return null; }
 };
+
+// ─── Hero Config ──────────────────────────────────────────────────────────────
+export const fetchAdminHero = async () => {
+  const { data } = await apiClient.get('/api/admin/hero');
+  return data;
+};
+
+export const saveHeroConfig = async (cfg) => {
+  const { data } = await apiClient.put('/api/admin/hero', cfg);
+  return data;
+};
+
+export const resetHeroConfig = async () => {
+  const { data } = await apiClient.post('/api/admin/hero/reset');
+  return data;
+};
