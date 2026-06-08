@@ -90,16 +90,24 @@ export default function ApplicationsPage() {
         const appsList = Array.isArray(res) ? res : res?.content || [];
         const enriched = await Promise.all(
           appsList.map(async (app) => {
+            // FIX: only call /detail when we have a valid UUID jobListingId.
+            // jobPostingId is a numeric Long from the job_postings table and is
+            // NOT a valid path parameter for GET /api/jobs/{uuid}/detail.
+            // For legacy applications where jobListingId was not yet recorded,
+            // we skip the fetch and fall back to whatever title the backend
+            // already embedded in the application response.
+            if (!app.jobListingId) {
+              return app;
+            }
             try {
-              const jobId = app.jobListingId || app.jobPostingId;
-              const jobDetail = await getJobDetail(jobId);
+              const jobDetail = await getJobDetail(app.jobListingId);
               return {
                 ...app,
                 jobTitle: jobDetail.title,
                 companyName: jobDetail.company,
               };
             } catch (err) {
-              console.warn(`Could not fetch details for job ${app.jobPostingId}`, err);
+              console.warn(`Could not fetch details for job listing ${app.jobListingId}`, err);
               return app;
             }
           })
@@ -269,9 +277,17 @@ export default function ApplicationsPage() {
                   >
                     <ClipboardList size={12}/> View Application
                   </button>
-                  <Link to={`/jobs/${app.jobListingId || app.jobPostingId}?viewOnly=true`} className="apps-action-btn">
-                    <Eye size={12}/> View Job
-                  </Link>
+                  {/* FIX: only link to the job detail page when a valid UUID is available.
+                      Navigating to /jobs/1073741824?viewOnly=true would also 404. */}
+                  {app.jobListingId ? (
+                    <Link to={`/jobs/${app.jobListingId}?viewOnly=true`} className="apps-action-btn">
+                      <Eye size={12}/> View Job
+                    </Link>
+                  ) : (
+                    <span className="apps-action-btn apps-action-btn--disabled" title="Job listing no longer available">
+                      <Eye size={12}/> View Job
+                    </span>
+                  )}
                 </div>
               </div>
             );

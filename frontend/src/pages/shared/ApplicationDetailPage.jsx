@@ -64,12 +64,22 @@ export default function ApplicationDetailPage() {
       setReviewNotes(appData.employerReview || '');
       setIvFeedback(appData.interview?.feedback || '');
 
-      // 2. Fetch Job posting and Seeker Profile in parallel
+      // 2. Fetch Job listing and Seeker Profile in parallel.
+      //    FIX: only call getJobDetail when jobListingId (a UUID string) is present.
+      //    jobPostingId is a numeric Long that identifies a row in the job_postings
+      //    table and is NOT a valid path parameter for GET /api/jobs/{uuid}/detail —
+      //    passing it produces a 404. For legacy applications where jobListingId was
+      //    not yet recorded, we resolve jobData to null and fall back to the title
+      //    already embedded in the application response.
+      const jobFetch = appData.jobListingId
+        ? getJobDetail(appData.jobListingId).catch(err => {
+            console.warn('Failed to load job details', err);
+            return null;
+          })
+        : Promise.resolve(null);
+
       const [jobData, profileData] = await Promise.all([
-        getJobDetail(appData.jobListingId || appData.jobPostingId).catch(err => {
-          console.warn('Failed to load job details', err);
-          return null;
-        }),
+        jobFetch,
         getJobSeekerProfile(appData.seekerId).catch(err => {
           console.warn('Failed to load candidate profile', err);
           return null;
