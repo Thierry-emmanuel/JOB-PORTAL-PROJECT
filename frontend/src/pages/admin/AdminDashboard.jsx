@@ -25,7 +25,7 @@ import {
   broadcastNotification,
 } from '../../api/admin';
 import AdminSidebar from '../../components/admin/AdminSidebar';
-import HeroEditor from './HeroEditor';
+import { HeroEditor, CMSTab } from './CMSPanel';
 import '../../styles/admin-dashboard.css';
 
 /* ═══════════════════════════════════════════════════════════════════
