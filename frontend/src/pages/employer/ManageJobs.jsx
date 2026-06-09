@@ -128,11 +128,7 @@ export default function ManageJobs() {
 
   const jobApps = useMemo(() => {
     if (!selectedJob) return [];
-    // applications.jobPostingId is a numeric Long; job.numericId is the same numeric identifier.
-    // job.id is a UUID string — do NOT compare against that.
-    return applications.filter(a =>
-      String(a.jobPostingId) === String(selectedJob.numericId ?? selectedJob.id)
-    );
+    return applications.filter(a => String(a.jobPostingId) === String(selectedJob.id));
   }, [applications, selectedJob]);
 
   const filteredApps = useMemo(() => {
@@ -155,8 +151,12 @@ export default function ManageJobs() {
 
   /* ── Handlers ─────────────────────────────────────────── */
   const handleStatusChange = useCallback(async (appId, newStatus) => {
-    await updateApplicationStatus(appId, newStatus);
-    showToast(`Applicant ${newStatus.toLowerCase()}.`);
+    try {
+      await updateApplicationStatus(appId, newStatus);
+      showToast(`Applicant ${newStatus.toLowerCase()}.`);
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to update applicant status.', 'error');
+    }
   }, [updateApplicationStatus]);
 
   const handleScheduled = useCallback((iv) => {
@@ -164,16 +164,28 @@ export default function ManageJobs() {
   }, []);
 
   const handleJobStatusToggle = useCallback(async (job) => {
+    if (job.status === 'EXPIRED') {
+      showToast('Expired listings cannot be reactivated. Please post a new job.', 'error');
+      return;
+    }
     const next = job.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
-    await updateJobPostingStatus(job.id, next);
-    showToast(`Job ${next === 'ACTIVE' ? 'activated' : 'paused'}.`);
+    try {
+      await updateJobPostingStatus(job.id, next);
+      showToast(`Job ${next === 'ACTIVE' ? 'published' : 'paused'}.`);
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to update job status.', 'error');
+    }
   }, [updateJobPostingStatus]);
 
   const handleDeleteJob = useCallback(async (jobId) => {
     if (!window.confirm('Delete this job listing? This cannot be undone.')) return;
-    await deleteJobPosting(jobId);
-    if (selectedJob?.id === jobId) setSelectedJob(null);
-    showToast('Job deleted.');
+    try {
+      await deleteJobPosting(jobId);
+      if (selectedJob?.id === jobId) setSelectedJob(null);
+      showToast('Job deleted.');
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to delete job.', 'error');
+    }
   }, [deleteJobPosting, selectedJob]);
 
   /* ── Loading / error ──────────────────────────────────── */
@@ -294,7 +306,7 @@ export default function ManageJobs() {
               ) : (
                 <div className="mj-job-list">
                   {filteredJobs.map(job => {
-                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.numericId ?? job.id)).length;
+                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.id)).length;
                     const isSelected = selectedJob?.id === job.id;
                     return (
                       <div
