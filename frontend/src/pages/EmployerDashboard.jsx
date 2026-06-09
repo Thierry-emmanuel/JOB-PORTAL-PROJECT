@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BarChart2, Bell, Briefcase, Calendar as CalendarIcon, Check, CheckCircle, ChevronRight, ClipboardList, Clock, Edit2, ExternalLink, Eye, FileText, Globe, Hand, Home, Mail, MapPin, Menu, Phone, Plus, RefreshCw, Search, Star, TrendingUp, Users, Video, X } from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';
 import InterviewScheduler from '../components/employer/InterviewScheduler';
+import { getApplicationDisplayStatus } from '../utils/applicationStatus';
 import EmployerSidebar from '../components/employer/EmployerSidebar';
 import '../styles/dashboard-shell.css';
 import '../styles/ManageJobs.css';
@@ -155,9 +156,13 @@ export default function EmployerDashboard() {
 
 
 
-  const filteredApplicants = applications.filter(
-    app => selectedJobForApplicants && app.jobPostingId === selectedJobForApplicants.id
-  );
+  const filteredApplicants = applications.filter(app => {
+    if (!selectedJobForApplicants) return false;
+    const job = selectedJobForApplicants;
+    return app.jobPostingId === job.numericId
+      || String(app.jobPostingId) === String(job.id)
+      || (job.id && app.jobListingId === job.id);
+  });
 
   const filtered = applications.filter(a =>
     a.applicant.toLowerCase().includes(search.toLowerCase()) ||
@@ -231,9 +236,9 @@ export default function EmployerDashboard() {
           existingInterview={schedulerTarget.interview}
           onClose={() => setSchedulerTarget(null)}
           onScheduled={() => {
-            handleUpdateStatus(schedulerTarget.id, 'SHORTLISTED');
+            refresh();
             addToast('Interview scheduled!', `Invitation sent to ${schedulerTarget.applicant}`, 'success');
-            setTimeout(() => setSchedulerTarget(null), 2500);
+            setSchedulerTarget(null);
           }}
         />
       )}
@@ -256,6 +261,7 @@ export default function EmployerDashboard() {
           </button>
 
           {/* ── Hero ── */}
+          <div className="ds-hero-sticky">
           <div className="ds-hero">
             <div className="ds-hero-text">
               <h1 className="ds-hero-title">Welcome back, {loading ? '…' : firstName} <Hand size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></h1>
@@ -276,6 +282,7 @@ export default function EmployerDashboard() {
                 <Plus size={14} /> Post New Job
               </button>
             </div>
+          </div>
           </div>
 
           {/* ── Quick Actions ── (placed at top, below hero) */}
@@ -298,7 +305,7 @@ export default function EmployerDashboard() {
                     }
                   },
                   { icon: <Edit2 size={20} />,     label: 'Company Profile',      color: '#10B981', bg: '#ECFDF5', action: () => navigate('/profile/employer')      },
-                  { icon: <Globe size={20} />,     label: 'Browse Jobs',          color: '#2563EB', bg: '#DBEAF8', action: () => navigate('/jobs')                  },
+                  { icon: <Globe size={20} />,     label: 'Browse Jobs',          color: '#2563EB', bg: '#DBEAF8', action: () => navigate('/employer/browse-jobs')  },
                   { icon: <BarChart2 size={20} />,  label: 'Market Insights',     color: '#7C3AED', bg: '#F3E8FF', action: () => navigate('/employer/insights')         },
                   { icon: <Home size={20} />,      label: 'Go to Homepage',       color: '#0D9488', bg: '#CCFBF1', action: () => navigate('/')                      },
                 ].map(({ icon, label, color, bg, action }) => (
@@ -553,7 +560,9 @@ export default function EmployerDashboard() {
                   </p>
                 </div>
               ) : (
-                filteredApplicants.map((app) => (
+                filteredApplicants.map((app) => {
+                  const displayStatus = getApplicationDisplayStatus(app);
+                  return (
                   <div key={app.id} className="mj-app-card">
                     <div className="mj-app-card-header">
                       <div className="mj-app-candidate-info">
@@ -574,8 +583,8 @@ export default function EmployerDashboard() {
                         </div>
                       </div>
                       
-                      <span className={`mj-app-badge ${app.status.toLowerCase()}`}>
-                        {app.status}
+                      <span className={`mj-app-badge ${displayStatus.toLowerCase()}`}>
+                        {displayStatus.replace(/_/g, ' ')}
                       </span>
                     </div>
 
@@ -669,7 +678,8 @@ export default function EmployerDashboard() {
                             className="mj-drawer-btn primary"
                             onClick={() => setSchedulerTarget(app)}
                           >
-                            <CalendarIcon size={14} /> Schedule Interview
+                            <CalendarIcon size={14} />
+                            {app.interview?.id || app.hasInterview ? 'Reschedule Interview' : 'Schedule Interview'}
                           </button>
                           <button
                             className="mj-drawer-btn danger"
@@ -690,7 +700,8 @@ export default function EmployerDashboard() {
                       )}
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

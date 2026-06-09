@@ -8,18 +8,17 @@ import {
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 import {
-  createJob, updateJob, getLocations, getSkills, getCategories, getJobDetail
+  createJob, updateJob, getLocations, getSkills, getCategories, getJobDetail, createEmployerCompany,
 } from "../../api/jobs";
 import "../../styles/dashboard-shell.css";
 import "../../styles/PostJobs.css";
 
 /* ── Constants ─────────────────────────────────────────────── */
 const STEPS = [
-  { id: 1, label: "Company",      icon: Building2  },
-  { id: 2, label: "Basic Info",   icon: Briefcase  },
-  { id: 3, label: "Details",      icon: FileText   },
-  { id: 4, label: "Requirements", icon: Tag        },
-  { id: 5, label: "Review",       icon: Eye        },
+  { id: 1, label: "Basic Info",   icon: Briefcase  },
+  { id: 2, label: "Details",      icon: FileText   },
+  { id: 3, label: "Requirements", icon: Tag        },
+  { id: 4, label: "Review",       icon: Eye        },
 ];
 
 const INITIAL_FORM = {
@@ -99,7 +98,34 @@ const TagInput = memo(function TagInput({ items, options, placeholder, onAdd, on
   );
 });
 
-/* ── Step 1 — Company Info ─────────────────────────────────── */
+/* ── Company profile (read-only, from employer account) ───── */
+const CompanyProfileCard = memo(function CompanyProfileCard({ employer }) {
+  if (!employer?.companyId) {
+    return (
+      <div className="pj-company-card pj-company-card--warn">
+        <AlertCircle size={16} />
+        <div>
+          <strong>Company profile required</strong>
+          <p>Complete your company profile before posting. <a href="/profile/employer">Go to Company Profile</a></p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="pj-company-card">
+      <div className="pj-company-card-logo">{(employer.companyName || '?')[0]}</div>
+      <div>
+        <div className="pj-company-card-name">{employer.companyName}</div>
+        <div className="pj-company-card-meta">
+          {[employer.sector, employer.city].filter(Boolean).join(' · ') || 'Company profile'}
+        </div>
+        <p className="pj-company-card-hint">Pulled automatically from your company profile — no need to re-enter.</p>
+      </div>
+    </div>
+  );
+});
+
+/* ── Legacy step (unused in wizard) ────────────────────────── */
 const Step1Company = memo(function Step1Company({ form, updateField, errors }) {
   return (
     <div className="pj-step-body">
@@ -369,7 +395,7 @@ const Step4Requirements = memo(function Step4Requirements({ form, updateField, e
 });
 
 /* ── Step 5 — Review ────────────────────────────────────────── */
-const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations }) {
+const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations, employer }) {
   const catName = dbCategories.find(c=>c.id===form.categoryId)?.name || "—";
   const locCity = dbLocations.find(l=>l.id===form.locationId)?.city || "—";
 
@@ -400,10 +426,9 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations 
       </div>
 
       <Section title="Company" icon={Building2}>
-        <Row k="Company" v={form.companyName||"—"}/>
-        <Row k="Sector"  v={form.sector||"—"}/>
-        <Row k="Size"    v={form.companySize||"—"}/>
-        {form.website && <Row k="Website" v={form.website}/>}
+        <Row k="Company" v={employer?.companyName || "—"}/>
+        <Row k="Sector"  v={employer?.sector || "—"}/>
+        <Row k="Location" v={employer?.city || "—"}/>
       </Section>
 
       <Section title="Job Details" icon={Briefcase}>
@@ -546,23 +571,19 @@ export default function PostJob({ onBack, onSuccess }) {
   const validate = (s) => {
     const e = {};
     if (s === 1 || isEditMode) {
-      if (!form.companyName.trim()) e.companyName = "Company name is required.";
-      if (!form.sector)             e.sector      = "Please select a sector.";
-    }
-    if (s === 2 || isEditMode) {
       if (!form.title.trim())    e.title      = "Job title is required.";
       if (!form.categoryId)      e.categoryId = "Please select a category.";
       if (!form.type)            e.type       = "Please select a contract type.";
       if (!form.locationId)      e.locationId = "Location is required.";
       if (!form.deadline)        e.deadline   = "Please set a deadline.";
     }
-    if (s === 3 || isEditMode) {
+    if (s === 2 || isEditMode) {
       if (!form.description.trim())          e.description         = "Description is required.";
       if (form.description.length > 3000)    e.description         = "Max 3000 characters.";
       if (!form.experience)                  e.experience          = "Please select an experience level.";
       if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications are required.";
     }
-    if (s === 4 || isEditMode) {
+    if (s === 3 || isEditMode) {
       if (form.skills.length === 0) e.skills = "Add at least one skill.";
     }
     setErrors(e);
@@ -595,18 +616,32 @@ export default function PostJob({ onBack, onSuccess }) {
   };
 
   // ✅ Guard: employer must have a company before posting
-  const checkCompany = () => {
-    if (!employer?.companyId) {
-      setErrors({ api: "You must create a company profile before posting a job. Go to Company Settings first." });
+  const checkCompany = async () => {
+    if (employer?.companyId) return true;
+    if (!employer?.id) {
+      setErrors({ api: "Employer session not loaded. Please refresh and try again." });
       return false;
     }
-    return true;
+    try {
+      const created = await createEmployerCompany(employer.id, {
+        name: employer.companyName || employer.contactName || 'My Company',
+        sector: employer.sector || 'Technology',
+        city: employer.city || 'Yaounde',
+        country: 'Cameroon',
+      });
+      if (created?.id) {
+        await refresh();
+        return true;
+      }
+    } catch { /* fall through */ }
+    setErrors({ api: "Complete your company profile before posting. Go to Company Profile in the sidebar." });
+    return false;
   };
 
   const handlePublish = async () => {
-    const validateStep = isEditMode ? 1 : 5;
+    const validateStep = isEditMode ? 1 : 4;
     if (!validate(validateStep)) return;
-    if (!checkCompany()) return;               // ✅ guard
+    if (!(await checkCompany())) return;
     try {
       if (isEditMode) {
         await updateJob(editId, buildPayload(true));
@@ -617,7 +652,8 @@ export default function PostJob({ onBack, onSuccess }) {
       setSubmitted(true);
     } catch (err) {
       console.error(err);
-      setErrors({ api: err.response?.data?.message || "Failed to publish listing. Please check the details." });
+      const msg = err.response?.data?.detail || err.response?.data?.message || "Failed to publish listing. Please check the details.";
+      setErrors({ api: msg });
     }
   };
 
@@ -626,7 +662,7 @@ export default function PostJob({ onBack, onSuccess }) {
       setErrors({ title: "Job title is required to save draft." });
       return;
     }
-    if (!checkCompany()) return;               // ✅ guard
+    if (!(await checkCompany())) return;
     setSavingDraft(true);
     try {
       if (isEditMode) {
@@ -708,7 +744,7 @@ export default function PostJob({ onBack, onSuccess }) {
 
         <div className="pj-form-layout" style={{gridTemplateColumns:"1fr"}}>
           <div className="pj-form-card ds-card" style={{display:"flex",flexDirection:"column",gap:32,padding:32}}>
-            <Step1Company form={form} updateField={updateField} errors={errors}/>
+            <CompanyProfileCard employer={employer} />
             <div className="pj-section-divider"/>
             <Step2Basic form={form} updateField={updateField} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
             <div className="pj-section-divider"/>
@@ -767,11 +803,11 @@ export default function PostJob({ onBack, onSuccess }) {
 
       <div className="pj-form-layout">
         <div className="pj-form-card ds-card">
-          {step === 1 && <Step1Company form={form} updateField={updateField} errors={errors}/>}
-          {step === 2 && <Step2Basic form={form} updateField={updateField} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
-          {step === 3 && <Step3Details form={form} updateField={updateField} errors={errors}/>}
-          {step === 4 && <Step4Requirements form={form} updateField={updateField} errors={errors} skillOpts={skillOpts}/>}
-          {step === 5 && <Step5Review form={form} dbCategories={dbCategories} dbLocations={dbLocations}/>}
+          <CompanyProfileCard employer={employer} />
+          {step === 1 && <Step2Basic form={form} updateField={updateField} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
+          {step === 2 && <Step3Details form={form} updateField={updateField} errors={errors}/>}
+          {step === 3 && <Step4Requirements form={form} updateField={updateField} errors={errors} skillOpts={skillOpts}/>}
+          {step === 4 && <Step5Review form={form} dbCategories={dbCategories} dbLocations={dbLocations} employer={employer}/>}
 
           <div className="pj-step-nav">
             <div>
@@ -803,17 +839,17 @@ export default function PostJob({ onBack, onSuccess }) {
             {form.title && <span className="pj-preview-badge">Active</span>}
           </div>
           <div className="pj-preview-body">
-            {form.title || form.companyName ? (
+            {form.title || employer?.companyName ? (
               <>
                 <div className="pj-preview-company-row">
                   <div className="pj-preview-logo">
-                    {(form.companyName||employer?.companyName||"?")[0].toUpperCase()}
+                    {(employer?.companyName || "?")[0].toUpperCase()}
                   </div>
                   <div>
                     <div className="pj-preview-company-name">
-                      {form.companyName || employer?.companyName || "Your Company"}
+                      {employer?.companyName || "Your Company"}
                     </div>
-                    {form.sector && <div className="pj-preview-sector">{form.sector}</div>}
+                    {employer?.sector && <div className="pj-preview-sector">{employer.sector}</div>}
                   </div>
                 </div>
                 <h4 className="pj-preview-job-title">{form.title || "Job Title"}</h4>

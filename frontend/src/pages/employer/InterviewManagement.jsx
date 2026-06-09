@@ -103,7 +103,7 @@ function ResultModal({ interview, onSave, onClose }) {
                 color: result === r ? (r === 'PASSED' ? '#065F46' : '#991B1B') : '#6B7280',
                 fontSize:14, fontWeight:700, cursor:'pointer',
               }}>
-                {r === 'PASSED' ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Passed' : '<X size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Failed'}
+                {r === 'PASSED' ? <><Check size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Passed</> : <><X size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Failed</>}
               </button>
             ))}
           </div>
@@ -133,7 +133,8 @@ const TYPE_COLOR = { VIDEO: { bg:'#EFF6FF', color:'#1E40AF' }, PHONE: { bg:'#ECF
 function InterviewCard({ iv, onCancel, onResult }) {
   const isCompleted = iv.completed || iv.result;
   const isPending   = !isCompleted;
-  const tc = TYPE_COLOR[iv.interviewType] || { bg:'#F3F4F6', color:'#374151' };
+  const ivType = iv.type ?? iv.interviewType;
+  const tc = TYPE_COLOR[ivType] || { bg:'#F3F4F6', color:'#374151' };
   const scheduledAt = iv.scheduledAt ? new Date(iv.scheduledAt) : null;
 
   return (
@@ -145,11 +146,11 @@ function InterviewCard({ iv, onCancel, onResult }) {
       <div style={{ padding:'16px 20px', borderBottom:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
         <div style={{ display:'flex', gap:10, alignItems:'center' }}>
           <div style={{ width:40, height:40, borderRadius:10, background: tc.bg, color: tc.color, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            {TYPE_ICON[iv.interviewType] || <Calendar size={16}/>}
+            {TYPE_ICON[ivType] || <Calendar size={16}/>}
           </div>
           <div>
             <p style={{ fontSize:13, fontWeight:700, color:'#111827', margin:'0 0 2px' }}>
-              {iv.interviewType?.replace('_',' ') || 'Interview'} Interview
+              {(ivType || 'Interview').replace('_',' ')} Interview
             </p>
             <p style={{ fontSize:11, color:'#6B7280', margin:0 }}>ID #{iv.id}</p>
           </div>
@@ -294,15 +295,13 @@ export default function InterviewManagement() {
           <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <Menu size={20} />
           </button>
-          {/* Hero */}
-          <div className="ds-hero">
-            <div className="ds-hero-text">
-              <h1 className="ds-hero-title">Interview Management</h1>
-              <p className="ds-hero-sub">Track, manage and record results for candidate interviews.</p>
+          <div className="ds-page-header">
+            <div>
+              <h1 className="ds-page-title">Interview Management</h1>
+              <p className="ds-page-sub">Track, manage and record results for candidate interviews.</p>
             </div>
-            <button className="ds-btn ds-btn-ghost ds-btn-icon" onClick={fetchInterviews} title="Refresh"
-              style={{ background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', color:'#fff' }}>
-              <RefreshCw size={15}/>
+            <button type="button" className="ds-btn ds-btn-ghost ds-btn-sm" onClick={fetchInterviews}>
+              <RefreshCw size={13} /> Refresh
             </button>
           </div>
 

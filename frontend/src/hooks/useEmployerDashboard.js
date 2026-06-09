@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getEmployerProfile } from "../api/profiles";
 import { getJobSeekerProfile } from "../api/profiles";
@@ -12,18 +12,7 @@ import {
   updateApplicationReview as apiUpdateReview,
   getJob
 } from "../api/jobs";
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-
-const getWsUrl = () => {
-  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  if (baseUrl) {
-    return `${baseUrl.replace(/\/$/, '')}/ws`;
-  }
-  return 'http://localhost:8080/ws';
-};
-const WS_URL = getWsUrl();
+import useRealtimeRefresh from './useRealtimeRefresh';
 
 export function useEmployerDashboard() {
   const { user, token } = useAuth();
@@ -45,35 +34,6 @@ export function useEmployerDashboard() {
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
   const [refreshing,     setRefreshing]     = useState(false);
-  const stompRef = useRef(null);
-
-  // ── Real-time WebSocket notifications ──
-  useEffect(() => {
-    if (!user?.id) return;
-    const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
-      reconnectDelay: 5000,
-    });
-    client.onConnect = () => {
-      client.subscribe(`/topic/notifications/${user.id}`, (message) => {
-        try {
-          const payload = JSON.parse(message.body);
-          const n = {
-            id: Date.now(),
-            text: payload.message || payload.title || 'New notification',
-            time: 'Just now',
-            read: false,
-            type: payload.type || 'info',
-          };
-          setNotifications(prev => [n, ...prev].slice(0, 20));
-        } catch { /* ignore parse errors */ }
-      });
-    };
-    client.activate();
-    stompRef.current = client;
-    return () => { client.deactivate(); stompRef.current = null; };
-  }, [user?.id]);
-
   // ── Fetch all dashboard data from backend ──
   const fetchDashboard = useCallback(async (isRefresh = false) => {
     if (!token || !user?.id) {
@@ -169,6 +129,8 @@ export function useEmployerDashboard() {
           applicant:      applicantName,
           job:            jobTitle,
           jobPostingId:   app.jobPostingId,
+          jobListingId:   app.jobListingId || null,
+          hasInterview:   app.hasInterview || Boolean(app.interview),
           status:         app.status,
           date:           new Date(app.appliedAt || new Date()).toISOString().split('T')[0],
           avatar:         avatar,
@@ -200,8 +162,13 @@ export function useEmployerDashboard() {
       const mappedJobs = rawJobs.map(job => {
         // Count applications belonging to this specific job posting.
         // app.jobPostingId is a numeric Long; job.id is a UUID string — compare via String().
+        const jobNumericId = job.numericId ?? (job.id && job.id.includes('-')
+          ? parseInt(job.id.split('-')[0], 16)
+          : Number(job.id));
         const appCount = resolvedApps.filter(
-          a => String(a.jobPostingId) === String(job.id)
+          a => a.jobPostingId === jobNumericId
+            || String(a.jobPostingId) === String(job.id)
+            || (job.id && a.jobListingId === job.id)
         ).length;
 
         let daysLeft = 30;
@@ -217,6 +184,9 @@ export function useEmployerDashboard() {
 
         return {
           id:           job.id,
+          numericId:    job.numericId ?? (job.id && String(job.id).includes('-')
+            ? parseInt(String(job.id).split('-')[0], 16)
+            : Number(job.id) || null),
           title:        job.title,
           type:         job.jobType || "FULL_TIME",
           category:     job.categoryName || "",
@@ -262,6 +232,8 @@ export function useEmployerDashboard() {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
+
+  useRealtimeRefresh(() => fetchDashboard(true));
 
   // ── Mark notification as read ──
   const markNotificationRead = useCallback((id) => {
