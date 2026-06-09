@@ -40,10 +40,13 @@ export default function Login() {
       // or "ROLE_JOB_SEEKER" — always strip the prefix before comparing.
       const rawRole = (data.role || '').toUpperCase().replace('ROLE_', '');
 
-      if (rawRole === 'ADMIN') {
-        navigate('/admin/dashboard');          // go straight to the new admin dashboard
+      const redirectTo = location.state?.from;
+      if (redirectTo && typeof redirectTo === 'string') {
+        navigate(redirectTo, { replace: true });
+      } else if (rawRole === 'ADMIN') {
+        navigate('/admin/dashboard');
       } else if (rawRole === 'EMPLOYER') {
-        navigate('/dashboard/employer');
+        navigate('/employer/dashboard');
       } else {
         navigate('/employee/dashboard');
       }

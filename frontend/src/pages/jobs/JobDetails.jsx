@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { saveJob, getUserApplications, getCompanyStats, toggleCompanyLike } from '../../api/jobs';
+import { saveJob, getUserApplications, getCompanyStats, toggleCompanyLike, resolveJobPostingId } from '../../api/jobs';
 import { cachedGetJob, cachedGetJobDetail } from '../../api/cachedApi';
 import { Bookmark, Check, MapPin, Briefcase, DollarSign, Globe, Users, Lightbulb, Building2, Heart } from 'lucide-react';
 
@@ -55,7 +55,11 @@ export default function JobDetails() {
           if (isAuthenticated && isEmployee && user?.id) {
             try {
               const apps = await getUserApplications(user.id);
-              userApplied = apps.some(a => String(a.jobPostingId) === String(data.id));
+              const postingId = resolveJobPostingId(data);
+              userApplied = apps.some(a =>
+                a.jobPostingId === postingId
+                || (data.id && a.jobListingId === data.id)
+              );
             } catch (err) {
               console.error("Error checking applications", err);
             }
@@ -223,7 +227,7 @@ export default function JobDetails() {
                       <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
                         {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
                       </p>
-                      <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
+                      <Link to={isAuthenticated ? `/jobs/${id}/apply` : '/login'} state={!isAuthenticated ? { from: `/jobs/${id}/apply` } : undefined} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
                         onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
                         onMouseLeave={e => e.currentTarget.style.transform=''}
                       >

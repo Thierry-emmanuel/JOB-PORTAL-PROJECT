@@ -1,5 +1,23 @@
 import apiClient from './client';
 
+/** Derive numeric job posting id from UUID (matches backend CONV(SUBSTRING...)). */
+export function uuidToNumericId(uuid) {
+  if (!uuid || typeof uuid !== 'string') return null;
+  if (!uuid.includes('-')) {
+    const n = Number(uuid);
+    return Number.isFinite(n) ? n : null;
+  }
+  const hex = uuid.split('-')[0];
+  const n = parseInt(hex, 16);
+  return Number.isFinite(n) ? n : null;
+}
+
+export function resolveJobPostingId(job) {
+  if (!job) return null;
+  if (job.numericId != null) return job.numericId;
+  return uuidToNumericId(job.id);
+}
+
 /* ─── Job Listings ───────────────────────────────────────── */
 
 export const getJobs = async (params = {}) => {
@@ -47,7 +65,7 @@ export const getJobDetail = async (id) => {
 
 const mapJobSummary = (job) => ({
   id:        job.id,
-  numericId: job.numericId ?? null,  // ✅ used as Application.jobPostingId when applying
+  numericId: job.numericId ?? uuidToNumericId(job.id),
   title:    job.title,
   company:  job.companyName || 'Unknown Company',
   logo:     job.companyLogoUrl || null,
@@ -67,7 +85,7 @@ const mapJobSummary = (job) => ({
 
 const mapJobDetail = (job) => ({
   id:        job.id,
-  numericId: job.numericId ?? null,  // ✅ used as Application.jobPostingId when applying
+  numericId: job.numericId ?? uuidToNumericId(job.id),
   title:    job.title,
   company:  job.company?.name || job.companyName || 'Unknown Company',
   logo:     job.company?.logoUrl || job.companyLogoUrl || null,
@@ -189,6 +207,11 @@ export const deleteJob = async (jobId) => {
 
 export const getEmployerCompanies = async (employerId) => {
   const { data } = await apiClient.get(`/api/v1/companies/employer/${employerId}`);
+  return data;
+};
+
+export const createEmployerCompany = async (employerId, companyBody) => {
+  const { data } = await apiClient.post(`/api/v1/companies/${employerId}`, companyBody);
   return data;
 };
 

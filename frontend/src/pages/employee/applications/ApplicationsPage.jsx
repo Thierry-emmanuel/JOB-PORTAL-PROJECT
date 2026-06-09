@@ -12,6 +12,10 @@ import { useAuth } from '../../../context/AuthContext';
 import { getUserApplications, getJobDetail } from '../../../api/jobs';
 import '../../../styles/employee-dashboard.css';
 import '../../../styles/applications.css';
+import { getApplicationDisplayStatus } from '../../../utils/applicationStatus';
+import DashboardPagination from '../../../components/shared/DashboardPagination';
+
+const APPS_PAGE_SIZE = 10;
 
 /* ─── Status config ──────────────────────────────────────── */
 const STATUS = {
@@ -81,6 +85,7 @@ export default function ApplicationsPage() {
   const [error,       setError]       = useState(null);
   const [filter,      setFilter]      = useState('ALL');
   const [search,      setSearch]      = useState('');
+  const [page,        setPage]        = useState(1);
 
   const load = useCallback(() => {
     if (!user?.id) return;
@@ -122,15 +127,22 @@ export default function ApplicationsPage() {
 
   /* Derived */
   const counts = TABS.reduce((acc, t) => {
-    acc[t] = t === 'ALL' ? apps.length : apps.filter(a=>a.status===t).length;
+    acc[t] = t === 'ALL'
+      ? apps.length
+      : apps.filter(a => getApplicationDisplayStatus(a) === t).length;
     return acc;
   }, {});
 
   const visible = apps.filter(a => {
-    const matchTab = filter === 'ALL' || a.status === filter;
+    const matchTab = filter === 'ALL' || getApplicationDisplayStatus(a) === filter;
     const matchSearch = !search.trim() || (a.jobTitle || `Job #${a.jobPostingId}`).toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / APPS_PAGE_SIZE));
+  const paginated = visible.slice((page - 1) * APPS_PAGE_SIZE, page * APPS_PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [filter, search]);
 
   return (
     <EmployeeLayout profile={profile} completion={completion} onPhotoChange={handlePhotoChange}>
@@ -208,7 +220,7 @@ export default function ApplicationsPage() {
       {/* Application cards */}
       {!loading && !error && visible.length > 0 && (
         <div className="apps-list">
-          {visible.map(app => {
+          {paginated.map(app => {
             const jobLabel = app.jobTitle || `Job #${app.jobPostingId}`;
             const iv = app.interview; // embedded if backend returns it
             const isGood = app.status === 'HIRED' || app.status === 'SHORTLISTED';
@@ -238,7 +250,7 @@ export default function ApplicationsPage() {
                       )}
                     </div>
                     <div className="apps-card-right">
-                      <StatusBadge status={app.status}/>
+                      <StatusBadge status={getApplicationDisplayStatus(app)}/>
                       {app.expectedSalary && (
                         <span className="apps-card-salary">
                           {Number(app.expectedSalary).toLocaleString()} XAF
@@ -251,7 +263,7 @@ export default function ApplicationsPage() {
                   {iv && (
                     <div className="apps-iv-section">
                       <InterviewChip
-                        type={iv.type}
+                        type={iv.type ?? iv.interviewType}
                         link={iv.meetingLink}
                         scheduledAt={iv.scheduledAt}
                       />
@@ -293,6 +305,16 @@ export default function ApplicationsPage() {
             );
           })}
         </div>
+      )}
+
+      {!loading && !error && visible.length > 0 && (
+        <DashboardPagination
+          page={page}
+          totalPages={totalPages}
+          total={visible.length}
+          pageSize={APPS_PAGE_SIZE}
+          onChange={setPage}
+        />
       )}
     </EmployeeLayout>
   );
