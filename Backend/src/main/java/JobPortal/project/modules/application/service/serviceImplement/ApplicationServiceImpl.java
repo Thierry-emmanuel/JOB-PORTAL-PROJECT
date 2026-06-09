@@ -184,20 +184,20 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application application = findById(applicationId);
 
-        if (application.isTerminal()) {
-            throw new IllegalStateException(
-                    "Application " + applicationId + " is in a terminal state and cannot be updated.");
-        }
-
+        // Allow employers to override terminal states (HIRED/REJECTED) by passing
+        // the current status as expectedStatus — this enables the status-override dropdown.
+        // Only block when expectedStatus doesn't match the actual current status.
         int updated = applicationRepository.updateStatusIfExpected(
                 applicationId,
                 request.expectedStatus(),
                 request.newStatus());
 
         if (updated == 0) {
+            // Re-fetch to get current status for a clear error message
+            Application current = findById(applicationId);
             throw new IllegalStateException(
                     "Status update failed: expected status " + request.expectedStatus()
-                            + " but current status is " + application.getStatus());
+                            + " but current status is " + current.getStatus());
         }
 
         Application refreshed = findByIdWithInterview(applicationId);

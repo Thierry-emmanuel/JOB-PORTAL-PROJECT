@@ -34,6 +34,8 @@ public interface InterviewMapper {
     //  Entity → Summary Response (embedded in ApplicationResponse)        //
     // ------------------------------------------------------------------ //
 
+    @Mapping(target = "feedback",  source = "feedBack")
+    @Mapping(target = "notes",     source = "notes")
     @Mapping(target = "completed", expression = "java(interview.isCompleted())")
     @Mapping(target = "pending",   expression = "java(interview.isPending())")
     InterviewSummaryResponse toSummaryResponse(Interview interview);
@@ -48,6 +50,7 @@ public interface InterviewMapper {
     @Mapping(target = "result",      ignore = true)
     @Mapping(target = "createdAt",   ignore = true)
     @Mapping(target = "updatedAt",   ignore = true)
+    @Mapping(target = "notes",       source = "notes")
     Interview toEntity(ScheduleInterviewRequest request);
 
     @Mapping(target = "id",          ignore = true)
@@ -62,5 +65,3 @@ public interface InterviewMapper {
     @Mapping(target = "scheduledAt", source = "newScheduledAt")
     void applyReschedule(RescheduleInterviewRequest request, @MappingTarget Interview interview);
 }
-
-

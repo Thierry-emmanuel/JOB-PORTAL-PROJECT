@@ -269,7 +269,16 @@ export default function JobSeekerProfile() {
       )}
       {activeTab === 'overview' && (
         <CVUploadSection cvUrl={profile.cvUrl} cvFileName={profile.cvFileName}
-          onUpload={file => setProfile(p => ({ ...p, cvUrl: URL.createObjectURL(file), cvFileName: file.name }))} />
+          onUpload={async (file) => {
+            try {
+              const base64 = await fileToBase64(file);
+              const id = user?.id || user?.jobSeekerId || 1;
+              const payload = { ...profile, cvUrl: base64, cvFileName: file.name };
+              const updated = await updateJobSeekerProfile(id, payload);
+              setProfile(p => ({ ...p, cvUrl: updated.cvUrl || base64, cvFileName: updated.cvFileName || file.name }));
+              showToast('CV uploaded successfully!');
+            } catch { showToast('Failed to upload CV.', 'error'); }
+          }} />
       )}
 
       {editModal.open && (

@@ -14,9 +14,9 @@ public record InterviewSummaryResponse(
         InterviewType type,
         String platform,
         String meetingLink,
+        String notes,
+        String feedback,
         InterviewResult result,
         boolean completed,
         boolean pending
 ) {}
-
-

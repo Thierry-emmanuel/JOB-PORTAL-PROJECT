@@ -156,7 +156,11 @@ export default function EmployerDashboard() {
 
 
   const filteredApplicants = applications.filter(
-    app => selectedJobForApplicants && app.jobPostingId === selectedJobForApplicants.id
+    app => selectedJobForApplicants && (
+      selectedJobForApplicants.numericId != null
+        ? String(app.jobPostingId) === String(selectedJobForApplicants.numericId)
+        : false
+    )
   );
 
   const filtered = applications.filter(a =>

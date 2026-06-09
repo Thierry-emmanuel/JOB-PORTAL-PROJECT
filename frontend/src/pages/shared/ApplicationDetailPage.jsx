@@ -107,11 +107,15 @@ export default function ApplicationDetailPage() {
     if (!app) return;
     setUpdatingStatus(true);
     try {
-      await updateApplicationStatus(app.id, newStatus, app.status);
-      setApp(prev => ({ ...prev, status: newStatus }));
+      const updated = await updateApplicationStatus(app.id, newStatus, app.status);
+      // Use the server response to keep local state consistent
+      const freshStatus = updated?.status ?? updated?.data?.status ?? newStatus;
+      setApp(prev => ({ ...prev, status: freshStatus }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || 'Failed to update application status.');
+      // Re-fetch to sync status in case of optimistic concurrency mismatch
+      try { const fresh = await getApplication(id); if (fresh) setApp(fresh); } catch (_) {}
+      alert(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.');
     } finally {
       setUpdatingStatus(false);
     }
@@ -581,14 +585,56 @@ export default function ApplicationDetailPage() {
                     </div>
                     
                     <div className="app-detail-cv-btn-group">
-                      <a href={profile.cvUrl} target="_blank" rel="noreferrer" className="app-detail-cv-btn secondary" title="View resume PDF">
+                      <a
+                        href={profile.cvUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="app-detail-cv-btn secondary"
+                        title="View resume PDF"
+                        onClick={e => {
+                          if (profile.cvUrl?.startsWith('data:')) {
+                            e.preventDefault();
+                            try {
+                              const [header, b64] = profile.cvUrl.split(',');
+                              const mime = header.match(/:(.*?);/)[1];
+                              const bytes = atob(b64);
+                              const arr = new Uint8Array(bytes.length);
+                              for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                              const blob = new Blob([arr], { type: mime });
+                              const url = URL.createObjectURL(blob);
+                              const w = window.open(url, '_blank');
+                              if (w) setTimeout(() => URL.revokeObjectURL(url), 10000);
+                            } catch {}
+                          }
+                        }}
+                      >
                         View
                       </a>
                       <a
-                        href={profile.cvUrl.includes('cloudinary.com') ? profile.cvUrl.replace('/upload/', '/upload/fl_attachment/') : profile.cvUrl}
+                        href={profile.cvUrl?.includes('cloudinary.com')
+                          ? profile.cvUrl.replace('/upload/', '/upload/fl_attachment/')
+                          : profile.cvUrl?.startsWith('data:') ? '#' : profile.cvUrl}
                         download={profile.cvFileName || 'resume.pdf'}
                         className="app-detail-cv-btn"
                         title="Download resume file"
+                        onClick={e => {
+                          if (profile.cvUrl?.startsWith('data:')) {
+                            e.preventDefault();
+                            try {
+                              const [header, b64] = profile.cvUrl.split(',');
+                              const mime = header.match(/:(.*?);/)[1];
+                              const bytes = atob(b64);
+                              const arr = new Uint8Array(bytes.length);
+                              for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                              const blob = new Blob([arr], { type: mime });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url; a.download = profile.cvFileName || 'resume.pdf';
+                              a.click();
+                              setTimeout(() => URL.revokeObjectURL(url), 5000);
+                            } catch {}
+                          }
+                        }}
                       >
                         <Download size={12} /> Download
                       </a>
@@ -783,8 +829,18 @@ export default function ApplicationDetailPage() {
           }}
           existingInterview={app.interview}
           onClose={() => setShowScheduler(false)}
-          onScheduled={(newIv) => {
+          onScheduled={async (newIv) => {
             setShowScheduler(false);
+            // Re-fetch to get the authoritative status (backend sets INTERVIEW_SCHEDULED)
+            try {
+              const fresh = await getApplication(id);
+              if (fresh) {
+                setApp(fresh);
+                setIvFeedback(fresh.interview?.feedback || '');
+                return;
+              }
+            } catch (_) {}
+            // Fallback: optimistic update
             setApp(prev => ({
               ...prev,
               status: 'INTERVIEW_SCHEDULED',

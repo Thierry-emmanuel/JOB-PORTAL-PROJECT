@@ -52,6 +52,9 @@ public class Interview {
     @Column(name = "meeting_link", length = 512)
     private String meetingLink;
 
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "feed_back", columnDefinition = "TEXT")
     private String feedBack;
 
@@ -80,5 +83,3 @@ public class Interview {
         return result == null && LocalDateTime.now().isBefore(scheduledAt);
     }
 }
-
-

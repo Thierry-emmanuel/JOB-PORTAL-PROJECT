@@ -128,7 +128,11 @@ export default function ManageJobs() {
 
   const jobApps = useMemo(() => {
     if (!selectedJob) return [];
-    return applications.filter(a => String(a.jobPostingId) === String(selectedJob.id));
+    // applications.jobPostingId is a numeric Long; job.numericId is the same numeric identifier.
+    // job.id is a UUID string — do NOT compare against that.
+    return applications.filter(a =>
+      String(a.jobPostingId) === String(selectedJob.numericId ?? selectedJob.id)
+    );
   }, [applications, selectedJob]);
 
   const filteredApps = useMemo(() => {
@@ -290,7 +294,7 @@ export default function ManageJobs() {
               ) : (
                 <div className="mj-job-list">
                   {filteredJobs.map(job => {
-                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.id)).length;
+                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.numericId ?? job.id)).length;
                     const isSelected = selectedJob?.id === job.id;
                     return (
                       <div

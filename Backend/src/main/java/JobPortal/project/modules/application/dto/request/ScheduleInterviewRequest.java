@@ -18,7 +18,8 @@ public record ScheduleInterviewRequest(
         String platform,
 
         @Size(max = 512, message = "Meeting link must not exceed 512 characters")
-        String meetingLink
+        String meetingLink,
+
+        @Size(max = 2000, message = "Notes must not exceed 2000 characters")
+        String notes
 ) {}
-
-

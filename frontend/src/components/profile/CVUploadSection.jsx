@@ -56,7 +56,29 @@ export default function CVUploadSection({ cvUrl, cvFileName, onUpload }) {
             <p className="kora-cv-hint">Your CV is uploaded and visible to employers</p>
           </div>
           <div className="kora-cv-actions">
-            <a href={cvUrl} target="_blank" rel="noreferrer" className="kora-btn-ghost kora-cv-btn">
+            <a
+              href={cvUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="kora-btn-ghost kora-cv-btn"
+              onClick={e => {
+                // For base64 data URLs, open in a new tab via Blob to avoid browser blocking
+                if (cvUrl && cvUrl.startsWith('data:')) {
+                  e.preventDefault();
+                  try {
+                    const [header, b64] = cvUrl.split(',');
+                    const mime = header.match(/:(.*?);/)[1];
+                    const bytes = atob(b64);
+                    const arr = new Uint8Array(bytes.length);
+                    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                    const blob = new Blob([arr], { type: mime });
+                    const url = URL.createObjectURL(blob);
+                    const w = window.open(url, '_blank');
+                    if (w) setTimeout(() => URL.revokeObjectURL(url), 10000);
+                  } catch {}
+                }
+              }}
+            >
               <Download size={14} /> View
             </a>
             <button className="kora-btn-ghost kora-cv-btn kora-cv-btn-replace" onClick={() => fileRef.current?.click()}>
