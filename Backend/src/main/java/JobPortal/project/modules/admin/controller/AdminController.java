@@ -4,6 +4,7 @@ import JobPortal.project.modules.admin.dto.CategoryDTO;
 import JobPortal.project.modules.admin.dto.DashboardStatsDTO;
 import JobPortal.project.modules.admin.dto.FAQDTO;
 import JobPortal.project.modules.admin.dto.UserManagementDTO;
+import JobPortal.project.modules.admin.dto.UserPageResponse;
 import JobPortal.project.modules.admin.dto.UserCreationDTO;
 import JobPortal.project.modules.admin.dto.UserUpdateDTO;
 import JobPortal.project.modules.auth.model.User;
@@ -44,8 +45,13 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserManagementDTO>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    public ResponseEntity<UserPageResponse> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(adminService.getUsersPaged(page, size, role, active, search));
     }
 
     @PutMapping("/users/{id}/toggle-status")

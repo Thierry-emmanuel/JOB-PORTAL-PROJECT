@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import JobPortal.project.modules.notification.event.NotificationEvent;
 import JobPortal.project.enums.NotificationType;
 import JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest;
+import JobPortal.project.modules.notification.Service.RealtimeMessagingService;
 import java.util.UUID;
 
 
@@ -48,6 +49,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final JobListingRepository  jobListingRepository;
     private final UserRepository        userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RealtimeMessagingService  realtimeMessagingService;
 
     // ------------------------------------------------------------------ //
     //  Apply                                                               //
@@ -79,12 +81,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         log.info("New application created: id={}, seekerId={}, jobPostingId={}, jobListingId={}",
                 saved.getId(), seekerId, request.jobPostingId(), resolvedUuid);
 
+        Long employerId = null;
         // Increment view count of the job listing and notify employer
         try {
             String uuidStr = resolvedUuid;
             if (uuidStr != null) {
                 JobListing job = jobListingRepository.findById(UUID.fromString(uuidStr)).orElse(null);
                 if (job != null) {
+                    employerId = job.getEmployerId();
                     job.incrementViewCount();
                     jobListingRepository.save(job);
 
@@ -114,7 +118,24 @@ public class ApplicationServiceImpl implements ApplicationService {
             log.warn("Failed to increment view count or notify employer: {}", e.getMessage());
         }
 
-        return applicationMapper.toResponse(saved);
+        ApplicationResponse response = applicationMapper.toResponse(saved);
+        if (employerId == null) {
+            employerId = resolveEmployerId(saved.getJobPostingId());
+        }
+        realtimeMessagingService.publishApplicationEvent("APPLICATION_CREATED", response, employerId);
+        return response;
+    }
+
+    private Long resolveEmployerId(Long jobPostingId) {
+        try {
+            String uuidStr = jobListingRepository.findIdByNumericalId(jobPostingId);
+            if (uuidStr == null) return null;
+            return jobListingRepository.findById(UUID.fromString(uuidStr))
+                    .map(JobListing::getEmployerId)
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -227,7 +248,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             log.warn("Failed to notify seeker of status update: {}", e.getMessage());
         }
 
-        return applicationMapper.toResponse(refreshed);
+        ApplicationResponse response = applicationMapper.toResponse(refreshed);
+        realtimeMessagingService.publishApplicationEvent(
+                "APPLICATION_STATUS_CHANGED", response, resolveEmployerId(refreshed.getJobPostingId()));
+        return response;
     }
 
     @Override

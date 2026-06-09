@@ -36,6 +36,7 @@ import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import JobPortal.project.modules.notification.event.NotificationEvent;
+import JobPortal.project.modules.notification.Service.RealtimeMessagingService;
 import JobPortal.project.enums.NotificationType;
 import java.util.UUID;
 
@@ -53,6 +54,7 @@ public class InterviewServiceImpl implements InterviewService {
     private final JobListingRepository  jobListingRepository;
     private final UserRepository        userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RealtimeMessagingService  realtimeMessagingService;
 
     // ------------------------------------------------------------------ //
     //  Schedule                                                            //
@@ -94,7 +96,11 @@ public class InterviewServiceImpl implements InterviewService {
                 saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
         sendInterviewNotification(application, saved);
-        return interviewMapper.toResponse(saved);
+        InterviewResponse response = interviewMapper.toResponse(saved);
+        realtimeMessagingService.publishInterviewEvent(
+                "INTERVIEW_SCHEDULED", response, application.getSeekerId(),
+                resolveEmployerId(application.getJobPostingId()));
+        return response;
     }
 
     @Override
@@ -465,6 +471,18 @@ public class InterviewServiceImpl implements InterviewService {
         sb.append('-');
         for (int i = 0; i < 3; i++)  sb.append(CHARS.charAt(rng.nextInt(CHARS.length())));
         return sb.toString();
+    }
+
+    private Long resolveEmployerId(Long jobPostingId) {
+        try {
+            String uuidStr = jobListingRepository.findIdByNumericalId(jobPostingId);
+            if (uuidStr == null) return null;
+            return jobListingRepository.findById(UUID.fromString(uuidStr))
+                    .map(JobListing::getEmployerId)
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void sendInterviewNotification(Application application, Interview interview) {
