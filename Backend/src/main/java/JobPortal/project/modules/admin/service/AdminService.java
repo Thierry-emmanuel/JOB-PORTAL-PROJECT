@@ -2,6 +2,7 @@ package JobPortal.project.modules.admin.service;
 
 import JobPortal.project.modules.admin.dto.DashboardStatsDTO;
 import JobPortal.project.modules.admin.dto.UserManagementDTO;
+import JobPortal.project.modules.admin.dto.UserPageResponse;
 import JobPortal.project.modules.admin.dto.UserCreationDTO;
 import JobPortal.project.modules.admin.dto.UserUpdateDTO;
 import JobPortal.project.enums.Role;
@@ -16,6 +17,10 @@ import JobPortal.project.modules.userprofile.model.Employer;
 import JobPortal.project.modules.userprofile.model.Admin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -154,6 +159,31 @@ public class AdminService {
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public UserPageResponse getUsersPaged(int page, int size, Role role, Boolean active, String search) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Role roleFilter = role;
+        Boolean activeFilter = active;
+        String searchFilter = (search != null && !search.isBlank()) ? search.trim() : null;
+
+        Page<User> result = userRepository.findFiltered(roleFilter, activeFilter, searchFilter, pageable);
+        List<UserManagementDTO> content = result.getContent().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
+        return new UserPageResponse(
+                content,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast()
+        );
     }
 
     @Transactional
