@@ -196,12 +196,24 @@ const emptySlide = () => ({
   _key: Math.random().toString(36).slice(2),
 });
 
+const HERO_STEPS = [
+  { key: 'content',  label: 'Text content',  icon: Type },
+  { key: 'slides',   label: 'Background',    icon: Image },
+  { key: 'style',    label: 'Appearance',    icon: Palette },
+  { key: 'playback', label: 'Slideshow',     icon: Sliders },
+];
+
 export function HeroEditor({ showToast }) {
   const [cfg, setCfg]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [dirty, setDirty]     = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
   const [previewTab, setPreviewTab] = useState('desktop');
+  const [activeStep, setActiveStep] = useState('content');
+  const [panelMode, setPanelMode]   = useState('edit');
+  const previewRef = useRef(null);
+  const configRef  = useRef(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -250,12 +262,23 @@ export function HeroEditor({ showToast }) {
     upd('slides', slides);
   };
 
+  const scrollToPreview = () => {
+    setPanelMode('preview');
+    previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  const scrollToEdit = () => {
+    setPanelMode('edit');
+    configRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
   const save = async () => {
     setSaving(true);
     try {
       await saveHeroConfig(cfg);
       showToast('Hero configuration saved!');
       setDirty(false);
+      setSavedAt(new Date());
     } catch {
       showToast('Save failed.', 'error');
     } finally {
@@ -276,151 +299,195 @@ export function HeroEditor({ showToast }) {
   };
 
   if (loading) return <Spinner />;
-  if (!cfg) return null;
+  if (!cfg) return <EmptyState icon={AlertCircle} msg="Could not load hero configuration." />;
 
   return (
-    <div className="cms-hero-root">
-      {/* ── Sticky save bar ─────────────────────── */}
-      <div className="cms-save-bar">
+    <div className={`cms-hero-root cms-hero-root--${panelMode}`}>
+      <div className="cms-hero-intro">
+        <h3>Homepage Hero Editor</h3>
+        <p>
+          Customize what visitors see first on Kora. Edit headlines and calls-to-action in <strong>Text content</strong>,
+          swap background images under <strong>Background</strong>, tune colors in <strong>Appearance</strong>, then
+          preview before saving. Changes go live on the public homepage immediately after save.
+        </p>
+      </div>
+      {/* ── Action toolbar ─────────────────────── */}
+      <div className="cms-save-bar cms-hero-toolbar">
         <div className="cms-save-bar-left">
           <Sparkles size={15} />
-          <span>Hero Configuration</span>
+          <span>Hero Section Manager</span>
           {dirty && <span className="cms-unsaved-pill">Unsaved changes</span>}
+          {!dirty && savedAt && <span className="cms-saved-pill"><Check size={10}/> Saved</span>}
         </div>
-        <div className="cms-save-bar-right">
-          <button className="cms-btn ghost sm" onClick={reset}><RotateCcw size={13}/> Reset</button>
-          <button className="cms-btn primary sm" onClick={save} disabled={saving}>
-            <Save size={13}/> {saving ? 'Saving…' : 'Save changes'}
+        <div className="cms-hero-mode-tabs">
+          <button
+            type="button"
+            className={`cms-hero-mode-btn${panelMode === 'edit' ? ' active' : ''}`}
+            onClick={scrollToEdit}
+          >
+            <Edit2 size={13}/> Edit
+          </button>
+          <button
+            type="button"
+            className={`cms-hero-mode-btn${panelMode === 'preview' ? ' active' : ''}`}
+            onClick={scrollToPreview}
+          >
+            <Eye size={13}/> Preview
           </button>
         </div>
+        <div className="cms-save-bar-right">
+          <button type="button" className="cms-btn ghost sm" onClick={load} title="Reload from server"><RefreshCw size={13}/></button>
+          <button type="button" className="cms-btn ghost sm" onClick={reset}><RotateCcw size={13}/> Reset</button>
+          <button type="button" className="cms-btn primary sm" onClick={save} disabled={saving || !dirty}>
+            <Save size={13}/> {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Step navigation ─────────────────────── */}
+      <div className="cms-hero-steps">
+        {HERO_STEPS.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            type="button"
+            className={`cms-hero-step${activeStep === key ? ' active' : ''}`}
+            onClick={() => { setActiveStep(key); setPanelMode('edit'); }}
+          >
+            <Icon size={14}/>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* ── Two-column layout: config + preview ─ */}
       <div className="cms-hero-cols">
 
         {/* LEFT — configuration panels */}
-        <div className="cms-hero-config cms-scroll-pane">
+        <div ref={configRef} className={`cms-hero-config cms-scroll-pane${panelMode === 'preview' ? ' dimmed' : ''}`}>
 
-          {/* TEXT CONTENT */}
-          <Section icon={Type} title="Text content" defaultOpen>
-            <Field label="Headline" hint="Main hero heading displayed prominently">
-              <input className="cms-input" value={cfg.headline ?? ''} onChange={e => upd('headline', e.target.value)} placeholder="Find your dream job today" />
-            </Field>
-            <Field label="Sub-headline">
-              <input className="cms-input" value={cfg.subHeadline ?? ''} onChange={e => upd('subHeadline', e.target.value)} placeholder="Connecting talent with opportunity…" />
-            </Field>
-            <Field label="Body text">
-              <textarea className="cms-textarea" rows={3} value={cfg.body ?? ''} onChange={e => upd('body', e.target.value)} placeholder="Supporting description…" />
-            </Field>
-            <div className="cms-field-row">
-              <Field label="CTA button label">
-                <input className="cms-input" value={cfg.ctaLabel ?? ''} onChange={e => upd('ctaLabel', e.target.value)} placeholder="Get started" />
+          {activeStep === 'content' && (
+            <PanelCard title="Text content" icon={Type}>
+              <Field label="Headline" hint="Main hero heading displayed prominently">
+                <input className="cms-input" value={cfg.headline ?? ''} onChange={e => upd('headline', e.target.value)} placeholder="Find your dream job today" />
               </Field>
-              <Field label="CTA URL">
-                <input className="cms-input" value={cfg.ctaUrl ?? ''} onChange={e => upd('ctaUrl', e.target.value)} placeholder="/jobs" />
+              <Field label="Sub-headline">
+                <input className="cms-input" value={cfg.subHeadline ?? ''} onChange={e => upd('subHeadline', e.target.value)} placeholder="Connecting talent with opportunity…" />
               </Field>
-            </div>
-            <Field label="Secondary CTA label">
-              <input className="cms-input" value={cfg.ctaSecondaryLabel ?? ''} onChange={e => upd('ctaSecondaryLabel', e.target.value)} placeholder="Browse employers" />
-            </Field>
-          </Section>
-
-          {/* BACKGROUND SLIDES */}
-          <Section icon={Image} title="Background slides" badge={(cfg.slides || []).length}>
-            <AnimatePresence>
-              {(cfg.slides || []).map((slide, idx) => (
-                <SlideCard
-                  key={slide._key || idx}
-                  slide={slide}
-                  index={idx}
-                  total={(cfg.slides || []).length}
-                  onChange={s => { const arr = [...cfg.slides]; arr[idx] = s; upd('slides', arr); }}
-                  onRemove={() => removeSlide(idx)}
-                  onMove={dir => moveSlide(idx, dir)}
-                />
-              ))}
-            </AnimatePresence>
-            <button className="cms-btn dashed w-full mt-2" onClick={addSlide}>
-              <Plus size={14}/> Add slide
-            </button>
-          </Section>
-
-          {/* APPEARANCE */}
-          <Section icon={Palette} title="Appearance & layout" defaultOpen={false}>
-            <div className="cms-field-row">
-              <Field label="Layout">
-                <select className="cms-select" value={cfg.layout ?? 'center'} onChange={e => upd('layout', e.target.value)}>
-                  {LAYOUT_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+              <Field label="Body text">
+                <textarea className="cms-textarea" rows={3} value={cfg.body ?? ''} onChange={e => upd('body', e.target.value)} placeholder="Supporting description…" />
               </Field>
-              <Field label="Text animation">
-                <select className="cms-select" value={cfg.textAnimation ?? 'fadeUp'} onChange={e => upd('textAnimation', e.target.value)}>
-                  {TEXT_ANIM_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </Field>
-            </div>
-
-            <Field label="Gradient presets">
-              <div className="cms-gradient-grid">
-                {GRADIENT_PRESETS.map(p => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    className={`cms-gradient-swatch${cfg.gradientFrom === p.from ? ' active' : ''}`}
-                    style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
-                    title={p.name}
-                    onClick={() => { upd('gradientFrom', p.from); upd('gradientTo', p.to); }}
-                  >
-                    <span className="cms-swatch-label">{p.name}</span>
-                  </button>
-                ))}
+              <div className="cms-field-row">
+                <Field label="CTA button label">
+                  <input className="cms-input" value={cfg.ctaLabel ?? ''} onChange={e => upd('ctaLabel', e.target.value)} placeholder="Get started" />
+                </Field>
+                <Field label="CTA URL">
+                  <input className="cms-input" value={cfg.ctaUrl ?? ''} onChange={e => upd('ctaUrl', e.target.value)} placeholder="/jobs" />
+                </Field>
               </div>
-            </Field>
+              <Field label="Secondary CTA label">
+                <input className="cms-input" value={cfg.ctaSecondaryLabel ?? ''} onChange={e => upd('ctaSecondaryLabel', e.target.value)} placeholder="Browse employers" />
+              </Field>
+            </PanelCard>
+          )}
 
-            <div className="cms-field-row">
-              <Field label="Gradient from">
-                <div className="cms-color-row">
-                  <input type="color" className="cms-color-input" value={cfg.gradientFrom ?? '#1a1438'} onChange={e => upd('gradientFrom', e.target.value)} />
-                  <input className="cms-input" value={cfg.gradientFrom ?? ''} onChange={e => upd('gradientFrom', e.target.value)} />
+          {activeStep === 'slides' && (
+            <PanelCard title="Background slides" icon={Image} actions={<span className="cms-section-badge">{(cfg.slides || []).length}</span>}>
+              <p className="cms-step-hint">Add image URLs for rotating backgrounds. Drag order with the arrow buttons on each slide.</p>
+              <AnimatePresence>
+                {(cfg.slides || []).map((slide, idx) => (
+                  <SlideCard
+                    key={slide._key || idx}
+                    slide={slide}
+                    index={idx}
+                    total={(cfg.slides || []).length}
+                    onChange={s => { const arr = [...cfg.slides]; arr[idx] = s; upd('slides', arr); }}
+                    onRemove={() => removeSlide(idx)}
+                    onMove={dir => moveSlide(idx, dir)}
+                  />
+                ))}
+              </AnimatePresence>
+              <button type="button" className="cms-btn dashed w-full mt-2" onClick={addSlide}>
+                <Plus size={14}/> Add slide
+              </button>
+            </PanelCard>
+          )}
+
+          {activeStep === 'style' && (
+            <PanelCard title="Appearance & layout" icon={Palette}>
+              <div className="cms-field-row">
+                <Field label="Layout">
+                  <select className="cms-select" value={cfg.layout ?? 'center'} onChange={e => upd('layout', e.target.value)}>
+                    {LAYOUT_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="Text animation">
+                  <select className="cms-select" value={cfg.textAnimation ?? 'fadeUp'} onChange={e => upd('textAnimation', e.target.value)}>
+                    {TEXT_ANIM_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <Field label="Gradient presets">
+                <div className="cms-gradient-grid">
+                  {GRADIENT_PRESETS.map(p => (
+                    <button
+                      key={p.name}
+                      type="button"
+                      className={`cms-gradient-swatch${cfg.gradientFrom === p.from ? ' active' : ''}`}
+                      style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
+                      title={p.name}
+                      onClick={() => { upd('gradientFrom', p.from); upd('gradientTo', p.to); }}
+                    >
+                      <span className="cms-swatch-label">{p.name}</span>
+                    </button>
+                  ))}
                 </div>
               </Field>
-              <Field label="Gradient to">
-                <div className="cms-color-row">
-                  <input type="color" className="cms-color-input" value={cfg.gradientTo ?? '#1e3a5f'} onChange={e => upd('gradientTo', e.target.value)} />
-                  <input className="cms-input" value={cfg.gradientTo ?? ''} onChange={e => upd('gradientTo', e.target.value)} />
-                </div>
-              </Field>
-            </div>
-          </Section>
+              <div className="cms-field-row">
+                <Field label="Gradient from">
+                  <div className="cms-color-row">
+                    <input type="color" className="cms-color-input" value={cfg.gradientFrom ?? '#1a1438'} onChange={e => upd('gradientFrom', e.target.value)} />
+                    <input className="cms-input" value={cfg.gradientFrom ?? ''} onChange={e => upd('gradientFrom', e.target.value)} />
+                  </div>
+                </Field>
+                <Field label="Gradient to">
+                  <div className="cms-color-row">
+                    <input type="color" className="cms-color-input" value={cfg.gradientTo ?? '#1e3a5f'} onChange={e => upd('gradientTo', e.target.value)} />
+                    <input className="cms-input" value={cfg.gradientTo ?? ''} onChange={e => upd('gradientTo', e.target.value)} />
+                  </div>
+                </Field>
+              </div>
+            </PanelCard>
+          )}
 
-          {/* SLIDESHOW SETTINGS */}
-          <Section icon={Sliders} title="Slideshow settings" defaultOpen={false}>
-            <div className="cms-toggle-group">
-              <Toggle value={cfg.autoplay ?? true}    onChange={v => upd('autoplay', v)}    label="Autoplay" />
-              <Toggle value={cfg.showDots ?? true}    onChange={v => upd('showDots', v)}    label="Show dots" />
-              <Toggle value={cfg.showArrows ?? true}  onChange={v => upd('showArrows', v)}  label="Show arrows" />
-              <Toggle value={cfg.showStats ?? false}  onChange={v => upd('showStats', v)}   label="Show stats bar" />
-            </div>
-            <div className="cms-field-row">
-              <Field label="Transition effect">
-                <select className="cms-select" value={cfg.transition ?? 'fade'} onChange={e => upd('transition', e.target.value)}>
-                  {TRANSITION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label} — {o.desc}</option>)}
-                </select>
-              </Field>
-              <Field label="Interval">
-                <select className="cms-select" value={cfg.interval ?? 5000} onChange={e => upd('interval', Number(e.target.value))}>
-                  {INTERVAL_OPTS.map(v => <option key={v} value={v}>{v / 1000}s</option>)}
-                </select>
-              </Field>
-            </div>
-          </Section>
+          {activeStep === 'playback' && (
+            <PanelCard title="Slideshow settings" icon={Sliders}>
+              <div className="cms-toggle-group">
+                <Toggle value={cfg.autoplay ?? true}    onChange={v => upd('autoplay', v)}    label="Autoplay" />
+                <Toggle value={cfg.showDots ?? true}    onChange={v => upd('showDots', v)}    label="Show dots" />
+                <Toggle value={cfg.showArrows ?? true}  onChange={v => upd('showArrows', v)}  label="Show arrows" />
+                <Toggle value={cfg.showStats ?? false}  onChange={v => upd('showStats', v)}   label="Show stats bar" />
+              </div>
+              <div className="cms-field-row">
+                <Field label="Transition effect">
+                  <select className="cms-select" value={cfg.transition ?? 'fade'} onChange={e => upd('transition', e.target.value)}>
+                    {TRANSITION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label} — {o.desc}</option>)}
+                  </select>
+                </Field>
+                <Field label="Interval">
+                  <select className="cms-select" value={cfg.interval ?? 5000} onChange={e => upd('interval', Number(e.target.value))}>
+                    {INTERVAL_OPTS.map(v => <option key={v} value={v}>{v / 1000}s</option>)}
+                  </select>
+                </Field>
+              </div>
+            </PanelCard>
+          )}
 
-        </div>{/* end left */}
+        </div>
 
         {/* RIGHT — live preview */}
-        <div className="cms-hero-preview-pane cms-scroll-pane">
+        <div ref={previewRef} className={`cms-hero-preview-pane cms-scroll-pane${panelMode === 'edit' ? ' dimmed' : ''}`}>
           <div className="cms-preview-head">
-            <span className="cms-preview-label"><Eye size={13}/> Preview</span>
+            <span className="cms-preview-label"><Eye size={13}/> Live preview</span>
             <div className="cms-preview-tabs">
               {['desktop', 'mobile'].map(t => (
                 <button key={t} type="button" className={`cms-preview-tab${previewTab === t ? ' active' : ''}`} onClick={() => setPreviewTab(t)}>
@@ -431,6 +498,7 @@ export function HeroEditor({ showToast }) {
             </div>
           </div>
           <HeroPreview cfg={cfg} mode={previewTab} />
+          <p className="cms-preview-footnote">Changes appear instantly. Click <strong>Save</strong> to publish to the homepage.</p>
         </div>
 
       </div>

@@ -243,17 +243,49 @@ function FilterBar({ tabs, active, onChange, right }) {
   );
 }
 
-function Pagination({ page, totalPages, onChange }) {
-  if (totalPages <= 1) return null;
-  const pages = Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i);
+function Pagination({ page, totalPages, totalElements, pageSize = 10, onChange }) {
+  const total = totalElements ?? 0;
+  if (totalPages <= 1 && total <= pageSize) return null;
+
+  const windowSize = 5;
+  let start = Math.max(0, page - Math.floor(windowSize / 2));
+  let end = Math.min(totalPages - 1, start + windowSize - 1);
+  start = Math.max(0, end - windowSize + 1);
+  const pages = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+  const from = total === 0 ? 0 : page * pageSize + 1;
+  const to = Math.min((page + 1) * pageSize, total);
+
   return (
-    <div className="adm-pagination">
-      <button className="adm-page-btn" disabled={page===0} onClick={()=>onChange(page-1)}><ChevronLeft size={14}/></button>
-      {pages.map(p => (
-        <button key={p} className={`adm-page-btn${p===page?' active':''}`} onClick={()=>onChange(p)}>{p+1}</button>
-      ))}
-      {totalPages > 7 && <span className="adm-page-ellipsis">…{totalPages}</span>}
-      <button className="adm-page-btn" disabled={page>=totalPages-1} onClick={()=>onChange(page+1)}><ChevronRight size={14}/></button>
+    <div className="adm-pagination-wrap">
+      <span className="adm-pagination-info">
+        Showing {from}–{to} of {total.toLocaleString()}
+      </span>
+      <div className="adm-pagination">
+        <button className="adm-page-btn" disabled={page === 0} onClick={() => onChange(page - 1)} aria-label="Previous page">
+          <ChevronLeft size={14}/> Prev
+        </button>
+        {start > 0 && (
+          <>
+            <button className="adm-page-btn" onClick={() => onChange(0)}>1</button>
+            {start > 1 && <span className="adm-page-ellipsis">…</span>}
+          </>
+        )}
+        {pages.map(p => (
+          <button key={p} className={`adm-page-btn${p === page ? ' active' : ''}`} onClick={() => onChange(p)} aria-current={p === page ? 'page' : undefined}>
+            {p + 1}
+          </button>
+        ))}
+        {end < totalPages - 1 && (
+          <>
+            {end < totalPages - 2 && <span className="adm-page-ellipsis">…</span>}
+            <button className="adm-page-btn" onClick={() => onChange(totalPages - 1)}>{totalPages}</button>
+          </>
+        )}
+        <button className="adm-page-btn" disabled={page >= totalPages - 1} onClick={() => onChange(page + 1)} aria-label="Next page">
+          Next <ChevronRight size={14}/>
+        </button>
+      </div>
     </div>
   );
 }
@@ -271,17 +303,32 @@ function SCard({ title, icon, action, children, noPad=false }) {
   );
 }
 
-/* Page header */
-function PageHead({ title, sub, badge, actions }) {
+/* Page header + welcome banner */
+function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false }) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
   return (
-    <div className="adm-page-head">
-      <div>
-        <h1 className="adm-page-title">{title}</h1>
-        {sub && <p className="adm-page-sub">{sub}</p>}
-      </div>
-      <div className="adm-page-head-right">
-        {badge && <span className="adm-role-badge"><Shield size={12}/>{badge}</span>}
-        {actions}
+    <div className="adm-page-head-zone">
+      {showWelcome && (
+        <div className="adm-welcome-sticky">
+          <div className="adm-welcome-hero">
+            <div className="adm-welcome-text">
+              <h1 className="adm-welcome-title">{greeting}, {welcomeName ?? 'Admin'}</h1>
+              <p className="adm-welcome-sub">Your platform command center — analytics, users, and content at a glance.</p>
+            </div>
+            {badge && (
+              <span className="adm-role-badge adm-welcome-badge"><Shield size={12}/>{badge}</span>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="adm-page-head">
+        <div>
+          <h2 className="adm-page-title">{title}</h2>
+          {sub && <p className="adm-page-sub">{sub}</p>}
+        </div>
+        <div className="adm-page-head-right">{actions}</div>
       </div>
     </div>
   );
@@ -357,7 +404,9 @@ export default function AdminDashboard() {
         <PageHead
           title={title}
           sub={sub}
+          welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
           badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
+          showWelcome={tab === 'overview'}
         />
 
         <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
@@ -387,6 +436,8 @@ export default function AdminDashboard() {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1b — User Management (All Users CRUD)
    ═══════════════════════════════════════════════════════════════════ */
+const USERS_PAGE_SIZE = 10;
+
 function UsersTab({ showToast }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -394,6 +445,9 @@ function UsersTab({ showToast }) {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   
   // Overlays / Modals
   const [detailUser, setDetailUser] = useState(null);
@@ -411,15 +465,34 @@ function UsersTab({ showToast }) {
   };
   const [form, setForm] = useState(defaultForm);
 
-  const load = useCallback(() => {
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const load = useCallback((p) => {
     setLoading(true); setError('');
-    fetchAdminUsers()
-      .then(setUsers)
+    const activeParam = statusFilter === 'active' ? true : statusFilter === 'suspended' ? false : undefined;
+    fetchAdminUsers({
+      page: p,
+      size: USERS_PAGE_SIZE,
+      role: roleFilter !== 'all' ? roleFilter : undefined,
+      active: activeParam,
+      search: debouncedSearch || undefined,
+    })
+      .then(d => {
+        setUsers(d.content ?? []);
+        setTotalPages(Math.max(d.totalPages ?? 1, 1));
+        setTotalElements(d.totalElements ?? 0);
+      })
       .catch(() => setError('Failed to load user accounts.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [roleFilter, statusFilter, debouncedSearch]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(0); }, [roleFilter, statusFilter, debouncedSearch]);
+  useEffect(() => { load(page); }, [page, roleFilter, statusFilter, debouncedSearch, load]);
 
   const handleOpenDetail = async (user) => {
     try {
@@ -440,7 +513,7 @@ function UsersTab({ showToast }) {
     try {
       await toggleUserStatus(user.id);
       showToast(`User status toggled.`);
-      load();
+      load(page);
       if (detailUser && detailUser.id === user.id) {
         setDetailUser(prev => ({ ...prev, isActive: !prev.isActive }));
       }
@@ -460,7 +533,7 @@ function UsersTab({ showToast }) {
       showToast('User created successfully!');
       setIsCreating(false);
       setForm(defaultForm);
-      load();
+      load(page);
     } catch (err) {
       showToast(err.response?.data || 'Failed to create user.', 'error');
     }
@@ -477,7 +550,7 @@ function UsersTab({ showToast }) {
       showToast('User updated successfully!');
       setIsEditing(false);
       setDetailUser(null);
-      load();
+      load(page);
     } catch (err) {
       showToast(err.response?.data || 'Failed to update user.', 'error');
     }
@@ -489,7 +562,7 @@ function UsersTab({ showToast }) {
     try {
       await hardDeleteUser(userToDelete.id);
       showToast('User deleted permanently.');
-      load();
+      load(page);
       if (detailUser && detailUser.id === userToDelete.id) {
         setDetailUser(null);
       }
@@ -497,16 +570,6 @@ function UsersTab({ showToast }) {
       showToast('Could not delete user. They may have active applications or job posts.', 'error');
     }
   };
-
-  const filtered = users.filter(u => {
-    const q = search.toLowerCase();
-    const matchesSearch = !q || (u.fullName ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q);
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && u.isActive) || 
-      (statusFilter === 'suspended' && !u.isActive);
-    return matchesSearch && matchesRole && matchesStatus;
-  });
 
   const changeForm = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -692,14 +755,14 @@ function UsersTab({ showToast }) {
           { key: 'ADMIN', label: 'Admins' }
         ]}
         active={roleFilter}
-        onChange={setRoleFilter}
+        onChange={v => { setRoleFilter(v); setPage(0); }}
         right={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <select
               className="adm-select"
               style={{ padding: '6px 12px', fontSize: '12px', height: '34px', minWidth: '120px' }}
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={e => { setStatusFilter(e.target.value); setPage(0); }}
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
@@ -713,7 +776,7 @@ function UsersTab({ showToast }) {
         }
       />
 
-      <SCard title={`User Accounts (${filtered.length})`} icon={<Users size={15} />}>
+      <SCard title={`User Accounts (${totalElements.toLocaleString()})`} icon={<Users size={15} />}>
         {loading ? <Spin /> : (
           <div className="adm-table-wrap">
             <table className="adm-table">
@@ -727,10 +790,10 @@ function UsersTab({ showToast }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {users.length === 0 ? (
                   <tr><td colSpan={5}><Empty /></td></tr>
                 ) : (
-                  filtered.map(u => {
+                  users.map(u => {
                     const status = u.isActive ? 'ACTIVE' : 'SUSPENDED';
                     const avatarColor = u.role === 'ADMIN' ? C.purple : u.role === 'EMPLOYER' ? C.orange : C.blue;
                     return (
@@ -767,6 +830,15 @@ function UsersTab({ showToast }) {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={USERS_PAGE_SIZE}
+            onChange={setPage}
+          />
         )}
       </SCard>
 
@@ -1201,28 +1273,43 @@ function SeekersTab({ showToast }) {
    TAB 5 — Verification
    ═══════════════════════════════════════════════════════════════════ */
 function VerificationTab({ showToast }) {
-  const [users, setUsers]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch]   = useState('');
+  const [users, setUsers]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [search, setSearch]     = useState('');
+  const [page, setPage]         = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pendingTotal, setPendingTotal] = useState(0);
 
-  useEffect(()=>{
-    fetchAdminUsers()
-      .then(setUsers)
-      .catch(()=>{})
-      .finally(()=>setLoading(false));
-  },[]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const pending = users.filter(u=>u.isActive===false);
-  const filtered = pending.filter(u=>{
-    const q=search.toLowerCase();
-    return !q||(u.fullName??'').toLowerCase().includes(q)||(u.email??'').toLowerCase().includes(q);
-  });
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => { setPage(0); }, [debouncedSearch]);
+
+  const load = useCallback((p) => {
+    setLoading(true);
+    fetchAdminUsers({ page: p, size: USERS_PAGE_SIZE, active: false, search: debouncedSearch || undefined })
+      .then(d => {
+        setUsers(d.content ?? []);
+        setTotalPages(Math.max(d.totalPages ?? 1, 1));
+        setTotalElements(d.totalElements ?? 0);
+        setPendingTotal(d.totalElements ?? 0);
+      })
+      .catch(() => showToast('Failed to load verification queue.', 'error'))
+      .finally(() => setLoading(false));
+  }, [debouncedSearch, showToast]);
+
+  useEffect(() => { load(page); }, [page, load]);
 
   const toggle = async (u) => {
     try {
       await toggleUserStatus(u.id);
       showToast(`User ${u.isActive?'deactivated':'activated'}.`);
-      setUsers(prev=>prev.map(x=>x.id===u.id?{...x,isActive:!x.isActive}:x));
+      load(page);
     } catch { showToast('Failed.','error'); }
   };
 
@@ -1234,20 +1321,20 @@ function VerificationTab({ showToast }) {
           <strong>Identity Verification Queue</strong>
           <p>Users awaiting manual verification are listed below. Toggle status to activate or deactivate accounts.</p>
         </div>
-        <span className="adm-count-pill large">{pending.length} pending</span>
+        <span className="adm-count-pill large">{pendingTotal} pending</span>
       </div>
 
       <div className="adm-filter-bar">
         <div className="adm-filter-right"><SearchBar value={search} onChange={setSearch} placeholder="Search users…"/></div>
       </div>
 
-      <SCard title="Users Awaiting Verification" icon={<ShieldCheck size={15}/>}>
+      <SCard title={`Users Awaiting Verification (${totalElements})`} icon={<ShieldCheck size={15}/>}>
         {loading ? <Spin/> : (
           <div className="adm-table-wrap">
             <table className="adm-table">
               <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>
-                {filtered.length===0 ? <tr><td colSpan={6}><Empty msg="No pending verifications."/></td></tr> : filtered.map(u=>(
+                {users.length===0 ? <tr><td colSpan={6}><Empty msg="No pending verifications."/></td></tr> : users.map(u=>(
                   <tr key={u.id}>
                     <td><div className="adm-cell-person"><Avatar name={u.fullName??'?'} color={C.purple}/><span className="adm-td-strong">{fmt(u.fullName)}</span></div></td>
                     <td className="adm-td-muted">{fmt(u.email)}</td>
@@ -1265,6 +1352,15 @@ function VerificationTab({ showToast }) {
             </table>
           </div>
         )}
+        {!loading && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={USERS_PAGE_SIZE}
+            onChange={setPage}
+          />
+        )}
       </SCard>
     </>
   );
@@ -1281,13 +1377,14 @@ function JobsTab({ showToast }) {
   const [search, setSearch]     = useState('');
   const [page, setPage]         = useState(0);
   const [totalPages, setTotal]  = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [modal, setModal]       = useState(null);
   const [flagReason, setFlagReason] = useState('');
 
   const load = useCallback((p=0) => {
     setLoading(true);
     fetchAdminJobs({ status:filter, page:p, size:20 })
-      .then(d=>{ setJobs(Array.isArray(d)?d:d.content??[]); setTotal(d.totalPages??1); })
+      .then(d=>{ setJobs(Array.isArray(d)?d:d.content??[]); setTotal(d.totalPages??1); setTotalElements(d.totalElements??(d.content??[]).length); })
       .catch(()=>setError('Unable to load jobs.'))
       .finally(()=>setLoading(false));
   },[filter]);
@@ -1344,7 +1441,7 @@ function JobsTab({ showToast }) {
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} totalPages={totalPages} onChange={p=>{setPage(p);load(p);}}/>
+            <Pagination page={page} totalPages={totalPages} totalElements={totalElements} pageSize={20} onChange={p=>{setPage(p);load(p);}}/>
           </>
         )}
       </SCard>
@@ -1376,11 +1473,12 @@ function ApplicationsTab({ showToast }) {
   const [search, setSearch]     = useState('');
   const [page, setPage]         = useState(0);
   const [totalPages, setTotal]  = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   const load = useCallback((p=0) => {
     setLoading(true);
     fetchAllApplications({ status:filter, page:p, size:20 })
-      .then(d=>{ setApps(d.content??d.applications??[]); setTotal(d.totalPages??1); })
+      .then(d=>{ setApps(d.content??d.applications??[]); setTotal(d.totalPages??1); setTotalElements(d.totalElements??0); })
       .catch(()=>{})
       .finally(()=>setLoading(false));
   },[filter]);
@@ -1423,7 +1521,7 @@ function ApplicationsTab({ showToast }) {
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} totalPages={totalPages} onChange={p=>{setPage(p);load(p);}}/>
+            <Pagination page={page} totalPages={totalPages} totalElements={totalElements} pageSize={20} onChange={p=>{setPage(p);load(p);}}/>
           </>
         )}
       </SCard>

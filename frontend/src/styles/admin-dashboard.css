@@ -228,12 +228,82 @@
   min-width: 0;
 }
 
-/* ── 4. Page Header ──────────────────────────────────────────────────────── */
+/* ── 4. Page Header & Welcome Banner ───────────────────────────────────── */
+.adm-page-head-zone {
+  flex-shrink: 0;
+  background: var(--adm-bg);
+  z-index: 25;
+}
+
+.adm-welcome-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 16px 28px 0;
+  margin-bottom: 8px;
+  background: var(--adm-bg);
+  isolation: isolate;
+}
+.adm-welcome-sticky::after {
+  content: '';
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: -12px;
+  height: 12px;
+  background: linear-gradient(to bottom, var(--adm-bg), transparent);
+  pointer-events: none;
+}
+
+.adm-welcome-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+  border-radius: var(--adm-radius-lg);
+  background: linear-gradient(135deg, var(--adm-purple) 0%, var(--adm-purple-dk) 100%);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(109, 40, 217, 0.28);
+  overflow: hidden;
+  position: relative;
+  contain: paint;
+}
+.adm-welcome-hero::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -30px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+.adm-welcome-text { position: relative; z-index: 1; }
+.adm-welcome-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+.adm-welcome-sub {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.88;
+}
+.adm-welcome-badge {
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,0.18) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  color: #fff !important;
+  flex-shrink: 0;
+}
+
 .adm-page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px 0;
+  padding: 12px 28px 0;
   flex-shrink: 0;
   gap: 16px;
 }
@@ -295,6 +365,26 @@
   flex: 1;
   min-height: 0;
 }
+.cms-hero-intro {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.cms-hero-intro h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E3A5F;
+}
+.cms-hero-intro p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #475569;
+}
+
 /* cms-hero-root uses position:absolute so no flex rules needed for it.
    cms-tab-root (FAQs/Categories/Skills) still uses flex layout. */
 .adm-content.adm-content--cms .cms-tab-root {
@@ -529,6 +619,8 @@
   border-radius: var(--adm-radius-sm);
   border: 1px solid var(--adm-border);
   background: var(--adm-white);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, transform .12s;
   color: var(--adm-muted);
   cursor: pointer;
   transition: all 0.15s;
@@ -718,16 +810,31 @@
 }
 
 /* ── 15. Pagination ──────────────────────────────────────────────────────── */
+.adm-pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-top: 1px solid var(--adm-border);
+  background: #fafbfc;
+}
+.adm-pagination-info {
+  font-size: 12px;
+  color: var(--adm-muted);
+  font-weight: 500;
+}
 .adm-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--adm-border);
+  flex-wrap: wrap;
 }
 .adm-page-btn {
-  width: 32px; height: 32px;
+  min-width: 32px; height: 32px;
+  padding: 0 8px;
   border-radius: var(--adm-radius-sm);
   border: 1px solid var(--adm-border);
   background: var(--adm-white);
