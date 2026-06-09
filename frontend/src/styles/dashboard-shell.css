@@ -413,6 +413,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: relative;
+  z-index: 0;
 }
 
 /* ── Page header ────────────────────────────────────────── */
@@ -968,8 +970,39 @@
   gap: 6px;
 }
 
-/* ── Hero greeting ─────────────────────────────────────── */
+/* ── Hero greeting (sticky shell + solid card) ───────────── */
+.ds-hero-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin-bottom: 36px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  background: #F4F6F9;
+  isolation: isolate;
+}
+.ds-hero-sticky::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 12px;
+  background: #F4F6F9;
+  z-index: 0;
+}
+.ds-hero-sticky::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -20px;
+  height: 20px;
+  background: linear-gradient(to bottom, #F4F6F9 30%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .ds-hero {
+  position: relative;
   background: linear-gradient(135deg, var(--ds-accent) 0%, var(--ds-accent-dark) 100%);
   border-radius: 20px;
   padding: 28px 32px;
@@ -979,7 +1012,9 @@
   justify-content: space-between;
   gap: 20px;
   overflow: hidden;
+  z-index: 1;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  contain: paint;
 }
 .ds-hero::before {
   content: '';
@@ -988,6 +1023,7 @@
   width: 200px; height: 200px;
   border-radius: 50%;
   background: rgba(255,255,255,0.07);
+  pointer-events: none;
 }
 .ds-hero::after {
   content: '';
@@ -996,6 +1032,7 @@
   width: 160px; height: 160px;
   border-radius: 50%;
   background: rgba(255,255,255,0.05);
+  pointer-events: none;
 }
 .ds-hero-text { position: relative; z-index: 1; }
 .ds-hero-title {
@@ -1233,6 +1270,22 @@
 }
 .ds-hero-name { color: rgba(255,255,255,0.9); }
 .ds-hero-sub  { font-size: 13px; opacity: 0.85; margin: 0; }
+
+/* ── Unified pagination bar ───────────────────────────────── */
+.ds-pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #F3F4F6;
+}
+.ds-pagination-info {
+  font-size: 13px;
+  color: #6B7280;
+}
 
 /* Nudge card internals */
 .ds-nudge-left {

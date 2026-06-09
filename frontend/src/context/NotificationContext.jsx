@@ -26,14 +26,22 @@ const TOAST_OPTIONS = {
   draggable: true,
 };
 
+function dispatchRealtime(detail) {
+  window.dispatchEvent(new CustomEvent('kora:realtime', { detail }));
+}
+
+function normalizeRole(role) {
+  return (role || '').toUpperCase().replace('ROLE_', '');
+}
+
 export const NotificationProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
-  // Use a ref instead of state — the STOMP client is not UI state, it doesn't need to re-render.
   const clientRef = useRef(null);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
+    const role = normalizeRole(user.role);
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       reconnectDelay: 5000,
@@ -44,12 +52,45 @@ export const NotificationProvider = ({ children }) => {
     client.onConnect = () => {
       client.subscribe(`/topic/notifications/${user.id}`, (message) => {
         try {
-          const { title, message: body } = JSON.parse(message.body);
+          const payload = JSON.parse(message.body);
+          const title = payload.title || 'Notification';
+          const body = payload.message || payload.body || '';
           toast.info(`${title}: ${body}`, TOAST_OPTIONS);
+          dispatchRealtime({
+            ...payload,
+            event: payload.type || 'NOTIFICATION',
+            type: payload.type,
+          });
         } catch {
           toast.info('You have a new notification', TOAST_OPTIONS);
         }
       });
+
+      if (role === 'EMPLOYER') {
+        client.subscribe(`/topic/applications/employer/${user.id}`, (message) => {
+          try {
+            dispatchRealtime(JSON.parse(message.body));
+          } catch { /* ignore */ }
+        });
+        client.subscribe(`/topic/interviews/employer/${user.id}`, (message) => {
+          try {
+            dispatchRealtime(JSON.parse(message.body));
+          } catch { /* ignore */ }
+        });
+      }
+
+      if (role === 'JOB_SEEKER') {
+        client.subscribe(`/topic/applications/seeker/${user.id}`, (message) => {
+          try {
+            dispatchRealtime(JSON.parse(message.body));
+          } catch { /* ignore */ }
+        });
+        client.subscribe(`/topic/interviews/seeker/${user.id}`, (message) => {
+          try {
+            dispatchRealtime(JSON.parse(message.body));
+          } catch { /* ignore */ }
+        });
+      }
     };
 
     client.onStompError = (frame) => {
@@ -63,7 +104,7 @@ export const NotificationProvider = ({ children }) => {
       client.deactivate();
       clientRef.current = null;
     };
-  }, [isAuthenticated, user?.id]); // only re-connect when the user's ID actually changes
+  }, [isAuthenticated, user?.id, user?.role]);
 
   return (
     <NotificationContext.Provider value={clientRef}>
@@ -73,5 +114,4 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
-/** Returns the raw STOMP client ref (rarely needed by consumers). */
 export const useNotifications = () => useContext(NotificationContext);

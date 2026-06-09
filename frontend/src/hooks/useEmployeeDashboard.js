@@ -13,24 +13,13 @@
  *   handlePhotoChange, handleCancelInterview
  * ─────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getUserApplications, getJobDetail } from '../api/jobs';
 import { cachedGetJobs } from '../api/cachedApi';
 import { getInterviewsBySeeker, cancelInterview } from '../api/interviews';
 import { getJobSeekerProfile, updateJobSeekerProfile } from '../api/profiles';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-
-const getWsUrl = () => {
-  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  if (baseUrl) {
-    return `${baseUrl.replace(/\/$/, '')}/ws`;
-  }
-  return 'http://localhost:8080/ws';
-};
-const WS_URL = getWsUrl();
+import useRealtimeRefresh from './useRealtimeRefresh';
 
 /* ── Profile completion formula (mirrors JobSeekerProfile) ── */
 export function profileCompletion(p) {
@@ -64,8 +53,6 @@ function fileToBase64(file) {
 
 export default function useEmployeeDashboard() {
   const { user, token } = useAuth();
-  const stompRef = useRef(null);
-
   const [profile,       setProfile]       = useState({ ...EMPTY_PROFILE, ...(user || {}) });
   const [applications,  setApplications]  = useState([]);
   const [appsLoading,   setAppsLoading]   = useState(true);
@@ -84,34 +71,6 @@ export default function useEmployeeDashboard() {
     profile.email?.split('@')[0] ||
     'there'
   );
-
-  // ── Real-time WebSocket notifications ──
-  useEffect(() => {
-    if (!user?.id) return;
-    const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
-      reconnectDelay: 5000,
-    });
-    client.onConnect = () => {
-      client.subscribe(`/topic/notifications/${user.id}`, (message) => {
-        try {
-          const payload = JSON.parse(message.body);
-          const n = {
-            id:   Date.now(),
-            text: payload.message || payload.title || 'New notification',
-            time: 'Just now',
-            read: false,
-            type: payload.type || 'info',
-          };
-          setNotifications(prev => [n, ...prev].slice(0, 20));
-          setUnreadCount(c => c + 1);
-        } catch { /* ignore parse errors */ }
-      });
-    };
-    client.activate();
-    stompRef.current = client;
-    return () => { client.deactivate(); stompRef.current = null; };
-  }, [user?.id]);
 
   const markNotificationRead = useCallback((id) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -191,6 +150,18 @@ export default function useEmployeeDashboard() {
   }, [user]);
 
   const retryApps = useCallback(() => fetchApplications(), [fetchApplications]);
+
+  const refreshInterviews = useCallback(() => {
+    if (!user?.id) return;
+    getInterviewsBySeeker(user.id)
+      .then((data) => setInterviews(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [user?.id]);
+
+  useRealtimeRefresh(() => {
+    fetchApplications();
+    refreshInterviews();
+  });
 
   /* ── Photo upload ────────────────────────────────────────── */
   const handlePhotoChange = useCallback(async (file) => {

@@ -35,6 +35,7 @@ const JobDetails       = lazy(() => import('./pages/jobs/JobDetails'));
 const ApplyPage        = lazy(() => import('./pages/jobs/ApplyPage'));
 const InterviewManagement = lazy(() => import('./pages/employer/InterviewManagement'));
 const EmployerInsightsDashPage = lazy(() => import('./pages/employer/EmployerInsightsDashPage'));
+const EmployerBrowseJobsPage = lazy(() => import('./pages/employer/jobs/EmployerBrowseJobsPage'));
 const InsightsPage     = lazy(() => import('./pages/shared/InsightsPage'));
 const ApplicationDetailPage = lazy(() => import('./pages/shared/ApplicationDetailPage'));
 const ContactPage          = lazy(() => import('./pages/shared/ContactPage'));
@@ -163,6 +164,7 @@ function AnimatedRoutes() {
         <Route path="/employer/jobs"         element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
         <Route path="/employer/post-job"     element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
         <Route path="/employer/interviews"   element={wrap(<InterviewManagement />, "EMPLOYER")} />
+        <Route path="/employer/browse-jobs"  element={wrap(<EmployerBrowseJobsPage />, "EMPLOYER")} />
         <Route path="/employer/insights"     element={wrap(<EmployerInsightsDashPage />, "EMPLOYER")} />
 
         {/* ── Public ── */}
@@ -172,7 +174,7 @@ function AnimatedRoutes() {
         <Route path="/dashboard"       element={<Navigate to="/employee/dashboard" replace />} />
         <Route path="/jobs"            element={wrap(<JobList />)} />
         <Route path="/jobs/:id"        element={wrap(<JobDetails />)} />
-        <Route path="/jobs/:id/apply"  element={wrap(<ApplyPage />)} />
+        <Route path="/jobs/:id/apply"  element={wrap(<ApplyPage />, "JOB_SEEKER")} />
         <Route path="/insights"        element={wrap(<InsightsPage />)} />
         <Route path="/applications/:id" element={wrap(<ApplicationDetailPage />)} />
         <Route path="/contact"         element={wrap(<ContactPage />)} />

@@ -20,10 +20,13 @@ import {
   UserCheck, UserX, Star, ArrowDown, Video, ArrowUpRight, Menu,
 } from 'lucide-react';
 import EmployerSidebar from '../../components/employer/EmployerSidebar';
-import InterviewScheduler from '../../components/employer/InterviewScheduler';
 import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
 import { useAuth } from '../../context/AuthContext';
-import { scheduleInterview, addInterviewFeedback } from '../../api/interviews';
+import { getApplicationDisplayStatus } from '../../utils/applicationStatus';
+import DashboardPagination from '../../components/shared/DashboardPagination';
+
+const JOBS_PAGE_SIZE = 10;
+const APPS_PAGE_SIZE = 10;
 import '../../styles/dashboard-shell.css';
 import '../../styles/ManageJobs.css';
 
@@ -104,8 +107,9 @@ export default function ManageJobs() {
   const [selectedJob,  setSelectedJob]  = useState(null); // job whose applications we're viewing
   const [expandedJob,  setExpandedJob]  = useState(null); // accordion on mobile
   const [toast, setToast]               = useState(null);
-  const [scheduling, setScheduling] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [jobPage, setJobPage] = useState(1);
+  const [appPage, setAppPage] = useState(1);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -128,7 +132,11 @@ export default function ManageJobs() {
 
   const jobApps = useMemo(() => {
     if (!selectedJob) return [];
-    return applications.filter(a => String(a.jobPostingId) === String(selectedJob.id));
+    return applications.filter(a =>
+      a.jobPostingId === selectedJob.numericId
+      || String(a.jobPostingId) === String(selectedJob.id)
+      || (selectedJob.id && a.jobListingId === selectedJob.id)
+    );
   }, [applications, selectedJob]);
 
   const filteredApps = useMemo(() => {
@@ -139,6 +147,20 @@ export default function ManageJobs() {
     }
     return list;
   }, [jobApps, appTab, appSearch]);
+
+  const jobTotalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PAGE_SIZE));
+  const appTotalPages = Math.max(1, Math.ceil(filteredApps.length / APPS_PAGE_SIZE));
+  const paginatedJobs = useMemo(() => {
+    const start = (jobPage - 1) * JOBS_PAGE_SIZE;
+    return filteredJobs.slice(start, start + JOBS_PAGE_SIZE);
+  }, [filteredJobs, jobPage]);
+  const paginatedApps = useMemo(() => {
+    const start = (appPage - 1) * APPS_PAGE_SIZE;
+    return filteredApps.slice(start, start + APPS_PAGE_SIZE);
+  }, [filteredApps, appPage]);
+
+  useEffect(() => { setJobPage(1); }, [jobTab, jobSearch]);
+  useEffect(() => { setAppPage(1); }, [appTab, appSearch, selectedJob?.id]);
 
   /* KPI counts */
   const kpi = useMemo(() => ({
@@ -158,10 +180,6 @@ export default function ManageJobs() {
       showToast(err?.response?.data?.message || 'Failed to update applicant status.', 'error');
     }
   }, [updateApplicationStatus]);
-
-  const handleScheduled = useCallback((iv) => {
-    showToast('Interview scheduled successfully!');
-  }, []);
 
   const handleJobStatusToggle = useCallback(async (job) => {
     if (job.status === 'EXPIRED') {
@@ -305,8 +323,12 @@ export default function ManageJobs() {
                 </div>
               ) : (
                 <div className="mj-job-list">
-                  {filteredJobs.map(job => {
-                    const appCount = applications.filter(a => String(a.jobPostingId) === String(job.id)).length;
+                  {paginatedJobs.map(job => {
+                    const appCount = applications.filter(a =>
+                      a.jobPostingId === job.numericId
+                      || String(a.jobPostingId) === String(job.id)
+                      || (job.id && a.jobListingId === job.id)
+                    ).length;
                     const isSelected = selectedJob?.id === job.id;
                     return (
                       <div
@@ -378,6 +400,13 @@ export default function ManageJobs() {
                   })}
                 </div>
               )}
+              <DashboardPagination
+                page={jobPage}
+                totalPages={jobTotalPages}
+                total={filteredJobs.length}
+                pageSize={JOBS_PAGE_SIZE}
+                onChange={setJobPage}
+              />
             </div>
 
             {/* ── RIGHT: applicants panel ── */}
@@ -404,8 +433,7 @@ export default function ManageJobs() {
                       />
                     </div>
                   </div>
-
-                  {/* App status tabs */}
+          {/* App status tabs */}
                   <div className="mj-tab-filters">
                     {APP_STATUS_TABS.map(t => (
                       <button
@@ -429,7 +457,7 @@ export default function ManageJobs() {
                     </div>
                   ) : (
                     <div className="mj-app-list">
-                      {filteredApps.map(app => (
+                      {paginatedApps.map(app => (
                         <div key={app.id} className="mj-app-row">
                           <div className="mj-app-row-main" onClick={() => navigate(`/applications/${app.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
                             <Avatar name={app.applicant} />
@@ -440,7 +468,7 @@ export default function ManageJobs() {
                             {app.expectedSalary && (
                               <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
                             )}
-                            <StatusBadge status={app.status}/>
+                            <StatusBadge status={getApplicationDisplayStatus(app)}/>
                           </div>
                           <div className="mj-app-row-actions" onClick={e => e.stopPropagation()}>
                             {app.status === 'APPLIED' && (
@@ -476,6 +504,13 @@ export default function ManageJobs() {
                       ))}
                     </div>
                   )}
+                  <DashboardPagination
+                    page={appPage}
+                    totalPages={appTotalPages}
+                    total={filteredApps.length}
+                    pageSize={APPS_PAGE_SIZE}
+                    onChange={setAppPage}
+                  />
                 </>
               )}
             </div>
