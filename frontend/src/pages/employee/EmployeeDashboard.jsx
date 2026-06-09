@@ -12,6 +12,7 @@ import EmployeeLayout from '../../layouts/EmployeeLayout';
 import InterviewCard from '../../components/interviews/InterviewCard';
 import JobCard from '../../components/jobs/JobCard';
 import useEmployeeDashboard from '../../hooks/useEmployeeDashboard';
+import { getApplicationDisplayStatus } from '../../utils/applicationStatus';
 import '../../styles/dashboard-shell.css';
 import '../../styles/job-list.css';
 
@@ -67,10 +68,11 @@ function useToast() {
 
 /* ─── Status config ────────────────────────────────────────── */
 const STATUS_CONFIG = {
-  APPLIED:     { bg:'#EFF6FF', text:'#1E40AF', dot:'#3B82F6',  label:'Applied',     Icon: FileText     },
-  SHORTLISTED: { bg:'#FAF5FF', text:'#6B21A8', dot:'#A855F7',  label:'Shortlisted', Icon: Star         },
-  REJECTED:    { bg:'#FEF2F2', text:'#991B1B', dot:'#EF4444',  label:'Rejected',    Icon: XCircle      },
-  HIRED:       { bg:'#ECFDF5', text:'#065F46', dot:'#10B981',  label:'Hired',       Icon: CheckCircle2 },
+  APPLIED:             { bg:'#EFF6FF', text:'#1E40AF', dot:'#3B82F6',  label:'Applied',             Icon: FileText     },
+  SHORTLISTED:         { bg:'#FAF5FF', text:'#6B21A8', dot:'#A855F7',  label:'Shortlisted',         Icon: Star         },
+  INTERVIEW_SCHEDULED: { bg:'#FFF7ED', text:'#C2410C', dot:'#F97316',  label:'Interview Scheduled', Icon: CalendarCheck },
+  REJECTED:            { bg:'#FEF2F2', text:'#991B1B', dot:'#EF4444',  label:'Rejected',            Icon: XCircle      },
+  HIRED:               { bg:'#ECFDF5', text:'#065F46', dot:'#10B981',  label:'Hired',               Icon: CheckCircle2 },
 };
 const DEFAULT_STATUS = { bg:'#F9FAFB', text:'#374151', dot:'#9CA3AF', label: null, Icon: AlertCircle };
 
@@ -203,6 +205,7 @@ export default function EmployeeDashboard() {
       <Toast toasts={toasts} remove={removeToast} />
 
       {/* ═══ HERO GREETING ══════════════════════════════════ */}
+      <div className="ds-hero-sticky">
       <div className="ds-hero">
         <div className="ds-hero-text">
           <h1 className="ds-hero-title">
@@ -227,6 +230,7 @@ export default function EmployeeDashboard() {
             </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* ═══ QUICK ACTIONS ══════════════════════════════════ */}
@@ -318,19 +322,28 @@ export default function EmployeeDashboard() {
             <div className="ds-table-head" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
               <span>Job</span><span>Status</span><span>Salary</span><span>Applied</span><span/>
             </div>
-            {applications.slice(0, 5).map(app => (
+            {applications.slice(0, 5).map(app => {
+              const jobLabel = app.jobTitle || (app.jobListingId ? 'View job' : `Job #${app.jobPostingId}`);
+              const jobPath = app.jobListingId ? `/jobs/${app.jobListingId}?viewOnly=true` : null;
+              return (
               <div key={app.id} className="ds-table-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
                 <div className="ds-app-info" role="cell">
-                  <Link to={`/employee/jobs`} className="ds-app-name" onClick={e => { e.preventDefault(); navigate(`/jobs/${app.jobPostingId}?viewOnly=true`); }}>
-                    Job #{app.jobPostingId}
-                  </Link>
+                  {jobPath ? (
+                    <Link to={jobPath} className="ds-app-name">{jobLabel}</Link>
+                  ) : (
+                    <span className="ds-app-name">{jobLabel}</span>
+                  )}
                 </div>
-                <span role="cell"><StatusBadge status={app.status} /></span>
+                <span role="cell"><StatusBadge status={getApplicationDisplayStatus(app)} /></span>
                 <span className="ds-app-job" role="cell">{app.expectedSalary ? `${Number(app.expectedSalary).toLocaleString()} XAF` : '—'}</span>
                 <span className="ds-app-date" role="cell"><Clock size={10} /> {formatDate(app.appliedAt)}</span>
-                <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
+                {jobPath ? (
+                  <Link to={jobPath} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
+                ) : (
+                  <span className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0, opacity:0.4}} role="cell"><Eye size={12}/></span>
+                )}
               </div>
-            ))}
+            );})}
           </div>
         )}
       </Section>

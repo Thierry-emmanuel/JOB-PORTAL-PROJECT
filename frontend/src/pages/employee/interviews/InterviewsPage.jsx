@@ -43,7 +43,7 @@ function typeConfig(type) {
 
 function statusConfig(iv) {
   const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
-  if (iv.result === 'PASSED')  return { bg:'#ecfdf5', color:'#065f46', label:'Passed <Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',   ring:'#86efac' };
+  if (iv.result === 'PASSED')  return { bg:'#ecfdf5', color:'#065f46', label:'Passed', ring:'#86efac' };
   if (iv.result === 'FAILED')  return { bg:'#fef2f2', color:'#991b1b', label:'Not Passed', ring:'#fca5a5' };
   if (iv.result === 'NO_SHOW') return { bg:'#fff7ed', color:'#c2410c', label:'No Show',    ring:'#fed7aa' };
   if (!isPast)                 return { bg:'#eff6ff', color:'#1e40af', label:'Upcoming',   ring:'#bfdbfe' };
@@ -53,14 +53,15 @@ function statusConfig(iv) {
 /* ─── Single interview card ──────────────────────────────── */
 function InterviewCard({ iv, onCancel }) {
   const [copied, setCopied] = useState(false);
-  const tc = typeConfig(iv.type);
+  const ivType = iv.type ?? iv.interviewType;
+  const tc = typeConfig(ivType);
   const sc = statusConfig(iv);
   const isPast     = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
   const isUpcoming = !isPast && !iv.result;
   const cd         = isUpcoming ? countdown(iv.scheduledAt) : null;
 
   // For IN_PERSON: build Google Maps URL
-  const mapsUrl = iv.type === 'IN_PERSON' && iv.meetingLink
+  const mapsUrl = ivType === 'IN_PERSON' && iv.meetingLink
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(iv.meetingLink)}`
     : null;
 
@@ -114,7 +115,7 @@ function InterviewCard({ iv, onCancel }) {
       )}
 
       {/* Type-specific action area */}
-      {iv.type === 'VIDEO' && iv.meetingLink && (
+      {ivType === 'VIDEO' && iv.meetingLink && (
         <div className="iv-action-section">
           <a
             href={iv.meetingLink}
@@ -137,7 +138,7 @@ function InterviewCard({ iv, onCancel }) {
         </div>
       )}
 
-      {iv.type === 'PHONE' && (
+      {ivType === 'PHONE' && (
         <div className="iv-info-card iv-info-card--phone">
           <Phone size={14} style={{color:'#065f46', flexShrink:0}}/>
           <div>
@@ -149,7 +150,7 @@ function InterviewCard({ iv, onCancel }) {
         </div>
       )}
 
-      {iv.type === 'IN_PERSON' && iv.meetingLink && (
+      {ivType === 'IN_PERSON' && iv.meetingLink && (
         <div className="iv-info-card iv-info-card--location">
           <MapPin size={14} style={{color:'#92400e', flexShrink:0}}/>
           <div style={{flex:1}}>

@@ -19,7 +19,7 @@ import {
   AlertCircle, Paperclip, Eye, Send, Building2,
   MapPin, Clock, Banknote, CheckCircle,
 } from 'lucide-react';
-import { applyToJob } from '../../api/jobs';
+import { applyToJob, getUserApplications, resolveJobPostingId } from '../../api/jobs';
 import { cachedGetJob } from '../../api/cachedApi';
 import { getJobSeekerProfile } from '../../api/profiles';
 import { useAuth } from '../../context/AuthContext';
@@ -175,16 +175,37 @@ export default function ApplyPage() {
     notes:          '',
   });
 
+  /* ── Auth guard ───────────────────────────────────────── */
+  useEffect(() => {
+    if (!user?.id) {
+      navigate('/login', { state: { from: `/jobs/${id}/apply` }, replace: true });
+    }
+  }, [user?.id, id, navigate]);
+
   /* ── Load job + profile ───────────────────────────────── */
   useEffect(() => {
+    if (!user?.id) return;
     async function load() {
       try {
         const [jobData, profileData] = await Promise.allSettled([
           cachedGetJob(id),
-          user?.id ? getJobSeekerProfile(user.id) : Promise.resolve(null),
+          getJobSeekerProfile(user.id),
         ]);
-        if (jobData.status === 'fulfilled')     setJob(jobData.value);
-        else                                    setJobError('Could not load job details.');
+        if (jobData.status === 'fulfilled') {
+          const raw = jobData.value;
+          const numericId = resolveJobPostingId(raw);
+          let alreadyApplied = false;
+          try {
+            const apps = await getUserApplications(user.id);
+            alreadyApplied = apps.some(a =>
+              a.jobPostingId === numericId
+              || (raw?.id && a.jobListingId === raw.id)
+            );
+          } catch { /* non-fatal */ }
+          setJob({ ...raw, numericId, applied: alreadyApplied });
+        } else {
+          setJobError('Could not load job details.');
+        }
         if (profileData.status === 'fulfilled' && profileData.value) {
           const p = profileData.value;
           setForm(f => ({
@@ -288,7 +309,8 @@ export default function ApplyPage() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     // Guard: numericId must be present — it's the backend's jobPostingId (Long FK)
-    if (!job?.numericId) {
+    const postingId = resolveJobPostingId(job);
+    if (!postingId) {
       setSErr('Unable to identify job posting. Please refresh the page and try again.');
       return;
     }
@@ -296,7 +318,7 @@ export default function ApplyPage() {
     setSub(true); setSErr(null);
     try {
       const payload = {
-        jobPostingId:   job.numericId,
+        jobPostingId:   postingId,
         coverLetter:    form.coverLetter?.slice(0, 1000) || null,
         expectedSalary: parseFloat(form.expectedSalary),
       };

@@ -16,7 +16,7 @@ import {
   CheckCircle2, Copy, Check, Send, Zap, User,
   ArrowRight, AlertCircle, Briefcase, CalendarClock,
 } from 'lucide-react';
-import { scheduleInterview, rescheduleInterview } from '../../api/interviews';
+import { scheduleInterview, rescheduleInterview, getApiErrorMessage } from '../../api/interviews';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/interview-scheduler.css';
 
@@ -226,7 +226,7 @@ export default function InterviewScheduler({ application, existingInterview, onC
         setPhase('success');
       }
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Scheduling failed. Please try again.');
+      setError(getApiErrorMessage(err, 'Scheduling failed. Please try again.'));
     } finally {
       setSaving(false);
     }

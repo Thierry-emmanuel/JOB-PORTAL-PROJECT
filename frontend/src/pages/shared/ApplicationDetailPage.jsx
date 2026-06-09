@@ -12,6 +12,7 @@ import {
 import { getJobSeekerProfile } from '../../api/profiles';
 import { addInterviewFeedback } from '../../api/interviews';
 import InterviewScheduler from '../../components/employer/InterviewScheduler';
+import { getApplicationDisplayStatus } from '../../utils/applicationStatus';
 import '../../styles/application-detail.css';
 
 const STATUS = {
@@ -50,6 +51,7 @@ export default function ApplicationDetailPage() {
   const role = (user?.role || '').toUpperCase().replace('ROLE_', '');
   const isEmployer = role === 'EMPLOYER';
   const isSeeker = role === 'JOB_SEEKER';
+  const hasScheduledInterview = Boolean(app?.interview?.id || app?.hasInterview);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -111,7 +113,7 @@ export default function ApplicationDetailPage() {
       setApp(prev => ({ ...prev, status: newStatus }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || 'Failed to update application status.');
+      alert(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.');
     } finally {
       setUpdatingStatus(false);
     }
@@ -195,14 +197,16 @@ export default function ApplicationDetailPage() {
     );
   }
 
-  const s = STATUS[app.status] || DEFAULT_STATUS;
+  const displayStatus = getApplicationDisplayStatus(app);
+  const s = STATUS[displayStatus] || DEFAULT_STATUS;
   const iv = app.interview;
   const ivMap = {
     VIDEO:     { icon: <Video size={13}/>,  color: '#1d4ed8', bg: '#eff6ff', label: 'Video Call'   },
     PHONE:     { icon: <Phone size={13}/>,  color: '#065f46', bg: '#ecfdf5', label: 'Phone Call'   },
     IN_PERSON: { icon: <MapPin size={13}/>, color: '#92400e', bg: '#fffbeb', label: 'On-site'      },
   };
-  const ivType = iv ? (ivMap[iv.type] || ivMap.VIDEO) : null;
+  const ivTypeKey = iv?.type ?? iv?.interviewType;
+  const ivType = iv ? (ivMap[ivTypeKey] || ivMap.VIDEO) : null;
   const displayJobTitle = job?.title || `Job Posting #${app.jobPostingId}`;
   const displayCompanyName = job?.company || app.companyName || 'Corporate Partner';
   const companyLogo = job?.logo || null;
@@ -633,7 +637,7 @@ export default function ApplicationDetailPage() {
                     </div>
                   )}
 
-                  {app.status === 'SHORTLISTED' && (
+                  {app.status === 'SHORTLISTED' && !hasScheduledInterview && (
                     <div className="app-detail-textarea-wrapper">
                       <p className="app-detail-textarea-label">Status Actions</p>
                       <div className="app-detail-action-btn-row">
@@ -662,7 +666,7 @@ export default function ApplicationDetailPage() {
                     </div>
                   )}
 
-                  {app.status === 'INTERVIEW_SCHEDULED' && (
+                  {hasScheduledInterview && app.status === 'SHORTLISTED' && (
                     <div className="app-detail-textarea-wrapper">
                       <p className="app-detail-textarea-label">Status Actions</p>
                       <div className="app-detail-action-btn-row">
@@ -787,10 +791,11 @@ export default function ApplicationDetailPage() {
             setShowScheduler(false);
             setApp(prev => ({
               ...prev,
-              status: 'INTERVIEW_SCHEDULED',
-              interview: newIv
+              hasInterview: true,
+              interview: newIv,
             }));
-            setIvFeedback(newIv.feedback || '');
+            setIvFeedback(newIv?.feedback || '');
+            loadData();
           }}
         />
       )}
