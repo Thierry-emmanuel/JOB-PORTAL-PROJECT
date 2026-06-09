@@ -673,6 +673,121 @@
 }
 .cms-save-bar-right { display: flex; gap: 8px; }
 
+/* Hero toolbar — Edit / Preview / Save */
+.cms-hero-toolbar {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cms-hero-mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--cms-bg);
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid var(--cms-border);
+}
+.cms-hero-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font-family: var(--cms-font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cms-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.cms-hero-mode-btn:hover { color: var(--cms-ink); background: rgba(255,255,255,0.7); }
+.cms-hero-mode-btn.active {
+  background: var(--cms-purple);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(124,58,237,.25);
+}
+.cms-saved-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(5,150,105,.12);
+  color: var(--cms-green);
+  padding: 2px 9px;
+  border-radius: 99px;
+}
+
+.cms-hero-steps {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--cms-surface);
+  border-bottom: 1px solid var(--cms-border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cms-hero-steps::-webkit-scrollbar { display: none; }
+.cms-hero-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--cms-border);
+  border-radius: 9px;
+  background: var(--cms-bg);
+  font-family: var(--cms-font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cms-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.cms-hero-step:hover {
+  border-color: var(--cms-purple);
+  color: var(--cms-purple);
+}
+.cms-hero-step.active {
+  background: var(--cms-purple-lt);
+  border-color: var(--cms-purple);
+  color: var(--cms-purple);
+}
+.cms-step-hint {
+  font-size: 12px;
+  color: var(--cms-muted);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.cms-hero-config.dimmed,
+.cms-hero-preview-pane.dimmed {
+  opacity: 0.55;
+  pointer-events: none;
+  filter: grayscale(0.15);
+}
+.cms-hero-root--preview .cms-hero-preview-pane {
+  opacity: 1;
+  pointer-events: auto;
+  filter: none;
+  box-shadow: inset 0 0 0 2px var(--cms-purple);
+}
+.cms-hero-root--edit .cms-hero-config {
+  opacity: 1;
+  pointer-events: auto;
+  filter: none;
+}
+.cms-preview-footnote {
+  font-size: 11px;
+  color: var(--cms-muted);
+  text-align: center;
+  padding: 10px 14px 14px;
+  margin: 0;
+  border-top: 1px solid var(--cms-border);
+  flex-shrink: 0;
+}
+
 /* ── Two-column body: FLEX not grid, so children can be overflow:auto ── */
 .cms-hero-cols {
   display: flex;

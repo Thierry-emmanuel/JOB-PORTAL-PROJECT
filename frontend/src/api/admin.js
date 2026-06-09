@@ -7,9 +7,24 @@ export const fetchOverviewStats = async () => {
 };
 
 // ─── Users (all roles) ───────────────────────────────────────────────────────
-export const fetchAdminUsers = async () => {
-  const { data } = await apiClient.get('/api/admin/users');
-  return Array.isArray(data) ? data : [];
+export const fetchAdminUsers = async ({ page = 0, size = 10, role, active, search } = {}) => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (role && role !== 'all') params.set('role', role);
+  if (active === true || active === 'true') params.set('active', 'true');
+  else if (active === false || active === 'false') params.set('active', 'false');
+  if (search && search.trim()) params.set('search', search.trim());
+  const { data } = await apiClient.get(`/api/admin/users?${params}`);
+  if (Array.isArray(data)) {
+    return { content: data, page: 0, size: data.length, totalElements: data.length, totalPages: 1, last: true };
+  }
+  return {
+    content: data.content ?? [],
+    page: data.page ?? 0,
+    size: data.size ?? size,
+    totalElements: data.totalElements ?? 0,
+    totalPages: data.totalPages ?? 1,
+    last: data.last ?? true,
+  };
 };
 
 export const toggleUserStatus = async (id) => {
