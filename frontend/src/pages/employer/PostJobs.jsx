@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
   Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
@@ -48,7 +48,7 @@ const BENEFIT_OPTS = [
 ];
 
 /* ── Helpers ────────────────────────────────────────────────── */
-function Field({ label, required, error, hint, children }) {
+const Field = memo(function Field({ label, required, error, hint, children }) {
   return (
     <div className="pj-field">
       {label && (
@@ -61,9 +61,9 @@ function Field({ label, required, error, hint, children }) {
       {error && <p className="pj-error"><AlertCircle size={11} />{error}</p>}
     </div>
   );
-}
+});
 
-function TagInput({ items, options, placeholder, onAdd, onRemove }) {
+const TagInput = memo(function TagInput({ items, options, placeholder, onAdd, onRemove }) {
   const [input, setInput] = useState("");
   const filtered = options?.filter(
     o => !items.includes(o) && o.toLowerCase().includes(input.toLowerCase())
@@ -97,11 +97,10 @@ function TagInput({ items, options, placeholder, onAdd, onRemove }) {
       )}
     </div>
   );
-}
+});
 
 /* ── Step 1 — Company Info ─────────────────────────────────── */
-function Step1Company({ form, setForm, errors }) {
-  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+const Step1Company = memo(function Step1Company({ form, updateField, errors }) {
   return (
     <div className="pj-step-body">
       <div className="pj-step-header">
@@ -119,12 +118,12 @@ function Step1Company({ form, setForm, errors }) {
           <div className="pj-input-icon">
             <Building2 size={15}/>
             <input className="pj-input pj-input-with-icon" placeholder="e.g. Acme Corp"
-              value={form.companyName} onChange={e=>f("companyName",e.target.value)}/>
+              value={form.companyName} onChange={e=>updateField("companyName",e.target.value)}/>
           </div>
         </Field>
 
         <Field label="Industry / Sector" required error={errors.sector}>
-          <select className="pj-input" value={form.sector} onChange={e=>f("sector",e.target.value)}>
+          <select className="pj-input" value={form.sector} onChange={e=>updateField("sector",e.target.value)}>
             <option value="">Select sector…</option>
             {SECTORS.map(s=><option key={s} value={s}>{s}</option>)}
           </select>
@@ -134,7 +133,7 @@ function Step1Company({ form, setForm, errors }) {
           <div className="pj-input-icon">
             <Globe size={15}/>
             <input className="pj-input pj-input-with-icon" placeholder="https://yourcompany.com"
-              value={form.website} onChange={e=>f("website",e.target.value)}/>
+              value={form.website} onChange={e=>updateField("website",e.target.value)}/>
           </div>
         </Field>
 
@@ -142,7 +141,7 @@ function Step1Company({ form, setForm, errors }) {
           <div className="pj-input-icon">
             <Users size={15}/>
             <select className="pj-input pj-input-with-icon" value={form.companySize}
-              onChange={e=>f("companySize",e.target.value)}>
+              onChange={e=>updateField("companySize",e.target.value)}>
               <option value="">Select size…</option>
               {COMPANY_SIZES.map(s=><option key={s} value={s}>{s} employees</option>)}
             </select>
@@ -155,18 +154,17 @@ function Step1Company({ form, setForm, errors }) {
             <textarea className="pj-textarea" rows={4}
               placeholder="Describe your company culture, mission, products/services…"
               value={form.companyDescription}
-              onChange={e=>f("companyDescription",e.target.value)}/>
+              onChange={e=>updateField("companyDescription",e.target.value)}/>
             <span className="pj-char-count">{form.companyDescription.length}/500</span>
           </Field>
         </div>
       </div>
     </div>
   );
-}
+});
 
 /* ── Step 2 — Basic Info ────────────────────────────────────── */
-function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
-  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+const Step2Basic = memo(function Step2Basic({ form, updateField, errors, dbCategories, dbLocations }) {
   return (
     <div className="pj-step-body">
       <div className="pj-step-header">
@@ -182,19 +180,19 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
       <div className="pj-form-grid">
         <Field label="Job Title" required error={errors.title}>
           <input className="pj-input" placeholder="e.g. Senior Java Developer"
-            value={form.title} onChange={e=>f("title",e.target.value)}/>
+            value={form.title} onChange={e=>updateField("title",e.target.value)}/>
         </Field>
 
         <Field label="Category" required error={errors.categoryId}>
           <select className="pj-input" value={form.categoryId}
-            onChange={e=>f("categoryId",e.target.value)}>
+            onChange={e=>updateField("categoryId",e.target.value)}>
             <option value="">Select category…</option>
             {dbCategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </Field>
 
         <Field label="Contract Type" required error={errors.type}>
-          <select className="pj-input" value={form.type} onChange={e=>f("type",e.target.value)}>
+          <select className="pj-input" value={form.type} onChange={e=>updateField("type",e.target.value)}>
             <option value="">Select type…</option>
             {JOB_TYPES.map(t=><option key={t} value={t}>{t.replace(/_/g," ")}</option>)}
           </select>
@@ -203,7 +201,7 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
         <Field label="Location" required error={errors.locationId}>
           <div className="pj-input-icon"><MapPin size={15}/>
             <select className="pj-input pj-input-with-icon" value={form.locationId}
-              onChange={e=>f("locationId",e.target.value)}>
+              onChange={e=>updateField("locationId",e.target.value)}>
               <option value="">Select location…</option>
               {dbLocations.map(l=>
                 <option key={l.id} value={l.id}>{l.city}{l.country?`, ${l.country}`:""}</option>
@@ -216,7 +214,7 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
           <div className="pj-input-icon"><Calendar size={15}/>
             <input type="date" className="pj-input pj-input-with-icon"
               value={form.deadline} min={new Date().toISOString().split("T")[0]}
-              onChange={e=>f("deadline",e.target.value)}/>
+              onChange={e=>updateField("deadline",e.target.value)}/>
           </div>
         </Field>
 
@@ -226,16 +224,16 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
             <div className="pj-input-icon"><DollarSign size={15}/>
               <input className="pj-input pj-input-with-icon" type="number"
                 placeholder="Min" value={form.salaryMin}
-                onChange={e=>f("salaryMin",e.target.value)}/>
+                onChange={e=>updateField("salaryMin",e.target.value)}/>
             </div>
             <span className="pj-salary-sep">–</span>
             <div className="pj-input-icon"><DollarSign size={15}/>
               <input className="pj-input pj-input-with-icon" type="number"
                 placeholder="Max" value={form.salaryMax}
-                onChange={e=>f("salaryMax",e.target.value)}/>
+                onChange={e=>updateField("salaryMax",e.target.value)}/>
             </div>
             <select className="pj-input pj-currency" value={form.currency}
-              onChange={e=>f("currency",e.target.value)}>
+              onChange={e=>updateField("currency",e.target.value)}>
               {["XAF","USD","EUR","GBP"].map(c=><option key={c}>{c}</option>)}
             </select>
           </div>
@@ -244,7 +242,7 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
         <div className="pj-field">
           <label className="pj-checkbox pj-checkbox-card">
             <input type="checkbox" checked={form.remote}
-              onChange={e=>f("remote",e.target.checked)}/>
+              onChange={e=>updateField("remote",e.target.checked)}/>
             <div className="pj-checkbox-card-content">
               <span className="pj-checkbox-card-title">Remote / Hybrid position</span>
               <span className="pj-checkbox-card-sub">Open to remote candidates</span>
@@ -254,11 +252,10 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
       </div>
     </div>
   );
-}
+});
 
 /* ── Step 3 — Details ───────────────────────────────────────── */
-function Step3Details({ form, setForm, errors }) {
-  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+const Step3Details = memo(function Step3Details({ form, updateField, errors }) {
   return (
     <div className="pj-step-body">
       <div className="pj-step-header">
@@ -275,7 +272,7 @@ function Step3Details({ form, setForm, errors }) {
         hint="Include responsibilities, team context, day-to-day tasks.">
         <textarea className="pj-textarea pj-textarea-lg" rows={7}
           placeholder="Describe the role, responsibilities, team culture…"
-          value={form.description} onChange={e=>f("description",e.target.value)}/>
+          value={form.description} onChange={e=>updateField("description",e.target.value)}/>
         <div className="pj-char-row">
           <span className="pj-char-count">{form.description.length}/3000</span>
           {form.description.length < 100 && (
@@ -289,7 +286,7 @@ function Step3Details({ form, setForm, errors }) {
         <textarea className="pj-textarea" rows={3}
           placeholder="Bachelor's degree in CS, 3+ years experience, certifications, etc."
           value={form.qualificationNeeded}
-          onChange={e=>f("qualificationNeeded",e.target.value)}/>
+          onChange={e=>updateField("qualificationNeeded",e.target.value)}/>
       </Field>
 
       <Field label="Experience Level" required error={errors.experience}>
@@ -297,7 +294,7 @@ function Step3Details({ form, setForm, errors }) {
           {LEVELS.map(l=>(
             <button key={l} type="button"
               className={`pj-pill${form.experience===l?" active":""}`}
-              onClick={()=>f("experience",l)}>
+              onClick={()=>updateField("experience",l)}>
               {l}
             </button>
           ))}
@@ -307,7 +304,7 @@ function Step3Details({ form, setForm, errors }) {
       <div className="pj-row">
         <label className="pj-checkbox pj-checkbox-card pj-checkbox-card--accent">
           <input type="checkbox" checked={form.requiresInterview}
-            onChange={e=>f("requiresInterview",e.target.checked)}/>
+            onChange={e=>updateField("requiresInterview",e.target.checked)}/>
           <div className="pj-checkbox-card-content">
             <span className="pj-checkbox-card-title">Requires Interview Process</span>
             <span className="pj-checkbox-card-sub">Candidates will go through a formal interview</span>
@@ -320,7 +317,7 @@ function Step3Details({ form, setForm, errors }) {
           {BENEFIT_OPTS.map(b=>(
             <label key={b} className="pj-checkbox pj-checkbox-chip">
               <input type="checkbox" checked={form.benefits.includes(b)}
-                onChange={e=>f("benefits",e.target.checked
+                onChange={e=>updateField("benefits",e.target.checked
                   ? [...form.benefits,b]
                   : form.benefits.filter(x=>x!==b))}/>
               <span>{b}</span>
@@ -330,13 +327,12 @@ function Step3Details({ form, setForm, errors }) {
       </Field>
     </div>
   );
-}
+});
 
 /* ── Step 4 — Requirements / Skills ────────────────────────── */
-function Step4Requirements({ form, setForm, errors, skillOpts }) {
-  const f = (k,v) => setForm(p => ({...p,[k]:v}));
-  const addSkill = s => !form.skills.includes(s) && f("skills",[...form.skills,s]);
-  const addLang  = l => !form.languages.includes(l) && f("languages",[...form.languages,l]);
+const Step4Requirements = memo(function Step4Requirements({ form, updateField, errors, skillOpts }) {
+  const addSkill = s => !form.skills.includes(s) && updateField("skills",[...form.skills,s]);
+  const addLang  = l => !form.languages.includes(l) && updateField("languages",[...form.languages,l]);
   return (
     <div className="pj-step-body">
       <div className="pj-step-header">
@@ -353,7 +349,7 @@ function Step4Requirements({ form, setForm, errors, skillOpts }) {
         hint="Type a skill or pick from suggestions, then press Enter.">
         <TagInput items={form.skills} options={skillOpts}
           placeholder="e.g. React, Java, SQL…"
-          onAdd={addSkill} onRemove={s=>f("skills",form.skills.filter(x=>x!==s))}/>
+          onAdd={addSkill} onRemove={s=>updateField("skills",form.skills.filter(x=>x!==s))}/>
       </Field>
 
       <Field label="Languages"
@@ -361,7 +357,7 @@ function Step4Requirements({ form, setForm, errors, skillOpts }) {
         <TagInput items={form.languages}
           options={["English","French","Spanish","Arabic","Portuguese","German","Mandarin"]}
           placeholder="Add language…"
-          onAdd={addLang} onRemove={l=>f("languages",form.languages.filter(x=>x!==l))}/>
+          onAdd={addLang} onRemove={l=>updateField("languages",form.languages.filter(x=>x!==l))}/>
       </Field>
 
       <div className="pj-tip-banner">
@@ -370,10 +366,10 @@ function Step4Requirements({ form, setForm, errors, skillOpts }) {
       </div>
     </div>
   );
-}
+});
 
 /* ── Step 5 — Review ────────────────────────────────────────── */
-function Step5Review({ form, dbCategories, dbLocations }) {
+const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations }) {
   const catName = dbCategories.find(c=>c.id===form.categoryId)?.name || "—";
   const locCity = dbLocations.find(l=>l.id===form.locationId)?.city || "—";
 
@@ -455,6 +451,27 @@ function Step5Review({ form, dbCategories, dbLocations }) {
       </div>
     </div>
   );
+});
+
+/* ── Shell — defined OUTSIDE PostJob to avoid remount on re-render ───── */
+function PostJobShell({ children, mobileOpen, setMobileOpen, employer, loading, stats }) {
+  return (
+    <div className="ds-root employer">
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)}/>}
+      <div className="ds-body">
+        <aside className={`ds-sidebar${mobileOpen ? " ds-sidebar--mobile-open" : ""}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16}/></button>
+          <EmployerSidebar employer={employer} loading={loading} stats={stats}/>
+        </aside>
+        <main className="ds-main">
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20}/>
+          </button>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }
 
 /* ── Main Component ─────────────────────────────────────────── */
@@ -474,6 +491,9 @@ export default function PostJob({ onBack, onSuccess }) {
   const [editId,       setEditId]       = useState(null);
 
   const { employer, loading, stats, refresh } = useEmployerDashboard();
+
+  // Stable field updater — prevents re-renders that lose focus
+  const updateField = useCallback((k, v) => setForm(p => ({ ...p, [k]: v })), []);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -525,26 +545,24 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const validate = (s) => {
     const e = {};
-    // s === 'all' runs every step — used by handlePublish in wizard mode.
-    const all = s === 'all' || isEditMode;
-    if (all || s === 1) {
+    if (s === 1 || isEditMode) {
       if (!form.companyName.trim()) e.companyName = "Company name is required.";
       if (!form.sector)             e.sector      = "Please select a sector.";
     }
-    if (all || s === 2) {
+    if (s === 2 || isEditMode) {
       if (!form.title.trim())    e.title      = "Job title is required.";
       if (!form.categoryId)      e.categoryId = "Please select a category.";
       if (!form.type)            e.type       = "Please select a contract type.";
       if (!form.locationId)      e.locationId = "Location is required.";
       if (!form.deadline)        e.deadline   = "Please set a deadline.";
     }
-    if (all || s === 3) {
+    if (s === 3 || isEditMode) {
       if (!form.description.trim())          e.description         = "Description is required.";
       if (form.description.length > 3000)    e.description         = "Max 3000 characters.";
       if (!form.experience)                  e.experience          = "Please select an experience level.";
       if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications are required.";
     }
-    if (all || s === 4) {
+    if (s === 4 || isEditMode) {
       if (form.skills.length === 0) e.skills = "Add at least one skill.";
     }
     setErrors(e);
@@ -562,7 +580,7 @@ export default function PostJob({ onBack, onSuccess }) {
       title: form.title,
       description: form.description,
       categoryId: form.categoryId,
-      companyId: employer?.companyId,
+      companyId: employer?.companyId,           // ✅ no fallback to 1
       locationId: form.locationId || null,
       jobType: form.type || "FULL_TIME",
       salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
@@ -576,17 +594,19 @@ export default function PostJob({ onBack, onSuccess }) {
     };
   };
 
-  const handlePublish = async () => {
-    // In edit mode validate(1) covers all steps (isEditMode flag).
-    // In wizard mode use 'all' to run every step's checks before submitting.
-    if (!validate(isEditMode ? 1 : 'all')) return;
-
-    // Guard: employer must have a real company linked before we can post
+  // ✅ Guard: employer must have a company before posting
+  const checkCompany = () => {
     if (!employer?.companyId) {
-      setErrors({ api: "No company found on your profile. Please set up your company profile before posting a job." });
-      return;
+      setErrors({ api: "You must create a company profile before posting a job. Go to Company Settings first." });
+      return false;
     }
+    return true;
+  };
 
+  const handlePublish = async () => {
+    const validateStep = isEditMode ? 1 : 5;
+    if (!validate(validateStep)) return;
+    if (!checkCompany()) return;               // ✅ guard
     try {
       if (isEditMode) {
         await updateJob(editId, buildPayload(true));
@@ -597,7 +617,7 @@ export default function PostJob({ onBack, onSuccess }) {
       setSubmitted(true);
     } catch (err) {
       console.error(err);
-      setErrors({ api: err.response?.data?.message || "Failed to publish listing. Please check the details and try again." });
+      setErrors({ api: err.response?.data?.message || "Failed to publish listing. Please check the details." });
     }
   };
 
@@ -606,10 +626,7 @@ export default function PostJob({ onBack, onSuccess }) {
       setErrors({ title: "Job title is required to save draft." });
       return;
     }
-    if (!employer?.companyId) {
-      setErrors({ api: "No company found on your profile. Please set up your company profile before saving a draft." });
-      return;
-    }
+    if (!checkCompany()) return;               // ✅ guard
     setSavingDraft(true);
     try {
       if (isEditMode) {
@@ -621,45 +638,28 @@ export default function PostJob({ onBack, onSuccess }) {
       onBack();
     } catch (err) {
       console.error(err);
-      setErrors({ api: err.response?.data?.message || "Failed to save draft." });
+      setErrors({ api: "Failed to save draft." });
     } finally {
       setSavingDraft(false);
     }
   };
 
-  /* Shared Shell */
-  const Shell = ({ children }) => (
-    <div className="ds-root employer">
-      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)}/>}
-      <div className="ds-body">
-        <aside className={`ds-sidebar${mobileOpen?" ds-sidebar--mobile-open":""}`}>
-          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16}/></button>
-          <EmployerSidebar employer={employer} loading={loading} stats={stats}/>
-        </aside>
-        <main className="ds-main">
-          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-            <Menu size={20}/>
-          </button>
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+  /* Shell is defined outside — see top of file */
 
   if (loadingDb || loading) {
     return (
-      <Shell>
+      <PostJobShell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} employer={employer} loading={loading} stats={stats}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400}}>
           <div className="pj-spinner"/>
           <span style={{marginTop:12,fontSize:14,color:"#6B7280"}}>Loading job editor…</span>
         </div>
-      </Shell>
+      </PostJobShell>
     );
   }
 
   if (submitted) {
     return (
-      <Shell>
+      <PostJobShell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} employer={employer} loading={loading} stats={stats}>
         <div className="pj-success-screen">
           <div className="pj-success-confetti"/>
           <div className="pj-success-icon">
@@ -684,7 +684,7 @@ export default function PostJob({ onBack, onSuccess }) {
             )}
           </div>
         </div>
-      </Shell>
+      </PostJobShell>
     );
   }
 
@@ -692,7 +692,7 @@ export default function PostJob({ onBack, onSuccess }) {
   if (isEditMode) {
     const skillOpts = dbSkills.map(s => s.name);
     return (
-      <Shell>
+      <PostJobShell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} employer={employer} loading={loading} stats={stats}>
         <div className="ds-page-header">
           <div>
             <h1 className="ds-page-title">Edit Job Listing</h1>
@@ -708,13 +708,13 @@ export default function PostJob({ onBack, onSuccess }) {
 
         <div className="pj-form-layout" style={{gridTemplateColumns:"1fr"}}>
           <div className="pj-form-card ds-card" style={{display:"flex",flexDirection:"column",gap:32,padding:32}}>
-            <Step1Company form={form} setForm={setForm} errors={errors}/>
+            <Step1Company form={form} updateField={updateField} errors={errors}/>
             <div className="pj-section-divider"/>
-            <Step2Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
+            <Step2Basic form={form} updateField={updateField} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
             <div className="pj-section-divider"/>
-            <Step3Details form={form} setForm={setForm} errors={errors}/>
+            <Step3Details form={form} updateField={updateField} errors={errors}/>
             <div className="pj-section-divider"/>
-            <Step4Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>
+            <Step4Requirements form={form} updateField={updateField} errors={errors} skillOpts={skillOpts}/>
             <div style={{display:"flex",justifyContent:"flex-end",gap:12,borderTop:"1px solid #E5E7EB",paddingTop:24}}>
               <button className="ds-btn ds-btn-ghost" onClick={onBack}>Cancel</button>
               <button className="ds-btn ds-btn-primary" onClick={handlePublish}>
@@ -723,7 +723,7 @@ export default function PostJob({ onBack, onSuccess }) {
             </div>
           </div>
         </div>
-      </Shell>
+      </PostJobShell>
     );
   }
 
@@ -732,7 +732,7 @@ export default function PostJob({ onBack, onSuccess }) {
   const locCity = dbLocations.find(l => l.id === form.locationId)?.city || "Location";
 
   return (
-    <Shell>
+    <PostJobShell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} employer={employer} loading={loading} stats={stats}>
       <div className="pj-wizard-header">
         <div>
           <h1 className="ds-page-title">Post a New Job</h1>
@@ -767,10 +767,10 @@ export default function PostJob({ onBack, onSuccess }) {
 
       <div className="pj-form-layout">
         <div className="pj-form-card ds-card">
-          {step === 1 && <Step1Company form={form} setForm={setForm} errors={errors}/>}
-          {step === 2 && <Step2Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
-          {step === 3 && <Step3Details form={form} setForm={setForm} errors={errors}/>}
-          {step === 4 && <Step4Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>}
+          {step === 1 && <Step1Company form={form} updateField={updateField} errors={errors}/>}
+          {step === 2 && <Step2Basic form={form} updateField={updateField} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
+          {step === 3 && <Step3Details form={form} updateField={updateField} errors={errors}/>}
+          {step === 4 && <Step4Requirements form={form} updateField={updateField} errors={errors} skillOpts={skillOpts}/>}
           {step === 5 && <Step5Review form={form} dbCategories={dbCategories} dbLocations={dbLocations}/>}
 
           <div className="pj-step-nav">
@@ -868,6 +868,6 @@ export default function PostJob({ onBack, onSuccess }) {
           </div>
         </div>
       </div>
-    </Shell>
+    </PostJobShell>
   );
 }

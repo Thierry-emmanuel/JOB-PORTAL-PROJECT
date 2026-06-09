@@ -101,7 +101,7 @@ export function useEmployerDashboard() {
 
         empDetails = {
           id: user.id,
-          companyId: company?.id || null,
+          companyId: company?.id ?? company?.companyId ?? null, // ✅ needed for job posting
           companyName: company?.name || profileRes?.bio || "Kora Corporate Partner",
           contactName: profileRes?.fullName || user.fullName || user.email?.split('@')[0] || "Recruiter",
           logo: company?.logoUrl || profileRes?.avatarUrl || null,
@@ -114,7 +114,7 @@ export function useEmployerDashboard() {
         console.warn("Gracefully falling back for company/employer profile:", err);
         empDetails = {
           id: user.id,
-          companyId: null,
+          companyId: null, // ✅ null so PostJobs shows a clear error
           companyName: "Kora Corporate Partner",
           contactName: user.fullName || user.email?.split('@')[0] || "Recruiter",
           logo: null,
@@ -155,11 +155,12 @@ export function useEmployerDashboard() {
         }
 
         // Find matching job posting to get the title.
-        // app.jobPostingId (Long) must be compared against job.id (UUID string from backend).
-        // The backend JobListingSummary.id is a UUID; the application stores it as a numeric
-        // job_posting_id. We do a loose string comparison to handle both.
+        // app.jobPostingId is a numeric Long; job.numericId is the derived integer from the UUID.
+        // Never compare against job.id (UUID string) — they will never match.
         const matchingJob = rawJobs.find(
-          j => String(j.id) === String(app.jobPostingId) || j.numericId === app.jobPostingId
+          j => j.numericId != null
+            ? String(j.numericId) === String(app.jobPostingId)
+            : false
         );
         const jobTitle = matchingJob ? matchingJob.title : `Job #${app.jobPostingId}`;
 
@@ -199,9 +200,10 @@ export function useEmployerDashboard() {
       // categoryName, companyName, companyLogoUrl, locationCity, locationCountry, createdAt
       const mappedJobs = rawJobs.map(job => {
         // Count applications belonging to this specific job posting.
-        // app.jobPostingId is a numeric Long; job.id is a UUID string — compare via String().
+        // app.jobPostingId is a numeric Long; job.numericId is the derived integer — use that.
+        // Never compare against job.id (UUID string).
         const appCount = resolvedApps.filter(
-          a => String(a.jobPostingId) === String(job.id)
+          a => job.numericId != null && String(a.jobPostingId) === String(job.numericId)
         ).length;
 
         let daysLeft = 30;
@@ -217,6 +219,7 @@ export function useEmployerDashboard() {
 
         return {
           id:           job.id,
+          numericId:    job.numericId ?? null,   // numeric Long — used to match app.jobPostingId
           title:        job.title,
           type:         job.jobType || "FULL_TIME",
           category:     job.categoryName || "",
