@@ -1,10 +1,10 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
-  Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
+  Tag, CheckCircle, X, Plus, ArrowLeft,
   Eye, Lightbulb, Save, XCircle, Menu, Building2,
-  Globe, Users, ChevronRight, Sparkles, AlertCircle
+  ChevronRight, Sparkles, AlertCircle
 } from "lucide-react";
 import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
@@ -12,9 +12,8 @@ import {
   createJob, updateJob, getLocations, getSkills, getCategories, getJobDetail, createEmployerCompany,
 } from "../../api/jobs";
 import { JOB_TYPES, EXPERIENCE_LEVELS, formatJobType, defaultJobDeadline } from "../../utils/jobEnums";
-import { extractApiError } from "../../utils/apiErrors";
 import "../../styles/dashboard-shell.css";
-import "../../styles/PostJobs.css";
+import "../../styles/post-jobs.css";
 
 /* ── Constants ─────────────────────────────────────────────── */
 const STEPS = [
@@ -25,27 +24,17 @@ const STEPS = [
 ];
 
 const INITIAL_FORM = {
-  // Company
-  companyName: "", sector: "", website: "", companySize: "", companyDescription: "",
-  // Basic
   title: "", categoryId: "", type: "", locationId: "", deadline: defaultJobDeadline(),
   salaryMin: "", salaryMax: "", currency: "XAF",
-  // Details
   description: "", experience: "", remote: false,
   qualificationNeeded: "", requiresInterview: false,
-  // Requirements
   skills: [], benefits: [], languages: [],
 };
 
 const LEVELS = EXPERIENCE_LEVELS;
-const COMPANY_SIZES = ["1–10","11–50","51–200","201–500","500+"];
-const SECTORS      = [
-  "Technology","Finance","Healthcare","Education","Retail",
-  "Manufacturing","Marketing","Legal","Engineering","Other"
-];
 const BENEFIT_OPTS = [
-  "Health Insurance","Remote Work","Paid Leave","Transport Allowance",
-  "Performance Bonus","Training Budget","Flexible Hours","Stock Options"
+  "Health Insurance", "Remote Work", "Paid Leave", "Transport Allowance",
+  "Performance Bonus", "Training Budget", "Flexible Hours", "Stock Options",
 ];
 
 /* ── Helpers ────────────────────────────────────────────────── */
@@ -78,7 +67,7 @@ function TagInput({ items, options, placeholder, onAdd, onRemove }) {
           </span>
         ))}
         <input
-          placeholder={placeholder}
+          placeholder={items.length === 0 ? placeholder : ""}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => {
@@ -100,100 +89,45 @@ function TagInput({ items, options, placeholder, onAdd, onRemove }) {
   );
 }
 
-/* ── Company profile (read-only, from employer account) ───── */
+/* ── Company Profile Card ───────────────────────────────────── */
 const CompanyProfileCard = memo(function CompanyProfileCard({ employer }) {
   if (!employer?.companyId) {
     return (
       <div className="pj-company-card pj-company-card--warn">
-        <AlertCircle size={16} />
+        <AlertCircle size={18} style={{flexShrink:0, marginTop:1}}/>
         <div>
           <strong>Company profile required</strong>
-          <p>Complete your company profile before posting. <a href="/profile/employer">Go to Company Profile</a></p>
+          <p style={{margin:"4px 0 0", fontSize:12, lineHeight:1.5}}>
+            Complete your company profile before posting.{" "}
+            <Link to="/profile/employer" style={{color:"#b45309", fontWeight:700}}>
+              Go to Company Profile →
+            </Link>
+          </p>
         </div>
       </div>
     );
   }
   return (
     <div className="pj-company-card">
-      <div className="pj-company-card-logo">{(employer.companyName || '?')[0]}</div>
-      <div>
+      <div className="pj-company-card-logo">
+        {employer.logo
+          ? <img src={employer.logo} alt={employer.companyName} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit"}}/>
+          : (employer.companyName || "?")[0].toUpperCase()
+        }
+      </div>
+      <div style={{flex:1, minWidth:0}}>
         <div className="pj-company-card-name">{employer.companyName}</div>
         <div className="pj-company-card-meta">
-          {[employer.sector, employer.city].filter(Boolean).join(' · ') || 'Company profile'}
+          {[employer.sector, employer.city].filter(Boolean).join(" · ") || "Company profile"}
         </div>
-        <p className="pj-company-card-hint">Pulled automatically from your company profile — no need to re-enter.</p>
+        <p className="pj-company-card-hint">Pulled from your company profile — no need to re-enter.</p>
       </div>
     </div>
   );
 });
 
-/* ── Legacy step (unused in wizard) ────────────────────────── */
-const Step1Company = memo(function Step1Company({ form, setForm, errors }) {
-  const f = (k,v) => setForm(p => ({...p,[k]:v}));
-  return (
-    <div className="pj-step-body">
-      <div className="pj-step-header">
-        <div className="pj-step-icon-pill" style={{background:"#EFF6FF",color:"#2563EB"}}>
-          <Building2 size={16}/>
-        </div>
-        <div>
-          <h2 className="pj-step-title">Company Information</h2>
-          <p className="pj-step-sub">Tell candidates about your company</p>
-        </div>
-      </div>
-
-      <div className="pj-form-grid">
-        <Field label="Company Name" required error={errors.companyName}>
-          <div className="pj-input-icon">
-            <Building2 size={15}/>
-            <input className="pj-input pj-input-with-icon" placeholder="e.g. Acme Corp"
-              value={form.companyName} onChange={e=>f("companyName",e.target.value)}/>
-          </div>
-        </Field>
-
-        <Field label="Industry / Sector" required error={errors.sector}>
-          <select className="pj-input" value={form.sector} onChange={e=>f("sector",e.target.value)}>
-            <option value="">Select sector…</option>
-            {SECTORS.map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
-        </Field>
-
-        <Field label="Company Website" hint="Include https://">
-          <div className="pj-input-icon">
-            <Globe size={15}/>
-            <input className="pj-input pj-input-with-icon" placeholder="https://yourcompany.com"
-              value={form.website} onChange={e=>f("website",e.target.value)}/>
-          </div>
-        </Field>
-
-        <Field label="Company Size" error={errors.companySize}>
-          <div className="pj-input-icon">
-            <Users size={15}/>
-            <select className="pj-input pj-input-with-icon" value={form.companySize}
-              onChange={e=>f("companySize",e.target.value)}>
-              <option value="">Select size…</option>
-              {COMPANY_SIZES.map(s=><option key={s} value={s}>{s} employees</option>)}
-            </select>
-          </div>
-        </Field>
-
-        <div className="pj-field pj-field-full">
-          <Field label="About the Company"
-            hint="A short description helps candidates understand your mission and culture.">
-            <textarea className="pj-textarea" rows={4}
-              placeholder="Describe your company culture, mission, products/services…"
-              value={form.companyDescription}
-              onChange={e=>f("companyDescription",e.target.value)}/>
-            <span className="pj-char-count">{form.companyDescription.length}/500</span>
-          </Field>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-/* ── Step 2 — Basic Info ────────────────────────────────────── */
-function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
+/* ── Step 1 — Basic Info ────────────────────────────────────── */
+function Step1Basic({ form, setForm, errors, dbCategories, dbLocations }) {
   const f = (k,v) => setForm(p => ({...p,[k]:v}));
   return (
     <div className="pj-step-body">
@@ -248,7 +182,18 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
           </div>
         </Field>
 
-        <div className="pj-field pj-field-salary">
+        <div className="pj-field">
+          <label className="pj-checkbox pj-checkbox-card">
+            <input type="checkbox" checked={form.remote}
+              onChange={e=>f("remote",e.target.checked)}/>
+            <div className="pj-checkbox-card-content">
+              <span className="pj-checkbox-card-title">Remote / Hybrid position</span>
+              <span className="pj-checkbox-card-sub">Open to remote candidates</span>
+            </div>
+          </label>
+        </div>
+
+        <div className="pj-field pj-field-full pj-field-salary">
           <label className="pj-label">Salary Range <span className="pj-currency-badge">XAF</span></label>
           <div className="pj-salary-row">
             <div className="pj-input-icon"><DollarSign size={15}/>
@@ -268,24 +213,13 @@ function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
             </select>
           </div>
         </div>
-
-        <div className="pj-field">
-          <label className="pj-checkbox pj-checkbox-card">
-            <input type="checkbox" checked={form.remote}
-              onChange={e=>f("remote",e.target.checked)}/>
-            <div className="pj-checkbox-card-content">
-              <span className="pj-checkbox-card-title">Remote / Hybrid position</span>
-              <span className="pj-checkbox-card-sub">Open to remote candidates</span>
-            </div>
-          </label>
-        </div>
       </div>
     </div>
   );
 }
 
-/* ── Step 3 — Details ───────────────────────────────────────── */
-function Step3Details({ form, setForm, errors }) {
+/* ── Step 2 — Details ───────────────────────────────────────── */
+function Step2Details({ form, setForm, errors }) {
   const f = (k,v) => setForm(p => ({...p,[k]:v}));
   return (
     <div className="pj-step-body">
@@ -306,7 +240,7 @@ function Step3Details({ form, setForm, errors }) {
           value={form.description} onChange={e=>f("description",e.target.value)}/>
         <div className="pj-char-row">
           <span className="pj-char-count">{form.description.length}/3000</span>
-          {form.description.length < 50 && (
+          {form.description.length > 0 && form.description.length < 50 && (
             <span className="pj-char-warn">At least 50 characters required ({form.description.length}/50)</span>
           )}
         </div>
@@ -333,7 +267,7 @@ function Step3Details({ form, setForm, errors }) {
       </Field>
 
       <div className="pj-row">
-        <label className="pj-checkbox pj-checkbox-card pj-checkbox-card--accent">
+        <label className="pj-checkbox pj-checkbox-card pj-checkbox-card--accent" style={{flex:1}}>
           <input type="checkbox" checked={form.requiresInterview}
             onChange={e=>f("requiresInterview",e.target.checked)}/>
           <div className="pj-checkbox-card-content">
@@ -360,8 +294,8 @@ function Step3Details({ form, setForm, errors }) {
   );
 }
 
-/* ── Step 4 — Requirements / Skills ────────────────────────── */
-function Step4Requirements({ form, setForm, errors, skillOpts }) {
+/* ── Step 3 — Requirements / Skills ────────────────────────── */
+function Step3Requirements({ form, setForm, errors, skillOpts }) {
   const f = (k,v) => setForm(p => ({...p,[k]:v}));
   const addSkill = s => !form.skills.includes(s) && f("skills",[...form.skills,s]);
   const addLang  = l => !form.languages.includes(l) && f("languages",[...form.languages,l]);
@@ -400,8 +334,8 @@ function Step4Requirements({ form, setForm, errors, skillOpts }) {
   );
 }
 
-/* ── Step 5 — Review ────────────────────────────────────────── */
-const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations, employer }) {
+/* ── Step 4 — Review ────────────────────────────────────────── */
+const Step4Review = memo(function Step4Review({ form, dbCategories, dbLocations, employer }) {
   const catName = dbCategories.find(c=>c.id===form.categoryId)?.name || "—";
   const locCity = dbLocations.find(l=>l.id===form.locationId)?.city || "—";
 
@@ -411,11 +345,10 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
       {children}
     </div>
   );
-
   const Row = ({ k, v }) => (
     <div className="pj-review-row">
       <span className="pj-review-key">{k}</span>
-      <span className="pj-review-val">{v}</span>
+      <span className="pj-review-val">{v || "—"}</span>
     </div>
   );
 
@@ -432,18 +365,18 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
       </div>
 
       <Section title="Company" icon={Building2}>
-        <Row k="Company" v={employer?.companyName || "—"}/>
-        <Row k="Sector"  v={employer?.sector || "—"}/>
-        <Row k="Location" v={employer?.city || "—"}/>
+        <Row k="Company"  v={employer?.companyName}/>
+        <Row k="Sector"   v={employer?.sector}/>
+        <Row k="Location" v={employer?.city}/>
       </Section>
 
       <Section title="Job Details" icon={Briefcase}>
-        <Row k="Title"      v={form.title||"—"}/>
+        <Row k="Title"      v={form.title}/>
         <Row k="Category"   v={catName}/>
-        <Row k="Type"       v={form.type||"—"}/>
+        <Row k="Type"       v={formatJobType(form.type)}/>
         <Row k="Location"   v={locCity}/>
-        <Row k="Experience" v={form.experience||"—"}/>
-        <Row k="Deadline"   v={form.deadline||"—"}/>
+        <Row k="Experience" v={form.experience}/>
+        <Row k="Deadline"   v={form.deadline}/>
         <Row k="Interview?" v={form.requiresInterview?"Yes, required":"No"}/>
         <Row k="Salary"
           v={form.salaryMin&&form.salaryMax
@@ -457,7 +390,6 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
           <p className="pj-review-text">{form.qualificationNeeded}</p>
         </Section>
       )}
-
       {form.description && (
         <Section title="Description" icon={FileText}>
           <p className="pj-review-text">
@@ -465,10 +397,9 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
           </p>
         </Section>
       )}
-
       {form.skills.length>0 && (
         <Section title="Skills" icon={Tag}>
-          <div className="pj-tags" style={{marginTop:6}}>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,padding:"10px 14px"}}>
             {form.skills.map(s=><span key={s} className="pj-tag" style={{cursor:"default"}}>{s}</span>)}
           </div>
         </Section>
@@ -484,6 +415,25 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
   );
 });
 
+/* ── API Error Banner ───────────────────────────────────────── */
+function ApiError({ error }) {
+  if (!error) return null;
+  return (
+    <div className="pj-api-error">
+      <AlertCircle size={14}/>
+      <span>{error}</span>
+      {error.toLowerCase().includes("company") && (
+        <Link
+          to="/profile/employer"
+          style={{marginLeft:8,padding:"4px 10px",background:"#fff",border:"1.5px solid #FECACA",color:"#DC2626",borderRadius:6,fontSize:12,fontWeight:700,textDecoration:"none",flexShrink:0,whiteSpace:"nowrap"}}
+        >
+          Set Up Company →
+        </Link>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Component ─────────────────────────────────────────── */
 export default function PostJob({ onBack, onSuccess }) {
   const [step,        setStep]        = useState(1);
@@ -491,6 +441,7 @@ export default function PostJob({ onBack, onSuccess }) {
   const [form,        setForm]        = useState(INITIAL_FORM);
   const [errors,      setErrors]      = useState({});
   const [submitted,   setSubmitted]   = useState(false);
+  const [publishing,  setPublishing]  = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
 
   const [dbCategories, setDbCategories] = useState([]);
@@ -500,18 +451,15 @@ export default function PostJob({ onBack, onSuccess }) {
   const [isEditMode,   setIsEditMode]   = useState(false);
   const [editId,       setEditId]       = useState(null);
 
+  // Mutable ref: always holds the latest companyId so buildPayload
+  // never reads stale React state after a refresh() call.
+  const companyIdRef = useRef(null);
+
   const { employer, loading, stats, refresh } = useEmployerDashboard();
 
-  // Pre-fill Step 1 with employer profile data once the hook has loaded
   useEffect(() => {
-    if (!employer || isEditMode) return;
-    setForm(prev => ({
-      ...prev,
-      companyName: prev.companyName || employer.companyName || '',
-      sector:      prev.sector      || employer.sector       || '',
-      website:     prev.website     || employer.website      || '',
-    }));
-  }, [employer, isEditMode]);
+    if (employer?.companyId) companyIdRef.current = employer.companyId;
+  }, [employer]);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -531,25 +479,22 @@ export default function PostJob({ onBack, onSuccess }) {
           setEditId(editIdParam);
           const job = await getJobDetail(editIdParam);
           setForm({
-            companyName: job.company?.name || "",
-            sector: "", website: job.website || "",
-            companySize: "", companyDescription: "",
-            title: job.title || "",
-            categoryId: job.category?.id || "",
-            type: job.jobType || "",
-            locationId: job.location?.id || "",
-            deadline: job.deadline || "",
-            salaryMin: job.salaryMin ? parseInt(job.salaryMin.toString().replace(/[^0-9]/g,"")) : "",
-            salaryMax: job.salaryMax ? parseInt(job.salaryMax.toString().replace(/[^0-9]/g,"")) : "",
-            currency: "XAF",
-            description: job.description || "",
-            experience: job.experienceLevel || "",
-            remote: job.location?.city === "Remote",
-            skills: job.tags || [],
-            benefits: [],
-            languages: [],
+            title:               job.title || "",
+            categoryId:          job.category?.id || "",
+            type:                job.jobType || "",
+            locationId:          job.location_obj?.id || "",
+            deadline:            job.deadline || "",
+            salaryMin:           job.salaryMin ? parseInt(String(job.salaryMin).replace(/[^0-9]/g,"")) : "",
+            salaryMax:           job.salaryMax ? parseInt(String(job.salaryMax).replace(/[^0-9]/g,"")) : "",
+            currency:            "XAF",
+            description:         job.description || "",
+            experience:          job.experienceLevel || "",
+            remote:              job.location_obj?.city === "Remote",
+            skills:              job.tags || [],
+            benefits:            [],
+            languages:           [],
             qualificationNeeded: job.qualificationNeeded || "",
-            requiresInterview: job.requiresInterview || false,
+            requiresInterview:   job.requiresInterview || false,
           });
         }
       } catch (err) {
@@ -563,7 +508,7 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const validate = (s) => {
     const e = {};
-    const all = s === 'all' || s === 4 || isEditMode;
+    const all = s === "all" || s === 4 || isEditMode;
     if (all || s === 1) {
       if (!form.title.trim())    e.title      = "Job title is required.";
       if (!form.categoryId)      e.categoryId = "Please select a category.";
@@ -572,11 +517,11 @@ export default function PostJob({ onBack, onSuccess }) {
       if (!form.deadline)        e.deadline   = "Please set a deadline.";
     }
     if (all || s === 2) {
-      if (!form.description.trim())          e.description         = "Description is required.";
-      else if (form.description.length < 50) e.description         = "Description must be at least 50 characters.";
-      else if (form.description.length > 3000) e.description       = "Max 3000 characters.";
-      if (!form.experience)                  e.experience          = "Please select an experience level.";
-      if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications are required.";
+      if (!form.description.trim())            e.description         = "Description is required.";
+      else if (form.description.length < 50)   e.description         = "Description must be at least 50 characters.";
+      else if (form.description.length > 3000) e.description         = "Max 3000 characters.";
+      if (!form.experience)                    e.experience          = "Please select an experience level.";
+      if (!form.qualificationNeeded?.trim())   e.qualificationNeeded = "Qualifications are required.";
     }
     if (all || s === 3) {
       if (form.skills.length === 0) e.skills = "Add at least one skill.";
@@ -588,102 +533,101 @@ export default function PostJob({ onBack, onSuccess }) {
   const handleNext = () => { if (validate(step)) setStep(s => s + 1); };
   const handleBack = () => { setErrors({}); setStep(s => s - 1); };
 
-  const buildPayload = (publish = true) => {
+  const buildPayload = useCallback((publish, overrideCompanyId) => {
     const selectedSkillIds = form.skills
       .map(name => dbSkills.find(s => s.name === name)?.id)
       .filter(Boolean);
 
-    // Guard: empty string from <select> must become null, not "" which fails UUID parsing on backend
-    const categoryId  = form.categoryId  || null;
-    const locationId  = form.locationId  || null;
+    const companyId = overrideCompanyId ?? companyIdRef.current ?? employer?.companyId ?? null;
 
     return {
       title:               form.title,
       description:         form.description,
-      categoryId,                               // UUID string or null
-      companyId:           employer?.companyId ?? null,  // Long or null — backend auto-resolves null
-      locationId,                               // UUID string or null
-      jobType:             form.type || 'FULL_TIME',
+      categoryId:          form.categoryId || null,
+      companyId,
+      locationId:          form.locationId || null,
+      jobType:             form.type       || "CDI",
       salaryMin:           form.salaryMin  ? Number(form.salaryMin)  : null,
       salaryMax:           form.salaryMax  ? Number(form.salaryMax)  : null,
-      experienceLevel:     form.experience || 'MID',
-      deadline:            form.deadline   || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      experienceLevel:     form.experience || "MID",
+      deadline:            form.deadline   || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
       skillIds:            selectedSkillIds,
-      qualificationNeeded: form.qualificationNeeded || '',
+      qualificationNeeded: form.qualificationNeeded || "",
       requiresInterview:   form.requiresInterview   || false,
       publishImmediately:  publish,
     };
-  };
+  }, [form, dbSkills, employer]);
 
-  // ✅ Guard: employer must have a company before posting
-  const checkCompany = async () => {
-    if (employer?.companyId) return true;
+  // Returns companyId (existing or newly created), or null on failure.
+  const ensureCompany = async () => {
+    if (companyIdRef.current || employer?.companyId) {
+      return companyIdRef.current || employer.companyId;
+    }
     if (!employer?.id) {
       setErrors({ api: "Employer session not loaded. Please refresh and try again." });
-      return false;
+      return null;
     }
     try {
       const created = await createEmployerCompany(employer.id, {
-        name: employer.companyName || employer.contactName || 'My Company',
-        sector: employer.sector || 'Technology',
-        city: employer.city || 'Yaounde',
-        country: 'Cameroon',
+        name:    employer.companyName || employer.contactName || "My Company",
+        sector:  employer.sector      || "Technology",
+        city:    employer.city        || "Yaounde",
+        country: "Cameroon",
       });
       if (created?.id) {
-        await refresh();
-        return true;
+        companyIdRef.current = created.id;
+        refresh(); // background — don't await
+        return created.id;
       }
-    } catch { /* fall through */ }
+    } catch (_) { /* fall through */ }
     setErrors({ api: "Complete your company profile before posting. Go to Company Profile in the sidebar." });
-    return false;
+    return null;
   };
 
   const handlePublish = async () => {
-    if (!validate('all')) return;
-    if (!(await checkCompany())) return;
+    if (!validate("all")) return;
+    setPublishing(true);
+    setErrors({});
     try {
-      if (isEditMode) {
-        await updateJob(editId, buildPayload(true));
-      } else {
-        await createJob(buildPayload(true));
-      }
+      const companyId = await ensureCompany();
+      if (!companyId) return;
+      const payload = buildPayload(true, companyId);
+      if (isEditMode) { await updateJob(editId, payload); }
+      else            { await createJob(payload); }
       refresh();
       setSubmitted(true);
     } catch (err) {
-      console.error('[PostJob] publish error:', err);
-      // Surface the exact backend validation message when available
-      const apiMsg = err?.response?.data?.message
-        || err?.response?.data?.errors?.join(', ')
-        || err?.message
-        || 'Failed to publish listing. Please check all fields and try again.';
+      console.error("[PostJob] publish error:", err);
+      const apiMsg =
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.errors) ? err.response.data.errors.join(", ") : null) ||
+        err?.message ||
+        "Failed to publish listing. Please check all fields and try again.";
       setErrors({ api: apiMsg });
+    } finally {
+      setPublishing(false);
     }
   };
 
   const handleDraft = async () => {
-    if (!form.title.trim()) {
-      setErrors({ title: "Job title is required to save draft." });
-      return;
-    }
-    if (!(await checkCompany())) return;
+    if (!form.title.trim()) { setErrors({ title: "Job title is required to save draft." }); return; }
     setSavingDraft(true);
+    setErrors({});
     try {
-      if (isEditMode) {
-        await updateJob(editId, buildPayload(false));
-      } else {
-        await createJob(buildPayload(false));
-      }
+      const companyId = await ensureCompany();
+      if (!companyId) return;
+      const payload = buildPayload(false, companyId);
+      if (isEditMode) { await updateJob(editId, payload); }
+      else            { await createJob(payload); }
       refresh();
-      onBack();
+      onBack?.();
     } catch (err) {
-      console.error(err);
-      setErrors({ api: err.response?.data?.message || "Failed to save draft." });
+      setErrors({ api: err?.response?.data?.message || "Failed to save draft." });
     } finally {
       setSavingDraft(false);
     }
   };
 
-  /* Shared Shell */
   const Shell = ({ children }) => (
     <div className="ds-root employer">
       {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)}/>}
@@ -705,9 +649,9 @@ export default function PostJob({ onBack, onSuccess }) {
   if (loadingDb || loading) {
     return (
       <Shell>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400}}>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:16}}>
           <div className="pj-spinner"/>
-          <span style={{marginTop:12,fontSize:14,color:"#6B7280"}}>Loading job editor…</span>
+          <span style={{fontSize:14,color:"#6B7280"}}>Loading job editor…</span>
         </div>
       </Shell>
     );
@@ -717,21 +661,14 @@ export default function PostJob({ onBack, onSuccess }) {
     return (
       <Shell>
         <div className="pj-success-screen">
-          <div className="pj-success-confetti"/>
-          <div className="pj-success-icon">
-            <CheckCircle size={36}/>
-          </div>
-          <h1 className="pj-success-title">
-            {isEditMode ? "Job Updated Successfully!" : "Job Posted Successfully!"}
-          </h1>
+          <div className="pj-success-icon"><CheckCircle size={36}/></div>
+          <h1 className="pj-success-title">{isEditMode ? "Job Updated!" : "Job Posted!"}</h1>
           <p className="pj-success-sub">
             <strong>"{form.title}"</strong> is now live on Kora.{" "}
             Candidates can start discovering and applying immediately.
           </p>
           <div className="pj-success-actions">
-            <button className="ds-btn ds-btn-ghost" onClick={onBack}>
-              <ArrowLeft size={14}/> Back to Jobs
-            </button>
+            <button className="ds-btn ds-btn-ghost" onClick={onBack}><ArrowLeft size={14}/> Back to Jobs</button>
             {!isEditMode && (
               <button className="ds-btn ds-btn-primary"
                 onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL_FORM); setErrors({}); }}>
@@ -744,7 +681,6 @@ export default function PostJob({ onBack, onSuccess }) {
     );
   }
 
-  /* Edit Mode — single page */
   if (isEditMode) {
     const skillOpts = dbSkills.map(s => s.name);
     return (
@@ -756,35 +692,25 @@ export default function PostJob({ onBack, onSuccess }) {
           </div>
           <div style={{display:"flex",gap:12}}>
             <button className="ds-btn ds-btn-ghost" onClick={onBack}><XCircle size={14}/> Cancel</button>
-            <button className="ds-btn ds-btn-primary" onClick={handlePublish}><CheckCircle size={14}/> Save Changes</button>
+            <button className="ds-btn ds-btn-primary" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Saving…" : <><CheckCircle size={14}/> Save Changes</>}
+            </button>
           </div>
         </div>
-
-        {errors.api && (
-          <div className="pj-api-error">
-            <AlertCircle size={14}/>
-            <span>{errors.api}</span>
-            {errors.api.toLowerCase().includes('company') && (
-              <Link to="/profile/employer" className="ds-btn ds-btn-sm" style={{marginLeft:8,background:'#fff',border:'1.5px solid #FECACA',color:'#DC2626',flexShrink:0}}>
-                Set Up Company →
-              </Link>
-            )}
-          </div>
-        )}
-
+        <ApiError error={errors.api}/>
         <div className="pj-form-layout" style={{gridTemplateColumns:"1fr"}}>
           <div className="pj-form-card ds-card" style={{display:"flex",flexDirection:"column",gap:32,padding:32}}>
-            <CompanyProfileCard employer={employer} />
+            <CompanyProfileCard employer={employer}/>
             <div className="pj-section-divider"/>
-            <Step2Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
+            <Step1Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
             <div className="pj-section-divider"/>
-            <Step3Details form={form} setForm={setForm} errors={errors}/>
+            <Step2Details form={form} setForm={setForm} errors={errors}/>
             <div className="pj-section-divider"/>
-            <Step4Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>
+            <Step3Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>
             <div style={{display:"flex",justifyContent:"flex-end",gap:12,borderTop:"1px solid #E5E7EB",paddingTop:24}}>
               <button className="ds-btn ds-btn-ghost" onClick={onBack}>Cancel</button>
-              <button className="ds-btn ds-btn-primary" onClick={handlePublish}>
-                <Save size={14}/> Save Changes
+              <button className="ds-btn ds-btn-primary" onClick={handlePublish} disabled={publishing}>
+                {publishing ? "Saving…" : <><Save size={14}/> Save Changes</>}
               </button>
             </div>
           </div>
@@ -793,9 +719,8 @@ export default function PostJob({ onBack, onSuccess }) {
     );
   }
 
-  /* Wizard Mode */
   const skillOpts = dbSkills.map(s => s.name);
-  const locCity = dbLocations.find(l => l.id === form.locationId)?.city || "Location";
+  const locCity   = dbLocations.find(l => l.id === form.locationId)?.city || "Location";
 
   return (
     <Shell>
@@ -812,19 +737,8 @@ export default function PostJob({ onBack, onSuccess }) {
         </div>
       </div>
 
-      {errors.api && (
-        <div className="pj-api-error">
-          <AlertCircle size={14}/>
-          <span>{errors.api}</span>
-          {errors.api.toLowerCase().includes('company') && (
-            <Link to="/profile/employer" className="ds-btn ds-btn-sm" style={{marginLeft:8,background:'#fff',border:'1.5px solid #FECACA',color:'#DC2626',flexShrink:0}}>
-              Set Up Company →
-            </Link>
-          )}
-        </div>
-      )}
+      <ApiError error={errors.api}/>
 
-      {/* Step Indicator */}
       <div className="pj-steps">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
@@ -843,11 +757,11 @@ export default function PostJob({ onBack, onSuccess }) {
 
       <div className="pj-form-layout">
         <div className="pj-form-card ds-card">
-          <CompanyProfileCard employer={employer} />
-          {step === 1 && <Step2Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
-          {step === 2 && <Step3Details form={form} setForm={setForm} errors={errors}/>}
-          {step === 3 && <Step4Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>}
-          {step === 4 && <Step5Review form={form} dbCategories={dbCategories} dbLocations={dbLocations} employer={employer}/>}
+          <CompanyProfileCard employer={employer}/>
+          {step === 1 && <Step1Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
+          {step === 2 && <Step2Details form={form} setForm={setForm} errors={errors}/>}
+          {step === 3 && <Step3Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>}
+          {step === 4 && <Step4Review form={form} dbCategories={dbCategories} dbLocations={dbLocations} employer={employer}/>}
 
           <div className="pj-step-nav">
             <div>
@@ -860,22 +774,20 @@ export default function PostJob({ onBack, onSuccess }) {
             <div className="pj-step-nav-right">
               <span className="pj-step-counter">Step {step} of {STEPS.length}</span>
               {step < STEPS.length
-                ? <button className="ds-btn ds-btn-primary" onClick={handleNext}>
-                    Next <ChevronRight size={14}/>
-                  </button>
-                : <button className="ds-btn ds-btn-primary pj-publish-btn" onClick={handlePublish}>
-                    <Sparkles size={14}/> Publish Job
+                ? <button className="ds-btn ds-btn-primary" onClick={handleNext}>Next <ChevronRight size={14}/></button>
+                : <button className="ds-btn ds-btn-primary pj-publish-btn" onClick={handlePublish} disabled={publishing}>
+                    {publishing
+                      ? <><div className="pj-spinner" style={{width:14,height:14,borderWidth:2,borderTopColor:"#fff",borderColor:"rgba(255,255,255,0.3)"}}/> Publishing…</>
+                      : <><Sparkles size={14}/> Publish Job</>}
                   </button>
               }
             </div>
           </div>
         </div>
 
-        {/* Live Preview Sidebar */}
         <div className="ds-card pj-preview-card">
           <div className="pj-preview-header">
-            <Eye size={13}/>
-            <span>Live Preview</span>
+            <Eye size={13}/><span>Live Preview</span>
             {form.title && <span className="pj-preview-badge">Active</span>}
           </div>
           <div className="pj-preview-body">
@@ -883,32 +795,30 @@ export default function PostJob({ onBack, onSuccess }) {
               <>
                 <div className="pj-preview-company-row">
                   <div className="pj-preview-logo">
-                    {(employer?.companyName || "?")[0].toUpperCase()}
+                    {employer?.logo
+                      ? <img src={employer.logo} alt={employer.companyName} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit"}}/>
+                      : (employer?.companyName || "?")[0].toUpperCase()
+                    }
                   </div>
                   <div>
-                    <div className="pj-preview-company-name">
-                      {employer?.companyName || "Your Company"}
-                    </div>
+                    <div className="pj-preview-company-name">{employer?.companyName || "Your Company"}</div>
                     {employer?.sector && <div className="pj-preview-sector">{employer.sector}</div>}
                   </div>
                 </div>
                 <h4 className="pj-preview-job-title">{form.title || "Job Title"}</h4>
                 <div className="pj-preview-chips">
-                  {form.type && <span className="pj-preview-chip">{form.type.replace(/_/g," ")}</span>}
+                  {form.type && <span className="pj-preview-chip">{formatJobType(form.type)}</span>}
                   {form.remote && <span className="pj-preview-chip pj-preview-chip--green">Remote</span>}
                   {form.experience && <span className="pj-preview-chip">{form.experience}</span>}
                 </div>
-                {form.locationId && (
-                  <div className="pj-preview-meta">
-                    <MapPin size={11}/>{locCity}
-                  </div>
-                )}
+                {form.locationId && <div className="pj-preview-meta"><MapPin size={11}/>{locCity}</div>}
                 {form.salaryMin && (
                   <div className="pj-preview-salary">
                     {Number(form.salaryMin).toLocaleString()}
                     {form.salaryMax ? ` – ${Number(form.salaryMax).toLocaleString()}` : "+"} {form.currency}
                   </div>
                 )}
+                {form.deadline && <div className="pj-preview-meta"><Calendar size={11}/>Deadline: {form.deadline}</div>}
                 {form.description && (
                   <p className="pj-preview-desc">
                     {form.description.slice(0,120)}{form.description.length>120?"…":""}
@@ -928,16 +838,10 @@ export default function PostJob({ onBack, onSuccess }) {
               </div>
             )}
           </div>
-
           <div className="pj-tips-card">
             <div className="pj-tips-title"><Lightbulb size={13}/> Posting Tips</div>
             <ul className="pj-tips-list">
-              {[
-                "Clear titles get 50% more clicks",
-                "List 5–10 specific required skills",
-                "Salary transparency increases applications",
-                "Describe team culture, not just tasks",
-              ].map(t=>(
+              {["Clear titles get 50% more clicks","List 5–10 specific required skills","Salary transparency increases applications","Describe team culture, not just tasks"].map(t=>(
                 <li key={t} className="pj-tip"><ChevronRight size={11}/>{t}</li>
               ))}
             </ul>
