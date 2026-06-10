@@ -283,6 +283,16 @@ function SCard({ title, icon, children, noPad = false }) {
    inside AdminDashboard root — it is ONLY true for tab === 'overview'.
    All sub-pages receive showWelcome={false} and never render the hero.
    ═══════════════════════════════════════════════════════════════════ */
+/**
+ * PageHead — renders above adm-content inside adm-main.
+ *
+ * Layout alignment:
+ * • The welcome banner sticky wrapper matches .ds-hero-sticky from dashboard-shell.css
+ * • The standard title bar matches .ds-page-header proportions
+ * • No extra horizontal padding here — padding lives in .adm-content / .adm-body
+ *
+ * Banner: solid #7c3aed, no gradients, no orbs, no animations.
+ */
 function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false, overviewStats = null }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -290,31 +300,25 @@ function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false
   return (
     <div className="adm-page-head-zone">
 
-      {/* ────────────────────────────────────────────────────────
-          WELCOME HERO — rendered ONLY on the Overview tab
-          ──────────────────────────────────────────────────────── */}
+      {/* ── Welcome hero — Overview tab only ────────────────────── */}
       {showWelcome && (
         <div className="adm-welcome-sticky">
           <div className="adm-welcome-hero">
+            {/* NO orbs, NO pseudo-element gradients, NO animations */}
 
-            {/* Decorative geometry (CSS-only, no images) */}
-            <div className="adm-hero-orb adm-hero-orb--1" aria-hidden="true" />
-            <div className="adm-hero-orb adm-hero-orb--2" aria-hidden="true" />
-            <div className="adm-hero-orb adm-hero-orb--3" aria-hidden="true" />
-
-            {/* Left: greeting + role */}
+            {/* Left: greeting + role eyebrow + sub + KPI chips */}
             <div className="adm-welcome-text">
               <div className="adm-welcome-eyebrow">
-                <Shield size={13} />
+                <Shield size={12} />
                 <span>{badge ?? 'Super Admin'}</span>
               </div>
-              <h1 className="adm-welcome-title">{greeting}, {welcomeName ?? 'Admin'}</h1>
+              <h1 className="adm-welcome-title">{greeting}, {welcomeName ?? 'Admin'} 👋</h1>
               <p className="adm-welcome-sub">
                 Your command center for Kora — monitor real-time hiring activity,
-                approve listings, and keep the platform at peak health.
+                approve listings, manage users, and keep the platform at peak health.
               </p>
 
-              {/* Live KPI chips — populated once overview stats load */}
+              {/* Live KPI chips — rendered only once overview stats arrive */}
               {overviewStats && (
                 <div className="adm-hero-chips">
                   <span className="adm-hero-chip">
@@ -336,8 +340,7 @@ function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false
             {/* Right: platform health indicator */}
             <div className="adm-welcome-health">
               <div className="adm-health-ring">
-                <div className="adm-health-pulse" />
-                <CheckCircle size={22} />
+                <CheckCircle size={22} color="#fff" />
               </div>
               <p className="adm-health-label">Platform<br/>Healthy</p>
             </div>
@@ -422,39 +425,44 @@ export default function AdminDashboard() {
         <Layers size={18}/>
       </button>
 
-      <aside className={`adm-sidebar${mobileOpen?' open':''}`}>
-        <button className="adm-mob-close" onClick={()=>setMobileOpen(false)}><X size={16}/></button>
-        <AdminSidebar activeTab={tab} setActiveTab={t=>{ setTab(t); setMobileOpen(false); }}/>
-      </aside>
+      {/* ── Body row: matches .ds-body — sidebar + main inside max-width wrapper ── */}
+      <div className="adm-body">
 
-      <main className="adm-main">
-        {/* ── PageHead: banner only on overview tab ─────────────── */}
-        <PageHead
-          title={title}
-          sub={sub}
-          welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
-          badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
-          showWelcome={tab === 'overview'}   /* ← BANNER LOGIC FIX */
-          overviewStats={heroStats}
-        />
+        <aside className={`adm-sidebar${mobileOpen?' open':''}`}>
+          <button className="adm-mob-close" onClick={()=>setMobileOpen(false)}><X size={16}/></button>
+          <AdminSidebar activeTab={tab} setActiveTab={t=>{ setTab(t); setMobileOpen(false); }}/>
+        </aside>
 
-        <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
-          {tab === 'overview'     && <OverviewTab />}
-          {tab === 'users'        && <UsersTab showToast={showToast}/>}
-          {tab === 'reports'      && <ReportsTab />}
-          {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
-          {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
-          {tab === 'verification' && <VerificationTab showToast={showToast}/>}
-          {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
-          {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
-          {tab === 'interviews'   && <InterviewsTab />}
-          {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
-          {tab === 'cms'          && <CMSTab showToast={showToast}/>}
-          {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
-          {tab === 'compliance'   && <ComplianceTab />}
-          {tab === 'settings'     && <SettingsTab showToast={showToast}/>}
-        </div>
-      </main>
+        <main className="adm-main">
+          {/* ── PageHead: banner only on overview tab ─────────────── */}
+          <PageHead
+            title={title}
+            sub={sub}
+            welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
+            badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
+            showWelcome={tab === 'overview'}
+            overviewStats={heroStats}
+          />
+
+          <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
+            {tab === 'overview'     && <OverviewTab />}
+            {tab === 'users'        && <UsersTab showToast={showToast}/>}
+            {tab === 'reports'      && <ReportsTab />}
+            {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
+            {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
+            {tab === 'verification' && <VerificationTab showToast={showToast}/>}
+            {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
+            {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
+            {tab === 'interviews'   && <InterviewsTab />}
+            {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
+            {tab === 'cms'          && <CMSTab showToast={showToast}/>}
+            {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
+            {tab === 'compliance'   && <ComplianceTab />}
+            {tab === 'settings'     && <SettingsTab showToast={showToast}/>}
+          </div>
+        </main>
+
+      </div>{/* /adm-body */}
 
       {toast && <Toast message={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
     </div>
