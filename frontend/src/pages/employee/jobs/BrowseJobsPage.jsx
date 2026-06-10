@@ -6,8 +6,9 @@ import useEmployeeDashboard from "../../../hooks/useEmployeeDashboard";
 import { getJobs, getCategories } from "../../../api/jobs";
 import JobCard from "../../../components/jobs/JobCard";
 
+import { JOB_TYPES, formatJobType } from "../../../utils/jobEnums";
+
 const PAGE_SIZE = 9;
-const JOB_TYPES = ["FULL_TIME","PART_TIME","CONTRACT","INTERNSHIP","FREELANCE"];
 const EXP_LEVELS = ["ENTRY","JUNIOR","MID","SENIOR","LEAD"];
 
 export default function BrowseJobsPage() {
@@ -108,7 +109,7 @@ export default function BrowseJobsPage() {
               <label style={{ fontSize:11, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.6px', display:'block', marginBottom:5 }}>Job Type</label>
               <select className="ds-status-select" style={{ width:'100%', padding:'9px 12px' }} value={type} onChange={e => setType(e.target.value)}>
                 <option value="">All Types</option>
-                {JOB_TYPES.map(t => <option key={t} value={t}>{t.replace('_',' ')}</option>)}
+                {JOB_TYPES.map(t => <option key={t} value={t}>{formatJobType(t)}</option>)}
               </select>
             </div>
             <div>
