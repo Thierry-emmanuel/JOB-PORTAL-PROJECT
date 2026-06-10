@@ -103,8 +103,18 @@ public interface JobListingRepository
      * Must stay in sync with JobListingMapper.toNumericId().
      */
     @Query(value = """
-        SELECT jl.id FROM job_listings jl
-        WHERE CONV(SUBSTRING(jl.id, 1, 8), 16, 10) = :numericalId
+        SELECT CASE
+            WHEN LENGTH(jl.id) = 16 THEN BIN_TO_UUID(jl.id)
+            ELSE jl.id
+        END
+        FROM job_listings jl
+        WHERE CONV(SUBSTRING(
+            CASE
+                WHEN LENGTH(jl.id) = 16 THEN HEX(jl.id)
+                ELSE REPLACE(jl.id, '-', '')
+            END,
+            1, 8
+        ), 16, 10) = :numericalId
         LIMIT 1
         """, nativeQuery = true)
     String findIdByNumericalId(@Param("numericalId") Long numericalId);
