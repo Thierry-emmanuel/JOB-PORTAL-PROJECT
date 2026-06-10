@@ -1,4 +1,4 @@
-package JobPortal.project.modules.notification.Service;
+package JobPortal.project.modules.notification.service;
 
 import JobPortal.project.modules.application.dto.response.ApplicationResponse;
 import JobPortal.project.modules.application.dto.response.InterviewResponse;

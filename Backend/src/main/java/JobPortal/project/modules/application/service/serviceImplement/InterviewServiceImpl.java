@@ -36,7 +36,7 @@ import JobPortal.project.modules.auth.model.User;
 import JobPortal.project.modules.auth.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import JobPortal.project.modules.notification.event.NotificationEvent;
-import JobPortal.project.modules.notification.Service.RealtimeMessagingService;
+import JobPortal.project.modules.notification.service.RealtimeMessagingService;
 import JobPortal.project.enums.NotificationType;
 import java.util.UUID;
 
