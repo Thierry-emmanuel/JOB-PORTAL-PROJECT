@@ -569,6 +569,12 @@ export default function HeroEditor({ showToast }) {
 
   return (
     <div className="he-root">
+      <div className="he-intro-panel" style={{ margin: '0 0 20px', padding: '16px 20px', background: 'linear-gradient(135deg,#EFF6FF,#ECFDF5)', borderRadius: 14, border: '1px solid #BFDBFE' }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1E3A8A' }}>Homepage first impression</p>
+        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#374151', lineHeight: 1.55 }}>
+          Edit the headline, buttons, and background visitors see first. Use a clear primary CTA (e.g. <strong>Browse Jobs → /jobs</strong>) and keep slideshow text short. Changes go live after you click <strong>Save</strong> — preview updates on the right.
+        </p>
+      </div>
       {/* ── Top bar ──────────────────────────────────────────── */}
       <div className="he-topbar">
         <div className="he-topbar-left">
