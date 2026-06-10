@@ -5,10 +5,10 @@ import { useEmployerDashboard } from '../../../hooks/useEmployerDashboard';
 import { getJobs, getCategories } from '../../../api/jobs';
 import JobCard from '../../../components/jobs/JobCard';
 import DashboardPagination from '../../../components/shared/DashboardPagination';
+import { JOB_TYPES, formatJobType } from '../../../utils/jobEnums';
 import '../../../styles/dashboard-shell.css';
 
 const PAGE_SIZE = 9;
-const JOB_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'FREELANCE'];
 const EXP_LEVELS = ['ENTRY', 'JUNIOR', 'MID', 'SENIOR', 'LEAD'];
 
 export default function EmployerBrowseJobsPage() {
@@ -106,7 +106,7 @@ export default function EmployerBrowseJobsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, paddingTop: 14, borderTop: '1px solid #F3F4F6' }}>
                 <select className="ds-status-select" value={type} onChange={(e) => setType(e.target.value)}>
                   <option value="">All Types</option>
-                  {JOB_TYPES.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                  {JOB_TYPES.map((t) => <option key={t} value={t}>{formatJobType(t)}</option>)}
                 </select>
                 <select className="ds-status-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                   <option value="">All Categories</option>
