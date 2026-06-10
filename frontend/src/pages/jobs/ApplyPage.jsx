@@ -12,6 +12,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { X as XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft, ChevronRight, Upload, X, FileText,
@@ -150,6 +151,7 @@ export default function ApplyPage() {
   const [submitting, setSub]  = useState(false);
   const [submitted, setDone]  = useState(false);
   const [submitError, setSErr] = useState(null);
+  const [viewingPdfBlob, setViewingPdfBlob] = useState(null);
 
   /* ── Form fields ──────────────────────────────────────── */
   const [form, setForm] = useState({
@@ -332,21 +334,7 @@ export default function ApplyPage() {
       </div>
     </div>
   );
-  if (job?.applied && !submitted) return (
-    <div className="ap-page">
-      <div className="ap-container ap-container--narrow">
-        <div className="ap-state-card">
-          <span className="ap-state-icon"><CheckCircle size={48} color="#10B981" /></span>
-          <h1>Already Applied</h1>
-          <p>You have already applied for <strong>{job.title}</strong> at <strong>{job.company}</strong>.</p>
-          <div className="ap-state-actions">
-            <Link to="/employee/applications" className="ap-btn ap-btn--primary">View My Applications</Link>
-            <Link to="/jobs"                  className="ap-btn ap-btn--outline">Browse More Jobs</Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+
   if (submitted) return (
     <div className="ap-page">
       <div className="ap-container ap-container--narrow">
@@ -436,7 +424,31 @@ export default function ApplyPage() {
             <div className="ap-existing-cv-notice">
               <CheckCircle2 size={15} color="#16a34a" />
               <span>Your profile CV will be submitted. Upload a new one to override.</span>
-              <a href={form.cvUrl} target="_blank" rel="noreferrer" className="ap-link">View existing CV</a>
+              <button
+                type="button"
+                className="ap-link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', color: 'inherit', font: 'inherit' }}
+                onClick={() => {
+                  let url = form.cvUrl;
+                  if (form.cvUrl?.startsWith('data:')) {
+                    try {
+                      const [header, b64] = form.cvUrl.split(',');
+                      const mime = header.match(/:(.*?);/)[1];
+                      const bytes = atob(b64);
+                      const arr = new Uint8Array(bytes.length);
+                      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                      const blob = new Blob([arr], { type: mime });
+                      url = URL.createObjectURL(blob);
+                    } catch (err) {
+                      console.error(err);
+                      return;
+                    }
+                  }
+                  setViewingPdfBlob(url);
+                }}
+              >
+                View existing CV
+              </button>
             </div>
           )}
           <UploadZone
@@ -659,6 +671,7 @@ export default function ApplyPage() {
 
   /* ── Main render ──────────────────────────────────────── */
   return (
+    <>
     <div className="ap-page">
       <div className="ap-container ap-container--wide">
 
@@ -774,6 +787,49 @@ export default function ApplyPage() {
         </div>
       </div>
     </div>
+
+      {/* ── Inline PDF CV Viewer Overlay ── */}
+      {viewingPdfBlob && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '900px', height: '90vh',
+            background: '#fff', borderRadius: 16, display: 'flex',
+            flexDirection: 'column', overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+          }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', padding: '16px 24px',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#1f2937' }}>Viewing Your CV</h3>
+              <button
+                onClick={() => {
+                  if (viewingPdfBlob.startsWith('blob:')) URL.revokeObjectURL(viewingPdfBlob);
+                  setViewingPdfBlob(null);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, display: 'flex' }}
+                aria-label="Close CV viewer"
+              >
+                <XIcon size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, background: '#f3f4f6' }}>
+              <iframe
+                src={viewingPdfBlob}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title="CV PDF Viewer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
