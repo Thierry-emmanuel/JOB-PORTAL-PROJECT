@@ -10,6 +10,8 @@ import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
 import {
   createJob, updateJob, getLocations, getSkills, getCategories, getJobDetail, createEmployerCompany,
 } from "../../api/jobs";
+import { JOB_TYPES, EXPERIENCE_LEVELS, formatJobType, defaultJobDeadline } from "../../utils/jobEnums";
+import { extractApiError } from "../../utils/apiErrors";
 import "../../styles/dashboard-shell.css";
 import "../../styles/PostJobs.css";
 
@@ -25,7 +27,7 @@ const INITIAL_FORM = {
   // Company
   companyName: "", sector: "", website: "", companySize: "", companyDescription: "",
   // Basic
-  title: "", categoryId: "", type: "", locationId: "", deadline: "",
+  title: "", categoryId: "", type: "", locationId: "", deadline: defaultJobDeadline(),
   salaryMin: "", salaryMax: "", currency: "XAF",
   // Details
   description: "", experience: "", remote: false,
@@ -34,8 +36,7 @@ const INITIAL_FORM = {
   skills: [], benefits: [], languages: [],
 };
 
-const JOB_TYPES    = ["FULL_TIME","PART_TIME","CONTRACT","INTERNSHIP","FREELANCE"];
-const LEVELS       = ["ENTRY","JUNIOR","MID","SENIOR","LEAD","EXECUTIVE"];
+const LEVELS = EXPERIENCE_LEVELS;
 const COMPANY_SIZES = ["1–10","11–50","51–200","201–500","500+"];
 const SECTORS      = [
   "Technology","Finance","Healthcare","Education","Retail",
@@ -220,7 +221,7 @@ const Step2Basic = memo(function Step2Basic({ form, updateField, errors, dbCateg
         <Field label="Contract Type" required error={errors.type}>
           <select className="pj-input" value={form.type} onChange={e=>updateField("type",e.target.value)}>
             <option value="">Select type…</option>
-            {JOB_TYPES.map(t=><option key={t} value={t}>{t.replace(/_/g," ")}</option>)}
+            {JOB_TYPES.map(t=><option key={t} value={t}>{formatJobType(t)}</option>)}
           </select>
         </Field>
 
@@ -301,8 +302,8 @@ const Step3Details = memo(function Step3Details({ form, updateField, errors }) {
           value={form.description} onChange={e=>updateField("description",e.target.value)}/>
         <div className="pj-char-row">
           <span className="pj-char-count">{form.description.length}/3000</span>
-          {form.description.length < 100 && (
-            <span className="pj-char-warn">Aim for at least 100 characters</span>
+          {form.description.length < 50 && (
+            <span className="pj-char-warn">At least 50 characters required ({form.description.length}/50)</span>
           )}
         </div>
       </Field>
@@ -570,20 +571,22 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const validate = (s) => {
     const e = {};
-    if (s === 1 || isEditMode) {
+    const checkAll = s === 4 && !isEditMode;
+    if (s === 1 || isEditMode || checkAll) {
       if (!form.title.trim())    e.title      = "Job title is required.";
       if (!form.categoryId)      e.categoryId = "Please select a category.";
       if (!form.type)            e.type       = "Please select a contract type.";
       if (!form.locationId)      e.locationId = "Location is required.";
       if (!form.deadline)        e.deadline   = "Please set a deadline.";
     }
-    if (s === 2 || isEditMode) {
+    if (s === 2 || isEditMode || checkAll) {
       if (!form.description.trim())          e.description         = "Description is required.";
-      if (form.description.length > 3000)    e.description         = "Max 3000 characters.";
+      else if (form.description.length < 50) e.description         = "Description must be at least 50 characters.";
+      else if (form.description.length > 3000) e.description       = "Max 3000 characters.";
       if (!form.experience)                  e.experience          = "Please select an experience level.";
       if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications are required.";
     }
-    if (s === 3 || isEditMode) {
+    if (s === 3 || isEditMode || checkAll) {
       if (form.skills.length === 0) e.skills = "Add at least one skill.";
     }
     setErrors(e);
@@ -597,21 +600,26 @@ export default function PostJob({ onBack, onSuccess }) {
     const selectedSkillIds = form.skills
       .map(name => dbSkills.find(s => s.name === name)?.id)
       .filter(Boolean);
+
+    // Guard: empty string from <select> must become null, not "" which fails UUID parsing on backend
+    const categoryId  = form.categoryId  || null;
+    const locationId  = form.locationId  || null;
+
     return {
-      title: form.title,
-      description: form.description,
-      categoryId: form.categoryId,
-      companyId: employer?.companyId,           // ✅ no fallback to 1
-      locationId: form.locationId || null,
-      jobType: form.type || "FULL_TIME",
-      salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
-      salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
-      experienceLevel: form.experience || "MID",
-      deadline: form.deadline || new Date(Date.now() + 30*86400000).toISOString().split("T")[0],
-      skillIds: selectedSkillIds,
-      qualificationNeeded: form.qualificationNeeded || "",
-      requiresInterview: form.requiresInterview || false,
-      publishImmediately: publish,
+      title:               form.title,
+      description:         form.description,
+      categoryId,                               // UUID string or null
+      companyId:           employer?.companyId ?? null,  // Long or null — backend auto-resolves null
+      locationId,                               // UUID string or null
+      jobType:             form.type || 'CDI',
+      salaryMin:           form.salaryMin  ? Number(form.salaryMin)  : null,
+      salaryMax:           form.salaryMax  ? Number(form.salaryMax)  : null,
+      experienceLevel:     form.experience || 'MID',
+      deadline:            form.deadline   || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      skillIds:            selectedSkillIds,
+      qualificationNeeded: form.qualificationNeeded || '',
+      requiresInterview:   form.requiresInterview   || false,
+      publishImmediately:  publish,
     };
   };
 
@@ -651,9 +659,13 @@ export default function PostJob({ onBack, onSuccess }) {
       refresh();
       setSubmitted(true);
     } catch (err) {
-      console.error(err);
-      const msg = err.response?.data?.detail || err.response?.data?.message || "Failed to publish listing. Please check the details.";
-      setErrors({ api: msg });
+      console.error('[PostJob] publish error:', err);
+      // Surface the exact backend validation message when available
+      const apiMsg = err?.response?.data?.message
+        || err?.response?.data?.errors?.join(', ')
+        || err?.message
+        || 'Failed to publish listing. Please check all fields and try again.';
+      setErrors({ api: apiMsg });
     }
   };
 
