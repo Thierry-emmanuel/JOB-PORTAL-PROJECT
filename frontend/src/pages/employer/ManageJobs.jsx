@@ -24,6 +24,7 @@ import { useEmployerDashboard } from '../../hooks/useEmployerDashboard';
 import { useAuth } from '../../context/AuthContext';
 import { getApplicationDisplayStatus } from '../../utils/applicationStatus';
 import DashboardPagination from '../../components/shared/DashboardPagination';
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 
 const JOBS_PAGE_SIZE = 10;
 const APPS_PAGE_SIZE = 10;
@@ -98,6 +99,8 @@ export default function ManageJobs() {
     updateApplicationStatus, updateJobPostingStatus, deleteJobPosting,
     updateApplicationReview,
   } = useEmployerDashboard();
+
+  useRealtimeRefresh(refresh);
 
   /* ── UI state ─────────────────────────────────────────── */
   const [jobTab,    setJobTab]    = useState('ALL');

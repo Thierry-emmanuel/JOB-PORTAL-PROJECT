@@ -9,6 +9,12 @@ import {
   User, Briefcase, ChevronDown, X, Check, Menu,
 } from 'lucide-react';
 import "../../styles/dashboard-shell.css";
+import DashboardPagination from '../../components/shared/DashboardPagination';
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
+import Modal from '../../components/shared/Modal';
+import '../../styles/profile.css';
+
+const IV_PAGE_SIZE = 9;
 
 /* ─── Toast ────────────────────────────────────────────────── */
 function Toast({ toasts, remove }) {
@@ -50,24 +56,21 @@ function useToast() {
 
 /* ─── Confirm Modal ─────────────────────────────────────────── */
 function ConfirmModal({ open, title, body, onConfirm, onCancel, danger }) {
-  if (!open) return null;
   return (
-    <>
-      <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:2000 }} onClick={onCancel}/>
-      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', background:'#fff', borderRadius:16, padding:28, width:'min(400px,90vw)', zIndex:2001, boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-          <div style={{ width:40, height:40, borderRadius:10, background: danger ? '#FEF2F2' : '#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            {danger ? <XCircle size={20} color="#DC2626"/> : <AlertCircle size={20} color="#3B82F6"/>}
-          </div>
-          <h3 style={{ fontSize:16, fontWeight:700, margin:0, color:'#111827' }}>{title}</h3>
-        </div>
-        <p style={{ fontSize:14, color:'#6B7280', marginBottom:24, lineHeight:1.6 }}>{body}</p>
-        <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
-          <button onClick={onCancel} style={{ background:'#F3F4F6', border:'none', borderRadius:10, padding:'9px 20px', fontSize:14, fontWeight:600, cursor:'pointer', color:'#374151' }}>Cancel</button>
-          <button onClick={onConfirm} style={{ background: danger ? '#DC2626' : 'var(--ds-accent)', border:'none', borderRadius:10, padding:'9px 20px', fontSize:14, fontWeight:700, cursor:'pointer', color:'#fff' }}>Confirm</button>
-        </div>
-      </div>
-    </>
+    <Modal
+      open={open}
+      title={title}
+      onClose={onCancel}
+      danger={danger}
+      footer={
+        <>
+          <button type="button" className="ds-btn ds-btn-ghost" onClick={onCancel}>Cancel</button>
+          <button type="button" className="ds-btn ds-btn-primary" style={danger ? { background: '#DC2626' } : undefined} onClick={onConfirm}>Confirm</button>
+        </>
+      }
+    >
+      <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6, margin: 0 }}>{body}</p>
+    </Modal>
   );
 }
 
@@ -202,6 +205,13 @@ function InterviewCard({ iv, onCancel, onResult }) {
       </div>
 
       {/* Actions */}
+      {isPending && ivType === 'VIDEO' && iv.meetingLink && (
+        <div style={{ padding:'0 20px 12px' }}>
+          <a href={iv.meetingLink} target="_blank" rel="noreferrer" className="ds-btn ds-btn-primary ds-btn-sm" style={{ width:'100%', justifyContent:'center' }}>
+            <Video size={13}/> Launch Google Meet
+          </a>
+        </div>
+      )}
       {isPending && (
         <div style={{ padding:'12px 20px', borderTop:'1px solid #F3F4F6', display:'flex', gap:8 }}>
           <button onClick={() => onCancel(iv)} style={{ flex:1, background:'#FEF2F2', border:'1.5px solid #FECACA', borderRadius:10, padding:'8px', fontSize:13, fontWeight:600, cursor:'pointer', color:'#991B1B', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
@@ -228,6 +238,7 @@ export default function InterviewManagement() {
   const [filter,       setFilter]       = useState('ALL');
   const [cancelTarget, setCancelTarget] = useState(null);
   const [resultTarget, setResultTarget] = useState(null);
+  const [page, setPage] = useState(1);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const fetchInterviews = useCallback(async () => {
@@ -242,6 +253,8 @@ export default function InterviewManagement() {
   }, [user?.id]);
 
   useEffect(() => { fetchInterviews(); }, [fetchInterviews]);
+  useRealtimeRefresh(fetchInterviews, { applications: false, interviews: true });
+  useEffect(() => { setPage(1); }, [filter, searchQ]);
 
   const handleCancel = async () => {
     try {
@@ -274,6 +287,9 @@ export default function InterviewManagement() {
     PENDING:   interviews.filter(i => !i.completed && !i.result).length,
     COMPLETED: interviews.filter(i => i.completed || i.result).length,
   };
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / IV_PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * IV_PAGE_SIZE, page * IV_PAGE_SIZE);
 
   return (
     <div className="ds-root employer">
@@ -358,10 +374,13 @@ export default function InterviewManagement() {
             </div>
           ) : (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:16 }}>
-              {filtered.map(iv => (
+              {paginated.map(iv => (
                 <InterviewCard key={iv.id} iv={iv} onCancel={setCancelTarget} onResult={setResultTarget} />
               ))}
             </div>
+          )}
+          {!localLoading && filtered.length > IV_PAGE_SIZE && (
+            <DashboardPagination page={page} totalPages={totalPages} total={filtered.length} pageSize={IV_PAGE_SIZE} onChange={setPage} />
           )}
         </main>
       </div>
