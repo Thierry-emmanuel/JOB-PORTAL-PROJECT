@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
-import java.util.List;
 import JobPortal.project.modules.joblisting.entity.JobListing;
 import JobPortal.project.modules.joblisting.repository.JobListingRepository;
 import JobPortal.project.modules.auth.model.User;
@@ -34,7 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import JobPortal.project.modules.notification.event.NotificationEvent;
 import JobPortal.project.enums.NotificationType;
 import JobPortal.project.modules.application.dto.request.UpdateApplicationReviewRequest;
-import JobPortal.project.modules.notification.Service.RealtimeMessagingService;
+import JobPortal.project.modules.notification.service.RealtimeMessagingService;
 import java.util.UUID;
 
 
