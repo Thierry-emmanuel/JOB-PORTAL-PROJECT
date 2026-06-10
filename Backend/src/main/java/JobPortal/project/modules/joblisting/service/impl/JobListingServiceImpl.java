@@ -28,6 +28,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import JobPortal.project.modules.company.model.Company;
+import JobPortal.project.modules.company.repository.CompanyRepository;
+import JobPortal.project.modules.userprofile.model.Employer;
+import JobPortal.project.modules.userprofile.repository.EmployerRepository;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -62,6 +66,8 @@ public class JobListingServiceImpl implements JobListingService {
     private final ListingSkillRepository   skillRepository;
     private final JobLocationRepository    locationRepository;
     private final JobListingMapper         mapper;
+    private final CompanyRepository companyRepository;
+    private final EmployerRepository employerRepository;
 
     // Spring ApplicationEventPublisher — injected for cross-module event broadcasting
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
@@ -75,25 +81,53 @@ public class JobListingServiceImpl implements JobListingService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "jobListings",   allEntries = true),
-            @CacheEvict(value = "jobCategories", allEntries = true)   // category counts change
+            @CacheEvict(value = "jobCategories", allEntries = true)
     })
     public JobListingResponse createListing(Long employerId, JobListingCreateRequest req) {
 
         JobCategory category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("JobCategory", req.categoryId()));
 
-        // Build the location FK reference without loading the full entity
+        // ── Resolve location ──────────────────────────────────────────────────────
         JobLocation location = null;
         if (req.locationId() != null) {
             location = new JobLocation();
             location.setId(req.locationId());
         }
 
+        // ── Resolve companyId — auto-fallback if null ─────────────────────────────
+        // If the employer did not pass a companyId (e.g. hasn't created a company yet),
+        // try to auto-resolve from their existing company records.
+        // If none exist, create a stub company so the constraint is satisfied.
+        Long resolvedCompanyId = req.companyId();
+        if (resolvedCompanyId == null) {
+            Employer employer = employerRepository.findById(employerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employer", String.valueOf(employerId)));
+
+            List<Company> existing = companyRepository.findByEmployer(employer);
+            if (!existing.isEmpty()) {
+                resolvedCompanyId = existing.get(0).getId();
+                log.info("[JobListing] Auto-resolved companyId={} for employer {}", resolvedCompanyId, employerId);
+            } else {
+                // Create a stub company from the employer's profile data
+                Company stub = new Company();
+                stub.setName(employer.getCompanyName() != null ? employer.getCompanyName() : "Company");
+                stub.setEmployer(employer);
+                stub.setCity(employer.getCity() != null ? employer.getCity() : "Yaounde");
+                stub.setSector(employer.getSector() != null ? employer.getSector() : "Technology");
+                stub.setIsActive(true);
+                Company savedStub = companyRepository.save(stub);
+                resolvedCompanyId = savedStub.getId();
+                log.info("[JobListing] Created stub company id={} for employer {} — complete profile at /profile/employer",
+                        resolvedCompanyId, employerId);
+            }
+        }
+
         Set<ListingSkill> skills = resolveSkills(req.skillIds());
 
         JobListing listing = JobListing.builder()
                 .employerId(employerId)
-                .companyId(req.companyId())
+                .companyId(resolvedCompanyId)
                 .category(category)
                 .location(location)
                 .title(req.title())
