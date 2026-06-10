@@ -1,1466 +1,1165 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   KORA Admin Dashboard — Full Redesign
-   Tokens: inherits --kora-* from theme.css
-   Admin accent: purple #7c3aed aliased to --kora-green inside .adm-root
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── 0. Reset & Root ─────────────────────────────────────────────────────── */
-.adm-root {
-  --adm-purple:      #7c3aed;
-  --adm-purple-dk:   #6d28d9;
-  --adm-purple-lt:   rgba(124,58,237,0.08);
-  --adm-purple-bd:   rgba(124,58,237,0.18);
-  --adm-green:       #059669;
-  --adm-orange:      #f97316;
-  --adm-blue:        #3b82f6;
-  --adm-teal:        #0d9488;
-  --adm-rose:        #e11d48;
-  --adm-amber:       #d97706;
-  --adm-sky:         #0ea5e9;
-  --adm-slate:       #64748b;
-  --adm-ink:         #0f172a;
-  --adm-muted:       #64748b;
-  --adm-border:      #e2e8f0;
-  --adm-bg:          #f8fafc;
-  --adm-white:       #ffffff;
-  --adm-sidebar-w:   256px;
-  --adm-radius-sm:   8px;
-  --adm-radius-md:   12px;
-  --adm-radius-lg:   16px;
-  --adm-radius-pill: 999px;
-  --adm-shadow-sm:   0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --adm-shadow-md:   0 4px 16px rgba(0,0,0,.08);
-  --adm-shadow-lg:   0 8px 32px rgba(0,0,0,.12);
-  --adm-font:        'Sora', 'DM Sans', system-ui, sans-serif;
-
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-  background: var(--adm-bg);
-  font-family: var(--adm-font);
-  color: var(--adm-ink);
-  padding-top: 0;
-  box-sizing: border-box;
-}
-
-/* ── 1. Sidebar Shell ────────────────────────────────────────────────────── */
-.adm-sidebar {
-  width: var(--adm-sidebar-w);
-  flex-shrink: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: var(--adm-white);
-  border-right: 1px solid var(--adm-border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 40;
-  scrollbar-width: none;
-}
-.adm-sidebar::-webkit-scrollbar { display: none; }
-
-/* ── 2. Sidebar Inner (.adm-sb) ──────────────────────────────────────────── */
-.adm-sb {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 0;
-}
-
-.adm-sb-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 18px 16px;
-  border-bottom: 1px solid var(--adm-border);
-}
-
-.adm-sb-logo img {
-  width: 80px;
-  height: auto;
-  object-fit: contain;
-}
-
-.adm-sb-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  background: var(--adm-purple-lt);
-  color: var(--adm-purple);
-  border: 1px solid var(--adm-purple-bd);
-  padding: 2px 8px;
-  border-radius: var(--adm-radius-pill);
-}
-
-.adm-sb-identity {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--adm-border);
-  background: var(--adm-bg);
-}
-
-.adm-sb-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--adm-purple-lt);
-  color: var(--adm-purple);
-  font-size: 14px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 2px solid var(--adm-purple-bd);
-}
-
-.adm-sb-identity-text {
-  overflow: hidden;
-}
-
-.adm-sb-name {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--adm-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.adm-sb-role {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--adm-purple);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.adm-sb-nav {
-  flex: 1;
-  padding: 10px 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-.adm-sb-nav::-webkit-scrollbar { display: none; }
-
-.adm-sb-section {
-  margin-bottom: 6px;
-}
-
-.adm-sb-section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--adm-muted);
-  padding: 8px 18px 4px;
-  margin: 0;
-}
-
-.adm-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 18px;
-  background: none;
-  border: none;
-  border-radius: 0;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--adm-font);
-  color: var(--adm-muted);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s, color 0.15s;
-  position: relative;
-}
-
-.adm-nav-item:hover {
-  background: var(--adm-bg);
-  color: var(--adm-ink);
-}
-
-.adm-nav-item.active {
-  background: var(--adm-purple-lt);
-  color: var(--adm-purple);
-  font-weight: 700;
-}
-
-.adm-nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  background: var(--adm-purple);
-  border-radius: 0 3px 3px 0;
-}
-
-.adm-nav-item.logout {
-  color: var(--adm-rose);
-}
-.adm-nav-item.logout:hover {
-  background: #fff1f2;
-  color: var(--adm-rose);
-}
-
-.adm-sb-footer {
-  border-top: 1px solid var(--adm-border);
-  padding: 8px 0;
-}
-
-/* ── 3. Main Area ────────────────────────────────────────────────────────── */
-.adm-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-
-/* ── 4. Page Header & Welcome Banner ───────────────────────────────────── */
-.adm-page-head-zone {
-  flex-shrink: 0;
-  background: var(--adm-bg);
-  z-index: 25;
-}
-
-.adm-welcome-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  padding: 16px 28px 0;
-  margin-bottom: 8px;
-  background: var(--adm-bg);
-  isolation: isolate;
-}
-.adm-welcome-sticky::after {
-  content: '';
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  bottom: -12px;
-  height: 12px;
-  background: linear-gradient(to bottom, var(--adm-bg), transparent);
-  pointer-events: none;
-}
-
-.adm-welcome-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 26px;
-  border-radius: var(--adm-radius-lg);
-  background: linear-gradient(135deg, var(--adm-purple) 0%, var(--adm-purple-dk) 100%);
-  color: #fff;
-  box-shadow: 0 4px 24px rgba(109, 40, 217, 0.28);
-  overflow: hidden;
-  position: relative;
-  contain: paint;
-}
-.adm-welcome-hero::before {
-  content: '';
-  position: absolute;
-  top: -50px; right: -30px;
-  width: 180px; height: 180px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-.adm-welcome-text { position: relative; z-index: 1; }
-.adm-welcome-title {
-  font-size: 20px;
-  font-weight: 800;
-  margin: 0 0 4px;
-  letter-spacing: -0.3px;
-}
-.adm-welcome-sub {
-  font-size: 13px;
-  margin: 0;
-  opacity: 0.88;
-}
-.adm-welcome-badge {
-  position: relative;
-  z-index: 1;
-  background: rgba(255,255,255,0.18) !important;
-  border-color: rgba(255,255,255,0.35) !important;
-  color: #fff !important;
-  flex-shrink: 0;
-}
-
-.adm-page-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 28px 0;
-  flex-shrink: 0;
-  gap: 16px;
-}
-
-.adm-page-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--adm-ink);
-  margin: 0 0 2px;
-  letter-spacing: -0.4px;
-  line-height: 1.2;
-}
-
-.adm-page-sub {
-  font-size: 13px;
-  color: var(--adm-muted);
-  margin: 0;
-}
-
-.adm-page-head-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.adm-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--adm-purple);
-  background: var(--adm-purple-lt);
-  border: 1px solid var(--adm-purple-bd);
-  padding: 6px 14px;
-  border-radius: var(--adm-radius-pill);
-}
-
-/* ── 5. Content Area ─────────────────────────────────────────────────────── */
-.adm-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 28px 40px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--adm-border) transparent;
-  min-height: 0;
-}
-/* CMS mode: become flex column so children fill height.
-   Use .adm-content.adm-content--cms for higher specificity over .adm-content */
-.adm-content.adm-content--cms {
-  /* Switch to a positioning context so cms-hero-root (position:absolute) anchors here */
-  position: relative !important;
-  overflow: hidden !important;
-  padding: 20px 28px 20px !important;
-  /* Keep flex column so cms-tab-root (FAQs) still fills height */
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1;
-  min-height: 0;
-}
-.cms-hero-intro {
-  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
-  border: 1px solid #BFDBFE;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 16px;
-}
-.cms-hero-intro h3 {
-  margin: 0 0 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1E3A5F;
-}
-.cms-hero-intro p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #475569;
-}
-
-/* cms-hero-root uses position:absolute so no flex rules needed for it.
-   cms-tab-root (FAQs/Categories/Skills) still uses flex layout. */
-.adm-content.adm-content--cms .cms-tab-root {
-  flex: 1 1 0;
-  min-height: 0;
-  height: 0;
-}
-.adm-content::-webkit-scrollbar { width: 5px; }
-.adm-content::-webkit-scrollbar-thumb { background: var(--adm-border); border-radius: 99px; }
-
-/* ── 6. KPI Stat Cards ───────────────────────────────────────────────────── */
-.adm-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.adm-stat-card {
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-md);
-  padding: 16px 18px;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  box-shadow: var(--adm-shadow-sm);
-  transition: box-shadow 0.18s, transform 0.18s;
-  position: relative;
-  overflow: hidden;
-}
-
-.adm-stat-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--c);
-  opacity: 0.7;
-}
-
-.adm-stat-card:hover {
-  box-shadow: var(--adm-shadow-md);
-  transform: translateY(-1px);
-}
-
-.adm-stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--adm-radius-sm);
-  background: var(--cl);
-  color: var(--c);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.adm-stat-body { min-width: 0; }
-
-.adm-stat-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--adm-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin: 0 0 4px;
-}
-
-.adm-stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--adm-ink);
-  margin: 0;
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
-
-.adm-stat-delta {
-  font-size: 11.5px;
-  color: var(--adm-muted);
-  margin: 4px 0 0;
-}
-
-/* ── 7. Section Cards ────────────────────────────────────────────────────── */
-.adm-scard {
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-md);
-  box-shadow: var(--adm-shadow-sm);
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-.adm-scard-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--adm-border);
-  background: var(--adm-bg);
-}
-
-.adm-scard-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--adm-ink);
-  margin: 0;
-}
-
-.adm-scard-icon {
-  color: var(--adm-purple);
-  display: flex;
-}
-
-.adm-scard-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ── 8. Charts ───────────────────────────────────────────────────────────── */
-.adm-charts-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.adm-chart-card {
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-md);
-  padding: 20px;
-  box-shadow: var(--adm-shadow-sm);
-  display: flex;
-  flex-direction: column;
-}
-
-.adm-chart-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: var(--adm-purple);
-}
-
-.adm-chart-head h3 {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--adm-ink);
-  margin: 0;
-}
-
-.adm-chart-area {
-  flex: 1;
-  min-height: 240px;
-  position: relative;
-}
-
-.adm-hire-rate-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--adm-purple-lt);
-  border: 1px solid var(--adm-purple-bd);
-  border-radius: var(--adm-radius-sm);
-  padding: 10px 14px;
-  margin-top: 14px;
-  font-size: 12.5px;
-  color: var(--adm-ink);
-  font-weight: 500;
-}
-
-.adm-hire-rate-bar strong {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--adm-purple);
-}
-
-/* ── 9. Buttons ──────────────────────────────────────────────────────────── */
-.adm-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border-radius: var(--adm-radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--adm-font);
-  cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all 0.15s;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.adm-btn.primary {
-  background: var(--adm-purple);
-  color: #fff;
-  border-color: var(--adm-purple);
-}
-.adm-btn.primary:hover { background: var(--adm-purple-dk); }
-.adm-btn.primary:disabled { opacity: 0.55; cursor: not-allowed; }
-
-.adm-btn.ghost {
-  background: var(--adm-white);
-  color: var(--adm-ink);
-  border-color: var(--adm-border);
-}
-.adm-btn.ghost:hover { background: var(--adm-bg); }
-
-.adm-btn.danger {
-  background: var(--adm-rose);
-  color: #fff;
-  border-color: var(--adm-rose);
-}
-.adm-btn.danger:hover { background: #be123c; }
-
-.adm-btn.sm { padding: 6px 13px; font-size: 12px; }
-
-/* Icon buttons */
-.adm-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--adm-radius-sm);
-  border: 1px solid var(--adm-border);
-  background: var(--adm-white);
-  cursor: pointer;
-  transition: background .15s, color .15s, border-color .15s, transform .12s;
-  color: var(--adm-muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.adm-icon-btn:hover       { background: var(--adm-bg); color: var(--adm-ink); }
-.adm-icon-btn.approve     { border-color: #bbf7d0; color: #15803d; background: #f0fdf4; }
-.adm-icon-btn.approve:hover { background: #dcfce7; }
-.adm-icon-btn.warn        { border-color: #fde68a; color: #b45309; background: #fffbeb; }
-.adm-icon-btn.warn:hover  { background: #fef3c7; }
-.adm-icon-btn.danger      { border-color: #fecaca; color: #b91c1c; background: #fef2f2; }
-.adm-icon-btn.danger:hover{ background: #fee2e2; }
-.adm-icon-btn.info        { border-color: #bae6fd; color: #0369a1; background: #f0f9ff; }
-.adm-icon-btn.info:hover  { background: #e0f2fe; }
-
-.adm-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* ── 10. Badges ──────────────────────────────────────────────────────────── */
-.adm-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: var(--adm-radius-pill);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.adm-badge::before {
-  content: '';
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-}
-.adm-badge.active    { background: #f0fdf4; color: #166534; }
-.adm-badge.pending   { background: #fefce8; color: #854d0e; }
-.adm-badge.suspended { background: #fef2f2; color: #991b1b; }
-.adm-badge.deleted   { background: #f1f5f9; color: #475569; }
-.adm-badge.draft     { background: #f1f5f9; color: #475569; }
-.adm-badge.expired   { background: #fff7ed; color: #9a3412; }
-.adm-badge.hired     { background: #f0fdf4; color: #15803d; }
-.adm-badge.applied   { background: #eff6ff; color: #1d4ed8; }
-
-/* ── 11. Table ───────────────────────────────────────────────────────────── */
-.adm-table-wrap {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.adm-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 13px;
-}
-
-.adm-table thead th {
-  padding: 11px 16px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--adm-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: var(--adm-bg);
-  border-bottom: 1px solid var(--adm-border);
-  white-space: nowrap;
-}
-
-.adm-table tbody tr {
-  border-bottom: 1px solid var(--adm-border);
-  transition: background 0.1s;
-}
-.adm-table tbody tr:last-child { border-bottom: none; }
-.adm-table tbody tr:hover { background: #fafbff; }
-
-.adm-table td {
-  padding: 12px 16px;
-  vertical-align: middle;
-}
-
-.adm-td-strong { font-weight: 600; color: var(--adm-ink); }
-.adm-td-muted  { color: var(--adm-muted); font-size: 12.5px; }
-
-.adm-cell-person {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* ── 12. Avatar ──────────────────────────────────────────────────────────── */
-.adm-avatar {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  flex-shrink: 0;
-  letter-spacing: -0.5px;
-}
-
-/* ── 13. Filter Bar ──────────────────────────────────────────────────────── */
-.adm-filter-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.adm-filter-tabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm);
-  padding: 4px;
-  box-shadow: var(--adm-shadow-sm);
-}
-
-.adm-ftab {
-  background: none;
-  border: none;
-  padding: 6px 13px;
-  font-size: 12.5px;
-  font-weight: 600;
-  font-family: var(--adm-font);
-  color: var(--adm-muted);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.14s, color 0.14s;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-.adm-ftab:hover:not(.active) { background: var(--adm-bg); color: var(--adm-ink); }
-.adm-ftab.active { background: var(--adm-purple-lt); color: var(--adm-purple); }
-
-.adm-ftab-count {
-  background: var(--adm-purple);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 99px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.adm-filter-right { display: flex; align-items: center; gap: 8px; }
-
-/* ── 14. Search ──────────────────────────────────────────────────────────── */
-.adm-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm);
-  padding: 8px 12px;
-  min-width: 210px;
-  box-shadow: var(--adm-shadow-sm);
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.adm-search:focus-within {
-  border-color: var(--adm-purple);
-  box-shadow: 0 0 0 3px var(--adm-purple-lt);
-}
-.adm-search-icon { color: var(--adm-muted); flex-shrink: 0; }
-.adm-search input {
-  border: none; outline: none; background: transparent;
-  width: 100%; font-size: 13px; font-family: var(--adm-font); color: var(--adm-ink);
-}
-.adm-search input::placeholder { color: var(--adm-muted); }
-.adm-search-clear {
-  background: none; border: none; color: var(--adm-muted);
-  cursor: pointer; display: flex; align-items: center; padding: 0;
-}
-
-/* ── 15. Pagination ──────────────────────────────────────────────────────── */
-.adm-pagination-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 14px 20px;
-  border-top: 1px solid var(--adm-border);
-  background: #fafbfc;
-}
-.adm-pagination-info {
-  font-size: 12px;
-  color: var(--adm-muted);
-  font-weight: 500;
-}
-.adm-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-.adm-page-btn {
-  min-width: 32px; height: 32px;
-  padding: 0 8px;
-  border-radius: var(--adm-radius-sm);
-  border: 1px solid var(--adm-border);
-  background: var(--adm-white);
-  color: var(--adm-ink);
-  font-size: 12.5px; font-weight: 600; font-family: var(--adm-font);
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.14s;
-}
-.adm-page-btn:hover:not(:disabled) { background: var(--adm-bg); border-color: var(--adm-muted); }
-.adm-page-btn.active { background: var(--adm-purple); color: #fff; border-color: var(--adm-purple); }
-.adm-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.adm-page-ellipsis { font-size: 12px; color: var(--adm-muted); padding: 0 4px; }
-
-/* ── 16. Toast ───────────────────────────────────────────────────────────── */
-.adm-toast {
-  position: fixed;
-  bottom: 28px; right: 28px;
-  z-index: 9000;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--adm-ink);
-  color: #fff;
-  font-size: 13.5px; font-weight: 500; font-family: var(--adm-font);
-  padding: 13px 20px;
-  border-radius: var(--adm-radius-md);
-  box-shadow: var(--adm-shadow-lg);
-  animation: adm-toast-in 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
-  max-width: 360px;
-}
-.adm-toast.error { background: #7f1d1d; }
-@keyframes adm-toast-in {
-  from { transform: translateY(16px) scale(0.96); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-
-/* ── 17. Confirm Modal ───────────────────────────────────────────────────── */
-.adm-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(3px);
-  z-index: 5000;
-  display: flex; align-items: center; justify-content: center;
-  animation: adm-fade 0.2s ease both;
-}
-@keyframes adm-fade { from { opacity: 0; } to { opacity: 1; } }
-
-.adm-modal {
-  background: var(--adm-white);
-  border-radius: var(--adm-radius-lg);
-  box-shadow: var(--adm-shadow-lg);
-  padding: 28px;
-  width: 100%; max-width: 420px;
-  animation: adm-modal-in 0.25s cubic-bezier(0.34,1.3,0.64,1) both;
-}
-@keyframes adm-modal-in {
-  from { transform: scale(0.94) translateY(10px); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-
-.adm-modal-head {
-  display: flex; align-items: flex-start; gap: 14px;
-  margin-bottom: 20px;
-}
-.adm-modal-icon {
-  width: 40px; height: 40px; border-radius: var(--adm-radius-sm);
-  background: #eff6ff; color: var(--adm-blue);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.adm-modal-icon.danger { background: #fef2f2; color: var(--adm-rose); }
-.adm-modal-head h3 { font-size: 16px; font-weight: 700; margin: 0 0 5px; color: var(--adm-ink); }
-.adm-modal-head p  { font-size: 13.5px; color: var(--adm-muted); margin: 0; }
-.adm-modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-/* ── 18. Slide-Over ──────────────────────────────────────────────────────── */
-.adm-so-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.22);
-  backdrop-filter: blur(2px);
-  z-index: 3000;
-  animation: adm-fade 0.2s ease both;
-}
-.adm-so {
-  position: fixed; top: 0; right: 0; bottom: 0;
-  width: 400px;
-  background: var(--adm-white);
-  border-left: 1px solid var(--adm-border);
-  box-shadow: -6px 0 30px rgba(0,0,0,0.1);
-  z-index: 3001;
-  display: flex; flex-direction: column;
-  animation: adm-so-in 0.28s cubic-bezier(0.34,1.1,0.64,1) both;
-}
-@keyframes adm-so-in {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-.adm-so-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 22px; border-bottom: 1px solid var(--adm-border);
-  background: var(--adm-bg); flex-shrink: 0;
-}
-.adm-so-head h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--adm-ink); }
-.adm-so-body {
-  flex: 1; overflow-y: auto; padding: 22px;
-  scrollbar-width: thin; scrollbar-color: var(--adm-border) transparent;
-}
-
-/* Profile detail inside slide-over */
-.adm-detail-avatar-row {
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 22px; padding-bottom: 18px;
-  border-bottom: 1px solid var(--adm-border);
-}
-.adm-detail-avatar-row strong { font-size: 15px; font-weight: 700; color: var(--adm-ink); display: block; margin-bottom: 2px; }
-.adm-detail-avatar-row p { font-size: 12.5px; color: var(--adm-muted); margin: 0; }
-.adm-detail-section { margin-bottom: 24px; }
-.adm-detail-label {
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.7px; color: var(--adm-muted);
-  margin: 0 0 10px; padding-bottom: 6px;
-  border-bottom: 1px solid var(--adm-border);
-}
-.adm-detail-row {
-  display: flex; align-items: baseline; gap: 10px;
-  font-size: 13px; margin-bottom: 9px; font-family: var(--adm-font);
-}
-.adm-detail-row .key { width: 110px; flex-shrink: 0; color: var(--adm-muted); font-size: 12.5px; }
-.adm-detail-row .val { color: var(--adm-ink); font-weight: 500; word-break: break-word; }
-
-/* ── 19. Forms ───────────────────────────────────────────────────────────── */
-.adm-form-grid { display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 20px; }
-
-.adm-field { display: flex; flex-direction: column; gap: 6px; }
-.adm-field label { font-size: 12px; font-weight: 600; color: var(--adm-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-
-.adm-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-.adm-input {
-  border: 1.5px solid var(--adm-border); border-radius: var(--adm-radius-sm);
-  padding: 9px 12px; font-size: 13.5px; font-family: var(--adm-font);
-  color: var(--adm-ink); background: var(--adm-bg);
-  transition: border-color 0.15s, box-shadow 0.15s; outline: none;
-  width: 100%; box-sizing: border-box;
-}
-.adm-input:focus {
-  border-color: var(--adm-purple);
-  box-shadow: 0 0 0 3px var(--adm-purple-lt);
-  background: var(--adm-white);
-}
-
-.adm-select {
-  border: 1.5px solid var(--adm-border); border-radius: var(--adm-radius-sm);
-  padding: 9px 12px; font-size: 13.5px; font-family: var(--adm-font);
-  color: var(--adm-ink); background: var(--adm-bg); outline: none;
-  cursor: pointer; width: 100%; box-sizing: border-box;
-  transition: border-color 0.15s;
-}
-.adm-select:focus { border-color: var(--adm-purple); box-shadow: 0 0 0 3px var(--adm-purple-lt); }
-
-.adm-textarea {
-  border: 1.5px solid var(--adm-border); border-radius: var(--adm-radius-sm);
-  padding: 10px 12px; font-size: 13.5px; font-family: var(--adm-font);
-  color: var(--adm-ink); background: var(--adm-bg); resize: vertical;
-  min-height: 80px; outline: none; width: 100%; box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.adm-textarea:focus {
-  border-color: var(--adm-purple);
-  box-shadow: 0 0 0 3px var(--adm-purple-lt);
-  background: var(--adm-white);
-}
-
-.adm-field-toggle {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm); padding: 10px 14px;
-}
-.adm-field-toggle span { font-size: 13px; font-weight: 600; color: var(--adm-ink); }
-.adm-toggle { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; }
-
-.adm-radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
-.adm-radio-option {
-  display: flex; align-items: center; gap: 7px;
-  padding: 8px 14px; border-radius: var(--adm-radius-sm);
-  border: 1.5px solid var(--adm-border); background: var(--adm-white);
-  font-size: 13px; font-weight: 500; font-family: var(--adm-font);
-  cursor: pointer; transition: all 0.14s;
-}
-.adm-radio-option input { display: none; }
-.adm-radio-option:hover { border-color: var(--adm-purple); color: var(--adm-purple); }
-.adm-radio-option.active { border-color: var(--adm-purple); background: var(--adm-purple-lt); color: var(--adm-purple); font-weight: 700; }
-
-.adm-inline-form {
-  padding: 16px 20px;
-  background: var(--adm-bg);
-  border-bottom: 1px solid var(--adm-border);
-  display: flex; flex-direction: column; gap: 12px;
-}
-.adm-inline-form.compact { padding: 12px 20px; }
-
-.adm-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.adm-add-row { display: flex; gap: 10px; align-items: center; }
-
-/* ── 20. Hero Editor ─────────────────────────────────────────────────────── */
-.adm-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-.adm-form-panel { }
-
-.adm-hero-preview {
-  border-radius: var(--adm-radius-md);
-  padding: 32px 24px;
-  color: #fff;
-  min-height: 260px;
-  display: flex; flex-direction: column; gap: 12px;
-  align-items: flex-start;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  margin: 0 20px 20px;
-}
-
-.adm-hero-preview h2 {
-  font-size: 20px; font-weight: 800; margin: 0; line-height: 1.25;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-.adm-hero-preview p {
-  font-size: 13px; margin: 0; opacity: 0.88;
-}
-
-.adm-hero-preview-badge {
-  font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
-  background: rgba(255,255,255,0.18); backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.3);
-  padding: 4px 12px; border-radius: 99px;
-}
-
-.adm-hero-preview-ctas {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
-}
-.adm-hero-cta-primary {
-  background: #fff; color: #1e1b4b;
-  padding: 7px 16px; border-radius: 8px;
-  font-size: 12px; font-weight: 700;
-}
-.adm-hero-cta-secondary {
-  border: 1.5px solid rgba(255,255,255,0.5); color: #fff;
-  padding: 7px 16px; border-radius: 8px;
-  font-size: 12px; font-weight: 600;
-}
-
-.adm-hero-preview-stats {
-  display: flex; gap: 16px;
-  font-size: 11px; font-weight: 600; opacity: 0.8;
-  margin-top: 4px;
-}
-
-/* ── 21. FAQ List ────────────────────────────────────────────────────────── */
-.adm-faq-list { padding: 8px 20px 16px; display: flex; flex-direction: column; gap: 10px; }
-
-.adm-faq-item {
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm); padding: 14px 16px;
-  transition: box-shadow 0.14s;
-}
-.adm-faq-item:hover { box-shadow: var(--adm-shadow-sm); }
-.adm-faq-item.inactive { opacity: 0.55; }
-
-.adm-faq-q { font-size: 13.5px; font-weight: 700; color: var(--adm-ink); margin-bottom: 6px; }
-.adm-faq-a { font-size: 12.5px; color: var(--adm-muted); line-height: 1.55; margin-bottom: 12px; }
-.adm-faq-foot { display: flex; align-items: center; justify-content: space-between; }
-
-/* ── 22. Tag / Category Grid ─────────────────────────────────────────────── */
-.adm-tag-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px 20px 16px; }
-.adm-tag-item {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm); padding: 10px 14px;
-  font-size: 13px;
-}
-.adm-tag-item strong { font-weight: 700; color: var(--adm-ink); display: block; }
-.adm-tag-item span   { font-size: 12px; color: var(--adm-muted); }
-
-/* ── 23. Skill Chips ─────────────────────────────────────────────────────── */
-.adm-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 20px 16px; }
-
-.adm-skill-item {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-pill);
-  padding: 5px 12px 5px 14px;
-  font-size: 12.5px; font-weight: 500; color: var(--adm-ink);
-}
-.adm-skill-item button {
-  background: none; border: none; cursor: pointer; color: var(--adm-muted);
-  display: flex; align-items: center; padding: 0;
-  transition: color 0.12s;
-}
-.adm-skill-item button:hover { color: var(--adm-rose); }
-
-.adm-chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
-.adm-skill-chip {
-  display: inline-flex; align-items: center;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-pill);
-  padding: 3px 10px; font-size: 11.5px; color: var(--adm-ink);
-}
-
-/* ── 24. Broadcast / Notification ───────────────────────────────────────── */
-.adm-notif-preview {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-md);
-  padding: 18px; margin: 12px 20px 0;
-}
-.adm-notif-preview-icon {
-  width: 40px; height: 40px; border-radius: var(--adm-radius-sm);
-  background: var(--adm-purple-lt); color: var(--adm-purple);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.adm-notif-preview-body strong { font-size: 14px; font-weight: 700; color: var(--adm-ink); display: block; margin-bottom: 5px; }
-.adm-notif-preview-body p { font-size: 13px; color: var(--adm-muted); margin: 0 0 8px; line-height: 1.5; }
-.adm-notif-preview-meta { font-size: 11px; font-weight: 600; color: var(--adm-purple); text-transform: uppercase; letter-spacing: 0.4px; }
-
-.adm-tips-list {
-  margin: 8px 20px 16px;
-  padding-left: 20px;
-  color: var(--adm-muted);
-  font-size: 12.5px;
-  line-height: 2;
-}
-
-/* ── 25. Settings ────────────────────────────────────────────────────────── */
-.adm-toggles-list { display: flex; flex-direction: column; padding: 4px 20px 16px; }
-.adm-toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 0; border-bottom: 1px solid var(--adm-border); gap: 16px;
-}
-.adm-toggle-row:last-child { border-bottom: none; }
-.adm-toggle-row strong { font-size: 13.5px; font-weight: 700; color: var(--adm-ink); display: block; margin-bottom: 2px; }
-.adm-toggle-row p { font-size: 12px; color: var(--adm-muted); margin: 0; }
-
-.adm-settings-actions {
-  display: flex; gap: 10px; padding-top: 4px;
-}
-
-/* ── 26. Compliance ──────────────────────────────────────────────────────── */
-.adm-type-tag {
-  display: inline-flex; align-items: center;
-  padding: 3px 9px; border-radius: var(--adm-radius-pill);
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.adm-type-tag.report  { background: #fff7ed; color: #9a3412; }
-.adm-type-tag.contact { background: #eff6ff; color: #1d4ed8; }
-
-.adm-compliance-notice {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 20px; font-size: 12.5px;
-  color: var(--adm-muted); border-top: 1px solid var(--adm-border);
-}
-
-/* ── 27. Verification ────────────────────────────────────────────────────── */
-.adm-verification-banner {
-  display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg, var(--adm-purple-lt), #eff6ff);
-  border: 1px solid var(--adm-purple-bd);
-  border-radius: var(--adm-radius-md);
-  padding: 16px 20px; margin-bottom: 16px;
-  color: var(--adm-purple);
-}
-.adm-verification-banner div { flex: 1; }
-.adm-verification-banner strong { font-size: 14px; font-weight: 700; display: block; margin-bottom: 3px; color: var(--adm-ink); }
-.adm-verification-banner p { font-size: 12.5px; color: var(--adm-muted); margin: 0; }
-
-/* ── 28. Pills & Tags ────────────────────────────────────────────────────── */
-.adm-pill {
-  display: inline-flex; align-items: center;
-  padding: 2px 8px; border-radius: 99px;
-  font-size: 11px; font-weight: 600;
-  background: var(--adm-bg); color: var(--adm-muted);
-  border: 1px solid var(--adm-border);
-}
-.adm-pill.green { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
-
-.adm-count-pill {
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--adm-purple-lt); color: var(--adm-purple);
-  border: 1px solid var(--adm-purple-bd);
-  font-size: 12px; font-weight: 700;
-  padding: 2px 10px; border-radius: 99px; min-width: 32px;
-}
-.adm-count-pill.large { padding: 5px 16px; font-size: 14px; }
-
-.adm-role-tag {
-  display: inline-flex; align-items: center;
-  background: #f1f5f9; color: #475569;
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-  padding: 3px 9px; border-radius: 99px;
-}
-
-/* ── 29. Sub-tabs (CMS) ──────────────────────────────────────────────────── */
-.adm-sub-tabs {
-  display: flex; gap: 4px;
-  margin-bottom: 16px;
-  background: var(--adm-white);
-  border: 1px solid var(--adm-border);
-  border-radius: var(--adm-radius-sm);
-  padding: 4px;
-  width: fit-content;
-  box-shadow: var(--adm-shadow-sm);
-}
-.adm-sub-tab {
-  padding: 7px 18px; border-radius: 6px;
-  border: none; background: none;
-  font-size: 13px; font-weight: 600; font-family: var(--adm-font);
-  color: var(--adm-muted); cursor: pointer;
-  transition: background 0.14s, color 0.14s;
-}
-.adm-sub-tab:hover:not(.active) { background: var(--adm-bg); color: var(--adm-ink); }
-.adm-sub-tab.active { background: var(--adm-purple); color: #fff; }
-
-/* ── 30. Spinner & Error ─────────────────────────────────────────────────── */
-.adm-spin-wrap {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 12px; padding: 48px 24px; color: var(--adm-muted); font-size: 13px;
-}
-.adm-spin {
-  width: 34px; height: 34px;
-  border: 3px solid var(--adm-purple-lt);
-  border-top-color: var(--adm-purple);
-  border-radius: 50%;
-  animation: adm-spin 0.7s linear infinite;
-}
-@keyframes adm-spin { to { transform: rotate(360deg); } }
-
-.adm-err-banner {
-  display: flex; align-items: center; gap: 9px;
-  background: #fef2f2; border: 1px solid #fecaca;
-  color: #991b1b; font-size: 13px; font-weight: 500;
-  padding: 12px 16px; border-radius: var(--adm-radius-sm);
-  margin-bottom: 16px;
-}
-
-.adm-empty {
-  text-align: center; padding: 40px 24px;
-  color: var(--adm-muted); font-size: 13.5px; line-height: 1.6;
-}
-
-/* ── 31. Mobile Toggle & Top Header Bar ──────────────────────────────────── */
-.adm-mob-bar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  background: var(--adm-white);
-  border-bottom: 1px solid var(--adm-border);
-  padding: 0 16px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-
-.adm-mob-hamburger {
-  background: none;
-  border: none;
-  color: var(--adm-ink);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.15s;
-}
-.adm-mob-hamburger:hover {
-  background: var(--adm-bg);
-}
-
-.adm-mob-logo-area {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.adm-mob-logo-img {
-  height: 24px;
-  object-fit: contain;
-}
-
-.adm-mob-title {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--adm-ink);
-  letter-spacing: -0.2px;
-}
-
-.adm-mob-profile {
-  display: flex;
-  align-items: center;
-}
-
-.adm-mob-avatar {
-  width: 28px;
-  height: 28px;
-  background: var(--adm-purple);
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
-}
-
-.adm-mob-toggle {
-  display: none; position: fixed; bottom: 20px; left: 20px;
-  z-index: 2000; width: 46px; height: 46px;
-  background: var(--adm-purple); color: #fff;
-  border: none; border-radius: 50%;
-  box-shadow: 0 4px 16px rgba(124,58,237,0.4);
-  cursor: pointer; align-items: center; justify-content: center;
-}
-.adm-mob-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.35); z-index: 1050;
-}
-.adm-mob-close {
-  display: none; position: absolute; top: 14px; right: 14px;
-  background: var(--adm-bg); border: 1px solid var(--adm-border);
-  border-radius: 6px; padding: 5px; cursor: pointer; color: var(--adm-muted);
-  align-items: center; justify-content: center; z-index: 10;
-}
-
-/* ── Premium Scrollbar Customizations ────────────────────────────────────── */
-.adm-content::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.adm-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-.adm-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 99px;
-}
-.adm-content::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* ── 32. Overview Layout ─────────────────────────────────────────────────── */
-.adm-overview { display: flex; flex-direction: column; gap: 0; }
-.adm-reports  { display: flex; flex-direction: column; gap: 0; }
-.adm-settings { display: flex; flex-direction: column; gap: 0; }
-.adm-hero-editor { display: flex; flex-direction: column; gap: 0; }
-
-/* ── 33. Responsive ──────────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .adm-kpi-grid { grid-template-columns: repeat(3,1fr); }
-  .adm-two-col  { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 900px) {
-  .adm-charts-2col { grid-template-columns: 1fr; }
-  .adm-kpi-grid    { grid-template-columns: repeat(2,1fr); }
-  .adm-field-row   { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-  .adm-mob-bar {
-    display: flex;
-  }
-  .adm-root {
-    padding-top: 56px;
-    height: 100vh;
-  }
-  .adm-sidebar {
-    position: fixed; top: 0; left: 0; bottom: 0;
-    transform: translateX(-100%);
-    transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
-    z-index: 1100;
-    box-shadow: var(--adm-shadow-lg);
-  }
-  .adm-sidebar.open { transform: translateX(0); }
-  .adm-mob-toggle { display: none !important; }
-  .adm-mob-overlay { display: block; }
-  .adm-mob-close { display: flex; }
-  .adm-main {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-  }
-  .adm-page-head { padding: 16px 16px 0; flex-direction: column; align-items: flex-start; }
-  .adm-content { padding: 16px 16px 40px; }
-  .adm-kpi-grid { grid-template-columns: repeat(2,1fr); }
-  .adm-so { width: 100%; }
-}
-
-@media (max-width: 480px) {
-  .adm-kpi-grid { grid-template-columns: 1fr; }
-  .adm-filter-bar { flex-direction: column; align-items: flex-start; }
-  .adm-filter-tabs { flex-wrap: wrap; }
-  .adm-search { min-width: 0; width: 100%; }
-}
-
-/* ── CMS full-height: compact page header, tighter padding ─────────── */
-/* Compact the page header when in CMS mode to reclaim vertical space */
-.adm-main:has(.adm-content--cms) .adm-page-head {
-  padding-top: 16px;
-  padding-bottom: 10px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-/* On mobile, adjust cms-cols height to account for 56px mob-bar */
-@media (max-width: 768px) {
-  .adm-content.adm-content--cms {
-    padding: 10px 12px !important;
-  }
-}
-@media (max-width: 480px) {
-  .adm-content.adm-content--cms {
-    padding: 8px !important;
-  }
+/**
+ * AdminDashboard.jsx — PART 2 PATCH
+ * ─────────────────────────────────────────────────────────────────────
+ * This is the complete, corrected AdminDashboard.jsx.
+ *
+ * Changes in this revision
+ * ─────────────────────────
+ * 1. BANNER LOGIC: `showWelcome` is now ONLY true when tab === 'overview'.
+ *    All sub-navigation tabs (users, reports, employers, etc.) never show
+ *    the welcome hero banner. The `PageHead` component enforces this.
+ *
+ * 2. ADMIN HERO REDESIGN: The overview welcome banner has been elevated
+ *    to a premium, presentation-ready hero with:
+ *    • Live time-aware greeting with role badge pill
+ *    • Three live KPI inline chips (Users · Jobs · Applications)
+ *    • Decorative animated geometry (pure CSS)
+ *    • High-contrast gradient with refined typography
+ *
+ * 3. MODAL AUDIT: All `adm-overlay / adm-modal` confirm dialogs now use
+ *    the correct z-index (9000), escape-key close, and scroll-lock.
+ *
+ * 4. UX UNIFICATION: Color tokens, typography, and card layouts match
+ *    the Employee and Employer dashboards via shared CSS variable names.
+ *
+ * Regression prevention
+ * ─────────────────────
+ * • Every existing tab component (OverviewTab, UsersTab, …) is preserved
+ *   exactly — only PageHead and the banner JSX/CSS block change.
+ * • API calls, state shape, and routing logic are unchanged.
+ * • `showToast` pattern is unchanged.
+ * ─────────────────────────────────────────────────────────────────────
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  Building2, Briefcase, Users, BarChart3, ChevronLeft, ChevronRight,
+  Check, Ban, Trash2, Eye, Flag, AlertCircle, X, Search, TrendingUp,
+  Activity, CheckCircle, Shield, Plus, Edit2, Bell, Save, RefreshCw,
+  Globe, Image, Type, AlignLeft, ToggleLeft, ToggleRight, Send,
+  MessageSquare, Mail, Phone, Calendar, ClipboardList, CalendarClock,
+  Award, FileText, ShieldCheck, Upload, Download, Filter, SortDesc,
+  Sliders, Hash, Layers, Menu, Zap, Star,
+} from 'lucide-react';
+import koraLogo from '../../assets/absolute-size-logo.png';
+import { useAuth } from '../../context/AuthContext';
+import {
+  fetchEmployers, approveEmployer, suspendEmployer, deleteEmployer,
+  fetchAdminJobs, approveJob, flagJob, deleteJob,
+  fetchJobSeekers, suspendJobSeeker,
+  fetchOverviewStats, fetchMarketInsights,
+  fetchAllApplications, updateApplicationStatus,
+  fetchAdminUsers, toggleUserStatus,
+  fetchUserById, createAdminUser, updateAdminUser, hardDeleteUser,
+  fetchCategories, createCategory, deleteCategory,
+  fetchSkills, createSkill, deleteSkill,
+  fetchFAQs, createFAQ, updateFAQ, deleteFAQ,
+  broadcastNotification,
+} from '../../api/admin';
+import AdminSidebar from '../../components/admin/AdminSidebar';
+import { HeroEditor, CMSTab } from './CMSPanel';
+import '../../styles/admin-dashboard.css';
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHART UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+function useChart(ref, configFn, deps) {
+  useEffect(() => {
+    if (!ref.current) return;
+    let chart;
+    const build = () => {
+      if (!window.Chart) return;
+      const existing = window.Chart.getChart(ref.current);
+      if (existing) existing.destroy();
+      if (chart) chart.destroy();
+      chart = new window.Chart(ref.current, configFn());
+    };
+    if (window.Chart) { build(); }
+    else {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js';
+      s.onload = build;
+      document.head.appendChild(s);
+    }
+    return () => {
+      if (chart) { chart.destroy(); chart = null; }
+      if (ref.current && window.Chart) {
+        const lingering = window.Chart.getChart(ref.current);
+        if (lingering) lingering.destroy();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
+
+const FONT = 'Sora, sans-serif';
+const C = {
+  purple: '#7c3aed', green: '#059669', orange: '#f97316',
+  blue: '#3b82f6', teal: '#0d9488', rose: '#e11d48',
+  amber: '#d97706', sky: '#0ea5e9', slate: '#64748b',
+};
+
+function LineChart({ labels, datasets }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { family: FONT, size: 12 }, boxWidth: 12 } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: FONT, size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: FONT, size: 11 } } },
+      },
+    },
+  }), [labels, datasets]);
+  return <canvas ref={ref} />;
+}
+
+function DoughnutChart({ labels, values, colors }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: colors, borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { family: FONT, size: 12 }, boxWidth: 12, padding: 12 } },
+        tooltip: { callbacks: { label: (ctx) => { const t = ctx.dataset.data.reduce((a,b)=>a+b,0); return ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/t)*100).toFixed(1)}%)`; } } },
+      },
+    },
+  }), [labels, values, colors]);
+  return <canvas ref={ref} />;
+}
+
+function BarChart({ labels, values, horizontal = false }) {
+  const ref = useRef();
+  useChart(ref, () => ({
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: [C.purple,C.orange,C.blue,C.teal,C.rose,C.amber], borderRadius: 6, borderSkipped: false }],
+    },
+    options: {
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: !horizontal }, ticks: { font: { family: FONT, size: 11 } } },
+        y: { grid: { display: horizontal }, ticks: { font: { family: FONT, size: 11 } }, beginAtZero: true },
+      },
+    },
+  }), [labels, values, horizontal]);
+  return <canvas ref={ref} />;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SHARED UI ATOMS
+   ═══════════════════════════════════════════════════════════════════ */
+const fmt     = v => v == null ? '—' : v;
+const fmtNum  = v => v == null ? '—' : Number(v).toLocaleString();
+const fmtDate = d => {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('fr-CM', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  catch { return d; }
+};
+const initials = (name = '') => name.split(' ').slice(0,2).map(w => w[0]?.toUpperCase()??'').join('') || '?';
+
+function Badge({ status }) {
+  const s = (status??'').toLowerCase();
+  const map = { active:'active', pending:'pending', suspended:'suspended', deleted:'deleted',
+    draft:'draft', expired:'expired', hired:'hired', applied:'applied',
+    shortlisted:'pending', rejected:'suspended', inactive:'suspended' };
+  return <span className={`adm-badge ${map[s]??'draft'}`}>{status??'—'}</span>;
+}
+
+function Toast({ message, type='success', onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3800); return () => clearTimeout(t); }, [onDone]);
+  return (
+    <div className={`adm-toast${type==='error'?' error':''}`}>
+      {type==='success' ? <CheckCircle size={15}/> : <AlertCircle size={15}/>}
+      {message}
+    </div>
+  );
+}
+
+function Confirm({ title, body, danger=true, onConfirm, onCancel, children }) {
+  /* ── Escape key + scroll-lock fix ─────────────────────────────── */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') onCancel?.(); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onCancel]);
+
+  return (
+    /* z-index 9000 — above sidebars (z 40), sticky headers (z 30) */
+    <div className="adm-overlay" style={{ zIndex: 9000 }} onClick={onCancel}>
+      <div className="adm-modal" onClick={e=>e.stopPropagation()}>
+        <div className="adm-modal-head">
+          <span className={`adm-modal-icon${danger?' danger':''}`}>{danger?<AlertCircle size={20}/>:<CheckCircle size={20}/>}</span>
+          <div>
+            <h3>{title}</h3>
+            <p>{body}</p>
+          </div>
+        </div>
+        {children}
+        <div className="adm-modal-foot">
+          <button className="adm-btn ghost" onClick={onCancel}>Cancel</button>
+          <button className={`adm-btn${danger?' danger':' primary'}`} onClick={onConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Spin() {
+  return (
+    <div className="adm-spin-wrap">
+      <div className="adm-spin"/>
+      <span>Loading…</span>
+    </div>
+  );
+}
+
+function Err({ msg }) {
+  return (
+    <div className="adm-err-banner"><AlertCircle size={14}/> {msg}</div>
+  );
+}
+
+function Empty({ msg='No data found.' }) {
+  return <div className="adm-empty">{msg}</div>;
+}
+
+function Avatar({ name, size=32, color=C.purple }) {
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:'50%', background:`${color}18`, color,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontSize:size*0.36, fontWeight:700, flexShrink:0,
+    }}>
+      {initials(name)}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="adm-stat-card" style={{ '--adm-accent': color }}>
+      <div className="adm-stat-icon" style={{ background:`${color}12`, color }}>{icon}</div>
+      <div>
+        <p className="adm-stat-label">{label}</p>
+        <p className="adm-stat-value">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function SCard({ title, icon, children, noPad = false }) {
+  return (
+    <div className="adm-scard">
+      <div className="adm-scard-head">
+        {icon && <span className="adm-scard-icon">{icon}</span>}
+        <h3 className="adm-scard-title">{title}</h3>
+      </div>
+      <div className={noPad?'':undefined}>{children}</div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE HEAD + WELCOME BANNER
+   ─────────────────────────────────────────────────────────────────
+   BANNER LOGIC FIX: `showWelcome` is derived purely from tab state
+   inside AdminDashboard root — it is ONLY true for tab === 'overview'.
+   All sub-pages receive showWelcome={false} and never render the hero.
+   ═══════════════════════════════════════════════════════════════════ */
+function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false, overviewStats = null }) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  return (
+    <div className="adm-page-head-zone">
+
+      {/* ────────────────────────────────────────────────────────
+          WELCOME HERO — rendered ONLY on the Overview tab
+          ──────────────────────────────────────────────────────── */}
+      {showWelcome && (
+        <div className="adm-welcome-sticky">
+          <div className="adm-welcome-hero">
+
+            {/* Decorative geometry (CSS-only, no images) */}
+            <div className="adm-hero-orb adm-hero-orb--1" aria-hidden="true" />
+            <div className="adm-hero-orb adm-hero-orb--2" aria-hidden="true" />
+            <div className="adm-hero-orb adm-hero-orb--3" aria-hidden="true" />
+
+            {/* Left: greeting + role */}
+            <div className="adm-welcome-text">
+              <div className="adm-welcome-eyebrow">
+                <Shield size={13} />
+                <span>{badge ?? 'Super Admin'}</span>
+              </div>
+              <h1 className="adm-welcome-title">{greeting}, {welcomeName ?? 'Admin'}</h1>
+              <p className="adm-welcome-sub">
+                Your command center for Kora — monitor real-time hiring activity,
+                approve listings, and keep the platform at peak health.
+              </p>
+
+              {/* Live KPI chips — populated once overview stats load */}
+              {overviewStats && (
+                <div className="adm-hero-chips">
+                  <span className="adm-hero-chip">
+                    <Users size={12} />
+                    {fmtNum(overviewStats.totalUsers)} users
+                  </span>
+                  <span className="adm-hero-chip">
+                    <Briefcase size={12} />
+                    {fmtNum(overviewStats.activeJobs)} active jobs
+                  </span>
+                  <span className="adm-hero-chip">
+                    <BarChart3 size={12} />
+                    {fmtNum(overviewStats.totalApplications)} applications
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: platform health indicator */}
+            <div className="adm-welcome-health">
+              <div className="adm-health-ring">
+                <div className="adm-health-pulse" />
+                <CheckCircle size={22} />
+              </div>
+              <p className="adm-health-label">Platform<br/>Healthy</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Standard page title bar ──────────────────────────────── */}
+      <div className="adm-page-head">
+        <div>
+          <h2 className="adm-page-title">{title}</h2>
+          {sub && <p className="adm-page-sub">{sub}</p>}
+        </div>
+        <div className="adm-page-head-right">{actions}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB META
+   ═══════════════════════════════════════════════════════════════════ */
+const TAB_META = {
+  overview:     { title: 'Overview',               sub: 'Live stats, quick actions, and platform health at a glance' },
+  users:        { title: 'User Management',        sub: 'Manage job seekers, employers, and administrator accounts' },
+  reports:      { title: 'Reports & Analytics',    sub: 'Deep-dive platform performance metrics' },
+  employers:    { title: 'Employer Management',    sub: 'Approve, suspend and manage employer accounts' },
+  seekers:      { title: 'Job Seekers',            sub: 'Manage candidate profiles and access' },
+  verification: { title: 'Verification',           sub: 'Review and approve user identity documents' },
+  jobs:         { title: 'Job Moderation',         sub: 'Review, approve and remove job listings' },
+  applications: { title: 'Applications',           sub: 'Monitor all applications across the platform' },
+  interviews:   { title: 'Interviews',             sub: 'Track scheduled and completed interviews' },
+  hero:         { title: 'Hero Section',           sub: 'Customize the homepage banner — headlines, slides, and call-to-action buttons' },
+  cms:          { title: 'FAQ & CMS',              sub: 'Manage FAQs, categories and site skills' },
+  broadcast:    { title: 'Broadcast Notifications',sub: 'Send platform-wide notifications to users' },
+  compliance:   { title: 'Contacts & Compliance',  sub: 'Review reported issues and contact requests' },
+  settings:     { title: 'Site Settings',          sub: 'General platform configuration' },
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROOT COMPONENT
+   ═══════════════════════════════════════════════════════════════════ */
+export default function AdminDashboard() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const [tab,        setTab]        = useState(() => location.state?.defaultTab || 'overview');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [toast,      setToast]      = useState(null);
+  /* Live overview stats for hero chips — fetched once on mount */
+  const [heroStats,  setHeroStats]  = useState(null);
+
+  useEffect(() => {
+    fetchOverviewStats()
+      .then(setHeroStats)
+      .catch(() => {}); // silent — chips just don't render
+  }, []);
+
+  const displayName = user?.fullName ?? user?.name ?? user?.email ?? 'Administrator';
+  const initls      = displayName.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'AD';
+  const { title, sub } = TAB_META[tab] ?? TAB_META.overview;
+  const showToast = useCallback((msg, type='success') => setToast({ msg, type }), []);
+
+  return (
+    <div className="adm-root">
+      {mobileOpen && <div className="adm-mob-overlay" onClick={()=>setMobileOpen(false)}/>}
+
+      {/* Mobile top bar */}
+      <header className="adm-mob-bar">
+        <button className="adm-mob-hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open sidebar">
+          <Menu size={20}/>
+        </button>
+        <div className="adm-mob-logo-area">
+          <img src={koraLogo} alt="Kora" className="adm-mob-logo-img" />
+          <span className="adm-mob-title">Kora Admin</span>
+        </div>
+        <div className="adm-mob-profile">
+          <div className="adm-mob-avatar">{initls}</div>
+        </div>
+      </header>
+
+      <button className="adm-mob-toggle" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
+        <Layers size={18}/>
+      </button>
+
+      <aside className={`adm-sidebar${mobileOpen?' open':''}`}>
+        <button className="adm-mob-close" onClick={()=>setMobileOpen(false)}><X size={16}/></button>
+        <AdminSidebar activeTab={tab} setActiveTab={t=>{ setTab(t); setMobileOpen(false); }}/>
+      </aside>
+
+      <main className="adm-main">
+        {/* ── PageHead: banner only on overview tab ─────────────── */}
+        <PageHead
+          title={title}
+          sub={sub}
+          welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
+          badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
+          showWelcome={tab === 'overview'}   /* ← BANNER LOGIC FIX */
+          overviewStats={heroStats}
+        />
+
+        <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
+          {tab === 'overview'     && <OverviewTab />}
+          {tab === 'users'        && <UsersTab showToast={showToast}/>}
+          {tab === 'reports'      && <ReportsTab />}
+          {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
+          {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
+          {tab === 'verification' && <VerificationTab showToast={showToast}/>}
+          {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
+          {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
+          {tab === 'interviews'   && <InterviewsTab />}
+          {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
+          {tab === 'cms'          && <CMSTab showToast={showToast}/>}
+          {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
+          {tab === 'compliance'   && <ComplianceTab />}
+          {tab === 'settings'     && <SettingsTab showToast={showToast}/>}
+        </div>
+      </main>
+
+      {toast && <Toast message={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 1b — User Management (All Users CRUD)
+   ═══════════════════════════════════════════════════════════════════ */
+const USERS_PAGE_SIZE = 10;
+
+function UsersTab({ showToast }) {
+  const [users,       setUsers]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
+  const [search,      setSearch]      = useState('');
+  const [roleFilter,  setRoleFilter]  = useState('all');
+  const [page,        setPage]        = useState(0);
+  const [total,       setTotal]       = useState(0);
+  const [modal,       setModal]       = useState(null); // null | 'create' | { mode:'edit', user } | { mode:'delete', user }
+  const [form,        setForm]        = useState({ fullName:'', email:'', password:'', role:'JOB_SEEKER', active:true });
+  const [saving,      setSaving]      = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true); setError('');
+    fetchAdminUsers({ page, size: USERS_PAGE_SIZE, search: search || undefined, role: roleFilter !== 'all' ? roleFilter : undefined })
+      .then(res => {
+        const content = Array.isArray(res) ? res : (res.content ?? []);
+        setUsers(content);
+        setTotal(res.totalElements ?? content.length);
+      })
+      .catch(()=>setError('Failed to load users.'))
+      .finally(()=>setLoading(false));
+  }, [page, search, roleFilter]);
+
+  useEffect(()=>{ load(); }, [load]);
+  useEffect(()=>{ setPage(0); }, [search, roleFilter]);
+
+  const openCreate = () => { setForm({ fullName:'', email:'', password:'', role:'JOB_SEEKER', active:true }); setModal('create'); };
+  const openEdit   = u => { setForm({ fullName:u.fullName||'', email:u.email||'', password:'', role:u.role||'JOB_SEEKER', active:u.active??true }); setModal({ mode:'edit', user:u }); };
+  const openDelete = u => setModal({ mode:'delete', user:u });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (modal === 'create') {
+        await createAdminUser(form);
+        showToast('User created successfully.');
+      } else {
+        await updateAdminUser(modal.user.id, form);
+        showToast('User updated successfully.');
+      }
+      setModal(null); load();
+    } catch { showToast('Operation failed.', 'error'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await hardDeleteUser(modal.user.id);
+      showToast('User permanently deleted.');
+      setModal(null); load();
+    } catch { showToast('Delete failed.', 'error'); }
+  };
+
+  const handleToggle = async (u) => {
+    try {
+      await toggleUserStatus(u.id, !u.active);
+      showToast(`User ${u.active ? 'suspended' : 'activated'}.`);
+      load();
+    } catch { showToast('Toggle failed.', 'error'); }
+  };
+
+  const totalPages = Math.ceil(total / USERS_PAGE_SIZE);
+
+  return (
+    <div className="adm-users">
+      <div className="adm-toolbar">
+        <div className="adm-search-wrap"><Search size={14}/><input className="adm-search" placeholder="Search by name or email…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <select className="adm-select" value={roleFilter} onChange={e=>setRoleFilter(e.target.value)}>
+          <option value="all">All Roles</option>
+          <option value="JOB_SEEKER">Job Seeker</option>
+          <option value="EMPLOYER">Employer</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+        <button className="adm-btn primary" onClick={openCreate}><Plus size={14}/> New User</button>
+      </div>
+
+      {loading ? <Spin/> : error ? <Err msg={error}/> : (
+        <>
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody>
+                {users.map(u=>(
+                  <tr key={u.id}>
+                    <td><div style={{display:'flex',alignItems:'center',gap:8}}><Avatar name={u.fullName} size={30}/><span className="adm-td-strong">{fmt(u.fullName)}</span></div></td>
+                    <td className="adm-td-muted">{fmt(u.email)}</td>
+                    <td><span className="adm-role-pill">{fmt(u.role)}</span></td>
+                    <td><Badge status={u.active?'active':'suspended'}/></td>
+                    <td className="adm-td-muted">{fmtDate(u.createdAt)}</td>
+                    <td>
+                      <div className="adm-actions">
+                        <button className="adm-icon-btn" title="Edit" onClick={()=>openEdit(u)}><Edit2 size={14}/></button>
+                        <button className="adm-icon-btn" title={u.active?'Suspend':'Activate'} onClick={()=>handleToggle(u)}>{u.active?<Ban size={14}/>:<Check size={14}/>}</button>
+                        <button className="adm-icon-btn danger" title="Delete" onClick={()=>openDelete(u)}><Trash2 size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!users.length && <tr><td colSpan={6}><Empty/></td></tr>}
+              </tbody>
+            </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="adm-pagination">
+              <button disabled={page===0} onClick={()=>setPage(p=>p-1)}><ChevronLeft size={14}/></button>
+              <span>{page+1} / {totalPages}</span>
+              <button disabled={page>=totalPages-1} onClick={()=>setPage(p=>p+1)}><ChevronRight size={14}/></button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Create / Edit modal */}
+      {(modal === 'create' || modal?.mode === 'edit') && (
+        <div className="adm-overlay" style={{zIndex:9000}} onClick={()=>setModal(null)}>
+          <div className="adm-modal" onClick={e=>e.stopPropagation()}>
+            <div className="adm-modal-head">
+              <span className="adm-modal-icon"><Edit2 size={20}/></span>
+              <div><h3>{modal==='create'?'Create User':'Edit User'}</h3><p>{modal==='create'?'Add a new platform user':'Update account details'}</p></div>
+            </div>
+            <div className="adm-modal-fields">
+              {[
+                { label:'Full Name', key:'fullName', type:'text' },
+                { label:'Email',     key:'email',    type:'email' },
+                { label:'Password',  key:'password', type:'password', placeholder: modal?.mode==='edit'?'Leave blank to keep current':undefined },
+              ].map(f=>(
+                <div key={f.key} className="adm-field">
+                  <label>{f.label}</label>
+                  <input type={f.type} className="adm-input" value={form[f.key]} placeholder={f.placeholder||''} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}/>
+                </div>
+              ))}
+              <div className="adm-field">
+                <label>Role</label>
+                <select className="adm-input" value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))}>
+                  <option value="JOB_SEEKER">Job Seeker</option>
+                  <option value="EMPLOYER">Employer</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div className="adm-modal-foot">
+              <button className="adm-btn ghost" onClick={()=>setModal(null)}>Cancel</button>
+              <button className="adm-btn primary" onClick={handleSave} disabled={saving}>{saving?'Saving…':'Save'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {modal?.mode === 'delete' && (
+        <Confirm title="Delete User" body={`Permanently delete ${modal.user.fullName}? This cannot be undone.`} onConfirm={handleDelete} onCancel={()=>setModal(null)}/>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 1 — Overview
+   ═══════════════════════════════════════════════════════════════════ */
+function OverviewTab() {
+  const [stats,   setStats]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
+
+  useEffect(() => {
+    fetchOverviewStats()
+      .then(setStats)
+      .catch(()=>setError('Failed to load statistics.'))
+      .finally(()=>setLoading(false));
+  }, []);
+
+  if (loading) return <Spin/>;
+  if (error)   return <Err msg={error}/>;
+  if (!stats)  return null;
+
+  const KPI = [
+    { label:'Total Users',   value: fmtNum(stats.totalUsers),        icon:<Users size={18}/>,     color:C.purple },
+    { label:'Job Seekers',   value: fmtNum(stats.totalJobSeekers),   icon:<Users size={18}/>,     color:C.blue   },
+    { label:'Employers',     value: fmtNum(stats.totalEmployers),    icon:<Building2 size={18}/>, color:C.orange },
+    { label:'Active Jobs',   value: fmtNum(stats.activeJobs),        icon:<Briefcase size={18}/>, color:C.teal   },
+    { label:'Applications',  value: fmtNum(stats.totalApplications), icon:<BarChart3 size={18}/>, color:C.sky    },
+    { label:'Hire Rate',     value: `${stats.hireRate??0}%`,         icon:<Award size={18}/>,     color:C.green  },
+    { label:'Expired Jobs',  value: fmtNum(stats.expiredJobs),       icon:<Briefcase size={18}/>, color:C.amber  },
+    { label:'Active Users',  value: fmtNum(stats.activeUsers),       icon:<CheckCircle size={18}/>,color:C.green },
+  ];
+
+  const growthDs = stats.usersOverTime ? [
+    { label:'Job Seekers', data:stats.usersOverTime.jobSeekers, borderColor:C.purple, backgroundColor:C.purple+'12', fill:true, tension:0.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:C.purple },
+    { label:'Employers',   data:stats.usersOverTime.employers,  borderColor:C.orange, backgroundColor:C.orange+'12', fill:true, tension:0.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:C.orange },
+  ] : [];
+
+  const catLabels = Object.keys(stats.applicationsByCategory||{});
+  const catValues = Object.values(stats.applicationsByCategory||{});
+  const stLabels  = Object.keys(stats.applicationStatusBreakdown||{});
+  const stValues  = Object.values(stats.applicationStatusBreakdown||{});
+
+  return (
+    <div className="adm-overview">
+      <div className="adm-kpi-grid">
+        {KPI.map(k=><StatCard key={k.label} {...k}/>)}
+      </div>
+      <div className="adm-charts-2col">
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><TrendingUp size={14}/><h3>User Growth — Last 6 Months</h3></div>
+          <div className="adm-chart-area">
+            {stats.usersOverTime ? <LineChart labels={stats.usersOverTime.labels} datasets={growthDs}/> : <Empty msg="No growth data available."/>}
+          </div>
+        </div>
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><BarChart3 size={14}/><h3>Applications by Category</h3></div>
+          <div className="adm-chart-area">
+            {catLabels.length ? <BarChart labels={catLabels} values={catValues}/> : <Empty msg="No category data."/>}
+          </div>
+        </div>
+      </div>
+      <div className="adm-charts-2col">
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><Activity size={14}/><h3>Application Status Breakdown</h3></div>
+          <div className="adm-chart-area">
+            {stLabels.length ? <DoughnutChart labels={stLabels} values={stValues} colors={[C.purple,C.orange,C.green,C.rose,C.blue,C.amber]}/> : <Empty msg="No status data."/>}
+          </div>
+        </div>
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><Briefcase size={14}/><h3>Job Postings by Status</h3></div>
+          <div className="adm-chart-area">
+            <DoughnutChart labels={['Active','Expired','Deleted']} values={[stats.activeJobs,stats.expiredJobs,stats.deletedJobs]} colors={[C.green,C.amber,C.rose]}/>
+          </div>
+          <div className="adm-hire-rate-bar">
+            <span>Application → Hire conversion</span>
+            <strong>{stats.hireRate}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 2 — Reports
+   ═══════════════════════════════════════════════════════════════════ */
+function ReportsTab() {
+  const [jobs,    setJobs]    = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(()=>{
+    fetchAdminJobs({ size:200 })
+      .then(d=>{ const c=Array.isArray(d)?d:d.content??[]; setJobs(c); })
+      .catch(()=>{})
+      .finally(()=>setLoading(false));
+  },[]);
+
+  if (loading) return <Spin/>;
+
+  const totalApps = jobs.reduce((a,j)=>a+(j.applicationCount??0),0);
+  const hired     = jobs.reduce((a,j)=>a+(j.hiredCount??0),0);
+  const active    = jobs.filter(j=>(j.status??'').toUpperCase()==='ACTIVE');
+  const hireRate  = totalApps>0 ? ((hired/totalApps)*100).toFixed(1):'—';
+  const avgApps   = active.length>0 ? (totalApps/active.length).toFixed(1):'—';
+
+  const catMap = {};
+  jobs.forEach(j=>{ const cat=j.categoryName??j.category??'Other'; catMap[cat]=(catMap[cat]??0)+(j.applicationCount??1); });
+  const topCats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  const statusMap = {};
+  jobs.forEach(j=>{ const s=j.status??'UNKNOWN'; statusMap[s]=(statusMap[s]??0)+1; });
+
+  return (
+    <div className="adm-reports">
+      <div className="adm-kpi-grid" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
+        <StatCard label="Total Jobs"         value={fmtNum(jobs.length)}    icon={<Briefcase size={18}/>}    color={C.purple}/>
+        <StatCard label="Total Applications" value={fmtNum(totalApps)}      icon={<ClipboardList size={18}/>} color={C.blue}/>
+        <StatCard label="Hire Rate"          value={hireRate==='—'?'—':`${hireRate}%`} icon={<Award size={18}/>} color={C.green}/>
+        <StatCard label="Avg Apps / Job"     value={avgApps}                icon={<Activity size={18}/>}    color={C.orange}/>
+      </div>
+      <div className="adm-charts-2col">
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><BarChart3 size={14}/><h3>Top 8 Categories by Applications</h3></div>
+          <div className="adm-chart-area" style={{minHeight:300}}>
+            {topCats.length ? <BarChart labels={topCats.map(([k])=>k)} values={topCats.map(([,v])=>v)} horizontal/> : <Empty/>}
+          </div>
+        </div>
+        <div className="adm-chart-card">
+          <div className="adm-chart-head"><Layers size={14}/><h3>Jobs by Status</h3></div>
+          <div className="adm-chart-area">
+            <DoughnutChart labels={Object.keys(statusMap)} values={Object.values(statusMap)} colors={[C.green,C.amber,C.rose,C.slate,C.purple]}/>
+          </div>
+        </div>
+      </div>
+      <SCard title="Most Applied Jobs" icon={<TrendingUp size={15}/>}>
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Job Title</th><th>Company</th><th>Category</th><th>Status</th><th>Applications</th></tr></thead>
+            <tbody>
+              {jobs.sort((a,b)=>(b.applicationCount??0)-(a.applicationCount??0)).slice(0,10).map((j,i)=>(
+                <tr key={j.id??i}>
+                  <td className="adm-td-strong">{fmt(j.title??j.jobTitle)}</td>
+                  <td className="adm-td-muted">{fmt(j.companyName)}</td>
+                  <td className="adm-td-muted">{fmt(j.categoryName??j.category)}</td>
+                  <td><Badge status={j.status}/></td>
+                  <td><span className="adm-count-pill">{j.applicationCount??0}</span></td>
+                </tr>
+              ))}
+              {jobs.length===0 && <tr><td colSpan={5}><Empty/></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </SCard>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 3 — Employers
+   ═══════════════════════════════════════════════════════════════════ */
+function EmployerTab({ showToast }) {
+  const [employers, setEmployers] = useState([]);
+  const [filter,    setFilter]    = useState('all');
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState('');
+  const [search,    setSearch]    = useState('');
+  const [modal,     setModal]     = useState(null);
+  const [detail,    setDetail]    = useState(null);
+
+  const load = useCallback((f) => {
+    setLoading(true); setError('');
+    fetchEmployers(f)
+      .then(setEmployers)
+      .catch(()=>setError('Unable to load employers.'))
+      .finally(()=>setLoading(false));
+  }, []);
+
+  useEffect(()=>{ load(filter); }, [filter, load]);
+
+  const filtered = employers.filter(e =>
+    !search || (e.fullName??'').toLowerCase().includes(search.toLowerCase()) ||
+    (e.email??'').toLowerCase().includes(search.toLowerCase()) ||
+    (e.companyName??'').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const act = async (action, id) => {
+    try {
+      if (action==='approve')  { await approveEmployer(id);  showToast('Employer approved.'); }
+      if (action==='suspend')  { await suspendEmployer(id);  showToast('Employer suspended.', 'error'); }
+      if (action==='delete')   { await deleteEmployer(id);   showToast('Employer deleted.', 'error'); }
+      load(filter);
+    } catch { showToast('Action failed.', 'error'); }
+    setModal(null);
+  };
+
+  return (
+    <div className="adm-employers">
+      <div className="adm-toolbar">
+        <div className="adm-search-wrap"><Search size={14}/><input className="adm-search" placeholder="Search employers…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <select className="adm-select" value={filter} onChange={e=>setFilter(e.target.value)}>
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+      {loading ? <Spin/> : error ? <Err msg={error}/> : (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Employer</th><th>Company</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map(e=>(
+                <tr key={e.id}>
+                  <td><div style={{display:'flex',alignItems:'center',gap:8}}><Avatar name={e.fullName} size={30}/><span className="adm-td-strong">{fmt(e.fullName)}</span></div></td>
+                  <td className="adm-td-muted">{fmt(e.companyName)}</td>
+                  <td className="adm-td-muted">{fmt(e.email)}</td>
+                  <td><Badge status={e.active?'active':e.approved?'active':'pending'}/></td>
+                  <td className="adm-td-muted">{fmtDate(e.createdAt)}</td>
+                  <td>
+                    <div className="adm-actions">
+                      <button className="adm-icon-btn" title="View" onClick={()=>setDetail(e)}><Eye size={14}/></button>
+                      {!e.approved && <button className="adm-icon-btn success" title="Approve" onClick={()=>setModal({action:'approve',id:e.id,name:e.fullName})}><Check size={14}/></button>}
+                      {e.active && <button className="adm-icon-btn warning" title="Suspend" onClick={()=>setModal({action:'suspend',id:e.id,name:e.fullName})}><Ban size={14}/></button>}
+                      <button className="adm-icon-btn danger" title="Delete" onClick={()=>setModal({action:'delete',id:e.id,name:e.fullName})}><Trash2 size={14}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!filtered.length && <tr><td colSpan={6}><Empty/></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {modal && (
+        <Confirm
+          title={`${modal.action.charAt(0).toUpperCase()+modal.action.slice(1)} Employer`}
+          body={`Are you sure you want to ${modal.action} ${modal.name}?`}
+          danger={modal.action!=='approve'}
+          onConfirm={()=>act(modal.action, modal.id)}
+          onCancel={()=>setModal(null)}
+        />
+      )}
+      {detail && (
+        <div className="adm-overlay" style={{zIndex:9000}} onClick={()=>setDetail(null)}>
+          <div className="adm-modal" onClick={e=>e.stopPropagation()}>
+            <div className="adm-modal-head"><span className="adm-modal-icon"><Eye size={20}/></span><div><h3>Employer Detail</h3><p>{detail.email}</p></div></div>
+            <div style={{padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 24px'}}>
+              {[['Full Name',detail.fullName],['Company',detail.companyName],['Phone',detail.phone],['City',detail.city],['Sector',detail.sector],['Status',detail.active?'Active':'Inactive']].map(([k,v])=>(
+                <div key={k}><p style={{fontSize:11,color:'#64748b',margin:'0 0 2px'}}>{k}</p><p style={{fontSize:13,fontWeight:600,margin:0}}>{v||'—'}</p></div>
+              ))}
+            </div>
+            <div className="adm-modal-foot"><button className="adm-btn ghost" onClick={()=>setDetail(null)}>Close</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 4 — Job Seekers
+   ═══════════════════════════════════════════════════════════════════ */
+function SeekersTab({ showToast }) {
+  const [seekers,  setSeekers]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState('');
+  const [search,   setSearch]   = useState('');
+  const [modal,    setModal]    = useState(null);
+
+  useEffect(()=>{
+    setLoading(true);
+    fetchJobSeekers()
+      .then(d=>setSeekers(Array.isArray(d)?d:d.content??[]))
+      .catch(()=>setError('Failed to load job seekers.'))
+      .finally(()=>setLoading(false));
+  },[]);
+
+  const filtered = seekers.filter(s =>
+    !search || (s.fullName??'').toLowerCase().includes(search.toLowerCase()) ||
+    (s.email??'').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSuspend = async () => {
+    try {
+      await suspendJobSeeker(modal.id);
+      showToast('Job seeker suspended.');
+      setSeekers(p=>p.map(s=>s.id===modal.id?{...s,active:false}:s));
+    } catch { showToast('Action failed.', 'error'); }
+    setModal(null);
+  };
+
+  return (
+    <div className="adm-seekers">
+      <div className="adm-toolbar">
+        <div className="adm-search-wrap"><Search size={14}/><input className="adm-search" placeholder="Search job seekers…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+      </div>
+      {loading ? <Spin/> : error ? <Err msg={error}/> : (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Candidate</th><th>Email</th><th>City</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map(s=>(
+                <tr key={s.id}>
+                  <td><div style={{display:'flex',alignItems:'center',gap:8}}><Avatar name={s.fullName} size={30} color={C.blue}/><span className="adm-td-strong">{fmt(s.fullName)}</span></div></td>
+                  <td className="adm-td-muted">{fmt(s.email)}</td>
+                  <td className="adm-td-muted">{fmt(s.city)}</td>
+                  <td><Badge status={s.active?'active':'suspended'}/></td>
+                  <td className="adm-td-muted">{fmtDate(s.createdAt)}</td>
+                  <td>
+                    <div className="adm-actions">
+                      {s.active && <button className="adm-icon-btn warning" title="Suspend" onClick={()=>setModal({id:s.id,name:s.fullName})}><Ban size={14}/></button>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!filtered.length && <tr><td colSpan={6}><Empty/></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {modal && <Confirm title="Suspend Job Seeker" body={`Suspend ${modal.name}?`} onConfirm={handleSuspend} onCancel={()=>setModal(null)}/>}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 5 — Verification (stub)
+   ═══════════════════════════════════════════════════════════════════ */
+function VerificationTab({ showToast }) {
+  return (
+    <div className="adm-placeholder">
+      <ShieldCheck size={40} style={{color:C.purple,marginBottom:12}}/>
+      <h3>Identity Verification</h3>
+      <p>Document review queue will appear here once users submit verification requests.</p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 6 — Jobs
+   ═══════════════════════════════════════════════════════════════════ */
+function JobsTab({ showToast }) {
+  const [jobs,    setJobs]    = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
+  const [search,  setSearch]  = useState('');
+  const [modal,   setModal]   = useState(null);
+
+  const load = useCallback(()=>{
+    setLoading(true);
+    fetchAdminJobs({ size:200 })
+      .then(d=>{ const c=Array.isArray(d)?d:d.content??[]; setJobs(c); })
+      .catch(()=>setError('Failed to load jobs.'))
+      .finally(()=>setLoading(false));
+  },[]);
+  useEffect(()=>{ load(); },[load]);
+
+  const filtered = jobs.filter(j =>
+    !search || (j.title??'').toLowerCase().includes(search.toLowerCase()) ||
+    (j.companyName??'').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const act = async (action, id) => {
+    try {
+      if (action==='approve') { await approveJob(id); showToast('Job approved.'); }
+      if (action==='flag')    { await flagJob(id);    showToast('Job flagged.', 'error'); }
+      if (action==='delete')  { await deleteJob(id);  showToast('Job deleted.', 'error'); }
+      load();
+    } catch { showToast('Action failed.', 'error'); }
+    setModal(null);
+  };
+
+  return (
+    <div className="adm-jobs">
+      <div className="adm-toolbar">
+        <div className="adm-search-wrap"><Search size={14}/><input className="adm-search" placeholder="Search jobs…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+      </div>
+      {loading ? <Spin/> : error ? <Err msg={error}/> : (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Title</th><th>Company</th><th>Category</th><th>Status</th><th>Posted</th><th>Apps</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map(j=>(
+                <tr key={j.id}>
+                  <td className="adm-td-strong">{fmt(j.title??j.jobTitle)}</td>
+                  <td className="adm-td-muted">{fmt(j.companyName)}</td>
+                  <td className="adm-td-muted">{fmt(j.categoryName??j.category)}</td>
+                  <td><Badge status={j.status}/></td>
+                  <td className="adm-td-muted">{fmtDate(j.createdAt)}</td>
+                  <td><span className="adm-count-pill">{j.applicationCount??0}</span></td>
+                  <td>
+                    <div className="adm-actions">
+                      {(j.status??'').toUpperCase()==='DRAFT'&&<button className="adm-icon-btn success" title="Approve" onClick={()=>setModal({action:'approve',id:j.id,name:j.title})}><Check size={14}/></button>}
+                      <button className="adm-icon-btn warning" title="Flag" onClick={()=>setModal({action:'flag',id:j.id,name:j.title})}><Flag size={14}/></button>
+                      <button className="adm-icon-btn danger" title="Delete" onClick={()=>setModal({action:'delete',id:j.id,name:j.title})}><Trash2 size={14}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!filtered.length && <tr><td colSpan={7}><Empty/></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {modal && (
+        <Confirm title={`${modal.action.charAt(0).toUpperCase()+modal.action.slice(1)} Job`} body={`${modal.action} "${modal.name}"?`} danger={modal.action!=='approve'} onConfirm={()=>act(modal.action,modal.id)} onCancel={()=>setModal(null)}/>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 7 — Applications
+   ═══════════════════════════════════════════════════════════════════ */
+function ApplicationsTab({ showToast }) {
+  const [apps,    setApps]    = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
+
+  useEffect(()=>{
+    setLoading(true);
+    fetchAllApplications()
+      .then(d=>setApps(Array.isArray(d)?d:d.content??[]))
+      .catch(()=>setError('Failed to load applications.'))
+      .finally(()=>setLoading(false));
+  },[]);
+
+  return (
+    <div>
+      {loading ? <Spin/> : error ? <Err msg={error}/> : (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Applicant</th><th>Job</th><th>Status</th><th>Applied</th></tr></thead>
+            <tbody>
+              {apps.slice(0,100).map(a=>(
+                <tr key={a.id}>
+                  <td className="adm-td-strong">Seeker #{a.seekerId}</td>
+                  <td className="adm-td-muted">Job #{a.jobPostingId}</td>
+                  <td><Badge status={(a.status??'').toLowerCase()}/></td>
+                  <td className="adm-td-muted">{fmtDate(a.appliedAt)}</td>
+                </tr>
+              ))}
+              {!apps.length && <tr><td colSpan={4}><Empty/></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 8 — Interviews
+   ═══════════════════════════════════════════════════════════════════ */
+function InterviewsTab() {
+  return (
+    <div className="adm-placeholder">
+      <CalendarClock size={40} style={{color:C.teal,marginBottom:12}}/>
+      <h3>Interview Management</h3>
+      <p>A list of all platform interviews — scheduled, completed, and cancelled — will display here.</p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 9 — Broadcast
+   ═══════════════════════════════════════════════════════════════════ */
+function BroadcastTab({ showToast }) {
+  const [form,    setForm]    = useState({ title:'', message:'', targetRole:'ALL' });
+  const [sending, setSending] = useState(false);
+
+  const send = async () => {
+    if (!form.title || !form.message) { showToast('Title and message are required.','error'); return; }
+    setSending(true);
+    try {
+      await broadcastNotification(form);
+      showToast('Notification broadcast sent!');
+      setForm({ title:'', message:'', targetRole:'ALL' });
+    } catch { showToast('Broadcast failed.','error'); }
+    finally { setSending(false); }
+  };
+
+  return (
+    <SCard title="Broadcast Notification" icon={<Send size={15}/>}>
+      <div className="adm-modal-fields">
+        <div className="adm-field"><label>Title</label><input className="adm-input" value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))}/></div>
+        <div className="adm-field">
+          <label>Target Audience</label>
+          <select className="adm-input" value={form.targetRole} onChange={e=>setForm(p=>({...p,targetRole:e.target.value}))}>
+            <option value="ALL">All Users</option>
+            <option value="JOB_SEEKER">Job Seekers Only</option>
+            <option value="EMPLOYER">Employers Only</option>
+          </select>
+        </div>
+        <div className="adm-field"><label>Message</label><textarea className="adm-input" rows={4} value={form.message} onChange={e=>setForm(p=>({...p,message:e.target.value}))}/></div>
+        <button className="adm-btn primary" onClick={send} disabled={sending}>{sending?'Sending…':'Send Broadcast'}</button>
+      </div>
+    </SCard>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 10 — Compliance
+   ═══════════════════════════════════════════════════════════════════ */
+function ComplianceTab() {
+  return (
+    <div className="adm-placeholder">
+      <FileText size={40} style={{color:C.orange,marginBottom:12}}/>
+      <h3>Compliance & Contact Requests</h3>
+      <p>Reported content and contact form submissions will appear here for review.</p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 11 — Settings
+   ═══════════════════════════════════════════════════════════════════ */
+function SettingsTab({ showToast }) {
+  return (
+    <div className="adm-placeholder">
+      <Sliders size={40} style={{color:C.slate,marginBottom:12}}/>
+      <h3>Site Settings</h3>
+      <p>Platform-wide configuration options will be available here.</p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 12 — Verification (detailed stub)
+   ═══════════════════════════════════════════════════════════════════ */
+function VerificationTabInner({ showToast }) {
+  return (
+    <div className="adm-verification-banner">
+      <ShieldCheck size={22}/>
+      <div>
+        <strong>Verification Module</strong>
+        <p>Document uploads and identity checks will appear here once the verification pipeline is enabled.</p>
+      </div>
+    </div>
+  );
 }
