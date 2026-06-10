@@ -190,7 +190,7 @@ const Step1Company = memo(function Step1Company({ form, setForm, errors }) {
       </div>
     </div>
   );
-}
+});
 
 /* ── Step 2 — Basic Info ────────────────────────────────────── */
 function Step2Basic({ form, setForm, errors, dbCategories, dbLocations }) {
@@ -482,7 +482,7 @@ const Step5Review = memo(function Step5Review({ form, dbCategories, dbLocations,
       </div>
     </div>
   );
-}
+});
 
 /* ── Main Component ─────────────────────────────────────────── */
 export default function PostJob({ onBack, onSuccess }) {

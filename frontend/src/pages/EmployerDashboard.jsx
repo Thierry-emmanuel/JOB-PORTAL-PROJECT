@@ -806,7 +806,11 @@ export default function EmployerDashboard() {
                   </div>
                 )}
               </div>
-
+              {/* Active Jobs */}
+              <div className="ds-card">
+                <div className="ds-card-header">
+                  <h2 className="ds-card-title">
+                    <div className="ds-card-title-icon"><Briefcase size={15} /></div>
                     Active Jobs
                   </h2>
                   <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
@@ -907,11 +911,19 @@ export default function EmployerDashboard() {
                       <div className="ds-empty">
                         <div className="ds-empty-icon"><Bell size={20} /></div>
                         <p className="ds-empty-title">No notifications</p>
->>>>>>> d195ea3 (feat(employer): replace static Market Jobs widget with live paginated DB fetch)
                       </div>
-                    </div>
-                  ))
-                }
+                    )
+                    : notifications.map(n => (
+                      <div key={n.id} className={`ds-notif-item${!n.read ? ' unread' : ''}`} onClick={() => markNotificationRead(n.id)}>
+                        <div className="ds-notif-dot" />
+                        <div>
+                          <p className="ds-notif-text">{n.text}</p>
+                          <p className="ds-notif-time"><Clock size={10} /> {n.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
             </div>
           </div>
