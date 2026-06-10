@@ -13,6 +13,7 @@ import InterviewCard from '../../components/interviews/InterviewCard';
 import JobCard from '../../components/jobs/JobCard';
 import useEmployeeDashboard from '../../hooks/useEmployeeDashboard';
 import { getApplicationDisplayStatus } from '../../utils/applicationStatus';
+import { resolveApplicationJobId } from '../../utils/jobEnums';
 import '../../styles/dashboard-shell.css';
 import '../../styles/job-list.css';
 
@@ -323,8 +324,9 @@ export default function EmployeeDashboard() {
               <span>Job</span><span>Status</span><span>Salary</span><span>Applied</span><span/>
             </div>
             {applications.slice(0, 5).map(app => {
-              const jobLabel = app.jobTitle || (app.jobListingId ? 'View job' : `Job #${app.jobPostingId}`);
-              const jobPath = app.jobListingId ? `/jobs/${app.jobListingId}?viewOnly=true` : null;
+              const jobLabel = app.jobTitle || (app.jobPostingId ? `Job #${app.jobPostingId}` : 'View job');
+              const jobViewId = resolveApplicationJobId(app);
+              const jobPath = jobViewId ? `/jobs/${jobViewId}?viewOnly=true` : null;
               return (
               <div key={app.id} className="ds-table-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
                 <div className="ds-app-info" role="cell">
