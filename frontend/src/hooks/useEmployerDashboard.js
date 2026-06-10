@@ -188,7 +188,7 @@ export function useEmployerDashboard() {
             ? parseInt(String(job.id).split('-')[0], 16)
             : Number(job.id) || null),
           title:        job.title,
-          type:         job.jobType || "FULL_TIME",
+          type:         job.jobType || "CDI",
           category:     job.categoryName || "",
           location:     location,
           applications: appCount,
@@ -233,7 +233,11 @@ export function useEmployerDashboard() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  useRealtimeRefresh(() => fetchDashboard(true));
+// Near the bottom of useEmployerDashboard, after fetchDashboard is defined:
+useRealtimeRefresh(
+  useCallback(() => fetchDashboard(true), [fetchDashboard]),
+  { applications: true, interviews: true }
+);
 
   // ── Mark notification as read ──
   const markNotificationRead = useCallback((id) => {
