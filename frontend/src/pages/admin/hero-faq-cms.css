@@ -695,11 +695,11 @@
   overflow-y: scroll;     /* always show scrollbar track */
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: var(--cms-purple) rgba(0,0,0,0.05);
+  scrollbar-color: var(--cms-purple) rgba(0,0,0,0.10);
   background: var(--cms-bg);
 }
 .cms-hero-config::-webkit-scrollbar         { width: 6px; }
-.cms-hero-config::-webkit-scrollbar-track   { background: rgba(0,0,0,0.04); border-radius: 99px; }
+.cms-hero-config::-webkit-scrollbar-track   { background: rgba(0,0,0,0.10); border-radius: 99px; }
 .cms-hero-config::-webkit-scrollbar-thumb   { background: var(--cms-purple); border-radius: 99px; }
 .cms-hero-config::-webkit-scrollbar-thumb:hover { background: var(--adm-purple-dk, #6d28d9); }
 

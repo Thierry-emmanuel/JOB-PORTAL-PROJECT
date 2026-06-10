@@ -164,8 +164,8 @@
   border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 13.5px;
-  color: var(--kora-text-dark);
-  background: var(--kora-bg);
+  color: #111827;
+  background: #F9FAFB;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   width: 100%;
@@ -178,6 +178,27 @@
   box-shadow: 0 0 0 3px rgba(11,43,38,0.07);
 }
 .pj-input.error, .pj-select.error { border-color: #dc2626; }
+
+/* ── Placeholder & select text colour fixes ──────────────────── */
+.pj-input::placeholder,
+.pj-textarea::placeholder {
+  color: #9CA3AF;
+  opacity: 1;
+}
+/* Force select text colour (browser default often ignores inherited colour) */
+.pj-select {
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+.pj-select option { color: #111827; background: #fff; }
+/* When select shows placeholder (empty value) */
+.pj-select:invalid,
+.pj-select option[value=""] {
+  color: #9CA3AF;
+  -webkit-text-fill-color: #9CA3AF;
+}
 
 .pj-textarea { resize: vertical; min-height: 120px; }
 .pj-textarea-lg { min-height: 160px; }
@@ -353,11 +374,14 @@
   outline: none;
   font-size: 13px;
   background: transparent;
-  color: var(--kora-text-dark);
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  caret-color: #1A5C2E;
   min-width: 120px;
   flex: 1;
   padding: 2px 4px;
 }
+.pj-tags input::placeholder { color: #9CA3AF; opacity: 0.8; -webkit-text-fill-color: #9CA3AF; }
 .pj-tag {
   display: inline-flex;
   align-items: center;

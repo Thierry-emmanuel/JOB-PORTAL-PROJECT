@@ -503,6 +503,9 @@ function UsersTab({ showToast }) {
     }
   };
 
+  const [usersPage, setUsersPage] = useState(0);
+  const USERS_PAGE_SIZE = 15;
+
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
     const matchesSearch = !q || (u.fullName ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q);
@@ -512,6 +515,12 @@ function UsersTab({ showToast }) {
       (statusFilter === 'suspended' && !u.isActive);
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  const usersTotalPages = Math.ceil(filtered.length / USERS_PAGE_SIZE);
+  const pagedUsers = filtered.slice(usersPage * USERS_PAGE_SIZE, (usersPage + 1) * USERS_PAGE_SIZE);
+
+  // Reset to page 0 when filters change
+  useEffect(() => { setUsersPage(0); }, [search, roleFilter, statusFilter]);
 
   const changeForm = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -732,10 +741,10 @@ function UsersTab({ showToast }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {pagedUsers.length === 0 ? (
                   <tr><td colSpan={5}><Empty /></td></tr>
                 ) : (
-                  filtered.map(u => {
+                  pagedUsers.map(u => {
                     const status = u.isActive ? 'ACTIVE' : 'SUSPENDED';
                     const avatarColor = u.role === 'ADMIN' ? C.purple : u.role === 'EMPLOYER' ? C.orange : C.blue;
                     return (
@@ -772,6 +781,9 @@ function UsersTab({ showToast }) {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filtered.length > 0 && (
+          <Pagination page={usersPage} totalPages={usersTotalPages} onChange={setUsersPage} />
         )}
       </SCard>
 
@@ -1026,6 +1038,7 @@ function EmployerTab({ showToast }) {
   }, []);
 
   useEffect(()=>{ load(filter); }, [filter, load]);
+  useEffect(()=>{ setEmployersPage(0); }, [filter, search]);
 
   const act = async () => {
     const { type, emp } = modal; setModal(null);
@@ -1045,6 +1058,11 @@ function EmployerTab({ showToast }) {
     return !q||(e.fullName??'').toLowerCase().includes(q)||(e.email??'').toLowerCase().includes(q)||(e.jobTitle??'').toLowerCase().includes(q);
   });
 
+  const [employersPage, setEmployersPage] = useState(0);
+  const EMPLOYERS_PAGE_SIZE = 15;
+  const employersTotalPages = Math.ceil(filteredList.length / EMPLOYERS_PAGE_SIZE);
+  const pagedEmployers = filteredList.slice(employersPage * EMPLOYERS_PAGE_SIZE, (employersPage + 1) * EMPLOYERS_PAGE_SIZE);
+
   const TABS = [
     {key:'all',label:'All'},
     {key:'pending',label:'Pending',count:pending},
@@ -1063,7 +1081,7 @@ function EmployerTab({ showToast }) {
             <table className="adm-table">
               <thead><tr><th>Company / Contact</th><th>Role</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
               <tbody>
-                {filteredList.length===0 ? <tr><td colSpan={6}><Empty/></td></tr> : filteredList.map(emp=>{
+                {pagedEmployers.length===0 ? <tr><td colSpan={6}><Empty/></td></tr> : pagedEmployers.map(emp=>{
                   const status = emp.isApproved===false?'PENDING':emp.isActive===false?'SUSPENDED':'ACTIVE';
                   return (
                     <tr key={emp.id}>
@@ -1092,6 +1110,9 @@ function EmployerTab({ showToast }) {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filteredList.length > 0 && (
+          <Pagination page={employersPage} totalPages={employersTotalPages} onChange={setEmployersPage} />
         )}
       </SCard>
 
@@ -1137,6 +1158,12 @@ function SeekersTab({ showToast }) {
     return !q||(s.fullName??'').toLowerCase().includes(q)||(s.email??'').toLowerCase().includes(q);
   });
 
+  const [seekersPage, setSeekersPage] = useState(0);
+  const SEEKERS_PAGE_SIZE = 15;
+  const seekersTotalPages = Math.ceil(filtered.length / SEEKERS_PAGE_SIZE);
+  const pagedSeekers = filtered.slice(seekersPage * SEEKERS_PAGE_SIZE, (seekersPage + 1) * SEEKERS_PAGE_SIZE);
+  useEffect(()=>{ setSeekersPage(0); }, [search]);
+
   const act = async () => {
     const { seeker } = modal; setModal(null);
     try {
@@ -1158,7 +1185,7 @@ function SeekersTab({ showToast }) {
             <table className="adm-table">
               <thead><tr><th>Name</th><th>Email</th><th>City</th><th>Open to Work</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
               <tbody>
-                {filtered.length===0 ? <tr><td colSpan={7}><Empty/></td></tr> : filtered.map(s=>{
+                {pagedSeekers.length===0 ? <tr><td colSpan={7}><Empty/></td></tr> : pagedSeekers.map(s=>{
                   const status = s.isActive===false?'SUSPENDED':'ACTIVE';
                   return (
                     <tr key={s.id??s.userId}>
@@ -1180,6 +1207,9 @@ function SeekersTab({ showToast }) {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filtered.length > 0 && (
+          <Pagination page={seekersPage} totalPages={seekersTotalPages} onChange={setSeekersPage} />
         )}
       </SCard>
 
