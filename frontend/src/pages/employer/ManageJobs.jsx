@@ -77,15 +77,6 @@ function Avatar({ name, size = 36, color = '#1A5C2E' }) {
     <div className="mj-avatar" style={{ width:size, height:size, fontSize:size*0.36, background:`${color}18`, color }}>
       {initials}
     </div>
-
-      {/* ── Interview Scheduler Modal ── */}
-      {scheduling && (
-        <InterviewScheduler
-          application={scheduling}
-          onClose={() => setScheduling(null)}
-          onScheduled={(iv) => { handleScheduled(iv); setScheduling(null); }}
-        />
-      )}
   );
 }
 
@@ -492,6 +483,14 @@ export default function ManageJobs() {
         </main>
       </div>
 
+      {/* ── Interview Scheduler Modal ── */}
+      {scheduling && (
+        <InterviewScheduler
+          application={scheduling}
+          onClose={() => setScheduling(null)}
+          onScheduled={(iv) => { handleScheduled(iv); setScheduling(null); }}
+        />
+      )}
     </div>
   );
 }
