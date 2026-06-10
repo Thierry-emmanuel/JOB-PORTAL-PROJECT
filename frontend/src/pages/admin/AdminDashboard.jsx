@@ -60,7 +60,7 @@ import {
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import { HeroEditor, CMSTab } from './CMSPanel';
 import '../../styles/admin-dashboard.css';
-
+import '../../styles/dashboard-shell.css';
 /* ═══════════════════════════════════════════════════════════════════
    CHART UTILITIES
    ═══════════════════════════════════════════════════════════════════ */
