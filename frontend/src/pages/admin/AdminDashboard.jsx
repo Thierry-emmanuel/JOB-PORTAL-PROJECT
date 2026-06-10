@@ -411,7 +411,7 @@ function UsersTab({ showToast }) {
     fullName: '', email: '', password: '', role: 'JOB_SEEKER', isActive: true,
     phone: '', city: '', region: '',
     profileSummary: '', portfolioUrl: '', linkedInUrl: '', isOpenToWork: true,
-    jobTitle: '', bio: '', isApproved: false,
+    companyName: '', jobTitle: '', bio: '', isApproved: false,
     department: '', adminLevel: 'STANDARD'
   };
   const [form, setForm] = useState(defaultForm);
@@ -597,6 +597,10 @@ function UsersTab({ showToast }) {
         {/* Employer fields */}
         {form.role === 'EMPLOYER' && (
           <>
+            <div className="adm-field">
+              <label>Company Name</label>
+              <input className="adm-input" value={form.companyName || ''} onChange={e => changeForm('companyName', e.target.value)} placeholder="e.g. Acme Corp" />
+            </div>
             <div className="adm-field">
               <label>Job Title / Occupation</label>
               <input className="adm-input" value={form.jobTitle || ''} onChange={e => changeForm('jobTitle', e.target.value)} />

@@ -96,17 +96,24 @@ function ResultModal({ interview, onSave, onClose }) {
         <div style={{ marginBottom:16 }}>
           <label style={{ fontSize:13, fontWeight:600, color:'#374151', display:'block', marginBottom:8 }}>Result</label>
           <div style={{ display:'flex', gap:8 }}>
-            {['PASSED','FAILED'].map(r => (
-              <button key={r} onClick={() => setResult(r)} style={{
-                flex:1, padding:'10px', borderRadius:10, border:`2px solid ${result === r ? (r === 'PASSED' ? '#10B981' : '#EF4444') : '#E5E7EB'}`,
-                background: result === r ? (r === 'PASSED' ? '#ECFDF5' : '#FEF2F2') : '#fff',
-                color: result === r ? (r === 'PASSED' ? '#065F46' : '#991B1B') : '#6B7280',
+                        {[
+              {v:'PASSED', label:'Passed', color:'#10B981', bg:'#ECFDF5', text:'#065F46'},
+              {v:'FAILED', label:'Failed', color:'#EF4444', bg:'#FEF2F2', text:'#991B1B'},
+            ].map(({v, label, color, bg, text}) => (
+              <button key={v} onClick={() => setResult(v)} style={{
+                flex:1, padding:'10px', borderRadius:10,
+                border:`2px solid ${result === v ? color : '#E5E7EB'}`,
+                background: result === v ? bg : '#fff',
+                color: result === v ? text : '#6B7280',
                 fontSize:14, fontWeight:700, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               }}>
-                {r === 'PASSED' ? '<Check size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Passed' : '<X size={16} style={{display:"inline-block",verticalAlign:"middle"}} /> Failed'}
+                {v === 'PASSED'
+                  ? <Check size={16} style={{display:'inline-block',verticalAlign:'middle'}}/>
+                  : <X     size={16} style={{display:'inline-block',verticalAlign:'middle'}}/>}
+                {label}
               </button>
-            ))}
-          </div>
+            ))}          </div>
         </div>
         <div style={{ marginBottom:20 }}>
           <label style={{ fontSize:13, fontWeight:600, color:'#374151', display:'block', marginBottom:8 }}>Feedback (optional)</label>

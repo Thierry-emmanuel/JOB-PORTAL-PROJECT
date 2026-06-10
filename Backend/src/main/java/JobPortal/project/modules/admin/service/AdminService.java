@@ -211,6 +211,7 @@ public class AdminService {
                 emp.setRegion(dto.getRegion());
                 emp.setJobTitle(dto.getJobTitle());
                 emp.setBio(dto.getBio());
+                emp.setCompanyName(dto.getCompanyName());
                 emp.setIsApproved(dto.getIsApproved() != null ? dto.getIsApproved() : false);
                 emp.computeProfileScore();
                 user = emp;
@@ -318,4 +319,3 @@ public class AdminService {
         userRepository.delete(user);
     }
 }
-

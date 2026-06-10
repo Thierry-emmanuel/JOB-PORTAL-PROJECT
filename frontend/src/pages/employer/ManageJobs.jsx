@@ -77,6 +77,15 @@ function Avatar({ name, size = 36, color = '#1A5C2E' }) {
     <div className="mj-avatar" style={{ width:size, height:size, fontSize:size*0.36, background:`${color}18`, color }}>
       {initials}
     </div>
+
+      {/* ── Interview Scheduler Modal ── */}
+      {scheduling && (
+        <InterviewScheduler
+          application={scheduling}
+          onClose={() => setScheduling(null)}
+          onScheduled={(iv) => { handleScheduled(iv); setScheduling(null); }}
+        />
+      )}
   );
 }
 
@@ -430,21 +439,48 @@ export default function ManageJobs() {
                   ) : (
                     <div className="mj-app-list">
                       {filteredApps.map(app => (
-                        <div
-                          key={app.id}
-                          className="mj-app-row"
-                          onClick={() => navigate(`/applications/${app.id}`)}
-                        >
-                          <Avatar name={app.applicant} />
-                          <div className="mj-app-row-info">
-                            <span className="mj-app-row-name">{app.applicant}</span>
-                            <span className="mj-app-row-date">{fmtDate(app.date)}</span>
+                        <div key={app.id} className="mj-app-row">
+                          <div className="mj-app-row-main" onClick={() => navigate(`/applications/${app.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                            <Avatar name={app.applicant} />
+                            <div className="mj-app-row-info">
+                              <span className="mj-app-row-name">{app.applicant}</span>
+                              <span className="mj-app-row-date">{fmtDate(app.date)}</span>
+                            </div>
+                            {app.expectedSalary && (
+                              <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
+                            )}
+                            <StatusBadge status={app.status}/>
                           </div>
-                          {app.expectedSalary && (
-                            <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
-                          )}
-                          <StatusBadge status={app.status}/>
-                          <ArrowRight size={14} className="mj-app-row-arrow"/>
+                          <div className="mj-app-row-actions" onClick={e => e.stopPropagation()}>
+                            {app.status === 'APPLIED' && (
+                              <button
+                                className="mj-app-action-btn shortlist"
+                                onClick={() => handleStatusChange(app.id, 'SHORTLISTED')}
+                                title="Shortlist"
+                              ><UserCheck size={13}/></button>
+                            )}
+                            {(app.status === 'APPLIED' || app.status === 'SHORTLISTED') && (
+                              <button
+                                className="mj-app-action-btn schedule"
+                                onClick={() => setScheduling(app)}
+                                title="Schedule Interview"
+                              ><CalendarClock size={13}/></button>
+                            )}
+                            {app.status === 'SHORTLISTED' && (
+                              <button
+                                className="mj-app-action-btn hire"
+                                onClick={() => handleStatusChange(app.id, 'HIRED')}
+                                title="Mark as Hired"
+                              ><Award size={13}/></button>
+                            )}
+                            {app.status !== 'REJECTED' && app.status !== 'HIRED' && (
+                              <button
+                                className="mj-app-action-btn reject"
+                                onClick={() => handleStatusChange(app.id, 'REJECTED')}
+                                title="Reject"
+                              ><UserX size={13}/></button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

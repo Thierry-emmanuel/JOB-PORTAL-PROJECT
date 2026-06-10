@@ -20,6 +20,7 @@ public class UserCreationDTO {
     private Boolean isOpenToWork;
     
     // Employer-specific
+    private String companyName;
     private String jobTitle;
     private String bio;
     private Boolean isApproved;
