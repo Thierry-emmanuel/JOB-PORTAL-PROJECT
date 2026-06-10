@@ -315,7 +315,11 @@ function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false
           <div className="adm-welcome-hero">
             <div className="adm-welcome-text">
               <h1 className="adm-welcome-title">{greeting}, {welcomeName ?? 'Admin'}</h1>
-              <p className="adm-welcome-sub">Your platform command center — analytics, users, and content at a glance.</p>
+              <p className="adm-welcome-sub">
+                Your command center for Kora — monitor real-time hiring activity,
+                approve listings, manage users, and keep the platform running at peak health.
+                Every action you take here directly shapes the experience for thousands of job seekers and employers.
+              </p>
             </div>
             {badge && (
               <span className="adm-role-badge adm-welcome-badge"><Shield size={12}/>{badge}</span>
@@ -338,7 +342,7 @@ function PageHead({ title, sub, badge, actions, welcomeName, showWelcome = false
    TAB META
    ═══════════════════════════════════════════════════════════════════ */
 const TAB_META = {
-  overview:     { title: 'Overview',          sub: 'Platform analytics at a glance' },
+  overview:     { title: 'Overview',          sub: 'Live stats, quick actions, and platform health at a glance' },
   users:        { title: 'User Management',   sub: 'Manage job seekers, employers, and administrator accounts' },
   reports:      { title: 'Reports & Analytics',sub: 'Deep-dive platform performance metrics' },
   employers:    { title: 'Employer Management',sub: 'Approve, suspend and manage employer accounts' },
@@ -347,7 +351,7 @@ const TAB_META = {
   jobs:         { title: 'Job Moderation',     sub: 'Review, approve and remove job listings' },
   applications: { title: 'Applications',       sub: 'Monitor all applications across the platform' },
   interviews:   { title: 'Interviews',         sub: 'Track scheduled and completed interviews' },
-  hero:         { title: 'Hero Section',       sub: 'Configure the homepage hero banner' },
+  hero:         { title: 'Hero Section',       sub: 'Customize the homepage banner — headlines, slides, and call-to-action buttons' },
   cms:          { title: 'FAQ & CMS',          sub: 'Manage FAQs, categories and site skills' },
   broadcast:    { title: 'Broadcast Notifications', sub: 'Send platform-wide notifications to users' },
   compliance:   { title: 'Contacts & Compliance',   sub: 'Review reported issues and contact requests' },
@@ -1477,7 +1481,8 @@ function ApplicationsTab({ showToast }) {
 
   const load = useCallback((p=0) => {
     setLoading(true);
-    fetchAllApplications({ status:filter, page:p, size:20 })
+    const apiStatus = filter === 'INTERVIEW_SCHEDULED' ? 'SHORTLISTED' : filter;
+    fetchAllApplications({ status: apiStatus || undefined, page: p, size: filter === 'INTERVIEW_SCHEDULED' ? 100 : 20 })
       .then(d=>{ setApps(d.content??d.applications??[]); setTotal(d.totalPages??1); setTotalElements(d.totalElements??0); })
       .catch(()=>{})
       .finally(()=>setLoading(false));
@@ -1487,7 +1492,9 @@ function ApplicationsTab({ showToast }) {
 
   const filtered = apps.filter(a=>{
     const q=search.toLowerCase();
-    return !q||(a.seekerName??'').toLowerCase().includes(q)||(a.jobTitle??'').toLowerCase().includes(q);
+    const matchSearch = !q||(a.seekerName??'').toLowerCase().includes(q)||(a.jobTitle??'').toLowerCase().includes(q);
+    const matchInterview = filter !== 'INTERVIEW_SCHEDULED' || a.hasInterview || a.interview;
+    return matchSearch && matchInterview;
   });
 
   const STATUS_TABS = [
@@ -1537,8 +1544,11 @@ function InterviewsTab() {
   const [loading, setLoading] = useState(true);
 
   useEffect(()=>{
-    fetchAllApplications({ status:'INTERVIEW_SCHEDULED', size:50 })
-      .then(d=>setApps(d.content??d.applications??[]))
+    fetchAllApplications({ status: 'SHORTLISTED', size: 100 })
+      .then(d => {
+        const list = d.content ?? d.applications ?? [];
+        setApps(list.filter(a => a.hasInterview || a.interview));
+      })
       .catch(()=>{})
       .finally(()=>setLoading(false));
   },[]);
