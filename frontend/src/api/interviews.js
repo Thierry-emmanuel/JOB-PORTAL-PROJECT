@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { extractApiError } from '../utils/apiErrors';
 
 /**
  * Interview API Service
@@ -29,9 +30,7 @@ function toLocalDateTime(value) {
 }
 
 export function getApiErrorMessage(err, fallback = 'Request failed.') {
-  const d = err?.response?.data;
-  if (typeof d === 'string') return d;
-  return d?.detail || d?.message || d?.error || err?.message || fallback;
+  return extractApiError(err, fallback);
 }
 
 /* ─── Schedule ───────────────────────────────────────────── */
