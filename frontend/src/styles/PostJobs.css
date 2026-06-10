@@ -1,780 +1,941 @@
-/* ════════════════════════════════════════════
-   POST JOBS — Complete Stylesheet
-   ════════════════════════════════════════════ */
+import { useState, useEffect, useRef, memo, useCallback } from "react";
+import { Link } from "react-router-dom";
+import {
+  Briefcase, MapPin, DollarSign, Calendar, FileText,
+  Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
+  Eye, Lightbulb, Save, XCircle, Menu, Building2,
+  Globe, Users, ChevronRight, Sparkles, AlertCircle,
+  Clock, Zap, Star, Award
+} from "lucide-react";
+import EmployerSidebar from "../../components/employer/EmployerSidebar";
+import { useEmployerDashboard } from "../../hooks/useEmployerDashboard";
+import {
+  createJob, updateJob, getLocations, getSkills, getCategories, getJobDetail, createEmployerCompany,
+} from "../../api/jobs";
+import { JOB_TYPES, EXPERIENCE_LEVELS, formatJobType, defaultJobDeadline } from "../../utils/jobEnums";
+import { extractApiError } from "../../utils/apiErrors";
+import "../../styles/dashboard-shell.css";
+import "../../styles/PostJobs.css";
 
-.pj-company-card {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 16px 18px;
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-.pj-company-card--warn {
-  background: #FFFBEB;
-  border-color: #FDE68A;
-  color: #92400E;
-}
-.pj-company-card-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: #1A5C2E;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.pj-company-card-name { font-weight: 700; font-size: 15px; color: #111827; }
-.pj-company-card-meta { font-size: 12px; color: #6B7280; margin-top: 2px; }
-.pj-company-card-hint { font-size: 12px; color: #059669; margin: 6px 0 0; }
+/* ── Constants ─────────────────────────────────────────────── */
+const STEPS = [
+  { id: 1, label: "Basic Info",   icon: Briefcase  },
+  { id: 2, label: "Details",      icon: FileText   },
+  { id: 3, label: "Requirements", icon: Tag        },
+  { id: 4, label: "Review",       icon: Eye        },
+];
 
-/* ── Wizard Header ──────────────────────────── */
-.pj-wizard-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+const INITIAL_FORM = {
+  title: "", categoryId: "", type: "", locationId: "", deadline: defaultJobDeadline(),
+  salaryMin: "", salaryMax: "", currency: "XAF",
+  description: "", experience: "", remote: false,
+  qualificationNeeded: "", requiresInterview: false,
+  skills: [], benefits: [], languages: [],
+};
 
-/* ── Progress Steps ─────────────────────────── */
-.pj-steps {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  background: var(--kora-surface);
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-radius);
-  padding: 14px 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  gap: 0;
-}
-.pj-steps::-webkit-scrollbar { display: none; }
+const LEVELS = EXPERIENCE_LEVELS;
+const BENEFIT_OPTS = [
+  "Health Insurance", "Remote Work", "Paid Leave", "Transport Allowance",
+  "Performance Bonus", "Training Budget", "Flexible Hours", "Stock Options",
+];
 
-.pj-step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.pj-step-circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  border: 2px solid var(--kora-border);
-  background: var(--kora-surface);
-  color: var(--kora-text-muted);
-  flex-shrink: 0;
-  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-}
-.pj-step.active .pj-step-circle {
-  background: var(--kora-primary);
-  border-color: var(--kora-primary);
-  color: white;
-  box-shadow: 0 0 0 4px rgba(11,43,38,0.10);
-}
-.pj-step.done .pj-step-circle {
-  background: #16a34a;
-  border-color: #16a34a;
-  color: white;
-}
-.pj-step-label {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--kora-text-muted);
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-.pj-step.active .pj-step-label { color: var(--kora-primary); font-weight: 700; }
-.pj-step.done   .pj-step-label { color: #16a34a; }
-.pj-step-line {
-  flex: 1;
-  height: 2px;
-  background: var(--kora-border);
-  margin: 0 10px;
-  min-width: 20px;
-  transition: background 0.3s;
-}
-.pj-step-line.done { background: #16a34a; }
-
-/* ── Layout ─────────────────────────────────── */
-.pj-form-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
-  align-items: flex-start;
+/* ── Helpers ────────────────────────────────────────────────── */
+function Field({ label, required, error, hint, children }) {
+  return (
+    <div className="pj-field">
+      {label && (
+        <label className="pj-label">
+          {label}{required && <span className="pj-req"> *</span>}
+        </label>
+      )}
+      {children}
+      {hint  && !error && <p className="pj-hint">{hint}</p>}
+      {error && <p className="pj-error"><AlertCircle size={11} />{error}</p>}
+    </div>
+  );
 }
 
-/* ── Form Card ──────────────────────────────── */
-.pj-form-card {
-  background: var(--kora-surface);
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-radius);
-  padding: 28px 30px;
+function TagInput({ items, options, placeholder, onAdd, onRemove }) {
+  const [input, setInput] = useState("");
+  const filtered = options?.filter(
+    o => !items.includes(o) && o.toLowerCase().includes(input.toLowerCase())
+  ) ?? [];
+  return (
+    <div className="pj-tag-input">
+      <div className="pj-tags">
+        {items.map(tag => (
+          <span key={tag} className="pj-tag">
+            {tag}<button type="button" onClick={() => onRemove(tag)}><X size={11}/></button>
+          </span>
+        ))}
+        <input
+          placeholder={items.length === 0 ? placeholder : ""}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key==="Enter"&&input.trim()){e.preventDefault();onAdd(input.trim());setInput("");}
+            if (e.key==="Backspace"&&!input&&items.length) onRemove(items[items.length-1]);
+          }}
+        />
+      </div>
+      {input && filtered.length>0 && (
+        <ul className="pj-suggestions">
+          {filtered.slice(0,6).map(s=>(
+            <li key={s} onClick={()=>{onAdd(s);setInput("");}}>
+              <Plus size={11}/>{s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
-/* ── Step Body ──────────────────────────────── */
-.pj-step-body { display: flex; flex-direction: column; gap: 22px; }
+/* ── Company Profile Card (reads live data, shows logo if available) ─ */
+const CompanyProfileCard = memo(function CompanyProfileCard({ employer }) {
+  if (!employer?.companyId) {
+    return (
+      <div className="pj-company-card pj-company-card--warn">
+        <AlertCircle size={18} style={{flexShrink:0, marginTop:1}}/>
+        <div>
+          <strong>Company profile required</strong>
+          <p style={{margin:"4px 0 0", fontSize:12, lineHeight:1.5}}>
+            Complete your company profile before posting.{" "}
+            <Link to="/profile/employer" style={{color:"#b45309", fontWeight:700}}>
+              Go to Company Profile →
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="pj-company-card">
+      <div className="pj-company-card-logo">
+        {employer.logo
+          ? <img src={employer.logo} alt={employer.companyName} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit"}}/>
+          : (employer.companyName || "?")[0].toUpperCase()
+        }
+      </div>
+      <div style={{flex:1, minWidth:0}}>
+        <div className="pj-company-card-name">{employer.companyName}</div>
+        <div className="pj-company-card-meta">
+          {[employer.sector, employer.city].filter(Boolean).join(" · ") || "Company profile"}
+        </div>
+        <p className="pj-company-card-hint">Pulled from your company profile — no need to re-enter.</p>
+      </div>
+    </div>
+  );
+});
 
-.pj-step-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--kora-border);
-  margin-bottom: 4px;
-}
-.pj-step-icon-pill {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.pj-step-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--kora-text-dark);
-  margin: 0 0 2px;
-  font-family: var(--kora-font);
-}
-.pj-step-sub {
-  font-size: 12.5px;
-  color: var(--kora-text-muted);
-  margin: 0;
-}
+/* ── Step 1 — Basic Info ────────────────────────────────────── */
+function Step1Basic({ form, setForm, errors, dbCategories, dbLocations }) {
+  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+  return (
+    <div className="pj-step-body">
+      <div className="pj-step-header">
+        <div className="pj-step-icon-pill" style={{background:"#F0FDF4",color:"#16A34A"}}>
+          <Briefcase size={16}/>
+        </div>
+        <div>
+          <h2 className="pj-step-title">Basic Information</h2>
+          <p className="pj-step-sub">The essentials that appear in job search results</p>
+        </div>
+      </div>
 
-/* ── Section Divider ────────────────────────── */
-.pj-section-divider {
-  height: 1px;
-  background: var(--kora-border);
-  margin: 4px 0;
-}
+      <div className="pj-form-grid">
+        <Field label="Job Title" required error={errors.title}>
+          <input className="pj-input" placeholder="e.g. Senior Java Developer"
+            value={form.title} onChange={e=>f("title",e.target.value)}/>
+        </Field>
 
-/* ── Grid ───────────────────────────────────── */
-.pj-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.pj-field-full { grid-column: 1 / -1; }
+        <Field label="Category" required error={errors.categoryId}>
+          <select className="pj-input" value={form.categoryId}
+            onChange={e=>f("categoryId",e.target.value)}>
+            <option value="">Select category…</option>
+            {dbCategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>
 
-/* ── Fields ─────────────────────────────────── */
-.pj-field { display: flex; flex-direction: column; gap: 6px; }
-.pj-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--kora-text-mid);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.pj-req { color: #dc2626; }
+        <Field label="Contract Type" required error={errors.type}>
+          <select className="pj-input" value={form.type} onChange={e=>f("type",e.target.value)}>
+            <option value="">Select type…</option>
+            {JOB_TYPES.map(t=><option key={t} value={t}>{formatJobType(t)}</option>)}
+          </select>
+        </Field>
 
-.pj-input,
-.pj-select,
-.pj-textarea {
-  padding: 10px 14px;
-  border: 1.5px solid var(--kora-border);
-  border-radius: 10px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
-  color: #111827;
-  background: #F9FAFB;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  width: 100%;
-}
-.pj-input:focus,
-.pj-select:focus,
-.pj-textarea:focus {
-  border-color: var(--kora-primary);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(11,43,38,0.07);
-}
-.pj-input.error, .pj-select.error { border-color: #dc2626; }
+        <Field label="Location" required error={errors.locationId}>
+          <div className="pj-input-icon"><MapPin size={15}/>
+            <select className="pj-input pj-input-with-icon" value={form.locationId}
+              onChange={e=>f("locationId",e.target.value)}>
+              <option value="">Select location…</option>
+              {dbLocations.map(l=>
+                <option key={l.id} value={l.id}>{l.city}{l.country?`, ${l.country}`:""}</option>
+              )}
+            </select>
+          </div>
+        </Field>
 
-/* ── Placeholder & select text colour fixes ──────────────────── */
-.pj-input::placeholder,
-.pj-textarea::placeholder {
-  color: #9CA3AF;
-  opacity: 1;
-}
-/* Force select text colour (browser default often ignores inherited colour) */
-.pj-select {
-  color: #111827;
-  -webkit-text-fill-color: #111827;
-  appearance: auto;
-  -webkit-appearance: auto;
-}
-.pj-select option { color: #111827; background: #fff; }
-/* When select shows placeholder (empty value) */
-.pj-select:invalid,
-.pj-select option[value=""] {
-  color: #9CA3AF;
-  -webkit-text-fill-color: #9CA3AF;
-}
+        <Field label="Application Deadline" required error={errors.deadline}>
+          <div className="pj-input-icon"><Calendar size={15}/>
+            <input type="date" className="pj-input pj-input-with-icon"
+              value={form.deadline} min={new Date().toISOString().split("T")[0]}
+              onChange={e=>f("deadline",e.target.value)}/>
+          </div>
+        </Field>
 
-.pj-textarea { resize: vertical; min-height: 120px; }
-.pj-textarea-lg { min-height: 160px; }
+        <div className="pj-field">
+          <label className="pj-checkbox pj-checkbox-card">
+            <input type="checkbox" checked={form.remote}
+              onChange={e=>f("remote",e.target.checked)}/>
+            <div className="pj-checkbox-card-content">
+              <span className="pj-checkbox-card-title">Remote / Hybrid position</span>
+              <span className="pj-checkbox-card-sub">Open to remote candidates</span>
+            </div>
+          </label>
+        </div>
 
-.pj-error {
-  font-size: 11.5px;
-  color: #dc2626;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0;
-}
-.pj-hint { font-size: 11.5px; color: var(--kora-text-muted); margin: 0; }
-
-/* Char count */
-.pj-char-row { display: flex; justify-content: space-between; align-items: center; }
-.pj-char-count { font-size: 11px; color: var(--kora-text-muted); }
-.pj-char-warn  { font-size: 11px; color: #f59e0b; }
-
-/* Input with icon */
-.pj-input-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.pj-input-icon > svg {
-  position: absolute;
-  left: 12px;
-  color: var(--kora-text-muted);
-  pointer-events: none;
-  z-index: 1;
-}
-.pj-input-with-icon { padding-left: 36px !important; }
-
-/* Salary row */
-.pj-salary-row {
-  display: grid;
-  grid-template-columns: 1fr 18px 1fr 70px;
-  gap: 8px;
-  align-items: center;
-}
-.pj-salary-sep {
-  font-size: 14px;
-  color: var(--kora-text-muted);
-  text-align: center;
-}
-.pj-currency {
-  padding: 10px 8px !important;
-  font-size: 12px !important;
-  font-weight: 700;
-}
-.pj-currency-badge {
-  font-size: 10px;
-  font-weight: 700;
-  background: var(--kora-primary-pale, #e8f5ee);
-  color: var(--kora-primary);
-  padding: 2px 7px;
-  border-radius: 999px;
-  text-transform: none;
-  letter-spacing: 0;
+        <div className="pj-field pj-field-full pj-field-salary">
+          <label className="pj-label">Salary Range <span className="pj-currency-badge">XAF</span></label>
+          <div className="pj-salary-row">
+            <div className="pj-input-icon"><DollarSign size={15}/>
+              <input className="pj-input pj-input-with-icon" type="number"
+                placeholder="Min" value={form.salaryMin}
+                onChange={e=>f("salaryMin",e.target.value)}/>
+            </div>
+            <span className="pj-salary-sep">–</span>
+            <div className="pj-input-icon"><DollarSign size={15}/>
+              <input className="pj-input pj-input-with-icon" type="number"
+                placeholder="Max" value={form.salaryMax}
+                onChange={e=>f("salaryMax",e.target.value)}/>
+            </div>
+            <select className="pj-input pj-currency" value={form.currency}
+              onChange={e=>f("currency",e.target.value)}>
+              {["XAF","USD","EUR","GBP"].map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/* Field with salary label */
-.pj-field-salary .pj-label { margin-bottom: 6px; }
+/* ── Step 2 — Details ───────────────────────────────────────── */
+function Step2Details({ form, setForm, errors }) {
+  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+  return (
+    <div className="pj-step-body">
+      <div className="pj-step-header">
+        <div className="pj-step-icon-pill" style={{background:"#FFF7ED",color:"#EA580C"}}>
+          <FileText size={16}/>
+        </div>
+        <div>
+          <h2 className="pj-step-title">Job Details</h2>
+          <p className="pj-step-sub">Full description and qualifications</p>
+        </div>
+      </div>
 
-/* ── Checkbox Cards ─────────────────────────── */
-.pj-checkbox-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--kora-border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  background: var(--kora-bg);
-}
-.pj-checkbox-card:has(input:checked) {
-  border-color: var(--kora-primary);
-  background: var(--kora-primary-pale, #e8f5ee);
-}
-.pj-checkbox-card--accent:has(input:checked) {
-  border-color: #2563eb;
-  background: #eff6ff;
-}
-.pj-checkbox-card input { accent-color: var(--kora-primary); width: 16px; height: 16px; flex-shrink: 0; }
-.pj-checkbox-card-content { display: flex; flex-direction: column; gap: 2px; }
-.pj-checkbox-card-title { font-size: 13px; font-weight: 600; color: var(--kora-text-dark); }
-.pj-checkbox-card-sub   { font-size: 11.5px; color: var(--kora-text-muted); }
+      <Field label="Job Description" required error={errors.description}
+        hint="Include responsibilities, team context, day-to-day tasks.">
+        <textarea className="pj-textarea pj-textarea-lg" rows={7}
+          placeholder="Describe the role, responsibilities, team culture…"
+          value={form.description} onChange={e=>f("description",e.target.value)}/>
+        <div className="pj-char-row">
+          <span className="pj-char-count">{form.description.length}/3000</span>
+          {form.description.length > 0 && form.description.length < 50 && (
+            <span className="pj-char-warn">At least 50 characters required ({form.description.length}/50)</span>
+          )}
+        </div>
+      </Field>
 
-/* Standard checkbox */
-.pj-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--kora-text-mid);
-}
-.pj-checkbox input { accent-color: var(--kora-primary); width: 15px; height: 15px; }
+      <Field label="Qualifications Needed" required error={errors.qualificationNeeded}
+        hint="Education, certifications, years of experience.">
+        <textarea className="pj-textarea" rows={3}
+          placeholder="Bachelor's degree in CS, 3+ years experience, certifications, etc."
+          value={form.qualificationNeeded}
+          onChange={e=>f("qualificationNeeded",e.target.value)}/>
+      </Field>
 
-/* Chip-style checkbox (benefits) */
-.pj-checkbox-chip {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
-  border: 1.5px solid var(--kora-border);
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
-  background: var(--kora-bg);
-  color: var(--kora-text-mid);
-}
-.pj-checkbox-chip:has(input:checked) {
-  border-color: var(--kora-primary);
-  background: var(--kora-primary-pale, #e8f5ee);
-  color: var(--kora-primary);
-}
-.pj-checkbox-chip input { display: none; }
+      <Field label="Experience Level" required error={errors.experience}>
+        <div className="pj-pills">
+          {LEVELS.map(l=>(
+            <button key={l} type="button"
+              className={`pj-pill${form.experience===l?" active":""}`}
+              onClick={()=>f("experience",l)}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </Field>
 
-.pj-check-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+      <div className="pj-row">
+        <label className="pj-checkbox pj-checkbox-card pj-checkbox-card--accent" style={{flex:1}}>
+          <input type="checkbox" checked={form.requiresInterview}
+            onChange={e=>f("requiresInterview",e.target.checked)}/>
+          <div className="pj-checkbox-card-content">
+            <span className="pj-checkbox-card-title">Requires Interview Process</span>
+            <span className="pj-checkbox-card-sub">Candidates will go through a formal interview</span>
+          </div>
+        </label>
+      </div>
 
-/* ── Pills (experience level) ───────────────── */
-.pj-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-.pj-pill {
-  padding: 7px 16px;
-  border-radius: 999px;
-  border: 1.5px solid var(--kora-border);
-  background: var(--kora-bg);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kora-text-mid);
-  cursor: pointer;
-  transition: all 0.18s;
-}
-.pj-pill:hover { border-color: var(--kora-primary); color: var(--kora-primary); }
-.pj-pill.active {
-  background: var(--kora-primary);
-  border-color: var(--kora-primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(11,43,38,0.18);
+      <Field label="Benefits">
+        <div className="pj-check-grid">
+          {BENEFIT_OPTS.map(b=>(
+            <label key={b} className="pj-checkbox pj-checkbox-chip">
+              <input type="checkbox" checked={form.benefits.includes(b)}
+                onChange={e=>f("benefits",e.target.checked
+                  ? [...form.benefits,b]
+                  : form.benefits.filter(x=>x!==b))}/>
+              <span>{b}</span>
+            </label>
+          ))}
+        </div>
+      </Field>
+    </div>
+  );
 }
 
-/* ── Tag Input ──────────────────────────────── */
-.pj-tag-input { position: relative; }
-.pj-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 10px;
-  border: 1.5px solid var(--kora-border);
-  border-radius: 10px;
-  background: var(--kora-bg);
-  min-height: 48px;
-  align-items: center;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  cursor: text;
-}
-.pj-tags:focus-within {
-  border-color: var(--kora-primary);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(11,43,38,0.07);
-}
-.pj-tags input {
-  border: none;
-  outline: none;
-  font-size: 13px;
-  background: transparent;
-  color: #111827;
-  -webkit-text-fill-color: #111827;
-  caret-color: #1A5C2E;
-  min-width: 120px;
-  flex: 1;
-  padding: 2px 4px;
-}
-.pj-tags input::placeholder { color: #9CA3AF; opacity: 0.8; -webkit-text-fill-color: #9CA3AF; }
-.pj-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  background: var(--kora-primary-pale, #e8f5ee);
-  color: var(--kora-primary);
-  border: 1px solid rgba(11,43,38,0.12);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.pj-tag button {
-  background: none; border: none; color: inherit;
-  cursor: pointer; display: flex; padding: 0; opacity: 0.6; transition: opacity 0.15s;
-}
-.pj-tag button:hover { opacity: 1; }
+/* ── Step 3 — Requirements / Skills ────────────────────────── */
+function Step3Requirements({ form, setForm, errors, skillOpts }) {
+  const f = (k,v) => setForm(p => ({...p,[k]:v}));
+  const addSkill = s => !form.skills.includes(s) && f("skills",[...form.skills,s]);
+  const addLang  = l => !form.languages.includes(l) && f("languages",[...form.languages,l]);
+  return (
+    <div className="pj-step-body">
+      <div className="pj-step-header">
+        <div className="pj-step-icon-pill" style={{background:"#FDF4FF",color:"#9333EA"}}>
+          <Tag size={16}/>
+        </div>
+        <div>
+          <h2 className="pj-step-title">Requirements &amp; Skills</h2>
+          <p className="pj-step-sub">Skills and languages candidates should have</p>
+        </div>
+      </div>
 
-.pj-suggestions {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  background: white;
-  border: 1.5px solid var(--kora-border);
-  border-radius: 10px;
-  list-style: none;
-  margin: 0; padding: 4px;
-  z-index: 20;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  max-height: 200px;
-  overflow-y: auto;
-}
-.pj-suggestions li {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 7px;
-  cursor: pointer;
-  color: var(--kora-text-dark);
-  transition: background 0.15s;
-}
-.pj-suggestions li:hover { background: var(--kora-bg); }
+      <Field label="Required Skills" required error={errors.skills}
+        hint="Type a skill or pick from suggestions, then press Enter.">
+        <TagInput items={form.skills} options={skillOpts}
+          placeholder="e.g. React, Java, SQL…"
+          onAdd={addSkill} onRemove={s=>f("skills",form.skills.filter(x=>x!==s))}/>
+      </Field>
 
-/* ── Row helper ─────────────────────────────── */
-.pj-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      <Field label="Languages"
+        hint="Optional — add if language proficiency matters for this role.">
+        <TagInput items={form.languages}
+          options={["English","French","Spanish","Arabic","Portuguese","German","Mandarin"]}
+          placeholder="Add language…"
+          onAdd={addLang} onRemove={l=>f("languages",form.languages.filter(x=>x!==l))}/>
+      </Field>
 
-/* ── Tip Banner ─────────────────────────────── */
-.pj-tip-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 10px;
-  font-size: 12.5px;
-  color: #92400e;
-  line-height: 1.5;
-}
-.pj-tip-banner svg { flex-shrink: 0; margin-top: 1px; color: #f59e0b; }
-
-/* ── API Error ──────────────────────────────── */
-.pj-api-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 20px;
-  font-size: 13px;
+      <div className="pj-tip-banner">
+        <Sparkles size={14}/>
+        <span><strong>Pro tip:</strong> Jobs listing 5–10 specific skills attract 3× more qualified applicants than vague requirements.</span>
+      </div>
+    </div>
+  );
 }
 
-/* ── Step Nav ───────────────────────────────── */
-.pj-step-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid var(--kora-border);
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.pj-step-nav-right { display: flex; gap: 10px; align-items: center; }
-.pj-step-counter { font-size: 12px; color: #9ca3af; }
+/* ── Step 4 — Review ────────────────────────────────────────── */
+const Step4Review = memo(function Step4Review({ form, dbCategories, dbLocations, employer }) {
+  const catName = dbCategories.find(c=>c.id===form.categoryId)?.name || "—";
+  const locCity = dbLocations.find(l=>l.id===form.locationId)?.city || "—";
 
-.pj-publish-btn {
-  background: linear-gradient(135deg, var(--kora-primary) 0%, #1a6b4a 100%) !important;
-  box-shadow: 0 4px 14px rgba(11,43,38,0.25) !important;
-}
-.pj-publish-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(11,43,38,0.35) !important;
+  const Section = ({ title, icon: Icon, children }) => (
+    <div className="pj-review-section">
+      <div className="pj-review-section-title"><Icon size={14}/>{title}</div>
+      {children}
+    </div>
+  );
+
+  const Row = ({ k, v }) => (
+    <div className="pj-review-row">
+      <span className="pj-review-key">{k}</span>
+      <span className="pj-review-val">{v || "—"}</span>
+    </div>
+  );
+
+  return (
+    <div className="pj-step-body">
+      <div className="pj-step-header">
+        <div className="pj-step-icon-pill" style={{background:"#F0FDF4",color:"#16A34A"}}>
+          <Eye size={16}/>
+        </div>
+        <div>
+          <h2 className="pj-step-title">Review &amp; Publish</h2>
+          <p className="pj-step-sub">Double-check everything before going live</p>
+        </div>
+      </div>
+
+      <Section title="Company" icon={Building2}>
+        <Row k="Company"  v={employer?.companyName}/>
+        <Row k="Sector"   v={employer?.sector}/>
+        <Row k="Location" v={employer?.city}/>
+      </Section>
+
+      <Section title="Job Details" icon={Briefcase}>
+        <Row k="Title"      v={form.title}/>
+        <Row k="Category"   v={catName}/>
+        <Row k="Type"       v={formatJobType(form.type)}/>
+        <Row k="Location"   v={locCity}/>
+        <Row k="Experience" v={form.experience}/>
+        <Row k="Deadline"   v={form.deadline}/>
+        <Row k="Interview?" v={form.requiresInterview?"Yes, required":"No"}/>
+        <Row k="Salary"
+          v={form.salaryMin&&form.salaryMax
+            ? `${Number(form.salaryMin).toLocaleString()} – ${Number(form.salaryMax).toLocaleString()} ${form.currency}`
+            : "Not specified"}/>
+        <Row k="Remote" v={form.remote?"Yes":"No"}/>
+      </Section>
+
+      {form.qualificationNeeded && (
+        <Section title="Qualifications" icon={FileText}>
+          <p className="pj-review-text">{form.qualificationNeeded}</p>
+        </Section>
+      )}
+
+      {form.description && (
+        <Section title="Description" icon={FileText}>
+          <p className="pj-review-text">
+            {form.description.slice(0,320)}{form.description.length>320?"…":""}
+          </p>
+        </Section>
+      )}
+
+      {form.skills.length>0 && (
+        <Section title="Skills" icon={Tag}>
+          <div className="pj-tags" style={{margin:"10px 14px", border:"none", background:"transparent", padding:0, minHeight:"auto"}}>
+            {form.skills.map(s=><span key={s} className="pj-tag" style={{cursor:"default"}}>{s}</span>)}
+          </div>
+        </Section>
+      )}
+
+      <div className="pj-publish-callout">
+        <CheckCircle size={16}/>
+        <div>
+          <strong>Ready to publish?</strong> Your listing will go live immediately and be visible to thousands of candidates on Kora.
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/* ── Main Component ─────────────────────────────────────────── */
+export default function PostJob({ onBack, onSuccess }) {
+  const [step,        setStep]        = useState(1);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [form,        setForm]        = useState(INITIAL_FORM);
+  const [errors,      setErrors]      = useState({});
+  const [submitted,   setSubmitted]   = useState(false);
+  const [publishing,  setPublishing]  = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+
+  const [dbCategories, setDbCategories] = useState([]);
+  const [dbLocations,  setDbLocations]  = useState([]);
+  const [dbSkills,     setDbSkills]     = useState([]);
+  const [loadingDb,    setLoadingDb]    = useState(true);
+  const [isEditMode,   setIsEditMode]   = useState(false);
+  const [editId,       setEditId]       = useState(null);
+
+  // Keep a mutable ref to the latest companyId so buildPayload always sees
+  // the most current value — even if React state hasn't re-rendered yet after refresh()
+  const companyIdRef = useRef(null);
+
+  const { employer, loading, stats, refresh } = useEmployerDashboard();
+
+  // Sync ref whenever employer state updates
+  useEffect(() => {
+    if (employer?.companyId) {
+      companyIdRef.current = employer.companyId;
+    }
+  }, [employer]);
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const editIdParam = query.get("edit");
+
+    const loadPlatformData = async () => {
+      try {
+        const [cats, locs, sks] = await Promise.all([
+          getCategories(), getLocations(), getSkills()
+        ]);
+        setDbCategories(cats);
+        setDbLocations(locs);
+        setDbSkills(sks);
+
+        if (editIdParam) {
+          setIsEditMode(true);
+          setEditId(editIdParam);
+          const job = await getJobDetail(editIdParam);
+          setForm({
+            title: job.title || "",
+            categoryId: job.category?.id || "",
+            type: job.jobType || "",
+            locationId: job.location_obj?.id || "",
+            deadline: job.deadline || "",
+            salaryMin: job.salaryMin ? parseInt(String(job.salaryMin).replace(/[^0-9]/g,"")) : "",
+            salaryMax: job.salaryMax ? parseInt(String(job.salaryMax).replace(/[^0-9]/g,"")) : "",
+            currency: "XAF",
+            description: job.description || "",
+            experience: job.experienceLevel || "",
+            remote: job.location_obj?.city === "Remote",
+            skills: job.tags || [],
+            benefits: [],
+            languages: [],
+            qualificationNeeded: job.qualificationNeeded || "",
+            requiresInterview: job.requiresInterview || false,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load platform reference data:", err);
+      } finally {
+        setLoadingDb(false);
+      }
+    };
+    loadPlatformData();
+  }, []);
+
+  const validate = (s) => {
+    const e = {};
+    const all = s === "all" || s === 4 || isEditMode;
+    if (all || s === 1) {
+      if (!form.title.trim())    e.title      = "Job title is required.";
+      if (!form.categoryId)      e.categoryId = "Please select a category.";
+      if (!form.type)            e.type       = "Please select a contract type.";
+      if (!form.locationId)      e.locationId = "Location is required.";
+      if (!form.deadline)        e.deadline   = "Please set a deadline.";
+    }
+    if (all || s === 2) {
+      if (!form.description.trim())          e.description         = "Description is required.";
+      else if (form.description.length < 50) e.description         = "Description must be at least 50 characters.";
+      else if (form.description.length > 3000) e.description       = "Max 3000 characters.";
+      if (!form.experience)                  e.experience          = "Please select an experience level.";
+      if (!form.qualificationNeeded?.trim()) e.qualificationNeeded = "Qualifications are required.";
+    }
+    if (all || s === 3) {
+      if (form.skills.length === 0) e.skills = "Add at least one skill.";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleNext = () => { if (validate(step)) setStep(s => s + 1); };
+  const handleBack = () => { setErrors({}); setStep(s => s - 1); };
+
+  /**
+   * Build the API payload.
+   * FIX: companyId is read from the ref (always current) rather than
+   * from the employer state object (may be stale after refresh()).
+   */
+  const buildPayload = useCallback((publish = true, overrideCompanyId = null) => {
+    const selectedSkillIds = form.skills
+      .map(name => dbSkills.find(s => s.name === name)?.id)
+      .filter(Boolean);
+
+    const categoryId = form.categoryId || null;
+    const locationId = form.locationId || null;
+
+    // Prefer the override (freshly created company), then ref, then state
+    const companyId = overrideCompanyId ?? companyIdRef.current ?? employer?.companyId ?? null;
+
+    return {
+      title:               form.title,
+      description:         form.description,
+      categoryId,
+      companyId,
+      locationId,
+      jobType:             form.type || "CDI",
+      salaryMin:           form.salaryMin  ? Number(form.salaryMin)  : null,
+      salaryMax:           form.salaryMax  ? Number(form.salaryMax)  : null,
+      experienceLevel:     form.experience || "MID",
+      deadline:            form.deadline   || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      skillIds:            selectedSkillIds,
+      qualificationNeeded: form.qualificationNeeded || "",
+      requiresInterview:   form.requiresInterview   || false,
+      publishImmediately:  publish,
+    };
+  }, [form, dbSkills, employer]);
+
+  /**
+   * Ensure the employer has a company before posting.
+   * FIX: returns the new companyId directly so buildPayload can use it
+   * without waiting for React state to settle after refresh().
+   */
+  const ensureCompany = async () => {
+    // Already has company — use cached ref for speed
+    if (companyIdRef.current || employer?.companyId) {
+      return companyIdRef.current || employer?.companyId;
+    }
+
+    if (!employer?.id) {
+      setErrors({ api: "Employer session not loaded. Please refresh and try again." });
+      return null;
+    }
+
+    try {
+      const created = await createEmployerCompany(employer.id, {
+        name:    employer.companyName || employer.contactName || "My Company",
+        sector:  employer.sector      || "Technology",
+        city:    employer.city        || "Yaounde",
+        country: "Cameroon",
+      });
+
+      if (created?.id) {
+        companyIdRef.current = created.id;  // store immediately in ref
+        refresh();                           // background refresh — don't await
+        return created.id;
+      }
+    } catch { /* fall through */ }
+
+    setErrors({ api: "Complete your company profile before posting. Go to Company Profile in the sidebar." });
+    return null;
+  };
+
+  const handlePublish = async () => {
+    if (!validate("all")) return;
+
+    setPublishing(true);
+    setErrors({});
+
+    try {
+      const companyId = await ensureCompany();
+      if (!companyId) { setPublishing(false); return; }
+
+      const payload = buildPayload(true, companyId);
+
+      if (isEditMode) {
+        await updateJob(editId, payload);
+      } else {
+        await createJob(payload);
+      }
+
+      refresh();
+      setSubmitted(true);
+    } catch (err) {
+      console.error("[PostJob] publish error:", err);
+      // Surface exact backend validation message when available
+      const apiMsg =
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.errors) ? err.response.data.errors.join(", ") : null) ||
+        err?.message ||
+        "Failed to publish listing. Please check all fields and try again.";
+      setErrors({ api: apiMsg });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleDraft = async () => {
+    if (!form.title.trim()) {
+      setErrors({ title: "Job title is required to save draft." });
+      return;
+    }
+    setSavingDraft(true);
+    setErrors({});
+
+    try {
+      const companyId = await ensureCompany();
+      if (!companyId) { setSavingDraft(false); return; }
+
+      const payload = buildPayload(false, companyId);
+
+      if (isEditMode) {
+        await updateJob(editId, payload);
+      } else {
+        await createJob(payload);
+      }
+
+      refresh();
+      onBack?.();
+    } catch (err) {
+      console.error(err);
+      setErrors({ api: err?.response?.data?.message || "Failed to save draft." });
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  /* Shared Shell */
+  const Shell = ({ children }) => (
+    <div className="ds-root employer">
+      {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)}/>}
+      <div className="ds-body">
+        <aside className={`ds-sidebar${mobileOpen?" ds-sidebar--mobile-open":""}`}>
+          <button className="ds-mobile-close" onClick={() => setMobileOpen(false)}><X size={16}/></button>
+          <EmployerSidebar employer={employer} loading={loading} stats={stats}/>
+        </aside>
+        <main className="ds-main">
+          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20}/>
+          </button>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+
+  if (loadingDb || loading) {
+    return (
+      <Shell>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:16}}>
+          <div className="pj-spinner"/>
+          <span style={{fontSize:14,color:"#6B7280"}}>Loading job editor…</span>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <Shell>
+        <div className="pj-success-screen">
+          <div className="pj-success-icon">
+            <CheckCircle size={36}/>
+          </div>
+          <h1 className="pj-success-title">
+            {isEditMode ? "Job Updated!" : "Job Posted!"}
+          </h1>
+          <p className="pj-success-sub">
+            <strong>"{form.title}"</strong> is now live on Kora.{" "}
+            Candidates can start discovering and applying immediately.
+          </p>
+          <div className="pj-success-actions">
+            <button className="ds-btn ds-btn-ghost" onClick={onBack}>
+              <ArrowLeft size={14}/> Back to Jobs
+            </button>
+            {!isEditMode && (
+              <button className="ds-btn ds-btn-primary"
+                onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL_FORM); setErrors({}); }}>
+                <Plus size={14}/> Post Another Job
+              </button>
+            )}
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  /* Edit Mode — single page */
+  if (isEditMode) {
+    const skillOpts = dbSkills.map(s => s.name);
+    return (
+      <Shell>
+        <div className="ds-page-header">
+          <div>
+            <h1 className="ds-page-title">Edit Job Listing</h1>
+            <p className="ds-page-sub">Update the details for your job posting on Kora.</p>
+          </div>
+          <div style={{display:"flex",gap:12}}>
+            <button className="ds-btn ds-btn-ghost" onClick={onBack}><XCircle size={14}/> Cancel</button>
+            <button className="ds-btn ds-btn-primary" onClick={handlePublish} disabled={publishing}>
+              {publishing ? <><div className="pj-spinner" style={{width:14,height:14,borderWidth:2}}/> Saving…</> : <><CheckCircle size={14}/> Save Changes</>}
+            </button>
+          </div>
+        </div>
+
+        <ApiError error={errors.api}/>
+
+        <div className="pj-form-layout" style={{gridTemplateColumns:"1fr"}}>
+          <div className="pj-form-card ds-card" style={{display:"flex",flexDirection:"column",gap:32,padding:32}}>
+            <CompanyProfileCard employer={employer} />
+            <div className="pj-section-divider"/>
+            <Step1Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>
+            <div className="pj-section-divider"/>
+            <Step2Details form={form} setForm={setForm} errors={errors}/>
+            <div className="pj-section-divider"/>
+            <Step3Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:12,borderTop:"1px solid #E5E7EB",paddingTop:24}}>
+              <button className="ds-btn ds-btn-ghost" onClick={onBack}>Cancel</button>
+              <button className="ds-btn ds-btn-primary" onClick={handlePublish} disabled={publishing}>
+                {publishing ? "Saving…" : <><Save size={14}/> Save Changes</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  /* Wizard Mode */
+  const skillOpts = dbSkills.map(s => s.name);
+  const locCity = dbLocations.find(l => l.id === form.locationId)?.city || "Location";
+
+  return (
+    <Shell>
+      {/* Header */}
+      <div className="pj-wizard-header">
+        <div>
+          <h1 className="ds-page-title">Post a New Job</h1>
+          <p className="ds-page-sub">Fill in the details to publish your listing on Kora.</p>
+        </div>
+        <div className="ds-page-actions">
+          <button className="ds-btn ds-btn-ghost" onClick={onBack}><ArrowLeft size={14}/> Back</button>
+          <button className="ds-btn ds-btn-ghost" onClick={handleDraft} disabled={savingDraft}>
+            <Save size={14}/>{savingDraft ? "Saving…" : "Save Draft"}
+          </button>
+        </div>
+      </div>
+
+      <ApiError error={errors.api}/>
+
+      {/* Step Indicator */}
+      <div className="pj-steps">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const state = step === s.id ? "active" : step > s.id ? "done" : "";
+          return (
+            <div key={s.id} className={`pj-step${state ? " "+state : ""}`}>
+              <div className="pj-step-circle">
+                {step > s.id ? <CheckCircle size={14}/> : <Icon size={13}/>}
+              </div>
+              <span className="pj-step-label">{s.label}</span>
+              {i < STEPS.length-1 && <div className={`pj-step-line${step > s.id ? " done" : ""}`}/>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="pj-form-layout">
+        {/* Form Card */}
+        <div className="pj-form-card ds-card">
+          <CompanyProfileCard employer={employer} />
+
+          {step === 1 && <Step1Basic form={form} setForm={setForm} errors={errors} dbCategories={dbCategories} dbLocations={dbLocations}/>}
+          {step === 2 && <Step2Details form={form} setForm={setForm} errors={errors}/>}
+          {step === 3 && <Step3Requirements form={form} setForm={setForm} errors={errors} skillOpts={skillOpts}/>}
+          {step === 4 && <Step4Review form={form} dbCategories={dbCategories} dbLocations={dbLocations} employer={employer}/>}
+
+          {/* Step Nav */}
+          <div className="pj-step-nav">
+            <div>
+              {step > 1 && (
+                <button className="ds-btn ds-btn-ghost" onClick={handleBack}>
+                  <ArrowLeft size={14}/> Back
+                </button>
+              )}
+            </div>
+            <div className="pj-step-nav-right">
+              <span className="pj-step-counter">Step {step} of {STEPS.length}</span>
+              {step < STEPS.length
+                ? <button className="ds-btn ds-btn-primary" onClick={handleNext}>
+                    Next <ChevronRight size={14}/>
+                  </button>
+                : <button
+                    className="ds-btn ds-btn-primary pj-publish-btn"
+                    onClick={handlePublish}
+                    disabled={publishing}
+                  >
+                    {publishing
+                      ? <><div className="pj-spinner" style={{width:14,height:14,borderWidth:2,borderTopColor:"#fff",borderColor:"rgba(255,255,255,0.3)"}}/> Publishing…</>
+                      : <><Sparkles size={14}/> Publish Job</>
+                    }
+                  </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* Live Preview Sidebar */}
+        <div className="ds-card pj-preview-card">
+          <div className="pj-preview-header">
+            <Eye size={13}/>
+            <span>Live Preview</span>
+            {form.title && <span className="pj-preview-badge">Active</span>}
+          </div>
+          <div className="pj-preview-body">
+            {form.title || employer?.companyName ? (
+              <>
+                <div className="pj-preview-company-row">
+                  <div className="pj-preview-logo">
+                    {employer?.logo
+                      ? <img src={employer.logo} alt={employer.companyName} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit"}}/>
+                      : (employer?.companyName || "?")[0].toUpperCase()
+                    }
+                  </div>
+                  <div>
+                    <div className="pj-preview-company-name">
+                      {employer?.companyName || "Your Company"}
+                    </div>
+                    {employer?.sector && <div className="pj-preview-sector">{employer.sector}</div>}
+                  </div>
+                </div>
+                <h4 className="pj-preview-job-title">{form.title || "Job Title"}</h4>
+                <div className="pj-preview-chips">
+                  {form.type && <span className="pj-preview-chip">{formatJobType(form.type)}</span>}
+                  {form.remote && <span className="pj-preview-chip pj-preview-chip--green">Remote</span>}
+                  {form.experience && <span className="pj-preview-chip">{form.experience}</span>}
+                </div>
+                {form.locationId && (
+                  <div className="pj-preview-meta">
+                    <MapPin size={11}/>{locCity}
+                  </div>
+                )}
+                {form.salaryMin && (
+                  <div className="pj-preview-salary">
+                    {Number(form.salaryMin).toLocaleString()}
+                    {form.salaryMax ? ` – ${Number(form.salaryMax).toLocaleString()}` : "+"} {form.currency}
+                  </div>
+                )}
+                {form.deadline && (
+                  <div className="pj-preview-meta">
+                    <Calendar size={11}/>Deadline: {form.deadline}
+                  </div>
+                )}
+                {form.description && (
+                  <p className="pj-preview-desc">
+                    {form.description.slice(0,120)}{form.description.length>120?"…":""}
+                  </p>
+                )}
+                {form.skills.length > 0 && (
+                  <div className="pj-preview-skills">
+                    {form.skills.slice(0,4).map(s=><span key={s} className="pj-preview-skill-tag">{s}</span>)}
+                    {form.skills.length > 4 && <span className="pj-preview-more">+{form.skills.length-4}</span>}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="pj-preview-empty">
+                <Eye size={24} style={{opacity:0.2,margin:"0 auto 8px",display:"block"}}/>
+                Fill in the form to see a live preview of your job listing.
+              </div>
+            )}
+          </div>
+
+          <div className="pj-tips-card">
+            <div className="pj-tips-title"><Lightbulb size={13}/> Posting Tips</div>
+            <ul className="pj-tips-list">
+              {[
+                "Clear titles get 50% more clicks",
+                "List 5–10 specific required skills",
+                "Salary transparency increases applications",
+                "Describe team culture, not just tasks",
+              ].map(t=>(
+                <li key={t} className="pj-tip"><ChevronRight size={11}/>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Shell>
+  );
 }
 
-/* ── Preview Card ───────────────────────────── */
-.pj-preview-card {
-  background: var(--kora-surface);
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-radius);
-  overflow: hidden;
-  position: sticky;
-  top: 20px;
-}
-.pj-preview-header {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 14px 18px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--kora-text-mid);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--kora-border);
-  background: var(--kora-bg);
-}
-.pj-preview-badge {
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
-  background: #dcfce7;
-  color: #16a34a;
-  border-radius: 999px;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.pj-preview-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
-
-.pj-preview-company-row { display: flex; align-items: center; gap: 10px; }
-.pj-preview-logo {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--kora-primary) 0%, #1a6b4a 100%);
-  color: white;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 800;
-  flex-shrink: 0;
-}
-.pj-preview-company-name { font-size: 13px; font-weight: 700; color: var(--kora-text-dark); }
-.pj-preview-sector { font-size: 11px; color: var(--kora-text-muted); margin-top: 1px; }
-.pj-preview-job-title { font-size: 15px; font-weight: 800; color: var(--kora-text-dark); margin: 0; }
-
-.pj-preview-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.pj-preview-chip {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  background: var(--kora-bg);
-  border: 1px solid var(--kora-border);
-  border-radius: 999px;
-  color: var(--kora-text-mid);
-}
-.pj-preview-chip--green {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #16a34a;
-}
-.pj-preview-meta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--kora-text-muted);
-}
-.pj-preview-salary {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--kora-primary);
-}
-.pj-preview-desc {
-  font-size: 12px;
-  color: #374151;
-  line-height: 1.6;
-  margin: 0;
-}
-.pj-preview-skills { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-.pj-preview-skill-tag {
-  font-size: 11px;
-  padding: 3px 9px;
-  background: var(--kora-primary-pale, #e8f5ee);
-  color: var(--kora-primary);
-  border-radius: 999px;
-  font-weight: 600;
-}
-.pj-preview-more { font-size: 11px; color: var(--kora-text-muted); }
-.pj-preview-empty {
-  font-size: 12.5px;
-  color: var(--kora-text-muted);
-  font-style: italic;
-  text-align: center;
-  padding: 20px 0;
-  line-height: 1.6;
-}
-
-/* ── Tips Card ──────────────────────────────── */
-.pj-tips-card {
-  border-top: 1px solid var(--kora-border);
-  padding: 14px 18px;
-  background: #fffbeb;
-}
-.pj-tips-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.pj-tips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.pj-tip {
-  font-size: 11.5px;
-  color: #78350f;
-  display: flex;
-  align-items: flex-start;
-  gap: 5px;
-  line-height: 1.4;
-}
-.pj-tip svg { flex-shrink: 0; margin-top: 2px; color: #f59e0b; }
-
-/* ── Review Step ────────────────────────────── */
-.pj-review-section {
-  background: var(--kora-bg);
-  border: 1px solid var(--kora-border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.pj-review-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--kora-text-mid);
-  background: var(--kora-surface);
-  border-bottom: 1px solid var(--kora-border);
-}
-.pj-review-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 9px 16px;
-  border-bottom: 1px solid var(--kora-border);
-  gap: 12px;
-}
-.pj-review-row:last-child { border-bottom: none; }
-.pj-review-key { font-size: 12px; font-weight: 600; color: var(--kora-text-muted); flex-shrink: 0; }
-.pj-review-val { font-size: 12.5px; font-weight: 500; color: var(--kora-text-dark); text-align: right; }
-.pj-review-text {
-  font-size: 12.5px;
-  color: #374151;
-  line-height: 1.6;
-  padding: 10px 16px;
-  margin: 0;
-}
-
-/* Publish callout */
-.pj-publish-callout {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 18px;
-  background: #f0fdf4;
-  border: 1.5px solid #bbf7d0;
-  border-radius: 10px;
-  font-size: 13px;
-  color: #15803d;
-  line-height: 1.5;
-}
-.pj-publish-callout svg { flex-shrink: 0; margin-top: 1px; }
-
-/* ── Success Screen ─────────────────────────── */
-.pj-success-screen {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 72px 24px;
-  background: var(--kora-surface);
-  border: 1px solid var(--kora-border);
-  border-radius: var(--kora-radius);
-  overflow: hidden;
-  gap: 16px;
-}
-.pj-success-icon {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #16a34a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 10px rgba(22,163,74,0.08), 0 0 0 20px rgba(22,163,74,0.04);
-}
-.pj-success-title {
-  font-family: var(--kora-font);
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--kora-text-dark);
-  margin: 0;
-}
-.pj-success-sub {
-  font-size: 14px;
-  color: var(--kora-text-muted);
-  max-width: 420px;
-  line-height: 1.6;
-  margin: 0;
-}
-.pj-success-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-
-/* Spinner */
-.pj-spinner {
-  width: 40px; height: 40px;
-  border: 3px solid var(--kora-border);
-  border-top-color: var(--kora-primary);
-  border-radius: 50%;
-  animation: pj-spin 0.8s linear infinite;
-}
-@keyframes pj-spin { to { transform: rotate(360deg); } }
-
-/* ════════════════════════════
-   TABLET ≤ 1024px
-   ════════════════════════════ */
-@media (max-width: 1024px) {
-  .pj-form-layout { grid-template-columns: 1fr; }
-  .pj-preview-card { position: static; }
-}
-
-/* ════════════════════════════
-   MOBILE ≤ 768px
-   ════════════════════════════ */
-@media (max-width: 768px) {
-  .pj-wizard-header { flex-direction: column; align-items: flex-start; }
-  .pj-form-grid { grid-template-columns: 1fr; }
-  .pj-field-full { grid-column: 1; }
-  .pj-form-card { padding: 18px 16px; }
-  .pj-steps { padding: 12px 14px; }
-  .pj-step-label { display: none; }
-  .pj-step.active .pj-step-label { display: block; }
-  .pj-salary-row { grid-template-columns: 1fr 18px 1fr; }
-  .pj-currency { display: none; }
-}
-
-/* ════════════════════════════
-   SMALL MOBILE ≤ 480px
-   ════════════════════════════ */
-@media (max-width: 480px) {
-  .pj-step-nav { flex-direction: column; }
-  .pj-step-nav-right { width: 100%; justify-content: flex-end; }
-  .pj-success-actions { flex-direction: column; width: 100%; }
-  .pj-success-actions button { width: 100%; justify-content: center; }
-  .pj-salary-row { grid-template-columns: 1fr; }
-  .pj-salary-sep { display: none; }
+/* ── Reusable error banner ────────────────────────────────────── */
+function ApiError({ error }) {
+  if (!error) return null;
+  return (
+    <div className="pj-api-error">
+      <AlertCircle size={14}/>
+      <span>{error}</span>
+      {error.toLowerCase().includes("company") && (
+        <Link
+          to="/profile/employer"
+          className="ds-btn ds-btn-sm"
+          style={{marginLeft:8,background:"#fff",border:"1.5px solid #FECACA",color:"#DC2626",flexShrink:0,whiteSpace:"nowrap"}}
+        >
+          Set Up Company →
+        </Link>
+      )}
+    </div>
+  );
 }

@@ -114,20 +114,47 @@ export default function CVUploadSection({ cvUrl, cvFileName, onUpload }) {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #e2e8f0' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#1f2937' }}>Viewing CV: {cvFileName || 'resume.pdf'}</h3>
-              <button 
-                onClick={() => {
-                  if (viewingPdfBlob.startsWith('blob:')) {
-                    URL.revokeObjectURL(viewingPdfBlob);
-                  }
-                  setViewingPdfBlob(null);
-                }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, display: 'flex' }}
-              >
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <a 
+                  href={viewingPdfBlob} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    color: '#fff', background: 'var(--kora-primary, #7c3aed)', textDecoration: 'none',
+                    border: 'none', cursor: 'pointer', transition: 'opacity 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
+                  onMouseOut={e => e.currentTarget.style.opacity = '1'}
+                >
+                  <ExternalLink size={14} /> Open in New Tab
+                </a>
+                <button 
+                  onClick={() => {
+                    if (viewingPdfBlob.startsWith('blob:')) {
+                      URL.revokeObjectURL(viewingPdfBlob);
+                    }
+                    setViewingPdfBlob(null);
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, display: 'flex' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
-            <div style={{ flex: 1, background: '#f3f4f6' }}>
-              <iframe src={viewingPdfBlob} style={{ width: '100%', height: '100%', border: 'none' }} title="CV PDF Viewer" />
+            <div style={{ flex: 1, background: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+              <iframe 
+                src={viewingPdfBlob} 
+                style={{ width: '100%', height: '100%', border: 'none', flex: 1 }} 
+                title="CV PDF Viewer" 
+              />
+              <div style={{ padding: 12, background: '#fff', borderTop: '1px solid #e2e8f0', textAlign: 'center', fontSize: 13, color: '#4b5563' }}>
+                <span>PDF not loading? </span>
+                <a href={viewingPdfBlob} target="_blank" rel="noreferrer" style={{ color: 'var(--kora-primary, #7c3aed)', fontWeight: 600, textDecoration: 'underline' }}>
+                  Click here to open it directly in a new tab
+                </a>
+              </div>
             </div>
           </div>
         </div>
