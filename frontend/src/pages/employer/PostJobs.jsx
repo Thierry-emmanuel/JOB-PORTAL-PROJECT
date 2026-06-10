@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Briefcase, MapPin, DollarSign, Calendar, FileText,
   Tag, CheckCircle, X, Plus, ArrowLeft, ArrowRight,
@@ -475,6 +476,17 @@ export default function PostJob({ onBack, onSuccess }) {
 
   const { employer, loading, stats, refresh } = useEmployerDashboard();
 
+  // Pre-fill Step 1 with employer profile data once the hook has loaded
+  useEffect(() => {
+    if (!employer || isEditMode) return;
+    setForm(prev => ({
+      ...prev,
+      companyName: prev.companyName || employer.companyName || '',
+      sector:      prev.sector      || employer.sector       || '',
+      website:     prev.website     || employer.website      || '',
+    }));
+  }, [employer, isEditMode]);
+
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const editIdParam = query.get("edit");
@@ -583,7 +595,7 @@ export default function PostJob({ onBack, onSuccess }) {
 
     // Guard: employer must have a real company linked before we can post
     if (!employer?.companyId) {
-      setErrors({ api: "No company found on your profile. Please set up your company profile before posting a job." });
+      setErrors({ api: "No company linked to your profile. Please set up your company in your Employer Profile first, then return here to post a job." });
       return;
     }
 
@@ -704,7 +716,17 @@ export default function PostJob({ onBack, onSuccess }) {
           </div>
         </div>
 
-        {errors.api && <div className="pj-api-error"><AlertCircle size={14}/>{errors.api}</div>}
+        {errors.api && (
+          <div className="pj-api-error">
+            <AlertCircle size={14}/>
+            <span>{errors.api}</span>
+            {errors.api.toLowerCase().includes('company') && (
+              <Link to="/profile/employer" className="ds-btn ds-btn-sm" style={{marginLeft:8,background:'#fff',border:'1.5px solid #FECACA',color:'#DC2626',flexShrink:0}}>
+                Set Up Company →
+              </Link>
+            )}
+          </div>
+        )}
 
         <div className="pj-form-layout" style={{gridTemplateColumns:"1fr"}}>
           <div className="pj-form-card ds-card" style={{display:"flex",flexDirection:"column",gap:32,padding:32}}>
@@ -746,7 +768,17 @@ export default function PostJob({ onBack, onSuccess }) {
         </div>
       </div>
 
-      {errors.api && <div className="pj-api-error"><AlertCircle size={14}/>{errors.api}</div>}
+      {errors.api && (
+        <div className="pj-api-error">
+          <AlertCircle size={14}/>
+          <span>{errors.api}</span>
+          {errors.api.toLowerCase().includes('company') && (
+            <Link to="/profile/employer" className="ds-btn ds-btn-sm" style={{marginLeft:8,background:'#fff',border:'1.5px solid #FECACA',color:'#DC2626',flexShrink:0}}>
+              Set Up Company →
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Step Indicator */}
       <div className="pj-steps">

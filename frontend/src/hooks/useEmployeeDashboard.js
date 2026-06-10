@@ -15,7 +15,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getUserApplications } from '../api/jobs';
+import { getUserApplications, getJobDetail } from '../api/jobs';
 import { cachedGetJobs } from '../api/cachedApi';
 import { getInterviewsBySeeker, cancelInterview } from '../api/interviews';
 import { getJobSeekerProfile, updateJobSeekerProfile } from '../api/profiles';
@@ -161,10 +161,27 @@ export default function useEmployeeDashboard() {
     setAppsLoading(true);
     setAppsError(null);
     getUserApplications(seekerId)
-      .then((res) => {
-        // getUserApplications already extracts data.content || data from the
-        // ApplicationPageResponse envelope, so res is the plain array here.
-        setApplications(Array.isArray(res) ? res : (res?.content || []));
+      .then(async (res) => {
+        const raw = Array.isArray(res) ? res : (res?.content || []);
+        // Enrich each application with job title, company name, and the UUID
+        // jobListingId needed for correct navigation to /jobs/{uuid}?viewOnly=true.
+        // jobPostingId is a numeric Long — NOT a valid UUID for the jobs API.
+        const enriched = await Promise.all(
+          raw.map(async (app) => {
+            if (!app.jobListingId) return app;
+            try {
+              const job = await getJobDetail(app.jobListingId);
+              return {
+                ...app,
+                jobTitle: job.title || app.jobTitle,
+                companyName: job.company || app.companyName,
+              };
+            } catch {
+              return app;
+            }
+          })
+        );
+        setApplications(enriched);
       })
       .catch(() => {
         setAppsError('Could not load applications. Please try again.');

@@ -18,8 +18,8 @@ const STATUS = {
   APPLIED:             { bg: '#EFF6FF', color: '#1E40AF', dot: '#3B82F6', label: 'Applied',            icon: <FileText size={12}/> },
   SHORTLISTED:         { bg: '#FAF5FF', color: '#6B21A8', dot: '#A855F7', label: 'Shortlisted',        icon: <Star size={12}/> },
   INTERVIEW_SCHEDULED: { bg: '#FFF7ED', color: '#C2410C', dot: '#F97316', label: 'Interview Scheduled', icon: <CalendarClock size={12}/> },
-  HIRED:               { bg: '#ECFDF5', color: '#065F46', dot: '#10B981', label: 'Hired <PartyPopper size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',           icon: <CheckCircle2 size={12}/> },
-  REJECTED:            { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444', label: 'Not Selected',       icon: <X size={12}/> },
+  HIRED:               { bg: '#ECFDF5', color: '#065F46', dot: '#10B981', label: 'Hired 🎉',            icon: <CheckCircle2 size={12}/> },
+  REJECTED:            { bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444', label: 'Not Selected',        icon: <X size={12}/> },
 };
 const DEFAULT_STATUS = { bg: '#F3F4F6', color: '#374151', dot: '#9CA3AF', label: 'Pending', icon: <Clock size={12}/> };
 
@@ -37,6 +37,14 @@ export default function ApplicationDetailPage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Inline feedback toasts (replaces alert/confirm)
+  const [toast, setToast] = useState(null); // { msg, type: 'success'|'error' }
+  const [withdrawConfirm, setWithdrawConfirm] = useState(false);
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
   
   // Employer interactive states
   const [reviewNotes, setReviewNotes] = useState('');
@@ -115,7 +123,7 @@ export default function ApplicationDetailPage() {
       console.error(err);
       // Re-fetch to sync status in case of optimistic concurrency mismatch
       try { const fresh = await getApplication(id); if (fresh) setApp(fresh); } catch (_) {}
-      alert(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.');
+      showToast(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.', 'error');
     } finally {
       setUpdatingStatus(false);
     }
@@ -128,10 +136,10 @@ export default function ApplicationDetailPage() {
     try {
       await updateApplicationReview(app.id, reviewNotes);
       setApp(prev => ({ ...prev, employerReview: reviewNotes }));
-      alert('Recruiter notes saved successfully!');
+      showToast('Recruiter notes saved successfully!');
     } catch (err) {
       console.error(err);
-      alert('Failed to save recruiter notes.');
+      showToast('Failed to save recruiter notes.', 'error');
     } finally {
       setSavingReview(false);
     }
@@ -147,10 +155,10 @@ export default function ApplicationDetailPage() {
         ...prev,
         interview: { ...prev.interview, feedback: ivFeedback }
       }));
-      alert('Interview feedback saved successfully!');
+      showToast('Interview feedback saved successfully!');
     } catch (err) {
       console.error(err);
-      alert('Failed to save interview feedback.');
+      showToast('Failed to save interview feedback.', 'error');
     } finally {
       setSavingIvFeedback(false);
     }
@@ -159,15 +167,15 @@ export default function ApplicationDetailPage() {
   // Handle withdraw application (Seeker)
   const handleWithdraw = async () => {
     if (!app || !user?.id) return;
-    if (!window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) return;
+    setWithdrawConfirm(false);
     setWithdrawing(true);
     try {
       await withdrawApplication(app.id, user.id);
-      alert('Application withdrawn successfully.');
-      navigate('/employee/applications');
+      showToast('Application withdrawn successfully.');
+      setTimeout(() => navigate('/employee/applications'), 1500);
     } catch (err) {
       console.error(err);
-      alert('Failed to withdraw application.');
+      showToast('Failed to withdraw application.', 'error');
     } finally {
       setWithdrawing(false);
     }
@@ -218,7 +226,60 @@ export default function ApplicationDetailPage() {
   return (
     <div className="app-detail-root">
       <div className="app-detail-container">
-        
+
+        {/* Inline toast */}
+        {toast && (
+          <div style={{
+            position: 'fixed', top: 20, right: 20, zIndex: 9999,
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: toast.type === 'error' ? '#FEF2F2' : '#ECFDF5',
+            border: `1.5px solid ${toast.type === 'error' ? '#FCA5A5' : '#6EE7B7'}`,
+            borderRadius: 12, padding: '12px 16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)', minWidth: 280, maxWidth: 400,
+          }}>
+            {toast.type === 'error'
+              ? <AlertCircle size={16} color="#DC2626" style={{flexShrink:0}}/>
+              : <CheckCircle2 size={16} color="#10B981" style={{flexShrink:0}}/>}
+            <span style={{ fontSize: 13, fontWeight: 600, color: toast.type === 'error' ? '#991B1B' : '#065F46', flex: 1 }}>{toast.msg}</span>
+            <button onClick={() => setToast(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#9CA3AF',padding:0}}>
+              <X size={14}/>
+            </button>
+          </div>
+        )}
+
+        {/* Withdraw confirm dialog */}
+        {withdrawConfirm && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}>
+            <div style={{
+              background: '#fff', borderRadius: 16, padding: 28, maxWidth: 400, width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Withdraw Application?</h3>
+              <p style={{ fontSize: 13.5, color: '#6B7280', margin: '0 0 20px', lineHeight: 1.6 }}>
+                This action cannot be undone. Your application for <strong>{job?.title || 'this position'}</strong> will be permanently withdrawn.
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setWithdrawConfirm(false)}
+                  style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#F9FAFB', fontWeight: 600, fontSize: 13, cursor: 'pointer', color: '#374151' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleWithdraw}
+                  disabled={withdrawing}
+                  style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                >
+                  {withdrawing ? 'Withdrawing…' : 'Yes, Withdraw'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Bar */}
         <div className="app-detail-nav">
           <button className="app-detail-back-btn" onClick={() => navigate(backPath)}>
@@ -232,6 +293,17 @@ export default function ApplicationDetailPage() {
             <span>/</span>
             <span style={{ fontWeight: 600 }}>Application Details</span>
           </div>
+
+          {/* View Job button — only shown when a valid UUID job listing exists */}
+          {app?.jobListingId && (
+            <Link
+              to={`/jobs/${app.jobListingId}?viewOnly=true`}
+              className="app-detail-back-btn"
+              style={{ background: 'var(--ds-accent, #1A5C2E)', color: '#fff', border: 'none', marginLeft: 'auto' }}
+            >
+              <Briefcase size={14} /> View Job
+            </Link>
+          )}
         </div>
 
         {/* Header Summary Card */}
@@ -808,7 +880,7 @@ export default function ApplicationDetailPage() {
                 </div>
                 <button
                   className="app-detail-withdraw-btn"
-                  onClick={handleWithdraw}
+                  onClick={() => setWithdrawConfirm(true)}
                   disabled={withdrawing}
                 >
                   {withdrawing ? 'Withdrawing...' : 'Withdraw'}

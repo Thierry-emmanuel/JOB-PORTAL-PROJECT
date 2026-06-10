@@ -18,8 +18,8 @@ const STATUS = {
   APPLIED:             { bg:'#EFF6FF', color:'#1E40AF', dot:'#3B82F6', label:'Applied',            icon:<FileText size={12}/> },
   SHORTLISTED:         { bg:'#FAF5FF', color:'#6B21A8', dot:'#A855F7', label:'Shortlisted',        icon:<Star size={12}/> },
   INTERVIEW_SCHEDULED: { bg:'#FFF7ED', color:'#C2410C', dot:'#F97316', label:'Interview Scheduled', icon:<CalendarCheck size={12}/> },
-  HIRED:               { bg:'#ECFDF5', color:'#065F46', dot:'#10B981', label:'Hired <PartyPopper size={16} style={{display:"inline-block",verticalAlign:"middle"}} />',           icon:<CheckCircle2 size={12}/> },
-  REJECTED:            { bg:'#FEF2F2', color:'#991B1B', dot:'#EF4444', label:'Not Selected',       icon:<XCircle size={12}/> },
+  HIRED:               { bg:'#ECFDF5', color:'#065F46', dot:'#10B981', label:'Hired 🎉',            icon:<CheckCircle2 size={12}/> },
+  REJECTED:            { bg:'#FEF2F2', color:'#991B1B', dot:'#EF4444', label:'Not Selected',        icon:<XCircle size={12}/> },
 };
 const DEFAULT_STATUS = { bg:'#F3F4F6', color:'#374151', dot:'#9CA3AF', label:'Pending', icon:<Clock size={12}/> };
 

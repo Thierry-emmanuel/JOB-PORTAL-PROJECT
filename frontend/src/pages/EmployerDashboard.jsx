@@ -588,7 +588,7 @@ export default function EmployerDashboard() {
                         }}>
                           <Users size={11} /> View Apps
                         </button>
-                        <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
+                        <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate(`/employer/post-job?edit=${job.id}`)}>
                           <Edit2 size={11} /> Edit
                         </button>
                         {job.status === 'ACTIVE' ? (

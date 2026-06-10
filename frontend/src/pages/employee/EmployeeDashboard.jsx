@@ -321,14 +321,29 @@ export default function EmployeeDashboard() {
             {applications.slice(0, 5).map(app => (
               <div key={app.id} className="ds-table-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
                 <div className="ds-app-info" role="cell">
-                  <Link to={`/employee/jobs`} className="ds-app-name" onClick={e => { e.preventDefault(); navigate(`/jobs/${app.jobPostingId}?viewOnly=true`); }}>
-                    Job #{app.jobPostingId}
-                  </Link>
+                  <span className="ds-app-name" style={{ cursor: 'pointer', color: 'var(--ds-accent)' }}
+                    onClick={() => navigate(`/applications/${app.id}`)}>
+                    {app.jobTitle || `Job #${app.jobPostingId}`}
+                  </span>
+                  {app.companyName && <span className="ds-app-job">{app.companyName}</span>}
                 </div>
                 <span role="cell"><StatusBadge status={app.status} /></span>
                 <span className="ds-app-job" role="cell">{app.expectedSalary ? `${Number(app.expectedSalary).toLocaleString()} XAF` : '—'}</span>
                 <span className="ds-app-date" role="cell"><Clock size={10} /> {formatDate(app.appliedAt)}</span>
-                <Link to={`/jobs/${app.jobPostingId}?viewOnly=true`} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} role="cell">
+                  <button
+                    className="ds-btn ds-btn-ghost ds-btn-sm"
+                    onClick={() => navigate(`/applications/${app.id}`)}
+                    title="View application details"
+                  ><Eye size={12}/></button>
+                  {app.jobListingId && (
+                    <Link
+                      to={`/jobs/${app.jobListingId}?viewOnly=true`}
+                      className="ds-btn ds-btn-ghost ds-btn-sm"
+                      title="View job posting"
+                    ><Briefcase size={12}/></Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>
