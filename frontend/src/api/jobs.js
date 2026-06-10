@@ -21,24 +21,30 @@ export function resolveJobPostingId(job) {
 /* ─── Job Listings ───────────────────────────────────────── */
 
 export const getJobs = async (params = {}) => {
-  const { page = 1, limit, size, search, location, type, category, experienceLevel, salaryMin, salaryMax, ...rest } = params;
+  const {
+    page = 1, limit, size, search, location, type, category,
+    experienceLevel, salaryMin, salaryMax, ...rest
+  } = params;
+
   const backendParams = {
     page: Math.max(0, page - 1),
     size: limit || size || 10,
     ...rest,
   };
-  if (search)          backendParams.keyword  = search;
-  if (location)        backendParams.location = location;
-  if (type)            backendParams.jobType  = type;
-  if (category)        backendParams.category = category;
+  if (search)          backendParams.keyword        = search;
+  if (location)        backendParams.location       = location;
+  if (type)            backendParams.jobType        = type;
+  if (category)        backendParams.category       = category;
   if (experienceLevel) backendParams.experienceLevel = experienceLevel;
-  if (salaryMin)       backendParams.salaryMin = salaryMin;
-  if (salaryMax)       backendParams.salaryMax = salaryMax;
+  if (salaryMin)       backendParams.salaryMin       = salaryMin;
+  if (salaryMax)       backendParams.salaryMax       = salaryMax;
 
   const hasFilters = search || location || type || category || experienceLevel || salaryMin || salaryMax;
   const url = hasFilters ? '/api/jobs/search' : '/api/jobs';
+
   const { data: apiResp } = await apiClient.get(url, { params: backendParams });
   const pageData = apiResp?.data ?? apiResp;
+
   return {
     data:       (pageData?.content ?? []).map(mapJobSummary),
     total:      pageData?.totalElements ?? 0,
@@ -55,6 +61,10 @@ export const getJob = async (id) => {
  * Fetches job details without filtering by ACTIVE status.
  * Used for view-only access from application history where the job
  * may have expired or been set to DRAFT.
+ *
+ * Accepts both UUID strings and numeric IDs — the backend
+ * PublicJobListingController.getListingDetail handles both via
+ * resolveNumericalIdToUuid().
  */
 export const getJobDetail = async (id) => {
   const { data } = await apiClient.get(`/api/jobs/${id}/detail`);
@@ -66,45 +76,51 @@ export const getJobDetail = async (id) => {
 const mapJobSummary = (job) => ({
   id:        job.id,
   numericId: job.numericId ?? uuidToNumericId(job.id),
-  title:    job.title,
-  company:  job.companyName || 'Unknown Company',
-  logo:     job.companyLogoUrl || null,
-  location: job.locationCity
+  title:     job.title,
+  company:   job.companyName || 'Unknown Company',
+  logo:      job.companyLogoUrl || null,
+  location:  job.locationCity
     ? `${job.locationCity}${job.locationCountry ? ', ' + job.locationCountry : ''}`
     : 'Remote',
-  type:     job.jobType || 'Full-time',
-  salary:   job.salaryMin
-    ? `${Number(job.salaryMin).toLocaleString()} XAF${job.salaryMax ? ' – ' + Number(job.salaryMax).toLocaleString() + ' XAF' : ''}`
-    : null,
-  postedAt:   job.createdAt || new Date().toISOString(),
-  saved:      false,
-  applied:    false,
-  description:'',
-  tags:       job.categoryName ? [job.categoryName] : [],
-});
-
-const mapJobDetail = (job) => ({
-  id:        job.id,
-  numericId: job.numericId ?? uuidToNumericId(job.id),
-  title:    job.title,
-  company:  job.company?.name || job.companyName || 'Unknown Company',
-  logo:     job.company?.logoUrl || job.companyLogoUrl || null,
-  location: job.location?.city
-    ? `${job.location.city}${job.location.country ? ', ' + job.location.country : ''}`
-    : 'Remote',
-  type:        job.jobType || 'Full-time',
-  salary:      job.salaryMin
+  type:      job.jobType || 'Full-time',
+  salary:    job.salaryMin
     ? `${Number(job.salaryMin).toLocaleString()} XAF${job.salaryMax ? ' – ' + Number(job.salaryMax).toLocaleString() + ' XAF' : ''}`
     : null,
   postedAt:    job.createdAt || new Date().toISOString(),
   saved:       false,
   applied:     false,
-  description: job.description || '',
-  tags:        job.skills?.map(s => s.name) ?? [],
-  website:     job.company?.website || null,
-  deadline:    job.deadline || null,
+  description: '',
+  tags:        job.categoryName ? [job.categoryName] : [],
+});
+
+const mapJobDetail = (job) => ({
+  id:        job.id,
+  numericId: job.numericId ?? uuidToNumericId(job.id),
+  title:     job.title,
+  company:   job.company?.name || job.companyName || 'Unknown Company',
+  logo:      job.company?.logoUrl || job.companyLogoUrl || null,
+  location:  job.location?.city
+    ? `${job.location.city}${job.location.country ? ', ' + job.location.country : ''}`
+    : 'Remote',
+  type:            job.jobType || 'Full-time',
+  salary:          job.salaryMin
+    ? `${Number(job.salaryMin).toLocaleString()} XAF${job.salaryMax ? ' – ' + Number(job.salaryMax).toLocaleString() + ' XAF' : ''}`
+    : null,
+  postedAt:        job.createdAt || new Date().toISOString(),
+  saved:           false,
+  applied:         false,
+  description:     job.description || '',
+  tags:            job.skills?.map(s => s.name) ?? [],
+  website:         job.company?.website || null,
+  deadline:        job.deadline || null,
   experienceLevel: job.experienceLevel || null,
-  companyId:   job.company?.id || null,
+  companyId:       job.company?.id || null,
+  // Preserve qualificationNeeded and requiresInterview for edit mode
+  qualificationNeeded: job.qualificationNeeded || null,
+  requiresInterview:   job.requiresInterview || false,
+  // Category and location sub-objects for form pre-population
+  category: job.category || null,
+  location_obj: job.location || null,
 });
 
 /* ─── Applications (Job Seeker) ──────────────────────────── */
@@ -186,9 +202,41 @@ export const getApplicationStats = async ({ jobPostingId, seekerId } = {}) => {
 
 /* ─── Job Postings (Employer) ────────────────────────────── */
 
-export const getEmployerJobs = async (employerId) => {
-  const { data } = await apiClient.get(`/api/jobs/employer/${employerId}`);
-  return data?.data?.content ?? data?.data ?? data?.content ?? data ?? [];
+/**
+ * Get paginated listings for a specific employer.
+ *
+ * FIX: Added page/size/sort/direction params so ManageJobs and other consumers
+ * can drive server-side pagination instead of loading all records at once.
+ * Defaults are set to match previous behaviour (page=0, size=100) so existing
+ * callers that do not pass these params receive the full list as before.
+ *
+ * @param {number} employerId  - The employer's numeric user ID.
+ * @param {object} [opts]       - Optional pagination/sort overrides.
+ * @param {number} [opts.page=0]         - 0-based page index.
+ * @param {number} [opts.size=100]       - Page size (capped at 50 server-side for public endpoints, but employer endpoint allows 100).
+ * @param {string} [opts.sortBy='createdAt']
+ * @param {string} [opts.direction='DESC']
+ */
+export const getEmployerJobs = async (employerId, opts = {}) => {
+  const {
+    page      = 0,
+    size      = 100,   // large default keeps backward compatibility
+    sortBy    = 'createdAt',
+    direction = 'DESC',
+  } = opts;
+
+  const { data } = await apiClient.get(`/api/jobs/employer/${employerId}`, {
+    params: { page, size, sortBy, direction },
+  });
+
+  // Backend wraps in ApiResponse<Page<JobListingSummary>>
+  // data.data is the Page object; unwrap to a flat array for the hook.
+  const pageObj = data?.data ?? data;
+  if (pageObj && typeof pageObj === 'object' && Array.isArray(pageObj.content)) {
+    return pageObj.content;
+  }
+  // Fallback for plain array responses
+  return Array.isArray(pageObj) ? pageObj : (pageObj?.content ?? pageObj ?? []);
 };
 
 export const changeJobStatus = async (jobId, targetStatus) => {
