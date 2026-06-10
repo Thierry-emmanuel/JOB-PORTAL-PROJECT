@@ -66,13 +66,15 @@ export function useEmployerDashboard() {
             type: payload.type || 'info',
           };
           setNotifications(prev => [n, ...prev].slice(0, 20));
+          // Auto-refresh dashboard data silently when a new WebSocket notification is received
+          fetchDashboard(true);
         } catch { /* ignore parse errors */ }
       });
     };
     client.activate();
     stompRef.current = client;
     return () => { client.deactivate(); stompRef.current = null; };
-  }, [user?.id]);
+  }, [user?.id, fetchDashboard]);
 
   // ── Fetch all dashboard data from backend ──
   const fetchDashboard = useCallback(async (isRefresh = false) => {
@@ -261,6 +263,13 @@ export function useEmployerDashboard() {
 
   useEffect(() => {
     fetchDashboard();
+
+    // Periodically refresh dashboard data every 10 seconds to ensure real-time views and application counts
+    const interval = setInterval(() => {
+      fetchDashboard(true);
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [fetchDashboard]);
 
   // ── Mark notification as read ──

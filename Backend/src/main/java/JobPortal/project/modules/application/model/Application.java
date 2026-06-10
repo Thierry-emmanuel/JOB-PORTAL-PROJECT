@@ -12,10 +12,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "applications",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_application_seeker_posting",
-                columnNames = {"seeker_id", "job_posting_id"}
-        ),
         indexes = {
                 @Index(name = "idx_application_seeker_id",      columnList = "seeker_id"),
                 @Index(name = "idx_application_job_posting_id", columnList = "job_posting_id"),

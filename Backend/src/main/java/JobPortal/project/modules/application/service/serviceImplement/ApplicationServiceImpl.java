@@ -58,11 +58,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     @CacheEvict(value = {"seekerApplications", "applicationStats"}, allEntries = true)
     public ApplicationResponse apply(Long seekerId, CreateApplicationRequest request) {
 
-        if (applicationRepository.existsBySeekerIdAndJobPostingId(seekerId, request.jobPostingId())) {
-            throw new IllegalStateException(
-                    "Seeker " + seekerId + " has already applied to job posting " + request.jobPostingId());
-        }
-
         // Resolve UUID now — used both to populate jobListingId on the entity
         // and later for view-count increment + notifications.
         String resolvedUuid = null;

@@ -213,35 +213,31 @@ export default function JobDetails() {
               {/* If candidate/guest */}
               {(isEmployee || !isAuthenticated) ? (
                 <>
-                  {hasApplied ? (
+                  {hasApplied && (
                     <div style={{ background:'#ECFDF5', border:'1.5px solid #6EE7B7', borderRadius:10, padding:'12px 16px', textAlign:'center', fontSize:14, fontWeight:700, color:'#065F46', marginBottom:12, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                      <Check size={14}/> Application submitted
+                      <Check size={14}/> Application submitted (You can apply again)
                     </div>
-                  ) : (
-                    <>
-                      <h2 style={{ fontSize:17, fontWeight:700, color:'#111827', marginBottom:8 }}>Ready to Apply?</h2>
-                      <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
-                        {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
-                      </p>
-                      <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
-                        onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform=''}
-                      >
-                        Apply Now →
-                      </Link>
-                    </>
                   )}
 
-                  {!hasApplied && (
-                    <button onClick={handleSave} disabled={saving} style={{
-                      width:'100%', background: saved ? '#E8F5EE' : '#F9FAFB',
-                      color: saved ? '#1A5C2E' : '#6B7280',
-                      border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
-                      borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
-                    }}>
-                      {saving ? 'Saving…' : saved ? <><Check size={13} style={{display:'inline',marginRight:4}}/>Saved for Later</> : <><Bookmark size={13} style={{display:'inline',marginRight:4}}/>Save for Later</>}
-                    </button>
-                  )}
+                  <h2 style={{ fontSize:17, fontWeight:700, color:'#111827', marginBottom:8 }}>Ready to Apply?</h2>
+                  <p style={{ fontSize:13, color:'#6B7280', marginBottom:20, lineHeight:1.6 }}>
+                    {job.applicants != null ? `${job.applicants} people have already applied.` : 'Be among the first to apply!'}
+                  </p>
+                  <Link to={`/jobs/${id}/apply`} style={{ display:'block', background:'#1A5C2E', color:'#fff', borderRadius:12, padding:'13px', textAlign:'center', fontSize:15, fontWeight:700, textDecoration:'none', marginBottom:10, transition:'transform 0.15s', boxShadow:'0 4px 16px rgba(26,92,46,0.25)' }}
+                    onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform=''}
+                  >
+                    Apply Now →
+                  </Link>
+
+                  <button onClick={handleSave} disabled={saving} style={{
+                    width:'100%', background: saved ? '#E8F5EE' : '#F9FAFB',
+                    color: saved ? '#1A5C2E' : '#6B7280',
+                    border:`1.5px solid ${saved ? '#1A5C2E' : '#E5E7EB'}`,
+                    borderRadius:12, padding:12, fontSize:14, fontWeight:700, cursor:'pointer', marginTop:4,
+                  }}>
+                    {saving ? 'Saving…' : saved ? <><Check size={13} style={{display:'inline',marginRight:4}}/>Saved for Later</> : <><Bookmark size={13} style={{display:'inline',marginRight:4}}/>Save for Later</>}
+                  </button>
 
                   <div style={{ marginTop:16, padding:'12px', background:'#F9FAFB', borderRadius:10 }}>
                     <p style={{ fontSize:11, color:'#6B7280', margin:0, lineHeight:1.6, display:'flex', alignItems:'flex-start', gap:6 }}>
