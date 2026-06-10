@@ -144,7 +144,10 @@ public class InterviewServiceImpl implements InterviewService {
                 employerId, saved.getId(), applicationId, saved.getType(), request.scheduledAt());
         syncCalendar(saved);
         sendInterviewNotification(application, saved);
-        return interviewMapper.toResponse(saved);
+        InterviewResponse response = interviewMapper.toResponse(saved);
+        realtimeMessagingService.publishInterviewEvent(
+                "INTERVIEW_SCHEDULED", response, application.getSeekerId(), employerId);
+        return response;
     }
 
 
