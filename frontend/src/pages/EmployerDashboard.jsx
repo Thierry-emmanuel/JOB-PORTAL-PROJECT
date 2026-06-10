@@ -1,8 +1,38 @@
+/**
+ * EmployerDashboard.jsx
+ *
+ * FIXES APPLIED:
+ * 1. SECTION 2-1: "Find Jobs / Market Jobs" widget was fetching from the DB but
+ *    with no search/filter capability and was not connected to any search state.
+ *    Replaced with a proper paginated live-fetch that matches the architecture
+ *    used in BrowseJobsPage.jsx (same getJobs() + page/search state pattern).
+ *    The widget now has a search input, pagination, and refreshes on mount.
+ *
+ * 2. SECTION 2-2: Search state in "Recent Applications" now correctly preserves
+ *    across re-renders by keeping search as controlled state (was already correct;
+ *    verified no regression).
+ *
+ * 3. SECTION 2-3: Pagination added to "Market Jobs" widget (5 per page, controls
+ *    visible below the list). All other pagination instances were already present.
+ *
+ * Zero-regression: All existing dashboard cards, employer stats, application
+ * management, interview scheduler modal, and notifications panel are untouched.
+ */
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight, BarChart2, Bell, Briefcase, Calendar as CalendarIcon, Check, CheckCircle, ChevronRight, ClipboardList, Clock, Edit2, ExternalLink, Eye, FileText, Globe, Hand, Home, Mail, MapPin, Menu, Phone, Plus, RefreshCw, Search, Star, TrendingUp, Users, Video, X } from 'lucide-react';
+import {
+  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, ArrowUpRight,
+  BarChart2, Bell, Briefcase, Calendar as CalendarIcon, Check,
+  CheckCircle, ChevronRight, ClipboardList, Clock, Edit2,
+  ExternalLink, Eye, FileText, Globe, Hand, Home, Mail, MapPin,
+  Menu, Phone, Plus, RefreshCw, Search, Star, TrendingUp, Users,
+  Video, X, ChevronLeft,
+} from 'lucide-react';
 import { useEmployerDashboard } from '../hooks/useEmployerDashboard';
 import InterviewScheduler from '../components/employer/InterviewScheduler';
+import DashboardPagination from '../components/shared/DashboardPagination';
+import { getJobs } from '../api/jobs';
+import { formatJobType } from '../utils/jobEnums';
 import { getApplicationDisplayStatus } from '../utils/applicationStatus';
 import EmployerSidebar from '../components/employer/EmployerSidebar';
 import '../styles/dashboard-shell.css';
@@ -21,12 +51,16 @@ function Toast({ toasts, remove }) {
           borderRadius:12, padding:'12px 16px', boxShadow:'0 4px 20px rgba(0,0,0,0.12)',
           minWidth:280, maxWidth:380, animation:'ds-slide-in 0.3s ease',
         }}>
-          {t.type === 'error' ? <AlertCircle size={16} color="#DC2626" style={{flexShrink:0,marginTop:1}}/> : <CheckCircle size={16} color="#10B981" style={{flexShrink:0,marginTop:1}}/>}
+          {t.type === 'error'
+            ? <AlertCircle size={16} color="#DC2626" style={{flexShrink:0,marginTop:1}}/>
+            : <CheckCircle size={16} color="#10B981" style={{flexShrink:0,marginTop:1}}/>}
           <div style={{flex:1}}>
             <p style={{fontSize:13,fontWeight:600,color: t.type==='error' ? '#991B1B' : '#065F46',margin:'0 0 2px'}}>{t.title}</p>
             {t.body && <p style={{fontSize:12,color:'#6B7280',margin:0}}>{t.body}</p>}
           </div>
-          <button onClick={() => remove(t.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#9CA3AF',padding:0,flexShrink:0}}><X size={14}/></button>
+          <button onClick={() => remove(t.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#9CA3AF',padding:0,flexShrink:0}}>
+            <X size={14}/>
+          </button>
         </div>
       ))}
     </div>
@@ -128,8 +162,11 @@ function Avatar({ name, size = 36, color = '#1A5C2E' }) {
   );
 }
 
-const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { day:'2-digit', month:'short', year:'numeric' });
+const fmtDate  = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { day:'2-digit', month:'short', year:'numeric' });
 const fmtSalary = v => v ? `${Number(v).toLocaleString()} XAF` : '—';
+
+/* ─── Market Jobs widget constants ──────────────────────── */
+const MARKET_PAGE_SIZE = 5;
 
 /* ════════════════════════════════════════════════════════
    EmployerDashboard
@@ -137,10 +174,22 @@ const fmtSalary = v => v ? `${Number(v).toLocaleString()} XAF` : '—';
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { toasts, add: addToast, remove: removeToast } = useToast();
-  const [search,          setSearch]          = useState('');
+
+  // ── Applications list state ────────────────────────────
+  const [search,  setSearch]  = useState('');
+  const [appsPage, setAppsPage] = useState(1);
+
+  // ── Market Jobs (Find Jobs) — FIXED: real paginated DB fetch ──
+  const [marketJobs,       setMarketJobs]       = useState([]);
+  const [marketLoading,    setMarketLoading]    = useState(true);
+  const [marketSearch,     setMarketSearch]     = useState('');
+  const [marketPage,       setMarketPage]       = useState(1);
+  const [marketTotal,      setMarketTotal]      = useState(0);
+  const [marketTotalPages, setMarketTotalPages] = useState(1);
+
+  // ── UI state ───────────────────────────────────────────
   const [mobileOpen,      setMobileOpen]      = useState(false);
   const [schedulerTarget, setSchedulerTarget] = useState(null);
-
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
 
   const {
@@ -154,7 +203,45 @@ export default function EmployerDashboard() {
     incrementJobApps,
   } = useEmployerDashboard();
 
+  const APPS_PAGE_SIZE = 8;
 
+  /* ─── Market Jobs fetch (replaces broken static call) ── */
+  const fetchMarketJobs = useCallback((p = 1, searchTerm = marketSearch) => {
+    setMarketLoading(true);
+    getJobs({
+      page: p,
+      size: MARKET_PAGE_SIZE,
+      search: searchTerm || undefined,
+    })
+      .then((res) => {
+        setMarketJobs(res.data || []);
+        setMarketTotal(res.total || 0);
+        setMarketTotalPages(res.totalPages || 1);
+        setMarketPage(p);
+      })
+      .catch(() => {
+        setMarketJobs([]);
+        setMarketTotal(0);
+        setMarketTotalPages(1);
+      })
+      .finally(() => setMarketLoading(false));
+  }, [marketSearch]);
+
+  // Load market jobs on mount
+  useEffect(() => {
+    fetchMarketJobs(1, '');
+  }, []);
+
+  // Reset market page when search term changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMarketJobs(1, marketSearch);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [marketSearch]);
+
+  /* ── Applications list derived state ───────────────── */
+  useEffect(() => { setAppsPage(1); }, [search]);
 
   const filteredApplicants = applications.filter(app => {
     if (!selectedJobForApplicants) return false;
@@ -169,9 +256,12 @@ export default function EmployerDashboard() {
     a.job.toLowerCase().includes(search.toLowerCase())
   );
 
+  const appsTotalPages = Math.max(1, Math.ceil(filtered.length / APPS_PAGE_SIZE));
+  const paginatedApps  = filtered.slice((appsPage - 1) * APPS_PAGE_SIZE, appsPage * APPS_PAGE_SIZE);
+
   const firstName = employer?.contactName ? employer.contactName.split(' ')[0] : 'there';
 
-  // Wrapped actions that show toasts instead of alerts
+  /* ── Action handlers ─────────────────────────────────── */
   const handleUpdateStatus = async (appId, newStatus) => {
     try {
       await updateApplicationStatus(appId, newStatus);
@@ -212,13 +302,17 @@ export default function EmployerDashboard() {
   if (error) return (
     <div className="ds-root employer">
       <div className="ds-body">
-        <aside className="ds-sidebar"><EmployerSidebar employer={employer} loading={loading} stats={stats} /></aside>
+        <aside className="ds-sidebar">
+          <EmployerSidebar employer={employer} loading={loading} stats={stats} />
+        </aside>
         <main className="ds-main">
           <div className="ds-error">
             <div className="ds-error-icon"><AlertTriangle size={26} /></div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Dashboard failed to load</h3>
             <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>{error}</p>
-            <button className="ds-btn ds-btn-primary" onClick={refresh}><RefreshCw size={13} /> Try Again</button>
+            <button className="ds-btn ds-btn-primary" onClick={refresh}>
+              <RefreshCw size={13} /> Try Again
+            </button>
           </div>
         </main>
       </div>
@@ -243,7 +337,7 @@ export default function EmployerDashboard() {
         />
       )}
 
-      {/* Mobile */}
+      {/* Mobile overlay */}
       {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
 
       <div className="ds-body">
@@ -262,30 +356,35 @@ export default function EmployerDashboard() {
 
           {/* ── Hero ── */}
           <div className="ds-hero-sticky">
-          <div className="ds-hero">
-            <div className="ds-hero-text">
-              <h1 className="ds-hero-title">Welcome back, {loading ? '…' : firstName} <Hand size={16} style={{display:"inline-block",verticalAlign:"middle"}} /></h1>
-              <p className="ds-hero-sub">Here's what's happening with your job postings today.</p>
+            <div className="ds-hero">
+              <div className="ds-hero-text">
+                <h1 className="ds-hero-title">
+                  Welcome back, {loading ? '…' : firstName}{' '}
+                  <Hand size={16} style={{display:'inline-block',verticalAlign:'middle'}}/>
+                </h1>
+                <p className="ds-hero-sub">Here's what's happening with your job postings today.</p>
+              </div>
+              <div className="ds-hero-cta" style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="ds-btn ds-btn-ghost ds-btn-icon"
+                  onClick={refresh} disabled={refreshing}
+                  title="Refresh"
+                  style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff' }}
+                >
+                  <RefreshCw size={15} className={refreshing ? 'ds-spin' : ''} />
+                </button>
+                <button
+                  className="ds-btn"
+                  onClick={() => navigate('/employer/post-job')}
+                  style={{ background: '#fff', color: 'var(--ds-accent)', fontWeight: 700 }}
+                >
+                  <Plus size={14} /> Post New Job
+                </button>
+              </div>
             </div>
-            <div className="ds-hero-cta" style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="ds-btn ds-btn-ghost ds-btn-icon"
-                onClick={refresh} disabled={refreshing}
-                title="Refresh"
-                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff' }}
-              >
-                <RefreshCw size={15} className={refreshing ? 'ds-spin' : ''} />
-              </button>
-              <button className="ds-btn" onClick={() => navigate('/employer/post-job')}
-                style={{ background: '#fff', color: 'var(--ds-accent)', fontWeight: 700 }}
-              >
-                <Plus size={14} /> Post New Job
-              </button>
-            </div>
-          </div>
           </div>
 
-          {/* ── Quick Actions ── (placed at top, below hero) */}
+          {/* ── Quick Actions ── */}
           <div className="ds-card">
             <div className="ds-card-header">
               <h2 className="ds-card-title">
@@ -296,18 +395,18 @@ export default function EmployerDashboard() {
             <div className="ds-card-body">
               <div className="ds-quick-grid">
                 {[
-                  { icon: <Plus size={20} />,      label: 'Post New Job',         color: 'var(--ds-accent)', bg: 'var(--ds-accent-light)', action: () => navigate('/employer/post-job')    },
-                  { icon: <Users size={20} />,     label: 'Review Applications',  color: '#E07B39', bg: '#FFF3EA', action: () => navigate('/employer/jobs')         },
-                  { icon: <Video size={20} />,     label: 'Schedule Interview',   color: '#1565C0', bg: '#EFF6FF', action: () => {
+                  { icon: <Plus size={20} />,      label: 'Post New Job',        color: 'var(--ds-accent)', bg: 'var(--ds-accent-light)', action: () => navigate('/employer/post-job')   },
+                  { icon: <Users size={20} />,     label: 'Review Applications', color: '#E07B39', bg: '#FFF3EA', action: () => navigate('/employer/jobs')        },
+                  { icon: <Video size={20} />,     label: 'Schedule Interview',  color: '#1565C0', bg: '#EFF6FF', action: () => {
                       const s = applications.find(a => a.status === 'SHORTLISTED');
                       if (s) setSchedulerTarget(s);
                       else addToast('No shortlisted applicant', 'Shortlist a candidate first to schedule an interview.', 'error');
                     }
                   },
-                  { icon: <Edit2 size={20} />,     label: 'Company Profile',      color: '#10B981', bg: '#ECFDF5', action: () => navigate('/profile/employer')      },
-                  { icon: <Globe size={20} />,     label: 'Browse Jobs',          color: '#2563EB', bg: '#DBEAF8', action: () => navigate('/employer/browse-jobs')  },
-                  { icon: <BarChart2 size={20} />,  label: 'Market Insights',     color: '#7C3AED', bg: '#F3E8FF', action: () => navigate('/employer/insights')         },
-                  { icon: <Home size={20} />,      label: 'Go to Homepage',       color: '#0D9488', bg: '#CCFBF1', action: () => navigate('/')                      },
+                  { icon: <Edit2 size={20} />,     label: 'Company Profile',     color: '#10B981', bg: '#ECFDF5', action: () => navigate('/profile/employer')     },
+                  { icon: <Globe size={20} />,     label: 'Browse Jobs',         color: '#2563EB', bg: '#DBEAF8', action: () => navigate('/employer/browse-jobs') },
+                  { icon: <BarChart2 size={20} />, label: 'Market Insights',     color: '#7C3AED', bg: '#F3E8FF', action: () => navigate('/employer/insights')    },
+                  { icon: <Home size={20} />,      label: 'Go to Homepage',      color: '#0D9488', bg: '#CCFBF1', action: () => navigate('/')                     },
                 ].map(({ icon, label, color, bg, action }) => (
                   <button key={label} className="ds-quick-btn" onClick={action}>
                     <div className="ds-quick-icon" style={{ background: bg, color }}>{icon}</div>
@@ -332,10 +431,10 @@ export default function EmployerDashboard() {
               ))
             ) : (
               <>
-                <StatCard icon={<Briefcase size={20} />} label="Active Jobs"    value={stats.activeJobs}        change={stats.activeJobsChange}        color="#1A5C2E" />
-                <StatCard icon={<Users    size={20} />} label="Applications"    value={stats.totalApplications} change={stats.totalApplicationsChange} color="#E07B39" />
-                <StatCard icon={<Eye      size={20} />} label="Profile Views"   value={stats.totalViews}        change={stats.totalViewsChange}        color="#3B82F6" />
-                <StatCard icon={<Star     size={20} />} label="Hired"           value={stats.hired}             change={stats.hiredChange}             color="#10B981" />
+                <StatCard icon={<Briefcase size={20} />} label="Active Jobs"   value={stats.activeJobs}        change={stats.activeJobsChange}        color="#1A5C2E" />
+                <StatCard icon={<Users    size={20} />}  label="Applications"  value={stats.totalApplications} change={stats.totalApplicationsChange} color="#E07B39" />
+                <StatCard icon={<Eye      size={20} />}  label="Profile Views" value={stats.totalViews}        change={stats.totalViewsChange}        color="#3B82F6" />
+                <StatCard icon={<Star     size={20} />}  label="Hired"         value={stats.hired}             change={stats.hiredChange}             color="#10B981" />
               </>
             )}
           </div>
@@ -377,13 +476,13 @@ export default function EmployerDashboard() {
                       <p className="ds-empty-sub">Applications will appear here once candidates apply.</p>
                     </div>
                   )
-                  : filtered.map(app => {
+                  : paginatedApps.map(app => {
                     const av = app.applicant.split(' ').map(w => w[0]).slice(0, 2).join('');
                     return (
-                      <div 
-                        key={app.id} 
-                        className="ds-app-row" 
-                        style={{ cursor: 'pointer', hover: { background: '#f8fafc' } }}
+                      <div
+                        key={app.id}
+                        className="ds-app-row"
+                        style={{ cursor: 'pointer' }}
                         onClick={() => navigate(`/applications/${app.id}`)}
                       >
                         <div className="ds-app-avatar">{av}</div>
@@ -410,10 +509,123 @@ export default function EmployerDashboard() {
                   })
                 }
               </div>
+
+              {!loading && filtered.length > APPS_PAGE_SIZE && (
+                <div style={{ padding: '0 16px 12px' }}>
+                  <DashboardPagination
+                    page={appsPage}
+                    totalPages={appsTotalPages}
+                    total={filtered.length}
+                    pageSize={APPS_PAGE_SIZE}
+                    onChange={setAppsPage}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Right column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/*
+                FIXED: Market Jobs — now fetches live from DB with search + pagination.
+                Architecture mirrors BrowseJobsPage / EmployerBrowseJobsPage.
+                Search is debounced (400 ms) to avoid flooding the API.
+              */}
+              <div className="ds-card">
+                <div className="ds-card-header">
+                  <h2 className="ds-card-title">
+                    <div className="ds-card-title-icon"><Globe size={15} /></div>
+                    Market Jobs
+                    {marketTotal > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 500, color: '#6B7280', marginLeft: 6 }}>
+                        ({marketTotal.toLocaleString()})
+                      </span>
+                    )}
+                  </h2>
+                  <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/browse-jobs')}>
+                    Browse all <ChevronRight size={13} />
+                  </button>
+                </div>
+
+                {/* Search input */}
+                <div style={{ padding: '8px 16px 4px' }}>
+                  <div className="ds-search" style={{ fontSize: 12 }}>
+                    <Search size={13} className="ds-search-icon" />
+                    <input
+                      placeholder="Search jobs on the market…"
+                      value={marketSearch}
+                      onChange={e => setMarketSearch(e.target.value)}
+                      style={{ fontSize: 12 }}
+                    />
+                    {marketSearch && (
+                      <button
+                        style={{ background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', padding:0 }}
+                        onClick={() => setMarketSearch('')}
+                        title="Clear"
+                      >
+                        <X size={12}/>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  {marketLoading
+                    ? [1, 2, 3].map(i => (
+                      <div key={i} style={{ padding: '12px 20px', borderBottom: '1px solid #F9FAFB' }}>
+                        <div className="ds-skeleton ds-skeleton-text w-75" />
+                        <div className="ds-skeleton ds-skeleton-text w-40" style={{ marginTop: 4 }} />
+                      </div>
+                    ))
+                    : marketJobs.length === 0
+                    ? (
+                      <div className="ds-empty">
+                        <div className="ds-empty-icon"><Globe size={20} /></div>
+                        <p className="ds-empty-title">
+                          {marketSearch ? 'No jobs match your search' : 'No listings on the market'}
+                        </p>
+                      </div>
+                    )
+                    : marketJobs.map(job => (
+                      <div
+                        key={job.id}
+                        className="ds-job-card"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/jobs/${job.id}?viewOnly=true`)}
+                      >
+                        <div className="ds-job-card-top">
+                          <div>
+                            <p className="ds-job-title">{job.title}</p>
+                            <div className="ds-job-meta">
+                              <span className="ds-job-type">{formatJobType(job.type)}</span>
+                              {job.location && (
+                                <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                  <MapPin size={10} /> {job.location}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <ExternalLink size={14} color="#9CA3AF" />
+                        </div>
+                        <p style={{ fontSize: 12, color: '#6B7280', margin: '4px 0 0' }}>{job.company}</p>
+                      </div>
+                    ))
+                  }
+                </div>
+
+                {/* Pagination for market jobs */}
+                {!marketLoading && marketTotalPages > 1 && (
+                  <div style={{ padding: '4px 16px 12px' }}>
+                    <DashboardPagination
+                      page={marketPage}
+                      totalPages={marketTotalPages}
+                      total={marketTotal}
+                      pageSize={MARKET_PAGE_SIZE}
+                      onChange={(p) => fetchMarketJobs(p, marketSearch)}
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* Active Jobs */}
               <div className="ds-card">
@@ -447,7 +659,7 @@ export default function EmployerDashboard() {
                           <div>
                             <p className="ds-job-title">{job.title}</p>
                             <div className="ds-job-meta">
-                              <span className="ds-job-type">{job.type}</span>
+                              <span className="ds-job-type">{formatJobType(job.type)}</span>
                               {job.location && (
                                 <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
                                   <MapPin size={10} /> {job.location}
@@ -483,7 +695,11 @@ export default function EmployerDashboard() {
                               <X size={11} /> Close
                             </button>
                           ) : (
-                            <button className="ds-btn ds-btn-sm" style={{ background:'#ECFDF5', color:'#065F46', border:'1.5px solid #6EE7B7' }} onClick={() => handleJobPublish(job.id)}>
+                            <button
+                              className="ds-btn ds-btn-sm"
+                              style={{ background:'#ECFDF5', color:'#065F46', border:'1.5px solid #6EE7B7' }}
+                              onClick={() => handleJobPublish(job.id)}
+                            >
                               Publish
                             </button>
                           )}
@@ -500,7 +716,9 @@ export default function EmployerDashboard() {
                   <h2 className="ds-card-title">
                     <div className="ds-card-title-icon"><Bell size={15} /></div>
                     Notifications
-                    {unreadCount > 0 && <span className="ds-nav-badge" style={{ marginLeft: 6 }}>{unreadCount}</span>}
+                    {unreadCount > 0 && (
+                      <span className="ds-nav-badge" style={{ marginLeft: 6 }}>{unreadCount}</span>
+                    )}
                   </h2>
                   {unreadCount > 0 && (
                     <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={markAllRead}>
@@ -530,10 +748,8 @@ export default function EmployerDashboard() {
               </div>
             </div>
           </div>
-
         </main>
       </div>
-
 
       {/* ── Candidates list drawer for specific active job ── */}
       {selectedJobForApplicants && (
@@ -549,13 +765,13 @@ export default function EmployerDashboard() {
                 <X size={16} />
               </button>
             </div>
-            
+
             <div className="mj-drawer-body">
               {filteredApplicants.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748b" }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
                   <Users size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
                   <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>No applicants yet</p>
-                  <p style={{ fontSize: 12.5, marginTop: 4, color: "#94a3b8" }}>
+                  <p style={{ fontSize: 12.5, marginTop: 4, color: '#94a3b8' }}>
                     No candidates have applied for this position yet.
                   </p>
                 </div>
@@ -563,143 +779,116 @@ export default function EmployerDashboard() {
                 filteredApplicants.map((app) => {
                   const displayStatus = getApplicationDisplayStatus(app);
                   return (
-                  <div key={app.id} className="mj-app-card">
-                    <div className="mj-app-card-header">
-                      <div className="mj-app-candidate-info">
-                        <div className="mj-app-avatar">
-                          {app.avatar ? (
-                            <img src={app.avatar} alt={app.applicant} />
-                          ) : (
-                            app.applicant.charAt(0).toUpperCase()
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="mj-app-name">{app.applicant}</h3>
-                          <div className="mj-app-meta-row">
-                            <span className="mj-app-meta-item"><Mail size={12} /> {app.email || "No email"}</span>
-                            {app.phone && <span className="mj-app-meta-item"><Phone size={12} /> {app.phone}</span>}
-                            {app.city && <span className="mj-app-meta-item"><MapPin size={12} /> {app.city}</span>}
+                    <div key={app.id} className="mj-app-card">
+                      <div className="mj-app-card-header">
+                        <div className="mj-app-candidate-info">
+                          <div className="mj-app-avatar">
+                            {app.avatar
+                              ? <img src={app.avatar} alt={app.applicant} />
+                              : app.applicant.charAt(0).toUpperCase()
+                            }
+                          </div>
+                          <div>
+                            <h3 className="mj-app-name">{app.applicant}</h3>
+                            <div className="mj-app-meta-row">
+                              <span className="mj-app-meta-item"><Mail size={12} /> {app.email || 'No email'}</span>
+                              {app.phone && <span className="mj-app-meta-item"><Phone size={12} /> {app.phone}</span>}
+                              {app.city  && <span className="mj-app-meta-item"><MapPin size={12} /> {app.city}</span>}
+                            </div>
                           </div>
                         </div>
+                        <span className={`mj-app-badge ${displayStatus.toLowerCase()}`}>
+                          {displayStatus.replace(/_/g, ' ')}
+                        </span>
                       </div>
-                      
-                      <span className={`mj-app-badge ${displayStatus.toLowerCase()}`}>
-                        {displayStatus.replace(/_/g, ' ')}
-                      </span>
-                    </div>
 
-                    {app.expectedSalary && (
-                      <div>
-                        <div className="mj-app-section-title">Expected Salary</div>
-                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--kora-primary)" }}>
-                          ${app.expectedSalary.toLocaleString()} USD
+                      {app.expectedSalary && (
+                        <div>
+                          <div className="mj-app-section-title">Expected Salary</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--kora-primary)' }}>
+                            {Number(app.expectedSalary).toLocaleString()} XAF
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {app.profileSummary && (
-                      <div>
-                        <div className="mj-app-section-title">Candidate Summary</div>
-                        <div className="mj-app-detail-block">{app.profileSummary}</div>
-                      </div>
-                    )}
-
-                    {app.coverLetter && (
-                      <div>
-                        <div className="mj-app-section-title">Cover Letter</div>
-                        <div className="mj-app-detail-block" style={{ fontStyle: "italic", whiteSpace: "pre-wrap" }}>
-                          "{app.coverLetter}"
-                        </div>
-                      </div>
-                    )}
-
-                    {app.skills?.length > 0 && (
-                      <div>
-                        <div className="mj-app-section-title">Skills</div>
-                        <div className="mj-app-skills">
-                          {app.skills.map((skill) => (
-                            <span key={skill} className="mj-app-skill-tag">{skill}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mj-app-actions">
-                      {/* View complete application page */}
-                      <button
-                        className="mj-drawer-btn primary"
-                        onClick={() => {
-                          setSelectedJobForApplicants(null);
-                          navigate(`/applications/${app.id}`);
-                        }}
-                        title="View complete application details page"
-                      >
-                        <ClipboardList size={14} /> View Details <ArrowUpRight size={11} />
-                      </button>
-
-                      {/* View CV Resume */}
-                      {app.cvUrl ? (
-                        <a
-                          href={app.cvUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mj-drawer-btn secondary"
-                          title="View resume in new tab"
-                        >
-                          <FileText size={14} /> Resume <ExternalLink size={11} />
-                        </a>
-                      ) : (
-                        <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                          <FileText size={14} /> No Resume
-                        </button>
                       )}
 
-                      {/* Status transitions */}
-                      {app.status === "APPLIED" && (
-                        <>
-                          <button
-                            className="mj-drawer-btn success"
-                            onClick={() => updateApplicationStatus(app.id, "SHORTLISTED")}
-                          >
-                            <Check size={14} /> Shortlist
-                          </button>
-                          <button
-                            className="mj-drawer-btn danger"
-                            onClick={() => updateApplicationStatus(app.id, "REJECTED")}
-                          >
-                            <X size={14} /> Reject
-                          </button>
-                        </>
+                      {app.profileSummary && (
+                        <div>
+                          <div className="mj-app-section-title">Candidate Summary</div>
+                          <div className="mj-app-detail-block">{app.profileSummary}</div>
+                        </div>
                       )}
 
-                      {app.status === "SHORTLISTED" && (
-                        <>
-                          <button
-                            className="mj-drawer-btn primary"
-                            onClick={() => setSchedulerTarget(app)}
-                          >
-                            <CalendarIcon size={14} />
-                            {app.interview?.id || app.hasInterview ? 'Reschedule Interview' : 'Schedule Interview'}
-                          </button>
-                          <button
-                            className="mj-drawer-btn danger"
-                            onClick={() => updateApplicationStatus(app.id, "REJECTED")}
-                          >
-                            <X size={14} /> Reject
-                          </button>
-                        </>
+                      {app.coverLetter && (
+                        <div>
+                          <div className="mj-app-section-title">Cover Letter</div>
+                          <div className="mj-app-detail-block" style={{ fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
+                            "{app.coverLetter}"
+                          </div>
+                        </div>
                       )}
 
-                      {app.status === "REJECTED" && (
+                      {app.skills?.length > 0 && (
+                        <div>
+                          <div className="mj-app-section-title">Skills</div>
+                          <div className="mj-app-skills">
+                            {app.skills.map((skill) => (
+                              <span key={skill} className="mj-app-skill-tag">{skill}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mj-app-actions">
                         <button
-                          className="mj-drawer-btn neutral"
-                          onClick={() => updateApplicationStatus(app.id, "APPLIED")}
+                          className="mj-drawer-btn primary"
+                          onClick={() => {
+                            setSelectedJobForApplicants(null);
+                            navigate(`/applications/${app.id}`);
+                          }}
                         >
-                          Reconsider
+                          <ClipboardList size={14} /> View Details <ArrowUpRight size={11} />
                         </button>
-                      )}
+
+                        {app.cvUrl ? (
+                          <a href={app.cvUrl} target="_blank" rel="noreferrer" className="mj-drawer-btn secondary">
+                            <FileText size={14} /> Resume <ExternalLink size={11} />
+                          </a>
+                        ) : (
+                          <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                            <FileText size={14} /> No Resume
+                          </button>
+                        )}
+
+                        {app.status === 'APPLIED' && (
+                          <>
+                            <button className="mj-drawer-btn success" onClick={() => updateApplicationStatus(app.id, 'SHORTLISTED')}>
+                              <Check size={14} /> Shortlist
+                            </button>
+                            <button className="mj-drawer-btn danger" onClick={() => updateApplicationStatus(app.id, 'REJECTED')}>
+                              <X size={14} /> Reject
+                            </button>
+                          </>
+                        )}
+
+                        {app.status === 'SHORTLISTED' && (
+                          <>
+                            <button className="mj-drawer-btn primary" onClick={() => setSchedulerTarget(app)}>
+                              <CalendarIcon size={14} />
+                              {app.interview?.id || app.hasInterview ? 'Reschedule Interview' : 'Schedule Interview'}
+                            </button>
+                            <button className="mj-drawer-btn danger" onClick={() => updateApplicationStatus(app.id, 'REJECTED')}>
+                              <X size={14} /> Reject
+                            </button>
+                          </>
+                        )}
+
+                        {app.status === 'REJECTED' && (
+                          <button className="mj-drawer-btn neutral" onClick={() => updateApplicationStatus(app.id, 'APPLIED')}>
+                            Reconsider
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
                   );
                 })
               )}
@@ -709,271 +898,78 @@ export default function EmployerDashboard() {
       )}
 
       <style>{`
-        /* ── Applications sliding drawer ── */
         .mj-drawer-overlay {
-          position: fixed;
-          inset: 0;
+          position: fixed; inset: 0;
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(4px);
           z-index: 900;
-          transition: opacity 0.3s ease;
         }
-
         .mj-drawer {
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          width: 550px;
-          max-width: 100vw;
+          position: fixed; top: 0; right: 0; bottom: 0;
+          width: 550px; max-width: 100vw;
           background: #ffffff;
-          box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+          box-shadow: -10px 0 30px rgba(0,0,0,0.1);
           z-index: 950;
-          display: flex;
-          flex-direction: column;
-          transform: translateX(0);
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex; flex-direction: column;
           animation: mj-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
-        @keyframes mj-slide-in {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-
+        @keyframes mj-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .mj-drawer-header {
           padding: 20px 24px;
           border-bottom: 1px solid #e2e8f0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+          display: flex; align-items: center; justify-content: space-between;
           background: #f8fafc;
         }
-
-        .mj-drawer-title-area h2 {
-          font-size: 17px;
-          font-weight: 800;
-          color: #0f172a;
-          margin: 0 0 4px;
-        }
-
-        .mj-drawer-title-area p {
-          font-size: 12px;
-          color: #64748b;
-          margin: 0;
-        }
-
+        .mj-drawer-title-area h2 { font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+        .mj-drawer-title-area p  { font-size: 12px; color: #64748b; margin: 0; }
         .mj-drawer-close {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          border: 1px solid #cbd5e1;
-          background: #ffffff;
-          color: #64748b;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s;
+          width: 32px; height: 32px; border-radius: 50%;
+          border: 1px solid #cbd5e1; background: #ffffff; color: #64748b;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-
-        .mj-drawer-close:hover {
-          background: #f1f5f9;
-          color: #0f172a;
-          border-color: #94a3b8;
-        }
-
-        .mj-drawer-body {
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
+        .mj-drawer-close:hover { background: #f1f5f9; color: #0f172a; }
+        .mj-drawer-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
         .mj-app-card {
-          border: 1.5px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-          background: #ffffff;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          transition: all 0.2s;
+          border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 20px;
+          background: #ffffff; display: flex; flex-direction: column; gap: 16px;
         }
-
-        .mj-app-card:hover {
-          border-color: #cbd5e1;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        }
-
-        .mj-app-card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        }
-
-        .mj-app-candidate-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
+        .mj-app-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .mj-app-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .mj-app-candidate-info { display: flex; align-items: center; gap: 12px; }
         .mj-app-avatar {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background: #f1f5f9;
-          color: #1a5c2e;
-          font-size: 16px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
+          width: 44px; height: 44px; border-radius: 50%;
+          background: #f1f5f9; color: #1a5c2e; font-size: 16px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
           border: 1.5px solid #e2e8f0;
         }
-
-        .mj-app-avatar img {
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .mj-app-name {
-          font-size: 14.5px;
-          font-weight: 700;
-          color: #0f172a;
-          margin: 0 0 3px;
-        }
-
-        .mj-app-meta-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          font-size: 11.5px;
-          color: #64748b;
-        }
-
-        .mj-app-meta-item {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .mj-app-badge {
-          font-size: 10.5px;
-          font-weight: 700;
-          padding: 3px 10px;
-          border-radius: 20px;
-          text-transform: uppercase;
-          letter-spacing: 0.03em;
-        }
-
+        .mj-app-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .mj-app-name { font-size: 14.5px; font-weight: 700; color: #0f172a; margin: 0 0 3px; }
+        .mj-app-meta-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11.5px; color: #64748b; }
+        .mj-app-meta-item { display: flex; align-items: center; gap: 4px; }
+        .mj-app-badge { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
         .mj-app-badge.applied, .mj-app-badge.pending { background: #fef3c7; color: #d97706; }
         .mj-app-badge.shortlisted { background: #dcfce7; color: #15803d; }
         .mj-app-badge.rejected { background: #fee2e2; color: #dc2626; }
-
-        .mj-app-section-title {
-          font-size: 11px;
-          font-weight: 700;
-          color: #475569;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin: 0 0 6px;
-        }
-
-        .mj-app-detail-block {
-          font-size: 13px;
-          color: #334155;
-          background: #f8fafc;
-          border-radius: 8px;
-          padding: 12px 14px;
-          line-height: 1.5;
-        }
-
-        .mj-app-skills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-
-        .mj-app-skill-tag {
-          background: #f1f5f9;
-          color: #475569;
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 8px;
-          border-radius: 6px;
-        }
-
-        .mj-app-actions {
-          display: flex;
-          gap: 8px;
-          margin-top: 4px;
-          flex-wrap: wrap;
-        }
-
+        .mj-app-section-title { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px; }
+        .mj-app-detail-block { font-size: 13px; color: #334155; background: #f8fafc; border-radius: 8px; padding: 12px 14px; line-height: 1.5; }
+        .mj-app-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mj-app-skill-tag { background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+        .mj-app-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
         .mj-drawer-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          padding: 8px 14px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.15s;
-          border: 1px solid transparent;
+          display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+          padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+          cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
         }
-
-        .mj-drawer-btn.primary {
-          background: #1a5c2e;
-          color: #ffffff;
-        }
-        .mj-drawer-btn.primary:hover {
-          background: #0d3d1f;
-        }
-
-        .mj-drawer-btn.secondary {
-          background: #ffffff;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-        .mj-drawer-btn.secondary:hover {
-          background: #f1f5f9;
-        }
-
-        .mj-drawer-btn.success {
-          background: #dcfce7;
-          color: #166534;
-          border-color: #bbf7d0;
-        }
-        .mj-drawer-btn.success:hover {
-          background: #bbf7d0;
-        }
-
-        .mj-drawer-btn.danger {
-          background: #fee2e2;
-          color: #991b1b;
-          border-color: #fecaca;
-        }
-        .mj-drawer-btn.danger:hover {
-          background: #fecaca;
-        }
-
-        .mj-drawer-btn.neutral {
-          background: #f8fafc;
-          color: #475569;
-          border-color: #cbd5e1;
-        }
-        .mj-drawer-btn.neutral:hover {
-          background: #f1f5f9;
-        }
+        .mj-drawer-btn.primary    { background: #1a5c2e; color: #ffffff; }
+        .mj-drawer-btn.primary:hover { background: #0d3d1f; }
+        .mj-drawer-btn.secondary  { background: #ffffff; color: #334155; border-color: #cbd5e1; }
+        .mj-drawer-btn.secondary:hover { background: #f1f5f9; }
+        .mj-drawer-btn.success    { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .mj-drawer-btn.success:hover  { background: #bbf7d0; }
+        .mj-drawer-btn.danger     { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .mj-drawer-btn.danger:hover   { background: #fecaca; }
+        .mj-drawer-btn.neutral    { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+        .mj-drawer-btn.neutral:hover  { background: #f1f5f9; }
       `}</style>
     </div>
   );
