@@ -248,25 +248,6 @@ export default function EmployerDashboard() {
   const filteredApplicants = applications.filter(app => {
     if (!selectedJobForApplicants) return false;
     const job = selectedJobForApplicants;
-    return app.jobPostingId === job.numericId
-      || String(app.jobPostingId) === String(job.id)
-      || (job.id && app.jobListingId === job.id);
-  });
-
-  // Reset market page when search term changes (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchMarketJobs(1, marketSearch);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [marketSearch]);
-
-  /* ── Applications list derived state ───────────────── */
-  useEffect(() => { setAppsPage(1); }, [search]);
-
-  const filteredApplicants = applications.filter(app => {
-    if (!selectedJobForApplicants) return false;
-    const job = selectedJobForApplicants;
     return (job.numericId != null && String(app.jobPostingId) === String(job.numericId))
       || String(app.jobPostingId) === String(job.id)
       || (job.id && app.jobListingId === job.id);
@@ -283,9 +264,6 @@ export default function EmployerDashboard() {
 
   const appsTotalPages = Math.max(1, Math.ceil(tabFiltered.length / APPS_PAGE_SIZE));
   const paginatedApps  = tabFiltered.slice((appsPage - 1) * APPS_PAGE_SIZE, appsPage * APPS_PAGE_SIZE);
-
-  const appsTotalPages = Math.max(1, Math.ceil(filtered.length / APPS_PAGE_SIZE));
-  const paginatedApps  = filtered.slice((appsPage - 1) * APPS_PAGE_SIZE, appsPage * APPS_PAGE_SIZE);
 
   const firstName = employer?.contactName ? employer.contactName.split(' ')[0] : 'there';
 
@@ -678,35 +656,48 @@ export default function EmployerDashboard() {
                       <p className="ds-empty-sub">Post a job to start receiving applications.</p>
                     </div>
                   )
-                  : paginatedApps.map(app => {
-                    const av = app.applicant.split(' ').map(w => w[0]).slice(0, 2).join('');
-                    return (
-                      <div
-                        key={app.id}
-                        className="ds-app-row"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => navigate(`/applications/${app.id}`)}
-                      >
-                        <div className="ds-app-avatar">{av}</div>
-                        <div className="ds-app-info">
-                          <p className="ds-app-name">{app.applicant}</p>
-                          <p className="ds-app-job"><Briefcase size={10} /> {app.job}</p>
+                  : jobPostings.map(job => (
+                    <div key={job.id} className="ds-job-card">
+                      <div className="ds-job-card-top">
+                        <div>
+                          <p className="ds-job-title">{job.title}</p>
+                          <div className="ds-job-meta">
+                            <span className="ds-job-type">{formatJobType(job.type)}</span>
+                            {job.location && (
+                              <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                <MapPin size={10} /> {job.location}
+                              </span>
+                            )}
+                            <span className={`ds-job-days${job.daysLeft <= 14 ? ' urgent' : ''}`}>
+                              <Clock size={10} /> {job.daysLeft}d left
+                            </span>
+                          </div>
                         </div>
                         <span className={`ds-badge ${job.status === 'ACTIVE' ? 'active' : ''}`}>{job.status}</span>
                       </div>
-                      <div className="ds-job-stats">
-                        <span><Users size={11} /> {job.applications} applicants</span>
-                        <span><Eye size={11} /> {job.views} views</span>
+
+                      <div className="ds-job-stats" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Users size={11} /> {job.applications} applicants
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Eye size={11} /> {job.views} views
+                        </span>
                       </div>
+
                       <div className="ds-job-progress">
                         <div className="ds-job-progress-fill" style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }} />
                       </div>
+
                       <div className="ds-job-actions">
-                        <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => {
-                          setJobFilter(String(job.numericId ?? job.id));
-                          setAppTab('ALL');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}>
+                        <button
+                          className="ds-btn ds-btn-ghost ds-btn-sm"
+                          onClick={() => {
+                            setJobFilter(String(job.numericId ?? job.id));
+                            setAppTab('ALL');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        >
                           <Users size={11} /> View Apps
                         </button>
                         <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate(`/employer/post-job?edit=${job.id}`)}>
@@ -717,7 +708,11 @@ export default function EmployerDashboard() {
                             <X size={11} /> Close
                           </button>
                         ) : (
-                          <button className="ds-btn ds-btn-sm" style={{ background:'#ECFDF5', color:'#065F46', border:'1.5px solid #6EE7B7' }} onClick={() => handleJobPublish(job.id)}>
+                          <button
+                            className="ds-btn ds-btn-sm"
+                            style={{ background: '#ECFDF5', color: '#065F46', border: '1.5px solid #6EE7B7' }}
+                            onClick={() => handleJobPublish(job.id)}
+                          >
                             Publish
                           </button>
                         )}
@@ -726,18 +721,6 @@ export default function EmployerDashboard() {
                   ))
                 }
               </div>
-
-              {!loading && filtered.length > APPS_PAGE_SIZE && (
-                <div style={{ padding: '0 16px 12px' }}>
-                  <DashboardPagination
-                    page={appsPage}
-                    totalPages={appsTotalPages}
-                    total={filtered.length}
-                    pageSize={APPS_PAGE_SIZE}
-                    onChange={setAppsPage}
-                  />
-                </div>
-              )}
             </div>
 
             {/* Right column: Market Jobs + Notifications */}

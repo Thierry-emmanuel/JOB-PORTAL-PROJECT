@@ -14,7 +14,7 @@ import {
 import { JOB_TYPES, EXPERIENCE_LEVELS, formatJobType, defaultJobDeadline } from "../../utils/jobEnums";
 import { extractApiError } from "../../utils/apiErrors";
 import "../../styles/dashboard-shell.css";
-import "../../styles/post-jobs.css";
+import "../../styles/PostJobs.css";
 
 /* ── Constants ─────────────────────────────────────────────── */
 const STEPS = [
@@ -142,23 +142,6 @@ const Step1Company = memo(function Step1Company({ form, updateField, errors }) {
             </Link>
           </p>
         </div>
-      </div>
-    );
-  }
-  return (
-    <div className="pj-company-card">
-      <div className="pj-company-card-logo">
-        {employer.logo
-          ? <img src={employer.logo} alt={employer.companyName} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit"}}/>
-          : (employer.companyName || "?")[0].toUpperCase()
-        }
-      </div>
-      <div style={{flex:1, minWidth:0}}>
-        <div className="pj-company-card-name">{employer.companyName}</div>
-        <div className="pj-company-card-meta">
-          {[employer.sector, employer.city].filter(Boolean).join(" · ") || "Company profile"}
-        </div>
-        <p className="pj-company-card-hint">Pulled from your company profile — no need to re-enter.</p>
       </div>
     </div>
   );
@@ -596,7 +579,7 @@ export default function PostJob({ onBack, onSuccess }) {
       requiresInterview:   form.requiresInterview   || false,
       publishImmediately:  publish,
     };
-  };
+  }, [form, dbSkills, employer]);
 
   // ✅ Guard: employer must have a company before posting
   const checkCompany = async () => {
