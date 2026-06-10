@@ -84,6 +84,15 @@ function ProtectedRoute({ children, role }) {
   return children;
 }
 
+function DashboardRedirect() {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const role = (user?.role || '').toUpperCase().replace('ROLE_', '');
+  if (role.includes('ADMIN')) return <Navigate to="/admin/dashboard" replace />;
+  if (role.includes('EMPLOYER')) return <Navigate to="/employer/dashboard" replace />;
+  return <Navigate to="/employee/dashboard" replace />;
+}
+
 const GlobalLoader = () => (
   <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#F9FAFB' }}>
     <div className="kora-spinner" />
@@ -159,7 +168,7 @@ function AnimatedRoutes() {
 
         {/* ── Employer ── */}
         <Route path="/profile/employer"      element={wrap(<EmployerProfile />, "EMPLOYER")} />
-        <Route path="/dashboard/employer"    element={wrap(<EmployerDashboard />, "EMPLOYER")} />
+        <Route path="/dashboard/employer"    element={<Navigate to="/employer/dashboard" replace />} />
         <Route path="/employer/dashboard"    element={wrap(<EmployerDashboard />, "EMPLOYER")} />
         <Route path="/employer/jobs"         element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
         <Route path="/employer/post-job"     element={wrap(<EmployerJobsManager />, "EMPLOYER")} />
@@ -171,7 +180,7 @@ function AnimatedRoutes() {
         <Route path="/login"           element={wrap(<Login />)} />
         <Route path="/register"        element={wrap(<Register />)} />
         <Route path="/oauth2/redirect" element={wrap(<OAuth2RedirectHandler />)} />
-        <Route path="/dashboard"       element={<Navigate to="/employee/dashboard" replace />} />
+        <Route path="/dashboard"       element={wrap(<DashboardRedirect />)} />
         <Route path="/jobs"            element={wrap(<JobList />)} />
         <Route path="/jobs/:id"        element={wrap(<JobDetails />)} />
         <Route path="/jobs/:id/apply"  element={wrap(<ApplyPage />, "JOB_SEEKER")} />

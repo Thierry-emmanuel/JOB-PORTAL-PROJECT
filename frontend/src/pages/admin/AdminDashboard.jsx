@@ -439,31 +439,32 @@ export default function AdminDashboard() {
         </aside>
 
         <main className="adm-main">
-          {/* ── PageHead: banner only on overview tab ─────────────── */}
-          <PageHead
-            title={title}
-            sub={sub}
-            welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
-            badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
-            showWelcome={tab === 'overview'}
-            overviewStats={heroStats}
-          />
+          <div className="adm-scroll">
+            <PageHead
+              title={title}
+              sub={sub}
+              welcomeName={user?.fullName?.split(' ')[0] ?? 'Admin'}
+              badge={`${user?.fullName?.split(' ')[0]??'Admin'} · Super Admin`}
+              showWelcome={tab === 'overview'}
+              overviewStats={heroStats}
+            />
 
-          <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
-            {tab === 'overview'     && <OverviewTab />}
-            {tab === 'users'        && <UsersTab showToast={showToast}/>}
-            {tab === 'reports'      && <ReportsTab />}
-            {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
-            {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
-            {tab === 'verification' && <VerificationTab showToast={showToast}/>}
-            {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
-            {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
-            {tab === 'interviews'   && <InterviewsTab />}
-            {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
-            {tab === 'cms'          && <CMSTab showToast={showToast}/>}
-            {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
-            {tab === 'compliance'   && <ComplianceTab />}
-            {tab === 'settings'     && <SettingsTab showToast={showToast}/>}
+            <div className={`adm-content${(tab === 'hero' || tab === 'cms') ? ' adm-content--cms' : ''}`}>
+              {tab === 'overview'     && <OverviewTab goTab={(t) => { setTab(t); setMobileOpen(false); }} />}
+              {tab === 'users'        && <UsersTab showToast={showToast}/>}
+              {tab === 'reports'      && <ReportsTab />}
+              {tab === 'employers'    && <EmployerTab showToast={showToast}/>}
+              {tab === 'seekers'      && <SeekersTab showToast={showToast}/>}
+              {tab === 'verification' && <VerificationTab showToast={showToast}/>}
+              {tab === 'jobs'         && <JobsTab showToast={showToast}/>}
+              {tab === 'applications' && <ApplicationsTab showToast={showToast}/>}
+              {tab === 'interviews'   && <InterviewsTab />}
+              {tab === 'hero'         && <HeroEditor showToast={showToast}/>}
+              {tab === 'cms'          && <CMSTab showToast={showToast}/>}
+              {tab === 'broadcast'    && <BroadcastTab showToast={showToast}/>}
+              {tab === 'compliance'   && <ComplianceTab />}
+              {tab === 'settings'     && <SettingsTab showToast={showToast}/>}
+            </div>
           </div>
         </main>
 
@@ -647,7 +648,7 @@ function UsersTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1 — Overview
    ═══════════════════════════════════════════════════════════════════ */
-function OverviewTab() {
+function OverviewTab({ goTab }) {
   const [stats,   setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -689,6 +690,25 @@ function OverviewTab() {
       <div className="adm-kpi-grid">
         {KPI.map(k=><StatCard key={k.label} {...k}/>)}
       </div>
+      <SCard title="Quick Actions" icon={<Zap size={15}/>}>
+        <div style={{ padding: '14px 20px' }}>
+          <div className="ds-quick-grid">
+            {[
+              { icon: <Users size={20} />,        label: 'Users',         color: C.purple, bg: C.purple + '18', tab: 'users' },
+              { icon: <Building2 size={20} />,    label: 'Employers',      color: C.orange, bg: C.orange + '18', tab: 'employers' },
+              { icon: <Briefcase size={20} />,    label: 'Jobs',          color: C.teal,   bg: C.teal + '18', tab: 'jobs' },
+              { icon: <ClipboardList size={20} />,label: 'Applications',  color: C.blue,   bg: C.blue + '18', tab: 'applications' },
+              { icon: <Send size={20} />,         label: 'Broadcast',     color: C.rose,   bg: C.rose + '18', tab: 'broadcast' },
+              { icon: <Globe size={20} />,        label: 'CMS',           color: C.slate,  bg: C.slate + '18', tab: 'cms' },
+            ].map(({ icon, label, color, bg, tab }) => (
+              <button key={label} className="ds-quick-btn" onClick={() => goTab(tab)}>
+                <div className="ds-quick-icon" style={{ background: bg, color }}>{icon}</div>
+                <span className="ds-quick-label">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </SCard>
       <div className="adm-charts-2col">
         <div className="adm-chart-card">
           <div className="adm-chart-head"><TrendingUp size={14}/><h3>User Growth — Last 6 Months</h3></div>

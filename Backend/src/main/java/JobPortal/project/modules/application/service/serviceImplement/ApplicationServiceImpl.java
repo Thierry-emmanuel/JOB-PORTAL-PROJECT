@@ -118,11 +118,24 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         ApplicationResponse response = applicationMapper.toResponse(saved);
-        if (employerId == null) {
-            employerId = resolveEmployerId(saved.getJobPostingId());
-        }
+        if (employerId == null) employerId = resolveEmployerId(saved);
         realtimeMessagingService.publishApplicationEvent("APPLICATION_CREATED", response, employerId);
         return response;
+    }
+
+    private Long resolveEmployerId(Application application) {
+        if (application == null) return null;
+        try {
+            String jobListingId = application.getJobListingId();
+            if (jobListingId != null && !jobListingId.isBlank()) {
+                return jobListingRepository.findById(UUID.fromString(jobListingId))
+                        .map(JobListing::getEmployerId)
+                        .orElse(null);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return resolveEmployerId(application.getJobPostingId());
     }
 
     private Long resolveEmployerId(Long jobPostingId) {
@@ -249,7 +262,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationResponse response = applicationMapper.toResponse(refreshed);
         realtimeMessagingService.publishApplicationEvent(
-                "APPLICATION_STATUS_CHANGED", response, resolveEmployerId(refreshed.getJobPostingId()));
+                "APPLICATION_STATUS_CHANGED", response, resolveEmployerId(refreshed));
         return response;
     }
 
