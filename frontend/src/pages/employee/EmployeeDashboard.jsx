@@ -330,29 +330,20 @@ export default function EmployeeDashboard() {
               return (
               <div key={app.id} className="ds-table-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }} role="row">
                 <div className="ds-app-info" role="cell">
-                  <span className="ds-app-name" style={{ cursor: 'pointer', color: 'var(--ds-accent)' }}
-                    onClick={() => navigate(`/applications/${app.id}`)}>
-                    {app.jobTitle || `Job #${app.jobPostingId}`}
-                  </span>
-                  {app.companyName && <span className="ds-app-job">{app.companyName}</span>}
+                  {jobPath ? (
+                    <Link to={jobPath} className="ds-app-name">{jobLabel}</Link>
+                  ) : (
+                    <span className="ds-app-name">{jobLabel}</span>
+                  )}
                 </div>
                 <span role="cell"><StatusBadge status={getApplicationDisplayStatus(app)} /></span>
                 <span className="ds-app-job" role="cell">{app.expectedSalary ? `${Number(app.expectedSalary).toLocaleString()} XAF` : '—'}</span>
                 <span className="ds-app-date" role="cell"><Clock size={10} /> {formatDate(app.appliedAt)}</span>
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} role="cell">
-                  <button
-                    className="ds-btn ds-btn-ghost ds-btn-sm"
-                    onClick={() => navigate(`/applications/${app.id}`)}
-                    title="View application details"
-                  ><Eye size={12}/></button>
-                  {app.jobListingId && (
-                    <Link
-                      to={`/jobs/${app.jobListingId}?viewOnly=true`}
-                      className="ds-btn ds-btn-ghost ds-btn-sm"
-                      title="View job posting"
-                    ><Briefcase size={12}/></Link>
-                  )}
-                </div>
+                {jobPath ? (
+                  <Link to={jobPath} className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0}} role="cell"><Eye size={12}/></Link>
+                ) : (
+                  <span className="ds-btn ds-btn-ghost ds-btn-sm" style={{flexShrink:0, opacity:0.4}} role="cell"><Eye size={12}/></span>
+                )}
               </div>
             );})}
           </div>

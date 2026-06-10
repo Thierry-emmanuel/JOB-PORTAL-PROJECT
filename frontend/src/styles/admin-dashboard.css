@@ -2,6 +2,12 @@
    KORA Admin Dashboard — Full Redesign
    Tokens: inherits --kora-* from theme.css
    Admin accent: purple #7c3aed aliased to --kora-green inside .adm-root
+
+   LAYOUT: Matches Employer Dashboard proportions exactly.
+   • .adm-root     → full-viewport flex COLUMN background (like .ds-root)
+   • .adm-body     → centered max-width row: sidebar + main (like .ds-body)
+   • .adm-sidebar  → floating rounded sticky card 248px (like .ds-sidebar)
+   • .adm-main     → scrollable flex column, grows to fill (like .ds-main)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── 0. Reset & Root ─────────────────────────────────────────────────────── */
@@ -21,9 +27,9 @@
   --adm-ink:         #0f172a;
   --adm-muted:       #64748b;
   --adm-border:      #e2e8f0;
-  --adm-bg:          #f8fafc;
+  --adm-bg:          #F4F6F9;
   --adm-white:       #ffffff;
-  --adm-sidebar-w:   256px;
+  --adm-sidebar-w:   248px;
   --adm-radius-sm:   8px;
   --adm-radius-md:   12px;
   --adm-radius-lg:   16px;
@@ -33,28 +39,47 @@
   --adm-shadow-lg:   0 8px 32px rgba(0,0,0,.12);
   --adm-font:        'Sora', 'DM Sans', system-ui, sans-serif;
 
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+  /* ── Layout: matches .ds-root ── */
+  min-height: 100vh;
   background: var(--adm-bg);
   font-family: var(--adm-font);
   color: var(--adm-ink);
+  display: flex;
+  flex-direction: column;
   padding-top: 0;
+  box-sizing: border-box;
+  /* Remove overflow:hidden — let the page scroll naturally like ds-root */
+}
+
+/* ── Body row: matches .ds-body ─────────────────────────────────────────── */
+.adm-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px 20px 40px;
+  gap: 20px;
+  align-items: flex-start;
   box-sizing: border-box;
 }
 
-/* ── 1. Sidebar Shell ────────────────────────────────────────────────────── */
+/* ── 1. Sidebar Shell: matches .ds-sidebar ───────────────────────────────── */
 .adm-sidebar {
   width: var(--adm-sidebar-w);
   flex-shrink: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  position: sticky;
+  top: 20px;
+  height: calc(100vh - 40px);
   background: var(--adm-white);
-  border-right: 1px solid var(--adm-border);
+  border-radius: 20px;
+  border: 1px solid var(--adm-border);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
   display: flex;
   flex-direction: column;
-  position: relative;
+  overflow: hidden;
+  /* Remove border-right flush style — now floating card */
   z-index: 40;
   scrollbar-width: none;
 }
@@ -220,20 +245,25 @@
 }
 
 /* ── 3. Main Area ────────────────────────────────────────────────────────── */
+
+/* ── 3. Main Area: matches .ds-main ──────────────────────────────────────── */
 .adm-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
+  gap: 0;
+  position: relative;
+  z-index: 0;
+  /* Remove overflow:hidden — scrolling is handled by .adm-content */
 }
 
-/* ── 4. Page Header ──────────────────────────────────────────────────────── */
+/* ── 4. Page Header: matches ds-main spacing ─────────────────────────────── */
 .adm-page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px 0;
+  padding: 0 0 0 0;
   flex-shrink: 0;
   gap: 16px;
 }
@@ -277,26 +307,21 @@
 .adm-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 28px 40px;
+  padding: 20px 0 40px;
   scrollbar-width: thin;
   scrollbar-color: var(--adm-border) transparent;
   min-height: 0;
 }
-/* CMS mode: become flex column so children fill height.
-   Use .adm-content.adm-content--cms for higher specificity over .adm-content */
+/* CMS mode */
 .adm-content.adm-content--cms {
-  /* Switch to a positioning context so cms-hero-root (position:absolute) anchors here */
   position: relative !important;
   overflow: hidden !important;
-  padding: 20px 28px 20px !important;
-  /* Keep flex column so cms-tab-root (FAQs) still fills height */
+  padding: 20px 0 20px !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 1;
   min-height: 0;
 }
-/* cms-hero-root uses position:absolute so no flex rules needed for it.
-   cms-tab-root (FAQs/Categories/Skills) still uses flex layout. */
 .adm-content.adm-content--cms .cms-tab-root {
   flex: 1 1 0;
   min-height: 0;
@@ -304,7 +329,6 @@
 }
 .adm-content::-webkit-scrollbar { width: 5px; }
 .adm-content::-webkit-scrollbar-thumb { background: var(--adm-border); border-radius: 99px; }
-
 /* ── 6. KPI Stat Cards ───────────────────────────────────────────────────── */
 .adm-kpi-grid {
   display: grid;
@@ -1284,10 +1308,206 @@
 }
 
 /* ── 32. Overview Layout ─────────────────────────────────────────────────── */
+
+/* ── Overview Welcome Banner ────────────────────────────────────────────── */
+/* Matches .ds-hero-sticky / .ds-hero proportions from dashboard-shell.css  */
+
+.adm-page-head-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.adm-welcome-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  margin-bottom: 16px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  background: var(--adm-bg);
+  isolation: isolate;
+}
+.adm-welcome-sticky::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -16px;
+  height: 16px;
+  background: linear-gradient(to bottom, var(--adm-bg) 30%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── HERO CARD: solid #7c3aed, zero gradients, zero orbs ── */
+.adm-welcome-hero {
+  width: 100%;
+  border-radius: 20px;
+  padding: 28px 32px;
+  background: #7c3aed;               /* SOLID violet — no gradient */
+  border: none;
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.28);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  contain: paint;
+  /* No ::before gradient, no ::after gradient, no floating orbs */
+}
+
+/* Explicitly neutralise any ::before / ::after pseudo-elements */
+.adm-welcome-hero::before,
+.adm-welcome-hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+.adm-welcome-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Eyebrow pill — white on violet */
+.adm-welcome-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  border-radius: var(--adm-radius-pill);
+  padding: 4px 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+/* Title */
+.adm-welcome-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #fff;                        /* White text on solid violet */
+}
+
+/* Sub-text */
+.adm-welcome-sub {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);   /* High-opacity white — legible on violet */
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 600px;
+}
+
+/* KPI chips */
+.adm-hero-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.adm-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Right: health indicator */
+.adm-welcome-health {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.adm-health-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* Remove animated pulse — clean, no distractions */
+.adm-health-pulse {
+  display: none;
+}
+
+.adm-health-label {
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.90);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Orbs: hard-disabled — display:none overrides any transform/opacity */
+.adm-hero-orb,
+.adm-hero-orb--1,
+.adm-hero-orb--2,
+.adm-hero-orb--3 {
+  display: none !important;
+}
+
+@keyframes adm-float { from {} to {} }  /* neutralised */
+
+/* ── Standard page title bar below the banner ───────────────────────────── */
+.adm-page-head-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 0;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+/* ── Premium Scrollbar ───────────────────────────────────────────────────── */
+.adm-content::-webkit-scrollbar { width: 6px; height: 6px; }
+.adm-content::-webkit-scrollbar-track { background: transparent; }
+.adm-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+.adm-content::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── 32. Overview Layout ─────────────────────────────────────────────────── */
 .adm-overview { display: flex; flex-direction: column; gap: 0; }
 .adm-reports  { display: flex; flex-direction: column; gap: 0; }
 .adm-settings { display: flex; flex-direction: column; gap: 0; }
 .adm-hero-editor { display: flex; flex-direction: column; gap: 0; }
+
+/* ── CMS compact header ──────────────────────────────────────────────────── */
+.adm-main:has(.adm-content--cms) .adm-page-head {
+  padding-top: 0;
+  padding-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 /* ── 33. Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
@@ -1295,20 +1515,31 @@
   .adm-two-col  { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
+  /* Match ds-body tablet collapse */
+  .adm-body { padding: 12px 12px 32px; gap: 0; }
+  .adm-sidebar {
+    position: fixed;
+    top: 0; left: -280px;
+    height: 100vh;
+    width: 260px !important;
+    border-radius: 0 20px 20px 0;
+    z-index: 400;
+    margin: 0;
+    transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .adm-sidebar.open { left: 0 !important; }
   .adm-charts-2col { grid-template-columns: 1fr; }
   .adm-kpi-grid    { grid-template-columns: repeat(2,1fr); }
   .adm-field-row   { grid-template-columns: 1fr; }
+  .adm-welcome-hero { padding: 20px 24px; border-radius: 14px; }
+  .adm-welcome-title { font-size: 20px; }
+  .adm-welcome-health { flex-direction: row; }
 }
 
 @media (max-width: 768px) {
-  .adm-mob-bar {
-    display: flex;
-  }
-  .adm-root {
-    padding-top: 56px;
-    height: 100vh;
-  }
+  .adm-mob-bar { display: flex; }
+  .adm-root    { padding-top: 56px; }
   .adm-sidebar {
     position: fixed; top: 0; left: 0; bottom: 0;
     transform: translateX(-100%);
@@ -1316,19 +1547,17 @@
     z-index: 1100;
     box-shadow: var(--adm-shadow-lg);
   }
-  .adm-sidebar.open { transform: translateX(0); }
+  .adm-sidebar.open { transform: translateX(0); left: 0; }
   .adm-mob-toggle { display: none !important; }
   .adm-mob-overlay { display: block; }
   .adm-mob-close { display: flex; }
-  .adm-main {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-  }
-  .adm-page-head { padding: 16px 16px 0; flex-direction: column; align-items: flex-start; }
-  .adm-content { padding: 16px 16px 40px; }
+  .adm-body { padding: 8px 8px 24px; }
+  .adm-content { padding: 14px 0 40px; }
   .adm-kpi-grid { grid-template-columns: repeat(2,1fr); }
   .adm-so { width: 100%; }
+  .adm-welcome-sticky { padding: 8px 0 0; }
+  .adm-welcome-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .adm-welcome-health { width: 100%; flex-direction: row; justify-content: flex-start; }
 }
 
 @media (max-width: 480px) {
@@ -1336,30 +1565,7 @@
   .adm-filter-bar { flex-direction: column; align-items: flex-start; }
   .adm-filter-tabs { flex-wrap: wrap; }
   .adm-search { min-width: 0; width: 100%; }
-}
-
-/* ── CMS full-height: compact page header, tighter padding ─────────── */
-/* Compact the page header when in CMS mode to reclaim vertical space */
-.adm-main:has(.adm-content--cms) .adm-page-head {
-  padding-top: 16px;
-  padding-bottom: 10px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-/* On mobile, adjust cms-cols height to account for 56px mob-bar */
-@media (max-width: 768px) {
-  .adm-content.adm-content--cms {
-    padding: 10px 12px !important;
-  }
-}
-@media (max-width: 480px) {
-  .adm-content.adm-content--cms {
-    padding: 8px !important;
-  }
-}
-
-/* Hamburger toggle active state */
-.adm-mob-hamburger.open {
-  background: var(--adm-accent, #059669);
-  color: #fff;
+  .adm-content.adm-content--cms { padding: 8px 0 !important; }
+  .adm-welcome-title { font-size: 18px; }
+  .adm-welcome-sub { font-size: 12px; }
 }

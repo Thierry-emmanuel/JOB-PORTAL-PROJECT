@@ -85,9 +85,11 @@ export default function useEmployeeDashboard() {
   /* ── Bootstrap all data ─────────────────────────────────── */
   useEffect(() => {
     if (!token || !user?.id) return;
-    const id = user.id;
+    const seekerId = user.jobSeekerId ?? user.seekerId ?? user.id;
+    const id = seekerId;
     // Profile
     getJobSeekerProfile(id)
+
       .then((data) => {
         if (data) setProfile(prev => ({
           ...prev, ...data,
@@ -115,8 +117,9 @@ export default function useEmployeeDashboard() {
 
   /* ── Fetch / retry applications ──────────────────────────── */
   const fetchApplications = useCallback((id) => {
-    const seekerId = id || user?.id;
+    const seekerId = id || (user?.jobSeekerId ?? user?.seekerId ?? user?.id);
     if (!seekerId) return;
+
     setAppsLoading(true);
     setAppsError(null);
     getUserApplications(seekerId)

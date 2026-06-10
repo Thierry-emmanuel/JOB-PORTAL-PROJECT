@@ -461,48 +461,21 @@ export default function ManageJobs() {
                   ) : (
                     <div className="mj-app-list">
                       {paginatedApps.map(app => (
-                        <div key={app.id} className="mj-app-row">
-                          <div className="mj-app-row-main" onClick={() => navigate(`/applications/${app.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
-                            <Avatar name={app.applicant} />
-                            <div className="mj-app-row-info">
-                              <span className="mj-app-row-name">{app.applicant}</span>
-                              <span className="mj-app-row-date">{fmtDate(app.date)}</span>
-                            </div>
-                            {app.expectedSalary && (
-                              <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
-                            )}
-                            <StatusBadge status={getApplicationDisplayStatus(app)}/>
+                        <div
+                          key={app.id}
+                          className="mj-app-row"
+                          onClick={() => navigate(`/applications/${app.id}`)}
+                        >
+                          <Avatar name={app.applicant} />
+                          <div className="mj-app-row-info">
+                            <span className="mj-app-row-name">{app.applicant}</span>
+                            <span className="mj-app-row-date">{fmtDate(app.date)}</span>
                           </div>
-                          <div className="mj-app-row-actions" onClick={e => e.stopPropagation()}>
-                            {app.status === 'APPLIED' && (
-                              <button
-                                className="mj-app-action-btn shortlist"
-                                onClick={() => handleStatusChange(app.id, 'SHORTLISTED')}
-                                title="Shortlist"
-                              ><UserCheck size={13}/></button>
-                            )}
-                            {(app.status === 'APPLIED' || app.status === 'SHORTLISTED') && (
-                              <button
-                                className="mj-app-action-btn schedule"
-                                onClick={() => setScheduling(app)}
-                                title="Schedule Interview"
-                              ><CalendarClock size={13}/></button>
-                            )}
-                            {app.status === 'SHORTLISTED' && (
-                              <button
-                                className="mj-app-action-btn hire"
-                                onClick={() => handleStatusChange(app.id, 'HIRED')}
-                                title="Mark as Hired"
-                              ><Award size={13}/></button>
-                            )}
-                            {app.status !== 'REJECTED' && app.status !== 'HIRED' && (
-                              <button
-                                className="mj-app-action-btn reject"
-                                onClick={() => handleStatusChange(app.id, 'REJECTED')}
-                                title="Reject"
-                              ><UserX size={13}/></button>
-                            )}
-                          </div>
+                          {app.expectedSalary && (
+                            <span className="mj-app-row-salary">{fmtSalary(app.expectedSalary)}</span>
+                          )}
+                          <StatusBadge status={getApplicationDisplayStatus(app)}/>
+                          <ArrowRight size={14} className="mj-app-row-arrow"/>
                         </div>
                       ))}
                     </div>

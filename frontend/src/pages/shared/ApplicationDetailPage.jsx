@@ -124,9 +124,7 @@ export default function ApplicationDetailPage() {
       setApp(prev => ({ ...prev, status: freshStatus }));
     } catch (err) {
       console.error(err);
-      // Re-fetch to sync status in case of optimistic concurrency mismatch
-      try { const fresh = await getApplication(id); if (fresh) setApp(fresh); } catch (_) {}
-      showToast(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.', 'error');
+      alert(err?.response?.data?.detail || err?.response?.data?.message || 'Failed to update application status.');
     } finally {
       setUpdatingStatus(false);
     }

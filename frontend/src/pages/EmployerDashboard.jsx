@@ -174,18 +174,20 @@ const MARKET_PAGE_SIZE = 5;
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { toasts, add: addToast, remove: removeToast } = useToast();
-  const [search,          setSearch]          = useState('');
-  const [appTab,          setAppTab]          = useState('ALL');
-  const [jobFilter,       setJobFilter]       = useState('');
-  const [appsPage,        setAppsPage]        = useState(1);
 
-  // ── Market Jobs (Find Jobs) — real paginated DB fetch ──
+  // ── Applications list state ────────────────────────────
+  const [search,  setSearch]  = useState('');
+  const [appsPage, setAppsPage] = useState(1);
+
+  // ── Market Jobs (Find Jobs) — FIXED: real paginated DB fetch ──
   const [marketJobs,       setMarketJobs]       = useState([]);
   const [marketLoading,    setMarketLoading]    = useState(true);
   const [marketSearch,     setMarketSearch]     = useState('');
   const [marketPage,       setMarketPage]       = useState(1);
   const [marketTotal,      setMarketTotal]      = useState(0);
   const [marketTotalPages, setMarketTotalPages] = useState(1);
+
+  // ── UI state ───────────────────────────────────────────
   const [mobileOpen,      setMobileOpen]      = useState(false);
   const [schedulerTarget, setSchedulerTarget] = useState(null);
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
@@ -246,6 +248,25 @@ export default function EmployerDashboard() {
   const filteredApplicants = applications.filter(app => {
     if (!selectedJobForApplicants) return false;
     const job = selectedJobForApplicants;
+    return app.jobPostingId === job.numericId
+      || String(app.jobPostingId) === String(job.id)
+      || (job.id && app.jobListingId === job.id);
+  });
+
+  // Reset market page when search term changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMarketJobs(1, marketSearch);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [marketSearch]);
+
+  /* ── Applications list derived state ───────────────── */
+  useEffect(() => { setAppsPage(1); }, [search]);
+
+  const filteredApplicants = applications.filter(app => {
+    if (!selectedJobForApplicants) return false;
+    const job = selectedJobForApplicants;
     return (job.numericId != null && String(app.jobPostingId) === String(job.numericId))
       || String(app.jobPostingId) === String(job.id)
       || (job.id && app.jobListingId === job.id);
@@ -262,6 +283,9 @@ export default function EmployerDashboard() {
 
   const appsTotalPages = Math.max(1, Math.ceil(tabFiltered.length / APPS_PAGE_SIZE));
   const paginatedApps  = tabFiltered.slice((appsPage - 1) * APPS_PAGE_SIZE, appsPage * APPS_PAGE_SIZE);
+
+  const appsTotalPages = Math.max(1, Math.ceil(filtered.length / APPS_PAGE_SIZE));
+  const paginatedApps  = filtered.slice((appsPage - 1) * APPS_PAGE_SIZE, appsPage * APPS_PAGE_SIZE);
 
   const firstName = employer?.contactName ? employer.contactName.split(' ')[0] : 'there';
 
@@ -654,22 +678,19 @@ export default function EmployerDashboard() {
                       <p className="ds-empty-sub">Post a job to start receiving applications.</p>
                     </div>
                   )
-                  : jobPostings.map(job => (
-                    <div key={job.id} className="ds-job-card">
-                      <div className="ds-job-card-top">
-                        <div>
-                          <p className="ds-job-title">{job.title}</p>
-                          <div className="ds-job-meta">
-                            <span className="ds-job-type">{formatJobType(job.type)}</span>
-                            {job.location && (
-                              <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                <MapPin size={10} /> {job.location}
-                              </span>
-                            )}
-                            <span className={`ds-job-days${job.daysLeft <= 14 ? ' urgent' : ''}`}>
-                              <Clock size={10} /> {job.daysLeft}d left
-                            </span>
-                          </div>
+                  : paginatedApps.map(app => {
+                    const av = app.applicant.split(' ').map(w => w[0]).slice(0, 2).join('');
+                    return (
+                      <div
+                        key={app.id}
+                        className="ds-app-row"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/applications/${app.id}`)}
+                      >
+                        <div className="ds-app-avatar">{av}</div>
+                        <div className="ds-app-info">
+                          <p className="ds-app-name">{app.applicant}</p>
+                          <p className="ds-app-job"><Briefcase size={10} /> {app.job}</p>
                         </div>
                         <span className={`ds-badge ${job.status === 'ACTIVE' ? 'active' : ''}`}>{job.status}</span>
                       </div>
@@ -705,12 +726,28 @@ export default function EmployerDashboard() {
                   ))
                 }
               </div>
+
+              {!loading && filtered.length > APPS_PAGE_SIZE && (
+                <div style={{ padding: '0 16px 12px' }}>
+                  <DashboardPagination
+                    page={appsPage}
+                    totalPages={appsTotalPages}
+                    total={filtered.length}
+                    pageSize={APPS_PAGE_SIZE}
+                    onChange={setAppsPage}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Right column: Market Jobs + Notifications */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-              {/* Market Jobs — live paginated DB fetch, debounced search */}
+              {/*
+                FIXED: Market Jobs — now fetches live from DB with search + pagination.
+                Architecture mirrors BrowseJobsPage / EmployerBrowseJobsPage.
+                Search is debounced (400 ms) to avoid flooding the API.
+              */}
               <div className="ds-card">
                 <div className="ds-card-header">
                   <h2 className="ds-card-title">
@@ -739,11 +776,11 @@ export default function EmployerDashboard() {
                     />
                     {marketSearch && (
                       <button
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}
+                        style={{ background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', padding:0 }}
                         onClick={() => setMarketSearch('')}
                         title="Clear"
                       >
-                        <X size={12} />
+                        <X size={12}/>
                       </button>
                     )}
                   </div>
@@ -806,6 +843,7 @@ export default function EmployerDashboard() {
                   </div>
                 )}
               </div>
+
               {/* Active Jobs */}
               <div className="ds-card">
                 <div className="ds-card-header">
@@ -1018,46 +1056,20 @@ export default function EmployerDashboard() {
                       )}
 
                       <div className="mj-app-actions">
-                        {/* View complete application page */}
                         <button
                           className="mj-drawer-btn primary"
                           onClick={() => {
                             setSelectedJobForApplicants(null);
                             navigate(`/applications/${app.id}`);
                           }}
-                          title="View complete application details page"
                         >
                           <ClipboardList size={14} /> View Details <ArrowUpRight size={11} />
                         </button>
 
-                        {/* View CV / Resume — uses PDF blob viewer */}
                         {app.cvUrl ? (
-                          <button
-                            className="mj-drawer-btn secondary"
-                            title="View resume PDF"
-                            onClick={() => {
-                              let url = app.cvUrl;
-                              setViewingPdfName(app.cvFileName || `${app.applicant || 'Candidate'}_resume.pdf`);
-                              if (app.cvUrl?.startsWith('data:')) {
-                                try {
-                                  const [header, b64] = app.cvUrl.split(',');
-                                  const mime = header.match(/:(.*?);/)[1];
-                                  const bytes = atob(b64);
-                                  const arr = new Uint8Array(bytes.length);
-                                  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-                                  const blob = new Blob([arr], { type: mime });
-                                  url = URL.createObjectURL(blob);
-                                  setViewingPdfBlob(url);
-                                } catch (err) {
-                                  console.error(err);
-                                }
-                              } else {
-                                setViewingPdfBlob(url);
-                              }
-                            }}
-                          >
+                          <a href={app.cvUrl} target="_blank" rel="noreferrer" className="mj-drawer-btn secondary">
                             <FileText size={14} /> Resume <ExternalLink size={11} />
-                          </button>
+                          </a>
                         ) : (
                           <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
                             <FileText size={14} /> No Resume

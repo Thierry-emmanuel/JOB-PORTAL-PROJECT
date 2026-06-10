@@ -40,7 +40,13 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT COUNT(*) > 0
             FROM applications a
-            JOIN job_listings jp ON CONV(SUBSTRING(jp.id, 1, 8), 16, 10) = a.job_posting_id
+            JOIN job_listings jp ON CONV(SUBSTRING(
+                CASE
+                    WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                    ELSE REPLACE(jp.id, '-', '')
+                END,
+                1, 8
+            ), 16, 10) = a.job_posting_id
             WHERE a.id = :applicationId
             AND jp.employer_id = :employerId
             """, nativeQuery = true)
@@ -87,14 +93,26 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT a.* FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT CONV(SUBSTRING(jp.id, 1, 8), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
+                SELECT CONV(SUBSTRING(
+                    CASE
+                        WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                        ELSE REPLACE(jp.id, '-', '')
+                    END,
+                    1, 8
+                ), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             ORDER BY a.applied_at DESC
             """,
             countQuery = """
             SELECT COUNT(*) FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT CONV(SUBSTRING(jp.id, 1, 8), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
+                SELECT CONV(SUBSTRING(
+                    CASE
+                        WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                        ELSE REPLACE(jp.id, '-', '')
+                    END,
+                    1, 8
+                ), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             """,
             nativeQuery = true)
@@ -103,7 +121,13 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query(value = """
             SELECT a.* FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT CONV(SUBSTRING(jp.id, 1, 8), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
+                SELECT CONV(SUBSTRING(
+                    CASE
+                        WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                        ELSE REPLACE(jp.id, '-', '')
+                    END,
+                    1, 8
+                ), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             AND a.status = :status
             ORDER BY a.applied_at DESC
@@ -111,7 +135,13 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             countQuery = """
             SELECT COUNT(*) FROM applications a
             WHERE a.job_posting_id IN (
-                SELECT CONV(SUBSTRING(jp.id, 1, 8), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
+                SELECT CONV(SUBSTRING(
+                    CASE
+                        WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                        ELSE REPLACE(jp.id, '-', '')
+                    END,
+                    1, 8
+                ), 16, 10) FROM job_listings jp WHERE jp.employer_id = :employerId
             )
             AND a.status = :status
             """,
@@ -150,14 +180,26 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     @Query(value = """
         SELECT COUNT(*) FROM applications a
-        JOIN job_listings jp ON CONV(SUBSTRING(jp.id, 1, 8), 16, 10) = a.job_posting_id
+        JOIN job_listings jp ON CONV(SUBSTRING(
+            CASE
+                WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                ELSE REPLACE(jp.id, '-', '')
+            END,
+            1, 8
+        ), 16, 10) = a.job_posting_id
         WHERE jp.company_id = :companyId
         """, nativeQuery = true)
     long countByCompanyId(@Param("companyId") Long companyId);
 
     @Query(value = """
         SELECT COUNT(*) FROM applications a
-        JOIN job_listings jp ON CONV(SUBSTRING(jp.id, 1, 8), 16, 10) = a.job_posting_id
+        JOIN job_listings jp ON CONV(SUBSTRING(
+            CASE
+                WHEN LENGTH(jp.id) = 16 THEN HEX(jp.id)
+                ELSE REPLACE(jp.id, '-', '')
+            END,
+            1, 8
+        ), 16, 10) = a.job_posting_id
         WHERE jp.company_id = :companyId AND a.status = :status
         """, nativeQuery = true)
     long countByCompanyIdAndStatus(@Param("companyId") Long companyId, @Param("status") String status);

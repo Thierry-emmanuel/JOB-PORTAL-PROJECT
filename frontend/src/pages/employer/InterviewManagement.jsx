@@ -111,10 +111,7 @@ function ResultModal({ interview, onSave, onClose }) {
                 fontSize:14, fontWeight:700, cursor:'pointer',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               }}>
-                {v === 'PASSED'
-                  ? <Check size={16} style={{display:'inline-block',verticalAlign:'middle'}}/>
-                  : <X     size={16} style={{display:'inline-block',verticalAlign:'middle'}}/>}
-                {label}
+                {r === 'PASSED' ? <><Check size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Passed</> : <><X size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Failed</>}
               </button>
             ))}          </div>
         </div>
