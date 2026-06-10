@@ -14,8 +14,12 @@ import EmployeeLayout from '../../../layouts/EmployeeLayout';
 import useEmployeeDashboard from '../../../hooks/useEmployeeDashboard';
 import { useAuth } from '../../../context/AuthContext';
 import { getInterviewsBySeeker, cancelInterview } from '../../../api/interviews';
+import DashboardPagination from '../../../components/shared/DashboardPagination';
+import useRealtimeRefresh from '../../../hooks/useRealtimeRefresh';
 import '../../../styles/employee-dashboard.css';
 import '../../../styles/interviews.css';
+
+const PAST_PAGE_SIZE = 6;
 
 /* ─── Helpers ────────────────────────────────────────────── */
 const fmtDate = d => !d ? '—' : new Date(d).toLocaleDateString('fr-CM', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
@@ -193,6 +197,7 @@ export default function InterviewsPage() {
   const [interviews, setInterviews] = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState(null);
+  const [pastPage,   setPastPage]   = useState(1);
 
   const load = useCallback(() => {
     if (!user?.id) return;
@@ -204,6 +209,7 @@ export default function InterviewsPage() {
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
+  useRealtimeRefresh(load, { applications: false, interviews: true });
 
   const handleCancel = useCallback(async (id) => {
     if (!window.confirm('Cancel this interview? The employer will be notified.')) return;
@@ -224,6 +230,9 @@ export default function InterviewsPage() {
     const isPast = iv.scheduledAt && new Date(iv.scheduledAt) < new Date();
     return isPast || iv.result;
   });
+
+  const pastTotalPages = Math.max(1, Math.ceil(past.length / PAST_PAGE_SIZE));
+  const paginatedPast = past.slice((pastPage - 1) * PAST_PAGE_SIZE, pastPage * PAST_PAGE_SIZE);
 
   return (
     <EmployeeLayout profile={profile} completion={completion} onPhotoChange={handlePhotoChange}>
@@ -293,10 +302,13 @@ export default function InterviewsPage() {
             <span className="iv-section-count">{past.length}</span>
           </div>
           <div className="iv-grid">
-            {past.map(iv => (
+            {paginatedPast.map(iv => (
               <InterviewCard key={iv.id} iv={iv} onCancel={null}/>
             ))}
           </div>
+          {past.length > PAST_PAGE_SIZE && (
+            <DashboardPagination page={pastPage} totalPages={pastTotalPages} total={past.length} pageSize={PAST_PAGE_SIZE} onChange={setPastPage} />
+          )}
         </section>
       )}
     </EmployeeLayout>
