@@ -54,6 +54,7 @@ export default function ApplicationDetailPage() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [viewingPdfBlob, setViewingPdfBlob] = useState(null);
 
   const role = (user?.role || '').toUpperCase().replace('ROLE_', '');
   const isEmployer = role === 'EMPLOYER';
@@ -657,15 +658,12 @@ export default function ApplicationDetailPage() {
                     </div>
                     
                     <div className="app-detail-cv-btn-group">
-                      <a
-                        href={profile.cvUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
                         className="app-detail-cv-btn secondary"
                         title="View resume PDF"
-                        onClick={e => {
+                        onClick={() => {
+                          let url = profile.cvUrl;
                           if (profile.cvUrl?.startsWith('data:')) {
-                            e.preventDefault();
                             try {
                               const [header, b64] = profile.cvUrl.split(',');
                               const mime = header.match(/:(.*?);/)[1];
@@ -673,15 +671,18 @@ export default function ApplicationDetailPage() {
                               const arr = new Uint8Array(bytes.length);
                               for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
                               const blob = new Blob([arr], { type: mime });
-                              const url = URL.createObjectURL(blob);
-                              const w = window.open(url, '_blank');
-                              if (w) setTimeout(() => URL.revokeObjectURL(url), 10000);
-                            } catch {}
+                              url = URL.createObjectURL(blob);
+                              setViewingPdfBlob(url);
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          } else {
+                            setViewingPdfBlob(url);
                           }
                         }}
                       >
                         View
-                      </a>
+                      </button>
                       <a
                         href={profile.cvUrl?.includes('cloudinary.com')
                           ? profile.cvUrl.replace('/upload/', '/upload/fl_attachment/')
@@ -890,6 +891,37 @@ export default function ApplicationDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* PDF CV Viewer Overlay */}
+      {viewingPdfBlob && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '900px', height: '90vh', background: '#fff', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#1f2937' }}>Viewing CV: {profile.cvFileName || 'resume.pdf'}</h3>
+              <button 
+                onClick={() => {
+                  if (viewingPdfBlob.startsWith('blob:')) {
+                    URL.revokeObjectURL(viewingPdfBlob);
+                  }
+                  setViewingPdfBlob(null);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, display: 'flex' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, background: '#f3f4f6' }}>
+              <iframe src={viewingPdfBlob} style={{ width: '100%', height: '100%', border: 'none' }} title="CV PDF Viewer" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scheduler modal overlay */}
       {showScheduler && (

@@ -143,6 +143,8 @@ export default function EmployerDashboard() {
   const [schedulerTarget, setSchedulerTarget] = useState(null);
 
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
+  const [viewingPdfBlob, setViewingPdfBlob] = useState(null);
+  const [viewingPdfName, setViewingPdfName] = useState('resume.pdf');
 
   const {
     employer, stats, applications, jobPostings,
@@ -749,15 +751,32 @@ export default function EmployerDashboard() {
 
                       {/* View CV Resume */}
                       {app.cvUrl ? (
-                        <a
-                          href={app.cvUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
                           className="mj-drawer-btn secondary"
-                          title="View resume in new tab"
+                          title="View resume PDF"
+                          onClick={() => {
+                            let url = app.cvUrl;
+                            setViewingPdfName(app.cvFileName || `${app.applicant || 'Candidate'}_resume.pdf`);
+                            if (app.cvUrl?.startsWith('data:')) {
+                              try {
+                                const [header, b64] = app.cvUrl.split(',');
+                                const mime = header.match(/:(.*?);/)[1];
+                                const bytes = atob(b64);
+                                const arr = new Uint8Array(bytes.length);
+                                for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                                const blob = new Blob([arr], { type: mime });
+                                url = URL.createObjectURL(blob);
+                                setViewingPdfBlob(url);
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            } else {
+                              setViewingPdfBlob(url);
+                            }
+                          }}
                         >
                           <FileText size={14} /> Resume <ExternalLink size={11} />
-                        </a>
+                        </button>
                       ) : (
                         <button className="mj-drawer-btn secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
                           <FileText size={14} /> No Resume
@@ -814,6 +833,37 @@ export default function EmployerDashboard() {
             </div>
           </div>
         </>
+      )}
+
+      {/* PDF CV Viewer Overlay */}
+      {viewingPdfBlob && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '900px', height: '90vh', background: '#fff', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#1f2937' }}>Viewing CV: {viewingPdfName}</h3>
+              <button 
+                onClick={() => {
+                  if (viewingPdfBlob.startsWith('blob:')) {
+                    URL.revokeObjectURL(viewingPdfBlob);
+                  }
+                  setViewingPdfBlob(null);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, display: 'flex' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, background: '#f3f4f6' }}>
+              <iframe src={viewingPdfBlob} style={{ width: '100%', height: '100%', border: 'none' }} title="CV PDF Viewer" />
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`
