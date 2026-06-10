@@ -62,15 +62,32 @@ export default function EmployeeLayout({ profile, completion, onEdit, onPhotoCha
 
   const initials = (profile?.fullName || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
+  const pageLabel = NAV_ITEMS.find(n => location.pathname.startsWith(n.to))?.label || 'Dashboard';
+
   return (
     <div className="ds-root">
       {/* Mobile overlay */}
       {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
 
-      {/* FAB trigger (mobile) */}
-      <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-        <Menu size={20} />
-      </button>
+      {/* ── Top hamburger bar (mobile only, replaces FAB) ── */}
+      <header className="ds-topbar">
+        <button
+          className={`ds-topbar-hamburger${mobileOpen ? ' open' : ''}`}
+          onClick={() => setMobileOpen(o => !o)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+        <span className="ds-topbar-title">{pageLabel}</span>
+        <div className="ds-topbar-right">
+          <div className="ds-topbar-avatar" title={profile?.fullName || 'Profile'}>
+            {profile?.profilePhoto
+              ? <img src={profile.profilePhoto} alt="avatar" />
+              : <span>{initials}</span>}
+          </div>
+        </div>
+      </header>
 
       <div className="ds-body">
         {/* ════ SIDEBAR ════ */}

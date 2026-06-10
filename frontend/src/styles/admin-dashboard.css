@@ -1357,3 +1357,9 @@
     padding: 8px !important;
   }
 }
+
+/* Hamburger toggle active state */
+.adm-mob-hamburger.open {
+  background: var(--adm-accent, #059669);
+  color: #fff;
+}

@@ -15,6 +15,7 @@ import EmployeeDashboard from '../pages/employee/EmployeeDashboard';
 import * as jobsApi from '../api/jobs';
 import * as profilesApi from '../api/profiles';
 import * as interviewsApi from '../api/interviews';
+import { invalidate } from '../api/cache';
 
 /* ── Mocks ─────────────────────────────────────────────── */
 vi.mock('../context/AuthContext', () => ({
@@ -150,7 +151,10 @@ describe('EmployeeDashboard', () => {
     });
   });
 
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+    invalidate();
+  });
 
   /* ── Structure ────────────────────────────────────────── */
 

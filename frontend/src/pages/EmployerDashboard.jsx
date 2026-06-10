@@ -137,6 +137,8 @@ export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { toasts, add: addToast, remove: removeToast } = useToast();
   const [search,          setSearch]          = useState('');
+  const [appTab,          setAppTab]          = useState('ALL');
+  const [jobFilter,       setJobFilter]       = useState('');
   const [mobileOpen,      setMobileOpen]      = useState(false);
   const [schedulerTarget, setSchedulerTarget] = useState(null);
 
@@ -163,10 +165,14 @@ export default function EmployerDashboard() {
     )
   );
 
-  const filtered = applications.filter(a =>
-    a.applicant.toLowerCase().includes(search.toLowerCase()) ||
-    a.job.toLowerCase().includes(search.toLowerCase())
-  );
+  // Full applications section: filter by tab + job dropdown + search
+  const tabFiltered = applications.filter(a => {
+    const matchTab    = appTab === 'ALL' || a.status === appTab;
+    const matchJob    = !jobFilter || String(a.jobPostingId) === jobFilter;
+    const q           = search.toLowerCase();
+    const matchSearch = !q || (a.applicant || '').toLowerCase().includes(q) || (a.job || '').toLowerCase().includes(q);
+    return matchTab && matchJob && matchSearch;
+  });
 
   const firstName = employer?.contactName ? employer.contactName.split(' ')[0] : 'there';
 
@@ -242,8 +248,30 @@ export default function EmployerDashboard() {
         />
       )}
 
-      {/* Mobile */}
+      {/* Mobile overlay */}
       {mobileOpen && <div className="ds-mobile-overlay" onClick={() => setMobileOpen(false)} />}
+
+      {/* ── Top hamburger bar (mobile only) ── */}
+      <header className="ds-topbar">
+        <button
+          className={`ds-topbar-hamburger${mobileOpen ? ' open' : ''}`}
+          onClick={() => setMobileOpen(o => !o)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+        <span className="ds-topbar-title">
+          {employer?.companyName || 'Employer Dashboard'}
+        </span>
+        <div className="ds-topbar-right">
+          <div className="ds-topbar-avatar" title={employer?.companyName || 'Employer'}>
+            {employer?.logo
+              ? <img src={employer.logo} alt="logo" />
+              : <span>{(employer?.companyName || 'E').charAt(0).toUpperCase()}</span>}
+          </div>
+        </div>
+      </header>
 
       <div className="ds-body">
         {/* ════ SIDEBAR ════ */}
@@ -254,10 +282,6 @@ export default function EmployerDashboard() {
 
         {/* ════ MAIN ════ */}
         <main className="ds-main">
-          {/* FAB trigger (mobile) */}
-          <button className="ds-mobile-trigger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-            <Menu size={20} />
-          </button>
 
           {/* ── Hero ── */}
           <div className="ds-hero">
@@ -337,193 +361,284 @@ export default function EmployerDashboard() {
             )}
           </div>
 
-          {/* ── Two column row ── */}
+
+          {/* ══ FULL APPLICATIONS SECTION ══ */}
+          <div className="ds-card" style={{ overflow: 'visible' }}>
+            <div className="ds-card-header">
+              <h2 className="ds-card-title">
+                <div className="ds-card-title-icon"><Users size={15} /></div>
+                Applications
+                {!loading && applications.length > 0 && (
+                  <span className="ds-nav-badge" style={{ marginLeft: 6 }}>{applications.length}</span>
+                )}
+              </h2>
+              <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
+                Manage Jobs <ChevronRight size={13} />
+              </button>
+            </div>
+
+            {/* Status tab bar */}
+            <div className="emp-apps-tabs">
+              {[
+                { key: 'ALL',                 label: 'All'         },
+                { key: 'APPLIED',             label: 'Applied'     },
+                { key: 'SHORTLISTED',         label: 'Shortlisted' },
+                { key: 'INTERVIEW_SCHEDULED', label: 'Interviews'  },
+                { key: 'HIRED',               label: 'Hired'       },
+                { key: 'REJECTED',            label: 'Rejected'    },
+              ].map(({ key, label }) => {
+                const cnt = key === 'ALL'
+                  ? applications.length
+                  : applications.filter(a => a.status === key).length;
+                return (
+                  <button
+                    key={key}
+                    className={`emp-apps-tab${appTab === key ? ' active' : ''}`}
+                    onClick={() => setAppTab(key)}
+                  >
+                    {label}
+                    <span className="emp-apps-tab-count">{cnt}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search + job filter */}
+            <div style={{ display: 'flex', gap: 10, padding: '14px 20px', flexWrap: 'wrap' }}>
+              <div className="ds-search" style={{ flex: 1, minWidth: 180 }}>
+                <Search size={14} className="ds-search-icon" />
+                <input
+                  placeholder="Search by name or job…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              {jobPostings.length > 0 && (
+                <select
+                  style={{ padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontFamily: 'Poppins,sans-serif', fontSize: 12.5, fontWeight: 600, color: '#374151', background: '#F9FAFB', cursor: 'pointer', minWidth: 160, outline: 'none' }}
+                  value={jobFilter}
+                  onChange={e => setJobFilter(e.target.value)}
+                >
+                  <option value="">All Jobs</option>
+                  {jobPostings.map(j => (
+                    <option key={j.id} value={String(j.numericId ?? j.id)}>{j.title}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Column headers */}
+            {!loading && tabFiltered.length > 0 && (
+              <div className="emp-app-th">
+                <span />
+                <span>Candidate</span>
+                <span>Job</span>
+                <span>Status</span>
+                <span>Applied</span>
+                <span>Actions</span>
+              </div>
+            )}
+
+            {/* Rows */}
+            <div>
+              {loading
+                ? [1,2,3,4].map(i => <SkeletonCard key={i} />)
+                : tabFiltered.length === 0
+                ? (
+                  <div className="ds-empty" style={{ padding: '48px 24px' }}>
+                    <div className="ds-empty-icon"><Users size={24} /></div>
+                    <p className="ds-empty-title">
+                      {appTab === 'ALL' ? 'No applications yet' : `No ${appTab.replace(/_/g,' ').toLowerCase()} applications`}
+                    </p>
+                    <p className="ds-empty-sub">Applications from job seekers will appear here.</p>
+                  </div>
+                )
+                : tabFiltered.map(app => {
+                  const initials = (app.applicant || '?').split(' ').slice(0,2).map(w => w[0]?.toUpperCase() || '').join('');
+                  return (
+                    <div key={app.id} className="emp-app-row" onClick={() => navigate(`/applications/${app.id}`)}>
+                      <div className="emp-app-avatar">
+                        {app.avatar ? <img src={app.avatar} alt={app.applicant} /> : initials}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p className="emp-app-name">{app.applicant || 'Unknown Candidate'}</p>
+                        <p className="emp-app-job-label">
+                          {app.email
+                            ? <span>{app.email}</span>
+                            : app.city
+                            ? <span><MapPin size={10}/> {app.city}</span>
+                            : <span style={{color:'#9CA3AF'}}>—</span>}
+                        </p>
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {app.job || '—'}
+                        </p>
+                      </div>
+                      <div onClick={e => e.stopPropagation()}>
+                        <select
+                          className={`emp-app-status-select ${app.status || ''}`}
+                          value={app.status}
+                          onChange={e => handleUpdateStatus(app.id, e.target.value)}
+                        >
+                          <option value="APPLIED">Applied</option>
+                          <option value="SHORTLISTED">Shortlisted</option>
+                          <option value="INTERVIEW_SCHEDULED">Interview</option>
+                          <option value="HIRED">Hired</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                      </div>
+                      <span style={{ fontSize: 11, color: '#9CA3AF', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Clock size={10} /> {app.date || '—'}
+                      </span>
+                      <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                        <button
+                          title="View application"
+                          className="emp-app-action-btn"
+                          onClick={() => navigate(`/applications/${app.id}`)}
+                        ><Eye size={13} /></button>
+                        {(app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED') && (
+                          <button
+                            title="Schedule interview"
+                            className="emp-app-action-btn schedule"
+                            onClick={() => setSchedulerTarget(app)}
+                          ><Video size={13} /></button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              }
+            </div>
+
+            {/* Footer */}
+            {!loading && tabFiltered.length > 0 && (
+              <div style={{ padding: '10px 20px 14px', borderTop: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#6B7280' }}>
+                  Showing <strong>{tabFiltered.length}</strong> of <strong>{applications.length}</strong> applications
+                </span>
+                <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
+                  Manage All <ChevronRight size={13} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Bottom row: Active Jobs + Notifications ── */}
           <div className="ds-two-col">
 
-            {/* Applications */}
-            <div className="ds-card" style={{ minHeight: 400 }}>
+            {/* Active Jobs */}
+            <div className="ds-card">
               <div className="ds-card-header">
                 <h2 className="ds-card-title">
-                  <div className="ds-card-title-icon"><Users size={15} /></div>
-                  Recent Applications
+                  <div className="ds-card-title-icon"><Briefcase size={15} /></div>
+                  Active Jobs
                 </h2>
                 <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
                   View all <ChevronRight size={13} />
                 </button>
               </div>
-
-              <div style={{ padding: '12px 20px' }}>
-                <div className="ds-search">
-                  <Search size={14} className="ds-search-icon" />
-                  <input
-                    placeholder="Search applicants or jobs…"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-
               <div>
                 {loading
-                  ? [1,2,3].map(i => <SkeletonCard key={i} />)
-                  : filtered.length === 0
+                  ? [1,2].map(i => (
+                    <div key={i} style={{ padding: '14px 20px', borderBottom: '1px solid #F9FAFB' }}>
+                      <div className="ds-skeleton ds-skeleton-text w-75" style={{ height: 13 }} />
+                      <div className="ds-skeleton ds-skeleton-text w-40" />
+                    </div>
+                  ))
+                  : jobPostings.length === 0
                   ? (
                     <div className="ds-empty">
-                      <div className="ds-empty-icon"><Users size={22} /></div>
-                      <p className="ds-empty-title">No applications found</p>
-                      <p className="ds-empty-sub">Applications will appear here once candidates apply.</p>
+                      <div className="ds-empty-icon"><Briefcase size={20} /></div>
+                      <p className="ds-empty-title">No active jobs</p>
+                      <p className="ds-empty-sub">Post a job to start receiving applications.</p>
                     </div>
                   )
-                  : filtered.map(app => {
-                    const av = app.applicant.split(' ').map(w => w[0]).slice(0, 2).join('');
-                    return (
-                      <div 
-                        key={app.id} 
-                        className="ds-app-row" 
-                        style={{ cursor: 'pointer', hover: { background: '#f8fafc' } }}
-                        onClick={() => navigate(`/applications/${app.id}`)}
-                      >
-                        <div className="ds-app-avatar">{av}</div>
-                        <div className="ds-app-info">
-                          <p className="ds-app-name">{app.applicant}</p>
-                          <p className="ds-app-job"><Briefcase size={10} /> {app.job}</p>
+                  : jobPostings.map(job => (
+                    <div key={job.id} className="ds-job-card">
+                      <div className="ds-job-card-top">
+                        <div>
+                          <p className="ds-job-title">{job.title}</p>
+                          <div className="ds-job-meta">
+                            <span className="ds-job-type">{job.type}</span>
+                            {job.location && (
+                              <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                <MapPin size={10} /> {job.location}
+                              </span>
+                            )}
+                            <span className={`ds-job-days${job.daysLeft <= 14 ? ' urgent' : ''}`}>
+                              <Clock size={10} /> {job.daysLeft}d left
+                            </span>
+                          </div>
                         </div>
-                        <div className="ds-app-actions">
-                          <StatusSelect status={app.status} appId={app.id} onUpdate={handleUpdateStatus} />
-                          {app.status === 'SHORTLISTED' && (
-                            <button
-                              className="ds-btn ds-btn-sm"
-                              style={{ background: '#EFF6FF', color: '#1E40AF', border: '1.5px solid #BFDBFE' }}
-                              onClick={(e) => { e.stopPropagation(); setSchedulerTarget(app); }}
-                              title="Schedule Interview"
-                            >
-                              <Video size={11} /> Schedule
-                            </button>
-                          )}
-                        </div>
-                        <span className="ds-app-date"><Clock size={10} /> {app.date}</span>
+                        <span className={`ds-badge ${job.status === 'ACTIVE' ? 'active' : ''}`}>{job.status}</span>
                       </div>
-                    );
-                  })
+                      <div className="ds-job-stats">
+                        <span><Users size={11} /> {job.applications} applicants</span>
+                        <span><Eye size={11} /> {job.views} views</span>
+                      </div>
+                      <div className="ds-job-progress">
+                        <div className="ds-job-progress-fill" style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }} />
+                      </div>
+                      <div className="ds-job-actions">
+                        <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => {
+                          setJobFilter(String(job.numericId ?? job.id));
+                          setAppTab('ALL');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}>
+                          <Users size={11} /> View Apps
+                        </button>
+                        <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
+                          <Edit2 size={11} /> Edit
+                        </button>
+                        {job.status === 'ACTIVE' ? (
+                          <button className="ds-btn ds-btn-danger ds-btn-sm" onClick={() => handleJobClose(job.id)}>
+                            <X size={11} /> Close
+                          </button>
+                        ) : (
+                          <button className="ds-btn ds-btn-sm" style={{ background:'#ECFDF5', color:'#065F46', border:'1.5px solid #6EE7B7' }} onClick={() => handleJobPublish(job.id)}>
+                            Publish
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
                 }
               </div>
             </div>
 
-            {/* Right column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-              {/* Active Jobs */}
-              <div className="ds-card">
-                <div className="ds-card-header">
-                  <h2 className="ds-card-title">
-                    <div className="ds-card-title-icon"><Briefcase size={15} /></div>
-                    Active Jobs
-                  </h2>
-                  <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
-                    View all <ChevronRight size={13} />
+            {/* Notifications */}
+            <div className="ds-card">
+              <div className="ds-card-header">
+                <h2 className="ds-card-title">
+                  <div className="ds-card-title-icon"><Bell size={15} /></div>
+                  Notifications
+                  {unreadCount > 0 && <span className="ds-nav-badge" style={{ marginLeft: 6 }}>{unreadCount}</span>}
+                </h2>
+                {unreadCount > 0 && (
+                  <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={markAllRead}>
+                    Mark all read
                   </button>
-                </div>
-                <div>
-                  {loading
-                    ? [1,2].map(i => (
-                      <div key={i} style={{ padding: '14px 20px', borderBottom: '1px solid #F9FAFB' }}>
-                        <div className="ds-skeleton ds-skeleton-text w-75" style={{ height: 13 }} />
-                        <div className="ds-skeleton ds-skeleton-text w-40" />
-                      </div>
-                    ))
-                    : jobPostings.length === 0
-                    ? (
-                      <div className="ds-empty">
-                        <div className="ds-empty-icon"><Briefcase size={20} /></div>
-                        <p className="ds-empty-title">No active jobs</p>
-                      </div>
-                    )
-                    : jobPostings.map(job => (
-                      <div key={job.id} className="ds-job-card">
-                        <div className="ds-job-card-top">
-                          <div>
-                            <p className="ds-job-title">{job.title}</p>
-                            <div className="ds-job-meta">
-                              <span className="ds-job-type">{job.type}</span>
-                              {job.location && (
-                                <span style={{ fontSize: 10.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <MapPin size={10} /> {job.location}
-                                </span>
-                              )}
-                              <span className={`ds-job-days${job.daysLeft <= 14 ? ' urgent' : ''}`}>
-                                <Clock size={10} /> {job.daysLeft}d left
-                              </span>
-                            </div>
-                          </div>
-                          <span className={`ds-badge ${job.status === 'ACTIVE' ? 'active' : ''}`}>{job.status}</span>
-                        </div>
-                        <div className="ds-job-stats" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Users size={11} /> {job.applications} applicants
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Eye size={11} /> {job.views} views
-                          </span>
-                        </div>
-                        <div className="ds-job-progress">
-                          <div className="ds-job-progress-fill" style={{ width: `${Math.min((job.applications / 20) * 100, 100)}%` }} />
-                        </div>
-                        <div className="ds-job-actions">
-                          <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => setSelectedJobForApplicants(job)}>
-                            <Users size={11} /> Applicants
-                          </button>
-                          <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => navigate('/employer/jobs')}>
-                            <Edit2 size={11} /> Edit
-                          </button>
-                          {job.status === 'ACTIVE' ? (
-                            <button className="ds-btn ds-btn-danger ds-btn-sm" onClick={() => handleJobClose(job.id)}>
-                              <X size={11} /> Close
-                            </button>
-                          ) : (
-                            <button className="ds-btn ds-btn-sm" style={{ background:'#ECFDF5', color:'#065F46', border:'1.5px solid #6EE7B7' }} onClick={() => handleJobPublish(job.id)}>
-                              Publish
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
+                )}
               </div>
-
-              {/* Notifications */}
-              <div className="ds-card">
-                <div className="ds-card-header">
-                  <h2 className="ds-card-title">
-                    <div className="ds-card-title-icon"><Bell size={15} /></div>
-                    Notifications
-                    {unreadCount > 0 && <span className="ds-nav-badge" style={{ marginLeft: 6 }}>{unreadCount}</span>}
-                  </h2>
-                  {unreadCount > 0 && (
-                    <button className="ds-btn ds-btn-ghost ds-btn-sm" onClick={markAllRead}>
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                <div>
-                  {notifications.length === 0
-                    ? (
-                      <div className="ds-empty">
-                        <div className="ds-empty-icon"><Bell size={20} /></div>
-                        <p className="ds-empty-title">No notifications</p>
+              <div>
+                {notifications.length === 0
+                  ? (
+                    <div className="ds-empty">
+                      <div className="ds-empty-icon"><Bell size={20} /></div>
+                      <p className="ds-empty-title">No notifications</p>
+                    </div>
+                  )
+                  : notifications.map(n => (
+                    <div key={n.id} className={`ds-notif-item${!n.read ? ' unread' : ''}`} onClick={() => markNotificationRead(n.id)}>
+                      <div className="ds-notif-dot" />
+                      <div>
+                        <p className="ds-notif-text">{n.text}</p>
+                        <p className="ds-notif-time"><Clock size={10} /> {n.time}</p>
                       </div>
-                    )
-                    : notifications.map(n => (
-                      <div key={n.id} className={`ds-notif-item${!n.read ? ' unread' : ''}`} onClick={() => markNotificationRead(n.id)}>
-                        <div className="ds-notif-dot" />
-                        <div>
-                          <p className="ds-notif-text">{n.text}</p>
-                          <p className="ds-notif-time"><Clock size={10} /> {n.time}</p>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
+                    </div>
+                  ))
+                }
               </div>
             </div>
           </div>

@@ -331,8 +331,13 @@ export default function AdminDashboard() {
 
       {/* Mobile Top Header Toggle Bar */}
       <header className="adm-mob-bar">
-        <button className="adm-mob-hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open sidebar">
-          <Menu size={20}/>
+        <button
+          className={`adm-mob-hamburger${mobileOpen ? ' open' : ''}`}
+          onClick={() => setMobileOpen(o => !o)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X size={18}/> : <Menu size={18}/>}
         </button>
         <div className="adm-mob-logo-area">
           <img src={koraLogo} alt="Kora" className="adm-mob-logo-img" />
